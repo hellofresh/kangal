@@ -26,7 +26,7 @@ test-integration:
 
 # Builds the project
 build:
-	@printf "$(OK_COLOR)==> Building v${VERSION}$(NO_COLOR)"
+	@printf "$(OK_COLOR)==> Building v${VERSION}$(NO_COLOR)\n"
 	@CGO_ENABLED=0 go build -ldflags "-s -w" -ldflags "-X main.version=${VERSION}" -o "bin/kangal"
 
 # Apply CRD
