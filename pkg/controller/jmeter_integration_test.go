@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"testing"
@@ -122,13 +123,19 @@ func TestIntegrationJMeter(t *testing.T) {
 
 	t.Run("Checking master pod is created", func(t *testing.T) {
 		var master coreV1.PodList
+		var err error
 		for i := 0; i < 5; i++ {
 			WaitForResource(ShortWaitSec)
-			master, _ = GetMasterPod(client.CoreV1(), expectedLoadtestName)
+			master, err = GetMasterPod(client.CoreV1(), expectedLoadtestName)
+			if err != nil {
+				t.Log(fmt.Sprintf("get error from GetMasterPod: %s", err.Error()))
+				continue
+			}
 			if master.Items[0].Status.Phase == "Running" {
 				break
 			}
 		}
+		require.NoError(t, err)
 		assert.Equal(t, "Running", string(master.Items[0].Status.Phase))
 	})
 
