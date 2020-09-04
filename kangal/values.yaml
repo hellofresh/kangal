@@ -1,0 +1,171 @@
+# Default values for kangal.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+nameOverride: ""
+fullnameOverride: ""
+
+proxy:
+  # Number of pods to run
+  replicaCount: 2
+
+  #TODO: change repo after migration to hellofreshtech/kangal
+  image:
+    repository: 489198589229.dkr.ecr.eu-west-1.amazonaws.com/kangal
+    tag: latest
+    pullPolicy: Always
+
+  # Arguments for kangal command
+  args: [ "proxy" ]
+
+  service:
+    enabled: true
+    enablePrometheus: false
+    type: ClusterIP
+    ports:
+      http: 80
+
+  ingress:
+    enabled: true
+    annotations:
+      kubernetes.io/ingress.class: "nginx"
+    path: /
+    hosts:
+      http: ""
+
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+  # Node labels for pod assignment
+  nodeSelector: {}
+
+  # Tolerations for nodes that have taints on them
+  tolerations: []
+
+  # Pod scheduling preferences
+  affinity: {}
+
+  # Annotations to be added to pod
+  podAnnotations: {}
+
+  # The ports that the container listens to
+  containerPorts:
+    http: 8080
+
+  # Health check
+  livenessProbe:
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 15
+    periodSeconds: 10
+    timeoutSeconds: 4
+    successThreshold: 1
+    failureThreshold: 3
+
+  # Environmental variables to set in api
+  env:
+    # OpenAPI specification specific parameters
+    OPEN_API_SERVER_URL: ""
+    OPEN_API_SERVER_DESCRIPTION: ""
+    OPEN_API_UI_URL: ""
+
+controller:
+  # Number of pods to run
+  replicaCount: 1
+
+  #TODO: change repo after migration to hellofreshtech/kangal
+  image:
+    repository: 489198589229.dkr.ecr.eu-west-1.amazonaws.com/kangal
+    tag: latest
+    pullPolicy: Always
+
+  # Arguments for kangal command
+  args: [ "controller" ]
+
+  service:
+    enabled: true
+    enablePrometheus: false
+    type: ClusterIP
+    ports:
+      http: 80
+
+  # The ports that the container listens to
+  containerPorts:
+    http: 8080
+
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #  cpu: 100m
+    #  memory: 128Mi
+    # requests:
+    #  cpu: 100m
+    #  memory: 128Mi
+
+  # Node labels for pod assignment
+  nodeSelector: {}
+
+  # Tolerations for nodes that have taints on them
+  tolerations: []
+
+  # Pod scheduling preferences
+  affinity: {}
+
+openapi-ui:
+  enabled: true
+  # Number of pods to run
+  replicaCount: 2
+
+  #TODO: change repo after migration to hellofreshtech/kangal
+  image:
+    repository: swaggerapi/swagger-ui
+    tag: latest
+    pullPolicy: Always
+
+  service:
+    enabled: true
+    type: ClusterIP
+    ports:
+      http: 80
+
+  ingress:
+    enabled: true
+    annotations:
+      kubernetes.io/ingress.class: "nginx"
+    path: /
+    hosts:
+      http: ""
+  # Annotations to be added to pod
+  podAnnotations: {}
+
+  # The ports that the container listens to
+  containerPorts:
+    http: 8080
+
+  # Environmental variables to set in openapi-ui
+  env:
+    PORT: "8080"
+    URL: ""
+    VALIDATOR_URL: "null"
+
+configMap:
+  #  Those values needed to send Kangal reports to external object storage
+  #  Kangal supports S3 compatible object storage APIs
+  AWS_ACCESS_KEY_ID: ""
+  AWS_SECRET_ACCESS_KEY: ""
+  AWS_ENDPOINT_URL: "s3.eu-west-1.amazonaws.com"
+  AWS_BUCKET_NAME: "hf-kangal"
+  AWS_DEFAULT_REGION: "eu-west-1"

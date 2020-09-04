@@ -1,0 +1,41 @@
+{{- range $key, $value := .Values }}
+{{- if or (eq $key "proxy") (eq $key "openapi-ui") (eq $key "controller")}}
+{{- if $value.service.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "<CHARTNAME>.fullname" $ }}-{{ $key }}-k8s
+  labels:
+    app: {{ template "<CHARTNAME>.name" $ }}-{{ $key }}
+    chart: {{ template "<CHARTNAME>.chart" $ }}
+    release: {{ $.Release.Name }}
+    heritage: {{$.Release.Service }}
+{{- with $value.annotations }}
+  annotations:
+{{ toYaml . | indent 4}}
+{{- end }}
+spec:
+  type: {{ $value.type }}
+  ports:
+  {{- if $value.ports }}
+  {{- with $value.ports }}
+  {{- range $label,$port := $value.ports }}
+    - port: {{ $port  }}
+      targetPort: {{ $label }}
+      protocol: TCP
+      name: {{ $label }}
+  {{- end }}
+  {{- end }}
+  {{- else }}
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+  {{- end }}
+  selector:
+    app: {{ template "<CHARTNAME>.name" $ }}-{{ $key }}
+    release: {{ $.Release.Name }}
+{{- end }}
+{{- end }}
+{{- end }}

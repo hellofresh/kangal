@@ -1,0 +1,321 @@
+{
+	"openapi": "3.0.0",
+	"info": {
+		"title": "Kangal",
+		"description": "These docs describe how to use the Kangal Proxy API.",
+		"license": {
+			"name": "MIT"
+		},
+		"version": "0.0.1"
+	},
+	"servers": [{
+		"url": "http://127.0.0.1:80",
+		"description": "Running proxy on localhost"
+	}],
+	"paths": {
+		"/load-test": {
+			"post": {
+				"tags": ["load-tests"],
+				"summary": "Create a new loadTest",
+				"operationId": "createLoadTest",
+				"requestBody": {
+					"content": {
+						"multipart/form-data": {
+							"schema": {
+								"$ref": "#/components/schemas/LoadTest"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"201": {
+						"description": "Expected response to a valid request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/LoadTestStatus"
+								}
+							}
+						}
+					},
+					"default": {
+						"description": "unexpected error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/load-test/{loadTestName}": {
+			"get": {
+				"tags": ["load-tests"],
+				"summary": "Info for a specific loadTest",
+				"operationId": "showLoadTestByName",
+				"parameters": [{
+					"name": "loadTestName",
+					"in": "path",
+					"description": "The name of the load test to retrieve",
+					"required": true,
+					"style": "simple",
+					"explode": false,
+					"schema": {
+						"type": "string"
+					}
+				}],
+				"responses": {
+					"200": {
+						"description": "Load Test Information",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/LoadTestStatus"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Load Test Information not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								}
+							}
+						}
+					},
+					"default": {
+						"description": "unexpected error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								}
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"tags": ["load-tests"],
+				"summary": "Delete specific loadTest",
+				"operationId": "deleteLoadTestByName",
+				"parameters": [{
+					"name": "loadTestName",
+					"in": "path",
+					"description": "The name of the load test to retrieve",
+					"required": true,
+					"style": "simple",
+					"explode": false,
+					"schema": {
+						"type": "string"
+					}
+				}],
+				"responses": {
+					"202": {
+						"description": "Deleted loadtest"
+					},
+					"default": {
+						"description": "unexpected error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/load-test/{loadTestName}/report": {
+			"get": {
+				"tags": ["load-tests"],
+				"summary": "Report for a specific loadTest",
+				"operationId": "showLoadTestReportByName",
+				"parameters": [{
+					"name": "loadTestName",
+					"in": "path",
+					"description": "The name of the load test to retrieve",
+					"required": true,
+					"style": "simple",
+					"explode": false,
+					"schema": {
+						"type": "string"
+					}
+				}],
+				"responses": {
+					"200": {
+						"description": "View the Load Test report",
+						"content": {
+							"text/html": {
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"description": "unexpected error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/load-test/{loadTestName}/logs": {
+			"get": {
+				"tags": ["load-tests"],
+				"summary": "Logs for a specific loadTest",
+				"operationId": "showLoadTestLogsByName",
+				"parameters": [{
+					"name": "loadTestName",
+					"in": "path",
+					"description": "The name of the load test to retrieve",
+					"required": true,
+					"style": "simple",
+					"explode": false,
+					"schema": {
+						"type": "string"
+					}
+				}],
+				"responses": {
+					"200": {
+						"description": "Show logs of the running test",
+						"content": {
+							"text/plain": {
+								"schema": {
+									"type": "string",
+									"example": "=== Starting test ===\n=== Running ===\nChecking output.log\n=== Waiting to finish ===\n=== Waiting to finish ===\n..."
+								}
+							}
+						}
+					},
+					"default": {
+						"description": "unexpected error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/metrics": {
+			"get": {
+				"tags": ["metrics"],
+				"summary": "Get Metrics",
+				"operationId": "getMetrics",
+				"responses": {
+					"200": {
+						"description": "time series data",
+						"content": {
+							"text/plain": {
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"description": "unexpected error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	},
+	"components": {
+		"schemas": {
+			"LoadTest": {
+				"required": ["distributedPods", "testFile", "type"],
+				"type": "object",
+				"properties": {
+					"distributedPods": {
+						"minimum": 1,
+						"type": "integer"
+					},
+					"envVars": {
+						"type": "array",
+						"items": {
+							"type": "string",
+							"format": "file"
+						}
+					},
+					"testData": {
+						"type": "array",
+						"items": {
+							"type": "string",
+							"format": "file"
+						}
+					},
+					"testFile": {
+						"type": "array",
+						"items": {
+							"type": "string",
+							"format": "file"
+						}
+					},
+					"type": {
+						"type": "string",
+						"enum": ["jMeter"]
+					}
+				}
+			},
+			"LoadTestStatus": {
+				"type": "object",
+				"properties": {
+					"distributedPods": {
+						"minimum": 1,
+						"type": "integer"
+					},
+					"loadtestName": {
+						"type": "string"
+					},
+					"phase": {
+						"type": "string",
+						"enum": ["creating", "starting", "running", "finished", "errored"]
+					},
+					"hasEnvVars": {
+						"type": "boolean"
+					},
+					"hasTestData": {
+						"type": "boolean"
+					},
+					"type": {
+						"type": "string",
+						"enum": ["jMeter"]
+					}
+				}
+			},
+			"Error": {
+				"required": ["error"],
+				"type": "object",
+				"properties": {
+					"error": {
+						"type": "string"
+					}
+				}
+			}
+		}
+	}
+}

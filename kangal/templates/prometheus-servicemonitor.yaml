@@ -1,0 +1,35 @@
+{{- range $key, $value := .Values }}
+{{- if or (eq $key "proxy") (eq $key "openapi-ui") (eq $key "controller")}}
+{{- if and $value.service.enabled $value.service.enablePrometheus }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: {{ template "<CHARTNAME>.name" $ }}-{{ $key }}
+    chart: {{ template "<CHARTNAME>.chart" $ }}
+    release: {{ $.Release.Name }}
+    heritage: {{ $.Release.Service }}
+    prometheus: kube-prometheus
+  name: {{ template "<CHARTNAME>.fullname" $ }}-{{ $key }}-k8s
+spec:
+  endpoints:
+  - interval: 30s
+    port: http
+    path: /metrics
+{{- if $value.enableNGINXContainerMetrics }}
+  - interval: 30s
+    path: /nginx-metrics
+    port: http
+{{- end }}
+  jobLabel: {{ template "<CHARTNAME>.name" $ }}-{{ $key }}
+  namespaceSelector:
+    matchNames:
+    - "{{ $.Release.Namespace }}"
+  selector:
+    matchLabels:
+      app: {{ template "<CHARTNAME>.name" $ }}-{{ $key }}
+  sampleLimit: {{ $value.sampleLimit | default 5000}}
+{{- end }}
+{{- end }}
+{{- end }}

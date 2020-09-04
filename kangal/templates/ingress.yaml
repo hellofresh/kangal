@@ -1,0 +1,51 @@
+{{- range $key, $value := .Values }}
+{{- if or (eq $key "proxy") (eq $key "openapi-ui") }}
+{{- if and ($value.ingress) ($value.service) }}
+{{- if and ($value.ingress.enabled) ($value.service.enabled) -}}
+{{- $fullName := include "<CHARTNAME>.fullname" $ -}}
+{{- $ingressPath := $value.ingress.path -}}
+{{- if not $value.ingress.hosts.http}}
+  {{ fail (printf "host must be defined for ingress: %s" $key ) }}
+{{- end}}
+---
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: {{ $fullName }}-{{ $key }}
+  labels:
+    app: {{ template "<CHARTNAME>.name" $ }}-{{ $key }}
+    chart: {{ template "<CHARTNAME>.chart" $ }}
+    release: {{ $.Release.Name }}
+    heritage: {{ $.Release.Service }}
+{{- with $value.annotations }}
+  annotations:
+{{ toYaml . | indent 4 }}
+{{- end }}
+spec:
+  rules:
+{{- range $labelPort, $hostValue := $value.ingress.hosts }}
+{{- if kindIs "string"  $hostValue }}
+{{ $host := regexReplaceAll "^https://|http://" $hostValue "${2}" }}
+    - host: {{ $host }}
+      http:
+        paths:
+          - path: {{ $ingressPath }}
+            backend:
+              serviceName: {{ $fullName }}-{{ $key }}-k8s
+              servicePort: {{ $labelPort }}
+{{- else }}
+{{- range $key,$host := $hostValue }}
+    - host: {{ $host }}
+      http:
+        paths:
+          - path: {{ $ingressPath }}
+            backend:
+              serviceName: {{ $fullName }}-{{ $key }}-k8s
+              servicePort: {{ $labelPort }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
