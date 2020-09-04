@@ -131,7 +131,7 @@ func TestIntegrationJMeter(t *testing.T) {
 				t.Log(fmt.Sprintf("get error from GetMasterPod: %s", err.Error()))
 				continue
 			}
-			if master.Items[0].Status.Phase == "Running" {
+			if len(master.Items) > 0 && master.Items[0].Status.Phase == "Running" {
 				break
 			}
 		}
