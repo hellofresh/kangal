@@ -10,6 +10,7 @@ on:
 
 jobs:
   lint:
+    name: Lint
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
@@ -17,7 +18,8 @@ jobs:
       with:
         version: v1.30
 
-  integration-test:
+  test:
+    name: Test
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
