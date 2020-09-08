@@ -55,7 +55,7 @@ func NewJMeterLoadTest(spec *apisLoadTestV1.LoadTestSpec, logger *zap.Logger) (*
 //RequestValidator validates request body
 func httpValidator(r *http.Request) url.Values {
 	rules := govalidator.MapData{
-		"type":            []string{"required", "in:JMeter"},
+		"type":            []string{"required", "in:JMeter,Fake"},
 		"distributedPods": []string{"required", "numeric_between:1,"},
 		"file:testFile":   []string{"required", "ext:jmx"},
 		"file:envVars":    []string{"ext:csv"},
@@ -73,14 +73,14 @@ func httpValidator(r *http.Request) url.Values {
 }
 
 // FromHTTPRequestToJMeter creates a JMeter loadtest struct
-func FromHTTPRequestToJMeter(r *http.Request, logger *zap.Logger) (*apisLoadTestV1.LoadTestSpec, error) {
+func FromHTTPRequestToJMeter(r *http.Request, ltType apisLoadTestV1.LoadTestType, logger *zap.Logger) (*apisLoadTestV1.LoadTestSpec, error) {
 	if e := httpValidator(r); len(e) > 0 {
 		logger.Debug("User request validation failed", zap.Any("errors", e))
 		return nil, fmt.Errorf(e.Encode())
 	}
 
 	spec := &apisLoadTestV1.LoadTestSpec{
-		Type: apisLoadTestV1.LoadTestTypeJMeter,
+		Type: ltType,
 	}
 
 	n, err := getDistributedPods(r)
@@ -120,7 +120,8 @@ func (jm *JMeter) validate() error {
 		return ErrEmptySpec
 	}
 
-	if jm.Spec.Type != apisLoadTestV1.LoadTestTypeJMeter {
+	// we use Fake loadtest type to simulate JMeter loadtest creation
+	if jm.Spec.Type != apisLoadTestV1.LoadTestTypeJMeter && jm.Spec.Type != apisLoadTestV1.LoadTestTypeFake {
 		return ErrRequiredJMeterType
 	}
 

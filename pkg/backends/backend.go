@@ -7,6 +7,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	coreListersV1 "k8s.io/client-go/listers/core/v1"
 
+	"github.com/hellofresh/kangal/pkg/backends/fake"
 	"github.com/hellofresh/kangal/pkg/backends/jmeter"
 	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
@@ -28,5 +29,10 @@ type LoadTestType interface {
 
 // NewLoadTest returns a new LoadTestType
 func NewLoadTest(loadTest *loadTestV1.LoadTest, kubeClientSet kubernetes.Interface, kangalClientSet clientSetV.Interface, logger *zap.Logger, namespacesLister coreListersV1.NamespaceLister, reportConfig report.Config, podAnnotations, namespaceAnnotations map[string]string) LoadTestType {
-	return jmeter.New(kubeClientSet, kangalClientSet, loadTest, logger, namespacesLister, reportConfig, podAnnotations, namespaceAnnotations)
+	switch ltType := loadTest.Spec.Type; ltType {
+	case loadTestV1.LoadTestTypeJMeter:
+		return jmeter.New(kubeClientSet, kangalClientSet, loadTest, logger, namespacesLister, reportConfig, podAnnotations, namespaceAnnotations)
+	default:
+		return fake.New(kubeClientSet, kangalClientSet, loadTest, logger, namespacesLister, reportConfig, podAnnotations, namespaceAnnotations)
+	}
 }

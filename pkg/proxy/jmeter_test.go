@@ -11,13 +11,14 @@ import (
 )
 
 func TestNewJMeterFromHTTPLoadTest(t *testing.T) {
-	r, err := buildMocFormReq(map[string]string{}, "", string(apisLoadTestV1.LoadTestTypeJMeter))
+	ltType := apisLoadTestV1.LoadTestTypeFake
+	r, err := buildMocFormReq(map[string]string{}, "", string(ltType))
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
 	}
 
-	loadTest, err := FromHTTPRequestToJMeter(r, zap.NewNop())
+	loadTest, err := FromHTTPRequestToJMeter(r, ltType, zap.NewNop())
 	require.Error(t, err)
 	assert.Nil(t, loadTest)
 }
@@ -210,6 +211,7 @@ func TestEnvVarFile(t *testing.T) {
 
 func TestInit(t *testing.T) {
 	expectedDP := int32(2)
+	ltType := apisLoadTestV1.LoadTestTypeJMeter
 	for _, ti := range []struct {
 		tag              string
 		requestFile      map[string]string
@@ -226,7 +228,7 @@ func TestInit(t *testing.T) {
 			},
 			distributedPods: "2",
 			expectedResponse: &apisLoadTestV1.LoadTestSpec{
-				Type:            apisLoadTestV1.LoadTestTypeJMeter,
+				Type:            ltType,
 				DistributedPods: &expectedDP,
 				TestFile:        "load-test file\n",
 				TestData:        "test data 1\ntest data 2\n",
@@ -281,13 +283,13 @@ func TestInit(t *testing.T) {
 	} {
 
 		t.Run(ti.tag, func(t *testing.T) {
-			request, err := buildMocFormReq(ti.requestFile, ti.distributedPods, string(apisLoadTestV1.LoadTestTypeJMeter))
+			request, err := buildMocFormReq(ti.requestFile, ti.distributedPods, string(ltType))
 			if err != nil {
 				t.Error(err)
 				t.FailNow()
 			}
 
-			spec, err := FromHTTPRequestToJMeter(request, zap.NewNop())
+			spec, err := FromHTTPRequestToJMeter(request, ltType, zap.NewNop())
 			assert.Equal(t, ti.expectedResponse, spec)
 
 			if ti.expectError {
@@ -312,6 +314,7 @@ func TestHash(t *testing.T) {
 }
 
 func TestJMeterCR(t *testing.T) {
+	ltType := apisLoadTestV1.LoadTestTypeJMeter
 	expectedDP := int32(2)
 	requestFiles := map[string]string{
 		envVars:  "testdata/valid/envvars.csv",
@@ -321,7 +324,7 @@ func TestJMeterCR(t *testing.T) {
 	distributedPods := "2"
 	jmeter := &JMeter{
 		Spec: &apisLoadTestV1.LoadTestSpec{
-			Type:            apisLoadTestV1.LoadTestTypeJMeter,
+			Type:            ltType,
 			DistributedPods: &expectedDP,
 			TestFile:        "load-test file\n",
 			TestData:        "test data 1\ntest data 2\n",
@@ -329,13 +332,13 @@ func TestJMeterCR(t *testing.T) {
 		},
 	}
 
-	request, err := buildMocFormReq(requestFiles, distributedPods, string(apisLoadTestV1.LoadTestTypeJMeter))
+	request, err := buildMocFormReq(requestFiles, distributedPods, string(ltType))
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
 	}
 
-	spec, err := FromHTTPRequestToJMeter(request, zap.NewNop())
+	spec, err := FromHTTPRequestToJMeter(request, ltType, zap.NewNop())
 	require.NoError(t, err)
 
 	jm, err := NewJMeterLoadTest(spec, zap.NewNop())
