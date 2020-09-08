@@ -288,7 +288,6 @@ func TestIntegrationGetLoadtest(t *testing.T) {
 	loadTestType := apisLoadTestV1.LoadTestTypeFake
 
 	expectedLoadtestName := "loadtest-for-gettest"
-	expectedPhase := "creating"
 	testFile := "testdata/valid/loadtest.jmx"
 	testData := "testdata/valid/testdata.csv"
 	var dat LoadTestStatus
@@ -327,7 +326,8 @@ func TestIntegrationGetLoadtest(t *testing.T) {
 
 	assert.Equal(t, currentNamespace, dat.Namespace)
 	assert.Equal(t, distributedPods, dat.DistributedPods)
-	assert.Equal(t, expectedPhase, dat.Phase)
+	assert.NotEmpty(t, dat.Phase)
+	assert.NotEqual(t, apisLoadTestV1.LoadTestErrored, dat.Phase)
 	assert.Equal(t, true, dat.HasTestData)
 }
 
@@ -336,7 +336,7 @@ func TestIntegrationGetLoadtestLogs(t *testing.T) {
 		t.Skip("skipping test in short mode")
 	}
 	distributedPods := int32(1)
-	loadTestType := apisLoadTestV1.LoadTestTypeJMeter
+	loadTestType := apisLoadTestV1.LoadTestTypeFake
 
 	expectedLoadtestName := "loadtest-for-getlogs-test"
 	expectedPhase := "running"
