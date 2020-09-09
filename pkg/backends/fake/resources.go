@@ -11,7 +11,7 @@ import (
 )
 
 // NewMasterJob creates a new job which runs the Fake master pod
-func (c *Fake) NewMasterJob(podAnnotations map[string]string) *batchV1.Job {
+func (c *Fake) NewMasterJob() *batchV1.Job {
 	// For fake provider we don't really create load test and just use alpine image with some sleep
 	// to simulate load test job. Please don't use Fake provider in production.
 	return &batchV1.Job{
@@ -23,7 +23,6 @@ func (c *Fake) NewMasterJob(podAnnotations map[string]string) *batchV1.Job {
 			OwnerReferences: []metaV1.OwnerReference{
 				*metaV1.NewControllerRef(c.loadTest, loadtestV1.SchemeGroupVersion.WithKind("LoadTest")),
 			},
-			Annotations: podAnnotations,
 		},
 		Spec: batchV1.JobSpec{
 			Template: coreV1.PodTemplateSpec{
@@ -31,7 +30,6 @@ func (c *Fake) NewMasterJob(podAnnotations map[string]string) *batchV1.Job {
 					Labels: map[string]string{
 						"app": "loadtest-master",
 					},
-					Annotations: podAnnotations,
 				},
 				Spec: coreV1.PodSpec{
 					RestartPolicy: "Never",

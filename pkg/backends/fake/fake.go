@@ -8,11 +8,8 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	coreListersV1 "k8s.io/client-go/listers/core/v1"
 
 	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
-	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
-	"github.com/hellofresh/kangal/pkg/report"
 )
 
 var (
@@ -22,27 +19,17 @@ var (
 
 // Fake enables the controller to run a LoadTest using Fake load provider which simulates load test
 type Fake struct {
-	kubeClientSet    kubernetes.Interface
-	kangalClientSet  clientSetV.Interface
-	loadTest         *loadTestV1.LoadTest
-	logger           *zap.Logger
-	namespacesLister coreListersV1.NamespaceLister
-	reportConfig     report.Config
-
-	podAnnotations, namespaceAnnotations map[string]string
+	kubeClient kubernetes.Interface
+	loadTest   *loadTestV1.LoadTest
+	logger     *zap.Logger
 }
 
 //New initializes new Fake provider handler to manage load test resources with Kangal Controller
-func New(kubeClientSet kubernetes.Interface, kangalClientSet clientSetV.Interface, lt *loadTestV1.LoadTest, logger *zap.Logger, namespacesLister coreListersV1.NamespaceLister, reportConfig report.Config, podAnnotations, namespaceAnnotations map[string]string) *Fake {
+func New(kubeClientSet kubernetes.Interface, lt *loadTestV1.LoadTest, logger *zap.Logger) *Fake {
 	return &Fake{
-		kubeClientSet:        kubeClientSet,
-		kangalClientSet:      kangalClientSet,
-		loadTest:             lt,
-		logger:               logger,
-		namespacesLister:     namespacesLister,
-		reportConfig:         reportConfig,
-		podAnnotations:       podAnnotations,
-		namespaceAnnotations: namespaceAnnotations,
+		kubeClient: kubeClientSet,
+		loadTest:   lt,
+		logger:     logger,
 	}
 }
 
@@ -71,7 +58,7 @@ func (c *Fake) CheckOrCreateResources(ctx context.Context) error {
 // CheckOrUpdateStatus check the Fake resources and calculate the current status of the LoadTest from them
 func (c *Fake) CheckOrUpdateStatus(ctx context.Context) error {
 	// Get the Namespace resource
-	namespace, err := c.namespacesLister.Get(c.loadTest.Status.Namespace)
+	namespace, err := c.kubeClient.CoreV1().Namespaces().Get(ctx, c.loadTest.Status.Namespace, metaV1.GetOptions{})
 	if err != nil {
 		// The LoadTest resource may no longer exist, in which case we stop
 		// processing.
@@ -85,16 +72,14 @@ func (c *Fake) CheckOrUpdateStatus(ctx context.Context) error {
 		return nil
 	}
 
-	job, err := c.kubeClientSet.BatchV1().Jobs(namespace.GetName()).Get(ctx, "loadtest-master", metaV1.GetOptions{})
+	job, err := c.kubeClient.BatchV1().Jobs(namespace.GetName()).Get(ctx, "loadtest-master", metaV1.GetOptions{})
 	if err != nil {
 		// The LoadTest resource may no longer exist, in which case we stop
 		// processing.
 		if errors.IsNotFound(err) {
-			_, err = c.kubeClientSet.BatchV1().Jobs(namespace.GetName()).Create(
+			_, err = c.kubeClient.BatchV1().Jobs(namespace.GetName()).Create(
 				ctx,
-				c.NewMasterJob(
-					c.podAnnotations,
-				),
+				c.NewMasterJob(),
 				metaV1.CreateOptions{},
 			)
 			return err

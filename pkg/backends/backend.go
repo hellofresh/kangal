@@ -33,6 +33,6 @@ func NewLoadTest(loadTest *loadTestV1.LoadTest, kubeClientSet kubernetes.Interfa
 	case loadTestV1.LoadTestTypeJMeter:
 		return jmeter.New(kubeClientSet, kangalClientSet, loadTest, logger, namespacesLister, reportConfig, podAnnotations, namespaceAnnotations)
 	default:
-		return fake.New(kubeClientSet, kangalClientSet, loadTest, logger, namespacesLister, reportConfig, podAnnotations, namespaceAnnotations)
+		return fake.New(kubeClientSet, loadTest, logger)
 	}
 }
