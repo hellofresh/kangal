@@ -45,7 +45,58 @@ func TestSetLoadTestDefaults(t *testing.T) {
 
 func TestCheckOrCreateResources(t *testing.T) {
 	lt := createFake()
-	assert.NoError(t, lt.CheckOrCreateResources(context.TODO()))
+	lt.loadTest.Status.Namespace = "test-namespace"
+
+	t.Run("namespace not found", func(t *testing.T) {
+		client := fake.NewSimpleClientset()
+		client.Fake.PrependReactor("get", "namespaces", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+			actionImpl := action.(k8stesting.GetActionImpl)
+			assert.Equal(t, "test-namespace", actionImpl.Name)
+			return true, nil, &StatusError{}
+		})
+
+		lt.kubeClient = client
+		assert.NoError(t, lt.CheckOrCreateResources(context.TODO()))
+	})
+
+	t.Run("job exists", func(t *testing.T) {
+		client := fake.NewSimpleClientset()
+		client.Fake.PrependReactor("get", "namespaces", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+			return true, &v1.Namespace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test-namespace",
+				},
+			}, nil
+		})
+		client.Fake.PrependReactor("get", "jobs", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+			actionImpl := action.(k8stesting.GetActionImpl)
+			assert.Equal(t, "loadtest-master", actionImpl.Name)
+			return true, &batchV1.Job{}, nil
+		})
+
+		lt.kubeClient = client
+		assert.NoError(t, lt.CheckOrCreateResources(context.TODO()))
+	})
+
+	t.Run("job doesn't exist, creating", func(t *testing.T) {
+		client := fake.NewSimpleClientset()
+		client.Fake.PrependReactor("get", "namespaces", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+			return true, &v1.Namespace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test-namespace",
+				},
+			}, nil
+		})
+		client.Fake.PrependReactor("get", "jobs", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+			return true, nil, &StatusError{}
+		})
+		client.Fake.PrependReactor("create", "jobs", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+			return true, &batchV1.Job{}, nil
+		})
+
+		lt.kubeClient = client
+		assert.NoError(t, lt.CheckOrCreateResources(context.TODO()))
+	})
 }
 
 func TestCheckOrUpdateStatus(t *testing.T) {
@@ -189,7 +240,7 @@ func TestCheckOrUpdateStatus(t *testing.T) {
 		assert.NoError(t, lt.CheckOrUpdateStatus(context.TODO()))
 	})
 
-	t.Run("job doesn't exist - create job", func(t *testing.T) {
+	t.Run("job doesn't exist", func(t *testing.T) {
 		client := fake.NewSimpleClientset()
 		client.Fake.PrependReactor("get", "namespaces", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
 			return true, &v1.Namespace{
@@ -203,11 +254,7 @@ func TestCheckOrUpdateStatus(t *testing.T) {
 			return true, nil, &StatusError{}
 		})
 
-		client.Fake.PrependReactor("create", "jobs", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
-			return true, nil, nil
-		})
-
 		lt.kubeClient = client
-		assert.NoError(t, lt.CheckOrUpdateStatus(context.TODO()))
+		assert.Error(t, lt.CheckOrUpdateStatus(context.TODO()))
 	})
 }
