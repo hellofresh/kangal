@@ -30,7 +30,7 @@ type LoadTestType interface {
 
 // NewLoadTest returns a new LoadTestType
 func NewLoadTest(loadTest *loadTestV1.LoadTest, kubeClientSet kubernetes.Interface, kangalClientSet clientSetV.Interface, logger *zap.Logger, namespacesLister coreListersV1.NamespaceLister, reportConfig report.Config, podAnnotations, namespaceAnnotations map[string]string) (LoadTestType, error) {
-	switch ltType := loadTest.Spec.Type; ltType {
+	switch loadTest.Spec.Type {
 	case loadTestV1.LoadTestTypeJMeter:
 		return jmeter.New(kubeClientSet, kangalClientSet, loadTest, logger, namespacesLister, reportConfig, podAnnotations, namespaceAnnotations), nil
 	case loadTestV1.LoadTestTypeFake:

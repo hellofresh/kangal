@@ -14,7 +14,7 @@ import (
 
 var (
 	sleepImage = "alpine"
-	imageTag   = "latest"
+	imageTag   = "3.12.0"
 )
 
 // Fake enables the controller to run a LoadTest using Fake load provider which simulates load test
@@ -54,37 +54,35 @@ func (c *Fake) SetDefaults() error {
 func (c *Fake) CheckOrCreateResources(ctx context.Context) error {
 	// Get the Namespace resource
 	namespace, err := c.kubeClient.CoreV1().Namespaces().Get(ctx, c.loadTest.Status.Namespace, metaV1.GetOptions{})
+	// The LoadTest resource may no longer exist, in which case we stop
+	// processing.
+	if errors.IsNotFound(err) {
+		return nil
+	}
 	if err != nil {
-		// The LoadTest resource may no longer exist, in which case we stop
-		// processing.
-		if errors.IsNotFound(err) {
-			return nil
-		}
+		return err
 	}
 	// Check that we created master job
 	_, err = c.kubeClient.BatchV1().Jobs(namespace.GetName()).Get(ctx, "loadtest-master", metaV1.GetOptions{})
-	if err != nil {
-		// if not then we create new resource
-		if errors.IsNotFound(err) {
-			_, err = c.kubeClient.BatchV1().Jobs(namespace.GetName()).Create(ctx, c.NewMasterJob(), metaV1.CreateOptions{})
-			return err
-		}
+	if errors.IsNotFound(err) {
+		_, err = c.kubeClient.BatchV1().Jobs(namespace.GetName()).Create(ctx, c.NewMasterJob(), metaV1.CreateOptions{})
 		return err
 	}
-	return nil
+	return err
 }
 
 // CheckOrUpdateStatus check the Fake resources and calculate the current status of the LoadTest from them
 func (c *Fake) CheckOrUpdateStatus(ctx context.Context) error {
 	// Get the Namespace resource
 	namespace, err := c.kubeClient.CoreV1().Namespaces().Get(ctx, c.loadTest.Status.Namespace, metaV1.GetOptions{})
+	// The LoadTest resource may no longer exist, in which case we stop
+	// processing.
+	if errors.IsNotFound(err) {
+		c.loadTest.Status.Phase = loadTestV1.LoadTestFinished
+		return nil
+	}
 	if err != nil {
-		// The LoadTest resource may no longer exist, in which case we stop
-		// processing.
-		if errors.IsNotFound(err) {
-			c.loadTest.Status.Phase = loadTestV1.LoadTestFinished
-			return nil
-		}
+		return err
 	}
 
 	if c.loadTest.Status.Phase == loadTestV1.LoadTestErrored {
