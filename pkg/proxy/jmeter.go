@@ -120,7 +120,7 @@ func (jm *JMeter) validate() error {
 		return ErrEmptySpec
 	}
 
-	// we use Fake loadtest type to simulate JMeter loadtest creation
+	// TODO: temporarily, load test creation will be moved in own proxy method
 	if jm.Spec.Type != apisLoadTestV1.LoadTestTypeJMeter && jm.Spec.Type != apisLoadTestV1.LoadTestTypeFake {
 		return ErrRequiredJMeterType
 	}

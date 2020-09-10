@@ -2,6 +2,7 @@ package backends
 
 import (
 	"context"
+	"fmt"
 
 	"go.uber.org/zap"
 	"k8s.io/client-go/kubernetes"
@@ -28,11 +29,12 @@ type LoadTestType interface {
 }
 
 // NewLoadTest returns a new LoadTestType
-func NewLoadTest(loadTest *loadTestV1.LoadTest, kubeClientSet kubernetes.Interface, kangalClientSet clientSetV.Interface, logger *zap.Logger, namespacesLister coreListersV1.NamespaceLister, reportConfig report.Config, podAnnotations, namespaceAnnotations map[string]string) LoadTestType {
+func NewLoadTest(loadTest *loadTestV1.LoadTest, kubeClientSet kubernetes.Interface, kangalClientSet clientSetV.Interface, logger *zap.Logger, namespacesLister coreListersV1.NamespaceLister, reportConfig report.Config, podAnnotations, namespaceAnnotations map[string]string) (LoadTestType, error) {
 	switch ltType := loadTest.Spec.Type; ltType {
 	case loadTestV1.LoadTestTypeJMeter:
-		return jmeter.New(kubeClientSet, kangalClientSet, loadTest, logger, namespacesLister, reportConfig, podAnnotations, namespaceAnnotations)
-	default:
-		return fake.New(kubeClientSet, loadTest, logger)
+		return jmeter.New(kubeClientSet, kangalClientSet, loadTest, logger, namespacesLister, reportConfig, podAnnotations, namespaceAnnotations), nil
+	case loadTestV1.LoadTestTypeFake:
+		return fake.New(kubeClientSet, loadTest, logger), nil
 	}
+	return nil, fmt.Errorf("load test provider not found: %s", loadTest.Spec.Type)
 }
