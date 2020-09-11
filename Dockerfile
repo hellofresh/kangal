@@ -2,7 +2,7 @@ FROM ubuntu:20.10
 
 RUN mkdir -p /etc/kangal
 
-ADD bin/kangal /bin/kangal
+ADD kangal /bin/kangal
 ADD openapi.json /etc/kangal/
 
 RUN chmod a+x /bin/kangal && \

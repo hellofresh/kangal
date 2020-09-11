@@ -3,7 +3,7 @@ project_name: kangal
 builds:
   - id: binary-build
     main: main.go
-    binary: bin/kangal
+    binary: kangal
     ldflags:
       - -s -w -X main.version={{.Version}}
     env:
@@ -19,7 +19,7 @@ dockers:
   - goos: linux
     goarch: amd64
     binaries:
-      - bin/kangal
+      - kangal
     image_templates:
       - "hellofreshtech/kangal:latest"
       - "hellofreshtech/kangal:{{.Tag}}"
