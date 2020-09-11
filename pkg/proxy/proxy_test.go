@@ -43,7 +43,7 @@ func TestRequestValidator(t *testing.T) {
 		t.FailNow()
 	}
 
-	spec, err := FromHTTPRequestToJMeter(request, zap.NewNop())
+	spec, err := FromHTTPRequestToJMeter(request, "JMeter", zap.NewNop())
 	require.NoError(t, err)
 
 	loadTest := &JMeter{

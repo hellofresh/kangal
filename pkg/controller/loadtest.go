@@ -294,7 +294,10 @@ func (c *Controller) syncHandler(key string) error {
 	loadTest := loadTestFromCache.DeepCopy()
 	defer c.updateLoadTestStatus(ctx, loadTest)
 
-	backend := backends.NewLoadTest(loadTest, c.kubeClientSet, c.kangalClientSet, c.logger, c.namespacesLister, c.cfg.Report, c.cfg.PodAnnotations, c.cfg.NamespaceAnnotations)
+	backend, err := backends.NewLoadTest(loadTest, c.kubeClientSet, c.kangalClientSet, c.logger, c.namespacesLister, c.cfg.Report, c.cfg.PodAnnotations, c.cfg.NamespaceAnnotations)
+	if err != nil {
+		return fmt.Errorf("failed to create new backend: %w", err)
+	}
 
 	// check or create namespace
 	err = c.checkOrCreateNamespace(ctx, loadTest)

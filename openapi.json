@@ -277,7 +277,7 @@
 					},
 					"type": {
 						"type": "string",
-						"enum": ["jMeter"]
+						"enum": ["jMeter", "Fake"]
 					}
 				}
 			},
@@ -303,7 +303,7 @@
 					},
 					"type": {
 						"type": "string",
-						"enum": ["jMeter"]
+						"enum": ["jMeter", "Fake"]
 					}
 				}
 			},

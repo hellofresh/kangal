@@ -103,6 +103,8 @@ type LoadTestType string
 const (
 	// LoadTestTypeJMeter tells the controller to run the loadtest using JMeter
 	LoadTestTypeJMeter LoadTestType = "JMeter"
+	// LoadTestTypeFake tells controller to use fake provider
+	LoadTestTypeFake LoadTestType = "Fake"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

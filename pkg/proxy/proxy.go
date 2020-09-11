@@ -69,8 +69,8 @@ func CreateLoadTestHandler(loadTestClient loadTestV1.LoadTestInterface, maxLoadT
 
 		var loadTest *apisLoadTestV1.LoadTest
 		switch ltType := getLoadTestType(r); ltType {
-		case apisLoadTestV1.LoadTestTypeJMeter:
-			jmSpec, err := FromHTTPRequestToJMeter(r, logger)
+		case apisLoadTestV1.LoadTestTypeJMeter, apisLoadTestV1.LoadTestTypeFake:
+			jmSpec, err := FromHTTPRequestToJMeter(r, ltType, logger)
 			if err != nil {
 				render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest, err.Error()))
 				return
