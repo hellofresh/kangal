@@ -1,0 +1,1 @@
+Kangal chart storage
