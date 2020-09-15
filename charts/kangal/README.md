@@ -3,9 +3,8 @@
 [Kangal](https://github.com/hellofresh/kangal) is a tool to spin up an isolated environment in a Kubernetes cluster to run performance tests using JMeter
 
 ## TL;DR;
-!!! **TODO:** change repo after migration to hub.helm.sh
 ```console
-$ helm repo add hf-charts https://
+$ helm repo add kangal https://hellofresh.github.io/kangal/
 $ helm install kangal
 ```
 

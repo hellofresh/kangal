@@ -29,4 +29,4 @@ dockers:
 
 release:
   extra_files:
-  - glob: kangal/crd.yaml
+  - glob: charts/kangal/crd.yaml
