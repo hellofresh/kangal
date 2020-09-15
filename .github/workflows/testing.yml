@@ -17,6 +17,13 @@ jobs:
     - uses: golangci/golangci-lint-action@v1
       with:
         version: v1.30
+# TODO: Enable when we have first chart release on master
+#    - name: Fetch history
+#      run: git fetch --prune --unshallow
+#    - uses: helm/chart-testing-action@master
+#      with:
+#        command: lint
+#        config: .github/ct.yaml
 
   test:
     name: Test
@@ -29,7 +36,7 @@ jobs:
     - uses: engineerd/setup-kind@v0.4.0
     - name: Install Kangal CRD
       run: |
-        kubectl apply -f kangal/crd.yaml
+        make apply-crd
     - name: Build
       run: |
         go mod vendor

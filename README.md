@@ -36,7 +36,7 @@ With Kangal, you can spin up an isolated environment in a Kubernetes cluster to 
 Kangal application uses Kubernetes [Custom Resources](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/).
 
 LoadTest custom resource (CR) is a main working entity.
-LoadTest custom resource definition (LoadTest CRD) can be found in [/kangal/crd.yaml](https://github.com/hellofresh/kangal/blob/master/kangal/crd.yaml).
+LoadTest custom resource definition (LoadTest CRD) can be found in [/kangal/crd.yaml](https://github.com/hellofresh/kangal/blob/master/charts/kangal/crd.yaml).
 
 Kangal application contains two main parts:
  - **Proxy** to create, delete and check load tests and reports via REST API requests
