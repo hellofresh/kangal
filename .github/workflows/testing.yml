@@ -13,37 +13,48 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
-    - uses: golangci/golangci-lint-action@v1
-      with:
-        version: v1.30
-# TODO: Enable when we have first chart release on master
-#    - name: Fetch history
-#      run: git fetch --prune --unshallow
-#    - uses: helm/chart-testing-action@master
-#      with:
-#        command: lint
-#        config: .github/ct.yaml
+      - name: Checkout
+        uses: actions/checkout@master
+
+      - name: Run golangci linter
+        uses: golangci/golangci-lint-action@v1
+        with:
+          version: v1.30
+
+      - name: Lint GoReleaser
+        uses: goreleaser/goreleaser-action@v2
+        with:
+          args: --skip-publish --snapshot
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   test:
     name: Test
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
-    - uses: actions/setup-go@v2
-      with:
-        go-version: '^1.15'
-    - uses: engineerd/setup-kind@v0.4.0
-    - name: Install Kangal CRD
-      run: |
-        make apply-crd
-    - name: Build
-      run: |
-        go mod vendor
-        make build
-    - name: Integration Test
-      env:
-        AWS_ENDPOINT_URL: "localhost:8081"
-        AWS_BUCKET_NAME: "kangal-test"
-      run: |
-        ./ci/integration-tests.sh
+      - name: Checkout
+        uses: actions/checkout@master
+
+      - name: Setup Golang
+        uses: actions/setup-go@v2
+        with:
+          go-version: '^1.15'
+
+      - name: Setup Kind
+        uses: engineerd/setup-kind@v0.4.0
+
+      - name: Install Kangal CRD
+        run: |
+          make apply-crd
+
+      - name: Build Kangal
+        run: |
+          go mod vendor
+          make build
+
+      - name: Run Integration Tests
+        env:
+          AWS_ENDPOINT_URL: "localhost:8081"
+          AWS_BUCKET_NAME: "kangal-test"
+        run: |
+          ./ci/integration-tests.sh
