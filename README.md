@@ -93,7 +93,7 @@ or [docker desktop](https://rominirani.com/tutorial-getting-started-with-kuberne
 
 2. Create required Kubernetes resource LoadTest CRD in your cluster
     ```bash
-    kubectl apply -f kangal/crd.yaml
+    kubectl apply -f charts/kangal/crd.yaml
     ```
     or just use:
     ```bash

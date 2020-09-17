@@ -4,8 +4,8 @@
 
 ## TL;DR;
 ```console
-$ helm repo add kangal https://hellofresh.github.io/kangal/
-$ helm install kangal
+$ helm repo add kangal https://hellofresh.github.io/kangal
+$ helm install kangal/kangal --name kangal
 ```
 
 ## Introduction
@@ -18,10 +18,11 @@ This chart bootstraps a [kangal](https://github.com/hellofresh/kangal) deploymen
 - Kubernetes 1.12+
 
 ## Installing the Chart
-To install the chart with the release name `kangal`:
+To install the chart with the release name `kangal` and specific [Kangal version](https://github.com/hellofresh/kangal/releases):
 
 ```console
-$ helm install kangal
+$ helm repo add kangal https://hellofresh.github.io/kangal
+$ helm install --name kangal --set proxy.image.tag=1.0.0 --set controller.image.tag=1.0.0 kangal/kangal
 ```
 
 The command deploys Kangal on the Kubernetes cluster in the default configuration.
@@ -58,7 +59,7 @@ Deployment specific configurations:
 
 | Parameter                              | Description                                                                  | Default                                              |
 |----------------------------------------|------------------------------------------------------------------------------|------------------------------------------------------|
-| `proxy.image.repository`               | Repository of Kangal-Proxy image                                             | `489198589229.dkr.ecr.eu-west-1.amazonaws.com/kangal`|
+| `proxy.image.repository`               | Repository of Kangal-Proxy image                                             | `hellofreshtech/kangal`|
 | `proxy.image.tag`                      | Tag of Kangal-Proxy image                                                    | `latest`                                             |
 | `proxy.image.pullPolicy`               | Pull policy of Kangal-Proxy image                                            | `Always`                                             |
 | `proxy.args`                           | Argument for `kangal` command                                                | `["proxy"]`                                          |
@@ -70,16 +71,16 @@ Deployment specific configurations:
 | `proxy.ingress.enabled`                | Ingress enabled flag                                                         | `true`                                               |
 | `proxy.ingress.annotations`            | Ingress annotations                                                          | `kubernetes.io/ingress.class: "nginx"`               |
 | `proxy.ingress.path`                   | Ingress path                                                                 | `/`                                                  |
-| `proxy.ingress.hosts`                  | Ingress hosts. *Required* if ingress is enabled                              | ``                                                   |
+| `proxy.ingress.hosts`                  | Ingress hosts. *Required* if ingress is enabled                              | `kangal-proxy.local`                                 |
 | `proxy.resources`                      | CPU/Memory resource requests/limits                                          | Default values of the cluster                        |
 | `proxy.nodeSelector`                   | Node labels for pod assignment                                               | `{}`                                                 |
 | `proxy.tolerations`                    | Tolerations for nodes that have taints on them                               | `[]`                                                 |
 | `proxy.affinity`                       | Pod scheduling preferences                                                   | `{}`                                                 |
 | `proxy.podAnnotations`                 | Annotation to be added to pod                                                | `{}`                                                 |
 | `proxy.containerPorts.http`            | The ports that the container listens to                                      | `8080`                                               |
-| `proxy.env.OPEN_API_SERVER_URL`        | *Required.* A URL to the OpenAPI specification server                        | `nil`                                                |
-| `proxy.env.OPEN_API_SERVER_DESCRIPTION`| *Required.* String describing the host designated by the Open API server URL | `nil`                                                |
-| `proxy.env.OPEN_API_UI_URL`            | A URL to the OpenAPI UI                                                      | `nil`                                                |
+| `proxy.env.OPEN_API_SERVER_URL`        | *Required.* A URL to the OpenAPI specification server                        | `https://kangal-openapi.local`                       |
+| `proxy.env.OPEN_API_SERVER_DESCRIPTION`| *Required.* String describing the host designated by the Open API server URL | `Kangal proxy default value`                         |
+| `proxy.env.OPEN_API_UI_URL`            | A URL to the OpenAPI UI                                                      | `https://kangal-openapi-ui.local`                    |
 
 ### Kangal-openapi-UI:
 
@@ -97,7 +98,7 @@ Deployment specific configurations:
 | `openapi-ui.ingress.enabled`          | Ingress enabled flag                             | `true`                                 |
 | `openapi-ui.ingress.annotations`      | Ingress annotations                              | `kubernetes.io/ingress.class: "nginx"` |
 | `openapi-ui.ingress.path`             | Ingress path                                     | `/`                                    |
-| `openapi-ui.ingress.hosts`            | Ingress hosts. *Required* if ingress is enabled  | ``                                     |
+| `openapi-ui.ingress.hosts`            | Ingress hosts. *Required* if ingress is enabled  | `kangal-openapi.local`                 |
 | `openapi-ui.resources`                | CPU/Memory resource requests/limits              | Default values of the cluster          |
 | `openapi-ui.nodeSelector`             | Node labels for pod assignment                   | `{}`                                   |
 | `openapi-ui.tolerations`              | Tolerations for nodes that have taints on them   | `[]`                                   |
@@ -105,14 +106,14 @@ Deployment specific configurations:
 | `openapi-ui.podAnnotations`           | Annotation to be added to pod                    | `{}`                                   |
 | `openapi-ui.containerPorts.http`      | The ports that the container listens to          | `8080`                                 |
 | `openapi-ui.env.PORT`                 | The PORT of API definition                       | `8080`                                 |
-| `openapi-ui.env.URL`                  | The URL pointing to API definition               | ``                                     |
+| `openapi-ui.env.URL`                  | The URL pointing to API definition               | `https://kangal.local/openapi`         |
 | `openapi-ui.env.VALIDATOR_URL`        | The URL to spec validator                        | `null`                                 |
 
 ### Kangal-controller
 
 | Parameter                               | Description                                                   | Default                                              |
 |-----------------------------------------|---------------------------------------------------------------|------------------------------------------------------|
-| `controller.image.repository`           | Repository of Kangal-API image                                | `489198589229.dkr.ecr.eu-west-1.amazonaws.com/kangal`|
+| `controller.image.repository`           | Repository of Kangal-API image                                | `hellofreshtech/kangal`|
 | `controller.image.tag`                  | Tag of Kangal-API image                                       | `latest`                                             |
 | `controller.image.pullPolicy`           | Pull policy of Kangal-API image                               | `Always`                                             |
 | `controller.args`                       | Argument for `kangal` command                                 | `["controller"]`                                     |
