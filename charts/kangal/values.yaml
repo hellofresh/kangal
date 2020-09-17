@@ -9,14 +9,13 @@ proxy:
   # Number of pods to run
   replicaCount: 2
 
-  #TODO: change repo after migration to hellofreshtech/kangal
   image:
-    repository: 489198589229.dkr.ecr.eu-west-1.amazonaws.com/kangal
+    repository: hellofreshtech/kangal
     tag: latest
     pullPolicy: Always
 
   # Arguments for kangal command
-  args: [ "proxy" ]
+  args: ["proxy"]
 
   service:
     enabled: true
@@ -31,7 +30,7 @@ proxy:
       kubernetes.io/ingress.class: "nginx"
     path: /
     hosts:
-      http: ""
+      http: "kangal-proxy.local"
 
   resources: {}
     # We usually recommend not to specify default resources and to leave this as a conscious
@@ -75,22 +74,21 @@ proxy:
   # Environmental variables to set in api
   env:
     # OpenAPI specification specific parameters
-    OPEN_API_SERVER_URL: ""
-    OPEN_API_SERVER_DESCRIPTION: ""
-    OPEN_API_UI_URL: ""
+    OPEN_API_SERVER_URL: "https://kangal-openapi.local"
+    OPEN_API_SERVER_DESCRIPTION: "Kangal proxy default value"
+    OPEN_API_UI_URL: "https://kangal-openapi-ui.local"
 
 controller:
   # Number of pods to run
   replicaCount: 1
 
-  #TODO: change repo after migration to hellofreshtech/kangal
   image:
-    repository: 489198589229.dkr.ecr.eu-west-1.amazonaws.com/kangal
+    repository: hellofreshtech/kangal
     tag: latest
     pullPolicy: Always
 
   # Arguments for kangal command
-  args: [ "controller" ]
+  args: ["controller"]
 
   service:
     enabled: true
@@ -129,7 +127,6 @@ openapi-ui:
   # Number of pods to run
   replicaCount: 2
 
-  #TODO: change repo after migration to hellofreshtech/kangal
   image:
     repository: swaggerapi/swagger-ui
     tag: latest
@@ -147,7 +144,7 @@ openapi-ui:
       kubernetes.io/ingress.class: "nginx"
     path: /
     hosts:
-      http: ""
+      http: "kangal-openapi.local"
   # Annotations to be added to pod
   podAnnotations: {}
 
@@ -158,8 +155,9 @@ openapi-ui:
   # Environmental variables to set in openapi-ui
   env:
     PORT: "8080"
-    URL: ""
+    URL: "https://kangal.local/openapi"
     VALIDATOR_URL: "null"
+    OPEN_API_SERVER_URL: "https://kangal-openapi-ui.local"
 
 configMap:
   #  Those values needed to send Kangal reports to external object storage

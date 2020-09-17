@@ -28,6 +28,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Fetch history for helm linter
+        run: git fetch --prune --unshallow
+
+      - name: Lint Helm
+        uses: helm/chart-testing-action@v1.0.0
+        with:
+          image: quay.io/helmpack/chart-testing:v2.4.1
+          command: lint
+          config: .github/ct.yaml
+
   test:
     name: Test
     runs-on: ubuntu-latest

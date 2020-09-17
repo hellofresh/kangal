@@ -1,0 +1,5 @@
+# This file is used in testing/ling jobs to lint Helm chart
+# More info: https://github.com/helm/chart-testing
+helm-extra-args: --timeout 600
+check-version-increment: true
+chart-yaml-schema: .github/chart_schema.yaml
