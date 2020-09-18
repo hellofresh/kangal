@@ -1,7 +1,7 @@
 # Kangal
 
 Welcome to the Kangal - Kubernetes and Go Automatic Loader!
-To start using Kangal you will need to install it in your cluster. Helm installation guide is [here](https://github.com/hellofresh/kangal/blob/master/charts/kangal/README.md).
+To start using Kangal you will need to install it in your cluster. Installation guide using Helm can be found [here](https://github.com/hellofresh/kangal/blob/master/charts/kangal/README.md).
 In this section you can find information about load generator and how to write tests.
 
     
