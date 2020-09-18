@@ -1,16 +1,10 @@
 # Kangal
 
 Welcome to the Kangal - Kubernetes and Go Automatic Loader!
-To start using Kangal you will need to install it in your cluster. The guide is [here](README.md#to-start-using-kangal).
+To start using Kangal you will need to install it in your cluster. Installation guide using Helm can be found [here](https://github.com/hellofresh/kangal/blob/master/charts/kangal/README.md).
 In this section you can find information about load generator and how to write tests.
 
-## Quick Links
-- [How is load generated?](#how-is-load-generated)
-- [Usage examples](#usage-examples)
-    - [Tests with test data](#tests-with-test-data)
-    - [Tests with environment variables](#tests-with-environment-variables)
     
-
 ### How is load generated?
 Currently the main load generator used in Kangal is JMeter v5.0 r1840935. JMeter is a powerfull tool which can be used for different performance testing tasks. 
 Please read [Load generator in Kangal](Load-generator-in-kangal.md) for further details.

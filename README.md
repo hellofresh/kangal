@@ -1,4 +1,5 @@
 # Kangal - Automatic loader
+[![Artifact HUB](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/kangal)](https://artifacthub.io/packages/search?repo=kangal)
 <p align="center">  
 <img src="./kangal_logo.svg" width="320">
 </p>
@@ -93,7 +94,7 @@ or [docker desktop](https://rominirani.com/tutorial-getting-started-with-kuberne
 
 2. Create required Kubernetes resource LoadTest CRD in your cluster
     ```bash
-    kubectl apply -f kangal/crd.yaml
+    kubectl apply -f charts/kangal/crd.yaml
     ```
     or just use:
     ```bash
