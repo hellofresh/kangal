@@ -126,7 +126,6 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 		HasEnvVars:      len(loadTest.Spec.EnvVars) != 0,
 		HasTestData:     loadTest.Spec.TestData != "",
 	})
-
 }
 
 //Delete deletes load test CR

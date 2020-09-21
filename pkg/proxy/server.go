@@ -47,9 +47,23 @@ func RunServer(ctx context.Context, cfg Config, rr Runner) error {
 	// ---------------------------------------------------------------------- //
 	// LoadTest Proxy CRUD
 	// ---------------------------------------------------------------------- //
-	r.Post("/load-test", proxyHandler.Create)
-	r.Get("/load-test/{id}", proxyHandler.Get)
-	r.Delete("/load-test/{id}", proxyHandler.Delete)
+	loadtestRoute := "/load-test"
+	loadtestRouteWithID := fmt.Sprintf("%s/{id}", loadtestRoute)
+
+	r.Method(http.MethodPost,
+		loadtestRoute,
+		ochttp.WithRouteTag(http.HandlerFunc(proxyHandler.Create), loadtestRoute),
+	)
+
+	r.Method(http.MethodGet,
+		loadtestRouteWithID,
+		ochttp.WithRouteTag(http.HandlerFunc(proxyHandler.Get), loadtestRouteWithID),
+	)
+
+	r.Method(http.MethodDelete,
+		loadtestRouteWithID,
+		ochttp.WithRouteTag(http.HandlerFunc(proxyHandler.Delete), loadtestRouteWithID),
+	)
 
 	// ---------------------------------------------------------------------- //
 	// LoadTest API Documentation
