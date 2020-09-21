@@ -198,10 +198,9 @@ func (p *Proxy) GetLogs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	namespace := loadTest.Status.Namespace
-	// if no namespace was created we can not get errors
-	// TODO: maybe this should just be empty and not an error?
+	// if no namespace was created we can not get logs
 	if namespace == "" {
-		render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest, "got empty request"))
+		render.Render(w, r, cHttp.ErrResponse(http.StatusNoContent, "no logs found in load test resources"))
 		return
 	}
 
