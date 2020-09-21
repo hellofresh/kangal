@@ -96,7 +96,7 @@ func WaitLoadtest(clientSet clientSetV.Clientset, loadtestName string) error {
 		return err
 	}
 
-	return err
+	return nil
 }
 
 // DeleteLoadTest deletes a load test CR
