@@ -87,6 +87,9 @@ func WaitLoadtest(clientSet clientSetV.Clientset, loadtestName string) error {
 	watchObj, err := clientSet.KangalV1().LoadTests().Watch(ctx, metaV1.ListOptions{
 		FieldSelector: fmt.Sprintf("metadata.name=%s", loadtestName),
 	})
+	if err != nil {
+		return err
+	}
 
 	_, err = watchtools.UntilWithoutRetry(ctx, watchObj, WaitLoadtestFunc)
 	if err != nil {
