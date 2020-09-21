@@ -24,6 +24,9 @@ spec:
           type: string
           description: The current phase of the loadtest
           jsonPath: .status.phase
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
       # subresources describes the subresources for custom resources.
       subresources:
         # status enables the status subresource.
