@@ -30,6 +30,7 @@ type Runner struct {
 // RunServer runs Kangal proxy API
 func RunServer(ctx context.Context, cfg Config, rr Runner) error {
 
+	proxyHandler := NewProxy(cfg.MaxLoadTestsRun, rr.LoadTestClient, rr.KubeClient)
 	// Start instrumented server
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
@@ -44,32 +45,19 @@ func RunServer(ctx context.Context, cfg Config, rr Runner) error {
 	r.Handle("/metrics", rr.Exporter)
 
 	// ---------------------------------------------------------------------- //
+	// LoadTest Proxy CRUD
+	// ---------------------------------------------------------------------- //
+	r.Post("/load-test", proxyHandler.Create)
+	r.Get("/load-test/{id}", proxyHandler.Get)
+	r.Delete("/load-test/{id}", proxyHandler.Delete)
+
+	// ---------------------------------------------------------------------- //
 	// LoadTest API Documentation
 	// ---------------------------------------------------------------------- //
 	r.Get("/", OpenAPIUIHandler(cfg.OpenAPI))
 	r.Get("/openapi", OpenAPISpecHandler(cfg.OpenAPI))
 
-	// ---------------------------------------------------------------------- //
-	// LoadTest Proxy CRUD
-	// ---------------------------------------------------------------------- //
-	loadtestRoute := "/load-test"
-	r.Method(http.MethodPost,
-		loadtestRoute,
-		ochttp.WithRouteTag(CreateLoadTestHandler(rr.LoadTestClient, cfg.MaxLoadTestsRun), loadtestRoute),
-	)
-
-	loadtestRouteWithID := fmt.Sprintf("%s/{id}", loadtestRoute)
-	r.Method(http.MethodGet,
-		loadtestRouteWithID,
-		ochttp.WithRouteTag(GetLoadTestHandler(rr.LoadTestClient), loadtestRouteWithID),
-	)
-
-	r.Method(http.MethodDelete,
-		loadtestRouteWithID,
-		ochttp.WithRouteTag(DeleteLoadTestHandler(rr.LoadTestClient), loadtestRouteWithID),
-	)
-
-	r.Get("/load-test/{id}/logs", LoadTestGetLogsHandler(rr.KubeClient, rr.LoadTestClient))
+	r.Get("/load-test/{id}/logs", proxyHandler.GetLogs)
 
 	// ---------------------------------------------------------------------- //
 	// LoadTest reports
