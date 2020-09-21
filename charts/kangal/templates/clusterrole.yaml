@@ -21,6 +21,7 @@ rules:
     resources:
       - loadtests
     verbs:
+      - update
       - create
       - get
       - watch
