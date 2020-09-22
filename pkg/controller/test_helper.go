@@ -67,30 +67,16 @@ func readFile(filename string) (string, error) {
 	return str, nil
 }
 
-func waitLoadtestFunc(event watch.Event) (bool, error) {
-	switch event.Type {
-	case watch.Added:
-		return true, nil
-	case watch.Modified:
-		return true, nil
-	default:
-		return false, nil
-	}
-}
-
 // WaitLoadtest waits until Loadtest resources exists
 func WaitLoadtest(clientSet clientSetV.Clientset, loadtestName string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
-	defer cancel()
-
-	watchObj, err := clientSet.KangalV1().LoadTests().Watch(ctx, metaV1.ListOptions{
+	watchObj, err := clientSet.KangalV1().LoadTests().Watch(context.Background(), metaV1.ListOptions{
 		FieldSelector: fmt.Sprintf("metadata.name=%s", loadtestName),
 	})
 	if err != nil {
 		return err
 	}
 
-	_, err = watchtools.UntilWithoutRetry(ctx, watchObj, waitLoadtestFunc)
+	_, err = WaitResource(watchObj, (WaitCondition{}).LoadtestRunning)
 
 	return err
 }
@@ -237,6 +223,51 @@ func BuildConfig() (*rest.Config, error) {
 		return nil, err
 	}
 	return config, nil
+}
+
+type WaitCondition struct {
+}
+
+// waits until get Added
+func (WaitCondition) Added(event watch.Event) (bool, error) {
+	if watch.Added == event.Type {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+// waits until Pod are with status phase running
+func (WaitCondition) PodRunning(event watch.Event) (bool, error) {
+	if coreV1.PodRunning == event.Object.(*coreV1.Pod).Status.Phase {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (WaitCondition) LoadtestRunning(event watch.Event) (bool, error) {
+	if apisLoadTestV1.LoadTestRunning == event.Object.(*apisLoadTestV1.LoadTest).Status.Phase {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (WaitCondition) LoadtestFinished(event watch.Event) (bool, error) {
+	if apisLoadTestV1.LoadTestFinished == event.Object.(*apisLoadTestV1.LoadTest).Status.Phase {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+// WaitResource waits until a kubernetes resources to match a condition
+func WaitResource(obj watch.Interface, condFunc watchtools.ConditionFunc) (*watch.Event, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
+	defer cancel()
+
+	return watchtools.UntilWithoutRetry(ctx, obj, condFunc)
 }
 
 // WaitForResource sleeps to wait kubernetes resources to be created

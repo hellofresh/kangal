@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	loadtestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
@@ -18,12 +19,14 @@ func TestIntegrationKangalController(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test in short mode")
 	}
+
 	t.Log()
+
+	expectedLoadtestName := "loadtest-fake-integration"
 
 	// TODO: those attributes should gone once we do improvements on proxy side and move kube_client to own kube package
 	distributedPods := int32(1)
 	loadtestType := loadtestV1.LoadTestTypeFake
-	expectedLoadtestName := "loadtest-fake-integration"
 	testFile := "testdata/valid/loadtest.jmx"
 	envVars := "testdata/valid/envvars.csv"
 	testData := "testdata/valid/testdata.csv"
@@ -32,11 +35,11 @@ func TestIntegrationKangalController(t *testing.T) {
 
 	err := CreateLoadtest(clientSet, distributedPods, expectedLoadtestName, testFile, testData, envVars, loadtestType)
 	require.NoError(t, err)
+
 	t.Cleanup(func() {
 		err := DeleteLoadTest(clientSet, expectedLoadtestName, t.Name())
 		assert.NoError(t, err)
 	})
-	var ltNamespace *coreV1.Namespace
 
 	t.Run("Checking the name of created loadtest", func(t *testing.T) {
 		createdName, err := GetLoadtest(clientSet, expectedLoadtestName)
@@ -45,47 +48,51 @@ func TestIntegrationKangalController(t *testing.T) {
 	})
 
 	t.Run("Checking namespace is created", func(t *testing.T) {
-		for i := 0; i < 5; i++ {
-			WaitForResource(LongWaitSec)
-			ltNamespace, _ = client.CoreV1().Namespaces().Get(context.Background(), expectedLoadtestName, metaV1.GetOptions{})
-			if ltNamespace != nil {
-				break
-			}
-		}
-		// loadtest namespace name is equal to loadtest name
-		require.Equal(t, expectedLoadtestName, ltNamespace.Name)
+		watchObj, _ := client.CoreV1().Namespaces().Watch(context.Background(), metaV1.ListOptions{
+			FieldSelector: fmt.Sprintf("metadata.name=%s", expectedLoadtestName),
+		})
+
+		watchEvent, err := WaitResource(watchObj, (WaitCondition{}).Added)
+		require.NoError(t, err)
+
+		namespace := watchEvent.Object.(*coreV1.Namespace)
+		require.Equal(t, expectedLoadtestName, namespace.Name)
 	})
 
 	t.Run("Checking master pod is created", func(t *testing.T) {
-		var master coreV1.PodList
-		for i := 0; i < 5; i++ {
-			WaitForResource(ShortWaitSec)
-			master, _ = GetMasterPod(client.CoreV1(), expectedLoadtestName)
-			if master.Items[0].Status.Phase == "Running" {
-				break
-			}
-		}
-		assert.Equal(t, "Running", string(master.Items[0].Status.Phase))
+		watchObj, _ := client.CoreV1().Pods(expectedLoadtestName).Watch(context.Background(), metaV1.ListOptions{
+			LabelSelector: "app=loadtest-master",
+		})
+
+		watchEvent, err := WaitResource(watchObj, (WaitCondition{}).PodRunning)
+		require.NoError(t, err)
+
+		pod := watchEvent.Object.(*coreV1.Pod)
+		assert.Equal(t, coreV1.PodRunning, pod.Status.Phase)
 	})
 
 	t.Run("Checking loadtest is in Running state", func(t *testing.T) {
-		var phase string
-		phase, err = GetLoadtestPhase(clientSet, expectedLoadtestName)
+		watchObj, _ := clientSet.KangalV1().LoadTests().Watch(context.Background(), metaV1.ListOptions{
+			FieldSelector: fmt.Sprintf("metadata.name=%s", expectedLoadtestName),
+		})
+
+		watchEvent, err := WaitResource(watchObj, (WaitCondition{}).LoadtestRunning)
 		require.NoError(t, err)
-		assert.Equal(t, string(loadtestV1.LoadTestRunning), phase)
+
+		loadtest := watchEvent.Object.(*loadtestV1.LoadTest)
+		assert.Equal(t, loadtestV1.LoadTestRunning, loadtest.Status.Phase)
 	})
 
 	t.Run("Checking loadtest is in Finished state", func(t *testing.T) {
 		// We do run fake provider which has 10 sec sleep before finishing job
-		var phase string
-		for i := 0; i < 5; i++ {
-			WaitForResource(LongWaitSec)
-			phase, err = GetLoadtestPhase(clientSet, expectedLoadtestName)
-			require.NoError(t, err)
-			if phase == string(loadtestV1.LoadTestFinished) {
-				break
-			}
-		}
-		assert.Equal(t, string(loadtestV1.LoadTestFinished), phase)
+		watchObj, _ := clientSet.KangalV1().LoadTests().Watch(context.Background(), metaV1.ListOptions{
+			FieldSelector: fmt.Sprintf("metadata.name=%s", expectedLoadtestName),
+		})
+
+		watchEvent, err := WaitResource(watchObj, (WaitCondition{}).LoadtestFinished)
+		require.NoError(t, err)
+
+		loadtest := watchEvent.Object.(*loadtestV1.LoadTest)
+		assert.Equal(t, loadtestV1.LoadTestFinished, loadtest.Status.Phase)
 	})
 }
