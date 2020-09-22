@@ -20,8 +20,6 @@ func TestIntegrationKangalController(t *testing.T) {
 		t.Skip("skipping test in short mode")
 	}
 
-	t.Log()
-
 	expectedLoadtestName := "loadtest-fake-integration"
 
 	// TODO: those attributes should gone once we do improvements on proxy side and move kube_client to own kube package
