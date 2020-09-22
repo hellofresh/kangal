@@ -256,7 +256,7 @@ func (WaitCondition) LoadtestRunning(event watch.Event) (bool, error) {
 	return false, nil
 }
 
-// LoadtestRunning waits until Loadtest are with status phase finished
+// LoadtestFinished waits until Loadtest are with status phase finished
 func (WaitCondition) LoadtestFinished(event watch.Event) (bool, error) {
 	if apisLoadTestV1.LoadTestFinished == event.Object.(*apisLoadTestV1.LoadTest).Status.Phase {
 		return true, nil
