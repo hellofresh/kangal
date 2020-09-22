@@ -67,8 +67,7 @@ func readFile(filename string) (string, error) {
 	return str, nil
 }
 
-// WaitLoadtestFunc handles conditional watch events
-func WaitLoadtestFunc(event watch.Event) (bool, error) {
+func waitLoadtestFunc(event watch.Event) (bool, error) {
 	switch event.Type {
 	case watch.Added:
 		return true, nil
@@ -91,12 +90,9 @@ func WaitLoadtest(clientSet clientSetV.Clientset, loadtestName string) error {
 		return err
 	}
 
-	_, err = watchtools.UntilWithoutRetry(ctx, watchObj, WaitLoadtestFunc)
-	if err != nil {
-		return err
-	}
+	_, err = watchtools.UntilWithoutRetry(ctx, watchObj, waitLoadtestFunc)
 
-	return nil
+	return err
 }
 
 // DeleteLoadTest deletes a load test CR
