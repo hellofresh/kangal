@@ -9,9 +9,11 @@ import (
 
 	coreV1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/watch"
 	typeV1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	watchtools "k8s.io/client-go/tools/watch"
 
 	apisLoadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
@@ -63,6 +65,34 @@ func readFile(filename string) (string, error) {
 	}
 	str := string(b)
 	return str, nil
+}
+
+func waitLoadtestFunc(event watch.Event) (bool, error) {
+	switch event.Type {
+	case watch.Added:
+		return true, nil
+	case watch.Modified:
+		return true, nil
+	default:
+		return false, nil
+	}
+}
+
+// WaitLoadtest waits until Loadtest resources exists
+func WaitLoadtest(clientSet clientSetV.Clientset, loadtestName string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
+	defer cancel()
+
+	watchObj, err := clientSet.KangalV1().LoadTests().Watch(ctx, metaV1.ListOptions{
+		FieldSelector: fmt.Sprintf("metadata.name=%s", loadtestName),
+	})
+	if err != nil {
+		return err
+	}
+
+	_, err = watchtools.UntilWithoutRetry(ctx, watchObj, waitLoadtestFunc)
+
+	return err
 }
 
 // DeleteLoadTest deletes a load test CR
