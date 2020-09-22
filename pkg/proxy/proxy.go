@@ -258,7 +258,7 @@ func convertTestName(n string) string {
 func doRequest(req *restClient.Request) ([]byte, error) {
 	stream, err := req.Stream(context.Background())
 	if err != nil {
-		return []byte{}, fmt.Errorf("error in opening stream: %w", err)
+		return nil, fmt.Errorf("error in opening stream: %w", err)
 	}
 	defer stream.Close()
 
