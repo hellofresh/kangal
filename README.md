@@ -125,5 +125,9 @@ or [docker desktop](https://rominirani.com/tutorial-getting-started-with-kuberne
     ./kangal proxy --kubeconfig=$KUBECONFIG
     ```
 
+## Contributing
+
+To start contributing, please check [CONTRIBUTING](CONTRIBUTING.md).
+
 ## Support
 If you need support, start with the [Troubleshooting guide](docs/Troubleshooting.md), and work your way through the process that we've outlined.
