@@ -136,7 +136,7 @@ func (p *Proxy) Delete(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	ltID := chi.URLParam(r, loadTestID)
-	logger.Debug("Deleting loadtest", zap.Any("ltID", ltID))
+	logger.Debug("Deleting loadtest", zap.String("ltID", ltID))
 
 	err := loadtest.DeleteLoadTestCR(ctx, p.loadTestClient, ltID, logger)
 	if err != nil {
