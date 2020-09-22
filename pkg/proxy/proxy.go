@@ -265,7 +265,7 @@ func doRequest(req *restClient.Request) ([]byte, error) {
 	buf := new(bytes.Buffer)
 	_, err = io.Copy(buf, stream)
 	if err != nil {
-		return []byte{}, errors.New("error in copy information from podLogs to buf")
+		return nil, fmt.Errorf("error in copy information from podLogs to buf: %w", err)
 	}
 
 	return buf.Bytes(), nil
