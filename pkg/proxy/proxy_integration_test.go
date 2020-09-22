@@ -51,16 +51,17 @@ func TestIntegrationCreateLoadtestFormPostAllFiles(t *testing.T) {
 
 	resp, err := http.Post(fmt.Sprintf("http://localhost:%d/load-test", HTTPPort), request.contentType, request.body)
 	require.NoError(t, err, "Could not create POST request")
-	//added sleep to wait for kangal controller to create a CR from post
-	time.Sleep(1 * time.Second)
-
 	require.Equal(t, http.StatusCreated, resp.StatusCode)
+
 	createdLoadTestName := parseBody(resp)
 
 	t.Cleanup(func() {
 		err := testhelper.DeleteLoadTest(clientSet, createdLoadTestName, t.Name())
 		assert.NoError(t, err)
 	})
+
+	err = testhelper.WaitLoadtest(clientSet, createdLoadTestName)
+	require.NoError(t, err)
 
 	data, err := testhelper.GetLoadtestTestdata(clientSet, createdLoadTestName)
 	require.NoError(t, err)
