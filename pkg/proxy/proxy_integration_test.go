@@ -1,18 +1,21 @@
 package proxy
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	coreV1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
 	testhelper "github.com/hellofresh/kangal/pkg/controller"
@@ -28,7 +31,6 @@ var (
 func TestMain(m *testing.M) {
 	clientSet = kubeTestClient()
 	res := m.Run()
-
 	os.Exit(res)
 }
 
@@ -36,6 +38,7 @@ func TestIntegrationCreateLoadtestFormPostAllFiles(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test in short mode")
 	}
+
 	distributedPods := "2"
 	loadtestType := apisLoadTestV1.LoadTestTypeFake
 	testdataString := "test data 1\ntest data 2\n"
@@ -47,37 +50,49 @@ func TestIntegrationCreateLoadtestFormPostAllFiles(t *testing.T) {
 		testData: "testdata/valid/testdata.csv",
 	}
 
-	request, err := createRequestBody(requestFiles, distributedPods, string(loadtestType))
+	var createdLoadTestName string
 
-	resp, err := http.Post(fmt.Sprintf("http://localhost:%d/load-test", HTTPPort), request.contentType, request.body)
-	require.NoError(t, err, "Could not create POST request")
-	require.Equal(t, http.StatusCreated, resp.StatusCode)
+	t.Run("Creates the loadtest", func(t *testing.T) {
+		request, err := createRequestBody(requestFiles, distributedPods, string(loadtestType))
+		require.NoError(t, err)
 
-	createdLoadTestName := parseBody(resp)
+		resp, err := http.Post(fmt.Sprintf("http://localhost:%d/load-test", HTTPPort), request.contentType, request.body)
+		require.NoError(t, err, "Could not create POST request")
+		require.Equal(t, http.StatusCreated, resp.StatusCode)
+
+		createdLoadTestName = parseBody(resp)
+	})
 
 	t.Cleanup(func() {
 		err := testhelper.DeleteLoadTest(clientSet, createdLoadTestName, t.Name())
 		assert.NoError(t, err)
 	})
 
-	err = testhelper.WaitLoadtest(clientSet, createdLoadTestName)
-	require.NoError(t, err)
+	t.Run("Checking the loadtest is created", func(t *testing.T) {
+		err := testhelper.WaitLoadtest(clientSet, createdLoadTestName)
+		require.NoError(t, err)
+	})
 
-	data, err := testhelper.GetLoadtestTestdata(clientSet, createdLoadTestName)
-	require.NoError(t, err)
-	assert.Equal(t, testdataString, data)
+	t.Run("Checking if the loadtest testData is correct", func(t *testing.T) {
+		data, err := testhelper.GetLoadtestTestdata(clientSet, createdLoadTestName)
+		require.NoError(t, err)
+		assert.Equal(t, testdataString, data)
+	})
 
-	envVars, err := testhelper.GetLoadtestEnvVars(clientSet, createdLoadTestName)
-	require.NoError(t, err)
-	assert.Equal(t, envvarsString, envVars)
+	t.Run("Checking if the loadtest envVars is correct", func(t *testing.T) {
+		envVars, err := testhelper.GetLoadtestEnvVars(clientSet, createdLoadTestName)
+		require.NoError(t, err)
+		assert.Equal(t, envvarsString, envVars)
+	})
 }
 
 func TestIntegrationCreateLoadtestDuplicates(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test in short mode")
 	}
+
 	distributedPods := "2"
-	loadTestType := apisLoadTestV1.LoadTestTypeFake
+	loadtestType := apisLoadTestV1.LoadTestTypeFake
 
 	requestFiles := map[string]string{
 		testFile: "testdata/valid/loadtest.jmx",
@@ -85,33 +100,41 @@ func TestIntegrationCreateLoadtestDuplicates(t *testing.T) {
 		testData: "testdata/valid/testdata.csv",
 	}
 
-	request, err := createRequestBody(requestFiles, distributedPods, string(loadTestType))
-	// we call first time and it is success
-	resp, err := http.Post(fmt.Sprintf("http://localhost:%d/load-test", HTTPPort), request.contentType, request.body)
-	require.NoError(t, err, "Could not create POST request")
-	require.Equal(t, http.StatusCreated, resp.StatusCode)
+	var createdLoadTestName string
 
-	createdLoadTestName := parseBody(resp)
+	t.Run("Creates first loadtest, must succeed", func(t *testing.T) {
+		request, err := createRequestBody(requestFiles, distributedPods, string(loadtestType))
+		require.NoError(t, err)
+
+		resp, err := http.Post(fmt.Sprintf("http://localhost:%d/load-test", HTTPPort), request.contentType, request.body)
+		require.NoError(t, err, "Could not create POST request")
+		require.Equal(t, http.StatusCreated, resp.StatusCode)
+
+		createdLoadTestName = parseBody(resp)
+	})
+
 	t.Cleanup(func() {
 		err := testhelper.DeleteLoadTest(clientSet, createdLoadTestName, t.Name())
 		assert.NoError(t, err)
 	})
 
-	// we call second time and it fails
-	request, err = createRequestBody(requestFiles, distributedPods, string(loadTestType))
-	require.NoError(t, err)
-	resp, err = http.Post(fmt.Sprintf("http://localhost:%d/load-test", HTTPPort), request.contentType, request.body)
-	require.NoError(t, err, "Could not create POST request")
+	t.Run("Creates second loadtest, must fail", func(t *testing.T) {
+		request, err := createRequestBody(requestFiles, distributedPods, string(loadtestType))
+		require.NoError(t, err)
 
-	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+		resp, err := http.Post(fmt.Sprintf("http://localhost:%d/load-test", HTTPPort), request.contentType, request.body)
+		require.NoError(t, err, "Could not create POST request")
+		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	})
 }
 
 func TestIntegrationCreateLoadtestReachMaxLimit(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test in short mode")
 	}
+
 	distributedPods := "2"
-	loadTestType := apisLoadTestV1.LoadTestTypeFake
+	loadtestType := apisLoadTestV1.LoadTestTypeFake
 
 	requestFiles := map[string]string{
 		testFile: "testdata/valid/loadtest.jmx",
@@ -119,148 +142,188 @@ func TestIntegrationCreateLoadtestReachMaxLimit(t *testing.T) {
 		testData: "testdata/valid/testdata.csv",
 	}
 
-	request, err := createRequestBody(requestFiles, distributedPods, string(loadTestType))
-	// we call first time and it is success
-	resp, err := http.Post(fmt.Sprintf("http://localhost:%d/load-test", HTTPPort), request.contentType, request.body)
-	require.NoError(t, err, "Could not create POST request")
-	require.Equal(t, http.StatusCreated, resp.StatusCode)
+	var createdLoadTestName string
 
-	createdLoadTestName := parseBody(resp)
+	t.Run("Creates first loadtest, must succeed", func(t *testing.T) {
+		request, err := createRequestBody(requestFiles, distributedPods, string(loadtestType))
+		require.NoError(t, err)
+
+		resp, err := http.Post(fmt.Sprintf("http://localhost:%d/load-test", HTTPPort), request.contentType, request.body)
+		require.NoError(t, err, "Could not create POST request")
+		require.Equal(t, http.StatusCreated, resp.StatusCode)
+
+		createdLoadTestName = parseBody(resp)
+	})
+
 	t.Cleanup(func() {
 		err := testhelper.DeleteLoadTest(clientSet, createdLoadTestName, t.Name())
 		assert.NoError(t, err)
 	})
 
-	// at the same time we call second test and it fails because we run out of tests
-	time.Sleep(5 * time.Second)
-	requestFiles = map[string]string{
-		testFile: "testdata/valid/loadtest2.jmx",
-		envVars:  "testdata/valid/envvars.csv",
-		testData: "testdata/valid/testdata.csv",
-	}
-	request, err = createRequestBody(requestFiles, distributedPods, string(loadTestType))
+	err := testhelper.WaitLoadtest(clientSet, createdLoadTestName)
 	require.NoError(t, err)
-	resp, err = http.Post(fmt.Sprintf("http://localhost:%d/load-test", HTTPPort), request.contentType, request.body)
-	require.NoError(t, err, "Could not create POST request")
-	require.Equal(t, http.StatusTooManyRequests, resp.StatusCode)
+
+	t.Run("Creates second loadtest, must fail", func(t *testing.T) {
+		request, err := createRequestBody(requestFiles, distributedPods, string(loadtestType))
+		require.NoError(t, err)
+
+		resp, err := http.Post(fmt.Sprintf("http://localhost:%d/load-test", HTTPPort), request.contentType, request.body)
+		require.NoError(t, err, "Could not create POST request")
+		require.Equal(t, http.StatusTooManyRequests, resp.StatusCode)
+	})
 }
 
 func TestIntegrationCreateLoadtestFormPostOneFile(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test in short mode")
 	}
+
 	distributedPods := "2"
-	loadTestType := apisLoadTestV1.LoadTestTypeFake
+	loadtestType := apisLoadTestV1.LoadTestTypeFake
 
 	requestFiles := map[string]string{
 		testFile: "testdata/valid/loadtest2.jmx",
 	}
 
-	request, err := createRequestBody(requestFiles, distributedPods, string(loadTestType))
+	var createdLoadTestName string
 
-	resp, err := http.Post(fmt.Sprintf("http://localhost:%d/load-test", HTTPPort), request.contentType, request.body)
-	require.NoError(t, err, "Could not create POST request")
+	t.Run("Creates the loadtest", func(t *testing.T) {
+		request, err := createRequestBody(requestFiles, distributedPods, string(loadtestType))
+		require.NoError(t, err)
 
-	//added sleep to wait for kangal controller to create a CR from post
-	time.Sleep(1 * time.Second)
+		resp, err := http.Post(fmt.Sprintf("http://localhost:%d/load-test", HTTPPort), request.contentType, request.body)
+		require.NoError(t, err, "Could not create POST request")
+		require.Equal(t, http.StatusCreated, resp.StatusCode)
 
-	require.Equal(t, http.StatusCreated, resp.StatusCode)
-	createdLoadTestName := parseBody(resp)
+		createdLoadTestName = parseBody(resp)
+	})
+
 	t.Cleanup(func() {
 		err := testhelper.DeleteLoadTest(clientSet, createdLoadTestName, t.Name())
 		assert.NoError(t, err)
 	})
 
-	data, err := testhelper.GetLoadtestTestdata(clientSet, createdLoadTestName)
-	require.NoError(t, err)
-	assert.Equal(t, "", data)
+	t.Run("Checking the loadtest is created", func(t *testing.T) {
+		err := testhelper.WaitLoadtest(clientSet, createdLoadTestName)
+		require.NoError(t, err)
+	})
 
-	envVars, err := testhelper.GetLoadtestEnvVars(clientSet, createdLoadTestName)
-	require.NoError(t, err)
-	assert.Equal(t, "", envVars)
+	t.Run("Checking if the loadtest testData is correct", func(t *testing.T) {
+		data, err := testhelper.GetLoadtestTestdata(clientSet, createdLoadTestName)
+		require.NoError(t, err)
+		assert.Equal(t, "", data)
+	})
+
+	t.Run("Checking if the loadtest envVars is correct", func(t *testing.T) {
+		envVars, err := testhelper.GetLoadtestEnvVars(clientSet, createdLoadTestName)
+		require.NoError(t, err)
+		assert.Equal(t, "", envVars)
+	})
 }
 
 func TestIntegrationCreateLoadtestEmptyTestFile(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test in short mode")
 	}
-	distributedPods := "2"
-	loadTestType := apisLoadTestV1.LoadTestTypeFake
 
-	var dat map[string]interface{}
-	expectedMessage := `error getting "testFile" from request: file is empty`
+	distributedPods := "2"
+	loadtestType := apisLoadTestV1.LoadTestTypeFake
 
 	requestFiles := map[string]string{
 		testFile: "testdata/invalid/empty.jmx",
 	}
 
-	request, err := createRequestBody(requestFiles, distributedPods, string(loadTestType))
-	require.NoError(t, err, "Could not create request")
+	var body io.ReadCloser
 
-	resp, error := http.Post(fmt.Sprintf("http://localhost:%d/load-test", HTTPPort), request.contentType, request.body)
-	require.NoError(t, error, "Could not create POST request")
+	t.Run("Creates the loadtest", func(t *testing.T) {
+		request, err := createRequestBody(requestFiles, distributedPods, string(loadtestType))
+		require.NoError(t, err)
 
-	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+		resp, err := http.Post(fmt.Sprintf("http://localhost:%d/load-test", HTTPPort), request.contentType, request.body)
+		require.NoError(t, err, "Could not create POST request")
+		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 
-	defer resp.Body.Close()
-	respbody, err := ioutil.ReadAll(resp.Body)
-	require.NoError(t, err, "Could not get response body")
-	unmarshalErr := json.Unmarshal(respbody, &dat)
-	require.NoError(t, unmarshalErr, "Could not unmarshal response body")
+		body = resp.Body
+	})
 
-	message := dat["error"]
-	assert.Equal(t, expectedMessage, message)
+	defer body.Close()
+
+	t.Run("Check loadtest response", func(t *testing.T) {
+		var dat map[string]interface{}
+
+		respbody, err := ioutil.ReadAll(body)
+		require.NoError(t, err, "Could not get response body")
+
+		unmarshalErr := json.Unmarshal(respbody, &dat)
+		require.NoError(t, unmarshalErr, "Could not unmarshal response body")
+
+		expectedMessage := `error getting "testFile" from request: file is empty`
+		gotMessage := dat["error"]
+
+		assert.Equal(t, expectedMessage, gotMessage)
+	})
 }
 
 func TestIntegrationCreateLoadtestEmptyTestDataFile(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test in short mode")
 	}
-	distributedPods := "2"
-	loadTestType := apisLoadTestV1.LoadTestTypeFake
 
-	var dat map[string]interface{}
-	expectedMessage := `error getting "testData" from request: file is empty`
+	distributedPods := "2"
+	loadtestType := apisLoadTestV1.LoadTestTypeFake
 
 	requestFiles := map[string]string{
 		testFile: "testdata/valid/loadtest2.jmx",
 		testData: "testdata/invalid/empty.csv",
 	}
 
-	request, err := createRequestBody(requestFiles, distributedPods, string(loadTestType))
-	require.NoError(t, err, "Could not create request")
+	var body io.ReadCloser
 
-	resp, error := http.Post(fmt.Sprintf("http://localhost:%d/load-test", HTTPPort), request.contentType, request.body)
-	require.NoError(t, error, "Could not create POST request")
+	t.Run("Creates the loadtest", func(t *testing.T) {
+		request, err := createRequestBody(requestFiles, distributedPods, string(loadtestType))
+		require.NoError(t, err)
 
-	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+		resp, err := http.Post(fmt.Sprintf("http://localhost:%d/load-test", HTTPPort), request.contentType, request.body)
+		require.NoError(t, err, "Could not create POST request")
+		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 
-	defer resp.Body.Close()
-	respbody, err := ioutil.ReadAll(resp.Body)
-	require.NoError(t, err, "Could not get response body")
-	unmarshalErr := json.Unmarshal(respbody, &dat)
-	require.NoError(t, unmarshalErr, "Could not unmarshal response body")
+		body = resp.Body
+	})
 
-	message := dat["error"]
-	assert.Equal(t, expectedMessage, message)
+	defer body.Close()
+
+	t.Run("Check loadtest response", func(t *testing.T) {
+		var dat map[string]interface{}
+
+		respbody, err := ioutil.ReadAll(body)
+		require.NoError(t, err, "Could not get response body")
+
+		unmarshalErr := json.Unmarshal(respbody, &dat)
+		require.NoError(t, unmarshalErr, "Could not unmarshal response body")
+
+		expectedMessage := `error getting "testData" from request: file is empty`
+		gotMessage := dat["error"]
+
+		assert.Equal(t, expectedMessage, gotMessage)
+	})
 }
 
 func TestIntegrationDeleteLoadtest(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test in short mode")
 	}
-	distributedPods := int32(2)
-	loadTestType := apisLoadTestV1.LoadTestTypeFake
 
-	expectedLoadtestName := "loadtest-for-deletetest"
-	notFoundMessage := `loadtests.kangal.hellofresh.com "loadtest-for-deletetest" not found`
+	distributedPods := int32(2)
+	loadtestType := apisLoadTestV1.LoadTestTypeFake
+
 	testFile := "testdata/valid/loadtest.jmx"
 
-	err := testhelper.CreateLoadtest(clientSet, distributedPods, expectedLoadtestName, testFile, "", "", loadTestType)
-	require.NoError(t, err)
+	expectedLoadtestName := "loadtest-for-deletetest"
 
-	req, err := http.NewRequest("DELETE", fmt.Sprintf("http://localhost:%d/load-test/loadtest-for-deletetest", HTTPPort), nil)
-	require.NoError(t, err, "Could not create DELETE request")
+	t.Run("Creates the loadtest", func(t *testing.T) {
+		err := testhelper.CreateLoadtest(clientSet, distributedPods, expectedLoadtestName, testFile, "", "", loadtestType)
+		require.NoError(t, err)
+	})
 
 	t.Cleanup(func() {
 		// by default TestDeleteLoadtest will delete a created loadtest so Cleanup has nothing to delete.
@@ -274,110 +337,136 @@ func TestIntegrationDeleteLoadtest(t *testing.T) {
 		}
 	})
 
-	res, _ := http.DefaultClient.Do(req)
-	assert.Equal(t, http.StatusNoContent, res.StatusCode)
-	if _, err := testhelper.GetLoadtest(clientSet, expectedLoadtestName); err != nil {
-		assert.Equal(t, notFoundMessage, err.Error())
-	}
+	t.Run("Deletes the loadtest", func(t *testing.T) {
+		req, err := http.NewRequest("DELETE", fmt.Sprintf("http://localhost:%d/load-test/loadtest-for-deletetest", HTTPPort), nil)
+		require.NoError(t, err, "Could not create DELETE request")
+
+		res, _ := http.DefaultClient.Do(req)
+		assert.Equal(t, http.StatusNoContent, res.StatusCode)
+
+		if _, err := testhelper.GetLoadtest(clientSet, expectedLoadtestName); err != nil {
+			notFoundMessage := `loadtests.kangal.hellofresh.com "loadtest-for-deletetest" not found`
+			assert.Equal(t, notFoundMessage, err.Error())
+		}
+	})
 }
 
 func TestIntegrationGetLoadtest(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test in short mode")
 	}
-	distributedPods := int32(2)
-	loadTestType := apisLoadTestV1.LoadTestTypeFake
 
-	expectedLoadtestName := "loadtest-for-gettest"
+	distributedPods := int32(2)
+	loadtestType := apisLoadTestV1.LoadTestTypeFake
+
 	testFile := "testdata/valid/loadtest.jmx"
 	testData := "testdata/valid/testdata.csv"
-	var dat LoadTestStatus
 
-	err := testhelper.CreateLoadtest(clientSet, distributedPods, expectedLoadtestName, testFile, testData, "", loadTestType)
-	require.NoError(t, err)
+	expectedLoadtestName := "loadtest-for-gettest"
 
-	req, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:%d/load-test/loadtest-for-gettest", HTTPPort), nil)
-	require.NoError(t, err, "Could not create GET request")
+	t.Run("Creates the loadtest", func(t *testing.T) {
+		err := testhelper.CreateLoadtest(clientSet, distributedPods, expectedLoadtestName, testFile, testData, "", loadtestType)
+		require.NoError(t, err)
+	})
 
 	t.Cleanup(func() {
 		err := testhelper.DeleteLoadTest(clientSet, expectedLoadtestName, t.Name())
 		assert.NoError(t, err)
 	})
 
-	for i := 0; i < 5; i++ {
-		//added sleep to wait for kangal controller to create a namespace, related to CR
-		time.Sleep(1 * time.Second)
+	t.Run("Checking the loadtest is created", func(t *testing.T) {
+		err := testhelper.WaitLoadtest(clientSet, expectedLoadtestName)
+		require.NoError(t, err)
+	})
+
+	var respbody []byte
+
+	t.Run("Get loadtest details", func(t *testing.T) {
+		req, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:%d/load-test/%s", HTTPPort, expectedLoadtestName), nil)
+		require.NoError(t, err, "Could not create GET request")
 
 		res, err := http.DefaultClient.Do(req)
 		require.NoError(t, err, "Could not send GET request")
 		require.Equal(t, http.StatusOK, res.StatusCode)
 
 		defer res.Body.Close()
-		respbody, err := ioutil.ReadAll(res.Body)
+
+		respbody, err = ioutil.ReadAll(res.Body)
 		require.NoError(t, err, "Could not get response body")
+	})
+
+	t.Run("Ensure loadtest GET response is correct", func(t *testing.T) {
+		var dat LoadTestStatus
 
 		unmarshalErr := json.Unmarshal(respbody, &dat)
 		require.NoError(t, unmarshalErr, "Could not unmarshal response body")
-	}
+		assert.NotEmpty(t, dat.Namespace, "Could not get namespace from GET request")
 
-	assert.NotEmpty(t, dat.Namespace, "Could not get namespace from GET request")
+		currentNamespace, err := testhelper.GetLoadtestNamespace(clientSet, expectedLoadtestName)
+		require.NoError(t, err, "Could not get load test information")
 
-	currentNamespace, err := testhelper.GetLoadtestNamespace(clientSet, expectedLoadtestName)
-	require.NoError(t, err, "Could not get load test information")
-
-	assert.Equal(t, currentNamespace, dat.Namespace)
-	assert.Equal(t, distributedPods, dat.DistributedPods)
-	assert.NotEmpty(t, dat.Phase)
-	assert.NotEqual(t, apisLoadTestV1.LoadTestErrored, dat.Phase)
-	assert.Equal(t, true, dat.HasTestData)
+		assert.Equal(t, currentNamespace, dat.Namespace)
+		assert.Equal(t, distributedPods, dat.DistributedPods)
+		assert.NotEmpty(t, dat.Phase)
+		assert.NotEqual(t, apisLoadTestV1.LoadTestErrored, dat.Phase)
+		assert.Equal(t, true, dat.HasTestData)
+	})
 }
 
 func TestIntegrationGetLoadtestLogs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test in short mode")
 	}
+
 	distributedPods := int32(1)
-	loadTestType := apisLoadTestV1.LoadTestTypeFake
+	loadtestType := apisLoadTestV1.LoadTestTypeFake
+
+	testFile := "testdata/valid/loadtest.jmx"
 
 	expectedLoadtestName := "loadtest-for-getlogs-test"
-	expectedPhase := "running"
-	testFile := "testdata/valid/loadtest.jmx"
 
 	client := kubeClient(t)
 
-	err := testhelper.CreateLoadtest(clientSet, distributedPods, expectedLoadtestName, testFile, "", "", loadTestType)
-	require.NoError(t, err)
-
-	req, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:%d/load-test/loadtest-for-getlogs-test/logs", HTTPPort), nil)
-	require.NoError(t, err, "Could not create GET request")
+	t.Run("Creates the loadtest", func(t *testing.T) {
+		err := testhelper.CreateLoadtest(clientSet, distributedPods, expectedLoadtestName, testFile, "", "", loadtestType)
+		require.NoError(t, err)
+	})
 
 	t.Cleanup(func() {
 		err := testhelper.DeleteLoadTest(clientSet, expectedLoadtestName, t.Name())
 		assert.NoError(t, err)
 	})
 
-	for i := 0; i < 5; i++ {
-		//added sleep to wait for kangal controller to create a namespace and start pods
-		time.Sleep(4 * time.Second)
+	t.Run("Checking the loadtest is created", func(t *testing.T) {
+		err := testhelper.WaitLoadtest(clientSet, expectedLoadtestName)
+		require.NoError(t, err)
+	})
 
-		currentPhase, _ := testhelper.GetLoadtestPhase(clientSet, expectedLoadtestName)
-		if currentPhase == expectedPhase {
-			// sleep to let JMeter process start and generate logs after load test started
-			time.Sleep(1 * time.Second)
-			master, _ := testhelper.GetMasterPod(client.CoreV1(), expectedLoadtestName)
-			if master.Items[0].Status.Phase == "Running" {
-				break
-			}
-		}
-	}
-	res, err := http.DefaultClient.Do(req)
-	require.NoError(t, err, "Could not send GET request")
-	require.Equal(t, http.StatusOK, res.StatusCode)
+	t.Run("Checking the loadtest master pod", func(t *testing.T) {
+		watchObj, _ := client.CoreV1().Pods(expectedLoadtestName).Watch(context.Background(), metaV1.ListOptions{
+			LabelSelector: "app=loadtest-master",
+		})
 
-	defer res.Body.Close()
-	_, err = ioutil.ReadAll(res.Body)
-	require.NoError(t, err, "Could not get response body")
-	//require.NotEmpty(t, respbody, "Response body is empty")
+		watchEvent, err := testhelper.WaitResource(watchObj, (testhelper.WaitCondition{}).PodRunning)
+		require.NoError(t, err)
+
+		pod := watchEvent.Object.(*coreV1.Pod)
+		assert.Equal(t, coreV1.PodRunning, pod.Status.Phase)
+	})
+
+	t.Run("Checking the loadtest logs", func(t *testing.T) {
+		req, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:%d/load-test/%s/logs", HTTPPort, expectedLoadtestName), nil)
+		require.NoError(t, err, "Could not create GET request")
+
+		res, err := http.DefaultClient.Do(req)
+		require.NoError(t, err, "Could not send GET request")
+		require.Equal(t, http.StatusOK, res.StatusCode)
+
+		defer res.Body.Close()
+
+		_, err = ioutil.ReadAll(res.Body)
+		require.NoError(t, err, "Could not get response body")
+	})
 }
 
 func kubeTestClient() clientSetV.Clientset {
