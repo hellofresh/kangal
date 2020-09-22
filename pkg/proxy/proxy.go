@@ -156,7 +156,7 @@ func (p *Proxy) Get(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	ltID := chi.URLParam(r, loadTestID)
-	logger.Debug("Retrieving info for loadtest", zap.Any("ltID", ltID))
+	logger.Debug("Retrieving info for loadtest", zap.String("ltID", ltID))
 
 	result, err := loadtest.GetLoadtestCR(ctx, p.loadTestClient, ltID, logger)
 	if err != nil {
