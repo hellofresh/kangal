@@ -225,10 +225,11 @@ func BuildConfig() (*rest.Config, error) {
 	return config, nil
 }
 
+// WaitCondition contains useful functions for watch conditions
 type WaitCondition struct {
 }
 
-// waits until get Added
+// Added waits until resources exists
 func (WaitCondition) Added(event watch.Event) (bool, error) {
 	if watch.Added == event.Type {
 		return true, nil
@@ -237,7 +238,7 @@ func (WaitCondition) Added(event watch.Event) (bool, error) {
 	return false, nil
 }
 
-// waits until Pod are with status phase running
+// PodRunning waits until Pod are with status phase running
 func (WaitCondition) PodRunning(event watch.Event) (bool, error) {
 	if coreV1.PodRunning == event.Object.(*coreV1.Pod).Status.Phase {
 		return true, nil
@@ -246,6 +247,7 @@ func (WaitCondition) PodRunning(event watch.Event) (bool, error) {
 	return false, nil
 }
 
+// LoadtestRunning waits until Loadtest are with status phase running
 func (WaitCondition) LoadtestRunning(event watch.Event) (bool, error) {
 	if apisLoadTestV1.LoadTestRunning == event.Object.(*apisLoadTestV1.LoadTest).Status.Phase {
 		return true, nil
@@ -254,6 +256,7 @@ func (WaitCondition) LoadtestRunning(event watch.Event) (bool, error) {
 	return false, nil
 }
 
+// LoadtestRunning waits until Loadtest are with status phase finished
 func (WaitCondition) LoadtestFinished(event watch.Event) (bool, error) {
 	if apisLoadTestV1.LoadTestFinished == event.Object.(*apisLoadTestV1.LoadTest).Status.Phase {
 		return true, nil
