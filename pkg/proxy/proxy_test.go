@@ -11,21 +11,21 @@ import (
 
 func TestConvertTestName(t *testing.T) {
 	testName := "ederE_rfrg.jmx"
-	convertedName := ConvertTestName(testName)
+	convertedName := convertTestName(testName)
 
 	assert.Equal(t, "edere-rfrg", convertedName)
 }
 
 func TestConvertTestNameWithoutSuffix(t *testing.T) {
 	testName := "123_TEST_FILE"
-	convertedName := ConvertTestName(testName)
+	convertedName := convertTestName(testName)
 
 	assert.Equal(t, "123-test-file", convertedName)
 }
 
 func TestConvertTestNameSpecialSymbols(t *testing.T) {
 	testName := "¨¨ƒ¸¸dsgc_ŕtdv"
-	convertedName := ConvertTestName(testName)
+	convertedName := convertTestName(testName)
 
 	assert.Equal(t, "¨¨ƒ¸¸dsgc-ŕtdv", convertedName)
 }

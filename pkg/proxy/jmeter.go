@@ -166,7 +166,7 @@ func getFileFromHTTP(r *http.Request, file string) (string, error) {
 		return "", err
 	}
 
-	stringTestData, err := FileToString(td)
+	stringTestData, err := fileToString(td)
 	if err != nil {
 		return "", err
 	}
