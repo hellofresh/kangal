@@ -292,7 +292,7 @@ func (c *Controller) syncHandler(key string) error {
 		// The LoadTest resource may be conflicted, in which case we stop
 		// processing.
 		if errors.IsConflict(err) {
-			utilRuntime.HandleError(fmt.Errorf("There is a conflict with loadtest '%s'. It might be because object has been removed or modified in the datastore.", key))
+			utilRuntime.HandleError(fmt.Errorf("There is a conflict with loadtest '%s'. It might be because object has been removed or modified in the datastore", key))
 			return nil
 		}
 		return err
@@ -333,12 +333,26 @@ func (c *Controller) syncHandler(key string) error {
 	// check or clean LoadTest
 	err = c.checkOrDeleteLoadTest(ctx, loadTest)
 	if err != nil {
+		// The LoadTest resource may be conflicted, in which case we stop
+		// processing.
+		if errors.IsConflict(err) {
+			utilRuntime.HandleError(fmt.Errorf("There is a conflict with loadtest '%s'. It might be because object has been removed or modified in the datastore", key))
+			return nil
+		}
+
 		return err
 	}
 
 	// Finally, we send updated loadtest resource back
 	_, err = c.kangalClientSet.KangalV1().LoadTests().Update(ctx, loadTest, metaV1.UpdateOptions{})
 	if err != nil {
+		// The LoadTest resource may be conflicted, in which case we stop
+		// processing.
+		if errors.IsConflict(err) {
+			utilRuntime.HandleError(fmt.Errorf("There is a conflict with loadtest '%s'. It might be because object has been removed or modified in the datastore", key))
+			return nil
+		}
+
 		return err
 	}
 
