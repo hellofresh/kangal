@@ -1,17 +1,18 @@
-# Load generator in Kangal
+# JMeter Load generator in Kangal
 
 ## Quick links
 - [JMeter](#jmeter)
-    - [Installing JMeter](#installing-jmeter)
+    - [Installing JMeter for local test development](#installing-jmeter-for-local-test-development)
         - [Required JMeter version](#required-jmeter-version)
         - [Required JMeter Plugins versions](#required-jmeter-plugins-versions)
 
-Currently the main load generator used in Kangal is JMeter. In the future releases we plan to add other load generators as well.
+JMeter is one of the load generators used in Kangal.
 
 ## JMeter
-JMeter is a powerful tool which can be used for different performance testing tasks. Currently Kangal uses the JMeter v5.0 r1840935.
+JMeter is a powerful tool which can be used for different performance testing tasks. 
+Currently Kangal uses the docker image [Kangal-JMeter](https://github.com/hellofresh/kangal-jmeter) based on JMeter v5.0 r1840935.
 
-Apache JMeter features include ability to create and run performance test for many different applications/server/protocol types:
+Apache JMeter features include ability to create and run performance test for different applications/server/protocol types:
 
 * Web - HTTP, HTTPS (Java, NodeJS, PHP, ASP.NET, …)
 * SOAP / REST Webservices
@@ -19,9 +20,10 @@ Apache JMeter features include ability to create and run performance test for ma
 * LDAP
 * and many more ...
 
-Kangal requires a jmx testfile describing the test. To work with jmx files we recommend you to install JMeter locally.
+Kangal requires a jmx testfile describing the test. 
+To create and edit jmx files we recommend you to install JMeter locally.
 
-### Installing JMeter
+### Installing JMeter for local test development
 #### Required JMeter version
 1. Install Java 8+. [Official Java website](https://www.java.com/de/download/)
 2. Install JMeter v5.0 r1840935  [Official JMeter website](https://archive.apache.org/dist/jmeter/binaries/) It's also possible to install JMeter with [brew](https://stackoverflow.com/questions/22610316/how-do-i-install-jmeter-on-a-mac)
@@ -35,11 +37,11 @@ Install plugins:
 3. In the opened window got to Available Plugins tab and chose the plugin from the list. Then press **Apply Changes and restart JMeter** button.
 
 <p align="center">  
-<img src="./jmeter_plugins.png" height="500">
+<img src="images/jmeter_plugins.png" height="500">
 </p>
 
 <p align="center">  
-<img src="./jmeter_plugins_install.png" height="500">
+<img src="images/jmeter_plugins_install.png" height="500">
 </p>
 
 List of external JMeter plugins used in Kangal setup:
@@ -49,7 +51,4 @@ List of external JMeter plugins used in Kangal setup:
 * jpgc-fifo [Inter-Thread Communication](https://jmeter-plugins.org/wiki/InterThreadCommunication/)
 * jpgc-functions [Custom JMeter Functions](https://jmeter-plugins.org/wiki/Functions/)
 
-You can also use and modify example test files from Kangal repo, described [here](How-to-write-tests.md) and [Load generator in Kangal](Load-generator-in-kangal.md). But we strongly recommend you to read the [offical docs](https://jmeter.apache.org/usermanual/test_plan.html) to understand major concepts.
-
-
-
+You can also use and modify example test files from Kangal repo, described [here](How-to-write-tests.md) and [Load generator in Kangal](JMeter-load-generator-in-kangal.md). But we strongly recommend you to read the [offical docs](https://jmeter.apache.org/usermanual/test_plan.html) to understand major concepts.

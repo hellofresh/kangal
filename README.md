@@ -24,7 +24,7 @@ ___
 In Kangal project, the name stands for "**K**ubernetes **an**d **G**o **A**utomatic **L**oader".
 But originally Kangal is the breed of a shepherd dog. Let the smart and protective dog herd your load testing projects.
 
-With Kangal, you can spin up an isolated environment in a Kubernetes cluster to run performance tests using JMeter.
+With Kangal, you can spin up an isolated environment in a Kubernetes cluster to run performance tests using different load generators, e.g. JMeter.
 
 ## Key features
 - **create** an isolated environment in a Kubernetes cluster with an opinionated JMeter installation
@@ -50,7 +50,7 @@ The diagram below illustrates the workflow for Kangal in Kubernetes infrastructu
 
 <p align="left">  
  <a href="https://github.com/hellofresh/kangal/blob/master/architectural_diagram.png">
-   <img alt="Architectural diagram" src="./architectural_diagram.png" width="500" >
+   <img alt="Architectural diagram" src="./architectural_diagram.png" >
  </a>
 </p>
 
@@ -85,7 +85,8 @@ More detailed information can be found in [docs folder](docs/)
 ## To start developing Kangal
 To start developing Kangal you need a local Kubernetes environment, e.g. [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/)
 or [docker desktop](https://rominirani.com/tutorial-getting-started-with-kubernetes-with-docker-on-mac-7f58467203fd). 
-> Note: JMeter pods require a lot of CPU and memory, make sure you increased your limits for local Kubernetes cluster.
+> Note: Depending on load generator type, load test environments created by Kangal may require a lot of resources. Make sure you increased your limits for local Kubernetes cluster. 
+> Read more about implemented load generators [here](docs/README.md). 
 
 1. Clone the repo locally
     ```bash

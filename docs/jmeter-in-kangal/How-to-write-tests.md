@@ -2,6 +2,9 @@
 
 ## Quick links
 - [Intro](#intro)
+- [General recommendations](#general-recommendations)
+    - [Tests with test data](#tests-with-test-data)
+    - [Tests with environment variables](#tests-with-environment-variables)
 - [Example Test 1: Linearly growing load](#example-test-1-linearly-growing-load)
     - [Test Plan](#test-plan)
     - [Create desired load profile with Throughput Shaping Timer](#create-desired-load-profile-withthroughput-shaping-timer)
@@ -16,11 +19,29 @@
 - [Test with environment variables](#test-with-environment-variables)
 
 ## Intro
-Before starting, you need to install JMeter following the requirements from [Kangal user guide](Load-generator-in-kangal.md). It will allow you to edit the following test examples in JMeter UI.
+Before starting with creation JMeter tests for Kangal, you need to install JMeter localy following the requirements from [Kangal user guide](JMeter-load-generator-in-kangal.md). It will allow you to edit the following test examples in JMeter UI.
 
 [Kangal repo](https://github.com/hellofresh/kangal) has some simple tests examples that can help you with a quick start.
 
 Every element of the test can be modified, disabled or removed. You can also add new elements like Assertions, Timers, Listeners and Config elements. Please, follow the instructions from official [JMeter user manual](https://jmeter.apache.org/usermanual/component_reference.html#introduction)
+
+## General recommendations
+### Tests with test data
+Some test scenarios require unique request or at least some amount of varied data in requests. For this purposes JMeter allows you to use external data sets in a CSV format. Read more about [CSV DataSetConfig](https://jmeter.apache.org/usermanual/component_reference.html#CSV_Data_Set_Config) in official JMeter documentation.
+
+1. Prepare your test data in CSV file
+2. Configure test script accordingly. Find detais here [How to write and understand a JMeter test: Test with CSV Data](How-to-write-tests.md#test-with-csv-data)
+3. Add both files in POST request to Kangal API
+
+Kangal will split the test data equally between all the distributed pods you requested, so every pod will have a unique piece of your testdata file and requests from different pods will not be duplicated. If you have only one distributed pod no data splitting will take place.
+
+### Tests with environment variables
+Some tests may contain sensitive information like DB connection parameters, authorisation tokens, etc. You can provide this information as environment variables which will be applied in loadtest environment before running test. 
+
+Kangal allows you to use a file with env vars saved in CSV format. Please configure your test script accordingly to use env vars. Read more about using env vars in official [JMeter-plugin documentation](https://jmeter-plugins.org/wiki/Functions/#envsupfont-color-gray-size-1-since-1-2-0-font-sup) and [How to write and understand a JMeter test](How-to-write-tests.md).
+1. Save your environment variables in CSV file
+2. Configure test script accordingly. Find detais here [How to write and understand a JMeter test: Test with environment variables](How-to-write-tests.md#test-with-environment-variables)
+3. Add both files in POST request to Kangal API
 
 ## Example Test 1: Linearly growing load
 <details>
@@ -164,7 +185,7 @@ Every element of the test can be modified, disabled or removed. You can also add
 ### Test Plan
 Test Plan element is the root of the test. Inside it you can find all the nested required elements for test configuration.
 <p align="center">  
-<img src="./linear_test_plan.png" height="500">
+<img src="images/linear_test_plan.png" height="500">
 </p>
 
 ### Create desired load profile with Throughput Shaping Timer
@@ -189,7 +210,7 @@ With this two values you can regulate the number of the threads created during t
 In this example we advise to use thread count growing up to 20 threads during the test time (same time specified in Throughput Shaping Timer element). 
 
 <p align="center">  
-<img src="./linear_thread_group.png" height="500">
+<img src="images/linear_thread_group.png" height="500">
 </p>
 
 ### Where to shoot
@@ -349,7 +370,7 @@ Values to manipulate:
 With the values given in example test, you will get 2000 threads / 200 seconds = 10 threads/sec. With the loop count = 1 it will give us 10 RPS. 
 
 <p align="center">  
-<img src="./constant_thread_group.png" height="500">
+<img src="images/constant_thread_group.png" height="500">
 </p>
 
 ## Test with CSV Data
@@ -359,7 +380,7 @@ Some test scenarios require unique request or at least some amount of varied dat
 This config element should be nested under HTTP request sampler. Read more about [CSV DataSetConfig](https://jmeter.apache.org/usermanual/component_reference.html#CSV_Data_Set_Config) in official JMeter documentation.
 
 <p align="center">  
-<img src="./dataset_config.png" height="500">
+<img src="images/dataset_config.png" height="500">
 </p>
 
 > **Important note!** In Kangal the path to the testdata file is always the same **/testdata/testdata.csv**. Please specify this path in Filename field of your CSV Data Set Config. Otherwise the test run by Kangal will not see the the provided data. 
@@ -367,10 +388,10 @@ This config element should be nested under HTTP request sampler. Read more about
 ## Test with environment variables
 Some tests may contain sensitive information like DB connection parameters, authorisation tokens, etc. You can provide this information as environment variables which will be applied in loadtest environment before running test. 
 
-You don't need any special configuration elements to use environment variables in test. You only need to have the plugin [Custom JMeter Functions](https://jmeter-plugins.org/wiki/Functions/#envsupfont-color-gray-size-1-since-1-2-0-font-sup) installed. Check [Required JMeter Plugins versions](Load-generator-in-kangal.md#required-jmeter-plugins-versions) doc for details.
+You don't need any special configuration elements to use environment variables in test. You only need to have the plugin [Custom JMeter Functions](https://jmeter-plugins.org/wiki/Functions/#envsupfont-color-gray-size-1-since-1-2-0-font-sup) installed. Check [Required JMeter Plugins versions](JMeter-load-generator-in-kangal.md#required-jmeter-plugins-versions) doc for details.
 
 <p align="center">  
-<img src="./http_auth_manager.png" height="500">
+<img src="images/http_auth_manager.png" height="500">
 </p>
 
 In the example above the environment variable AUTH_CLIENT_ID used in HTTP Authorisation Manager. 
