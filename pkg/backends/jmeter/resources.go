@@ -241,7 +241,7 @@ func (c *JMeter) NewPod(i int, configMap *coreV1.ConfigMap, podAnnotations map[s
 }
 
 // NewJMeterMasterJob creates a new job which runs the jmeter master pod
-func (c *JMeter) NewJMeterMasterJob(awsAccessKeyID, awsSecretAccessKey, awsRegion, awsEndpointURL, awsBucketName string, podAnnotations map[string]string) *batchV1.Job {
+func (c *JMeter) NewJMeterMasterJob(preSignedURL string, podAnnotations map[string]string) *batchV1.Job {
 	loadtest := c.loadTest
 	var one int32 = 1
 	MasterConfig := loadtest.Spec.MasterConfig
@@ -256,31 +256,9 @@ func (c *JMeter) NewJMeterMasterJob(awsAccessKeyID, awsSecretAccessKey, awsRegio
 			Value: "true",
 		},
 		{
-			Name:  "AWS_DEFAULT_REGION",
-			Value: awsRegion,
+			Name:  "REPORT_PRESIGNED_URL",
+			Value: preSignedURL,
 		},
-		{
-			Name:  "AWS_ENDPOINT_URL",
-			Value: awsEndpointURL,
-		},
-		{
-			Name:  "AWS_BUCKET_NAME",
-			Value: awsBucketName,
-		},
-		{
-			Name:  "LOADTEST_NAME",
-			Value: loadtest.GetName(),
-		},
-	}
-
-	if awsAccessKeyID != "" {
-		jMeterEnvVars = append(jMeterEnvVars, coreV1.EnvVar{
-			Name:  "AWS_ACCESS_KEY_ID",
-			Value: awsAccessKeyID,
-		}, coreV1.EnvVar{
-			Name:  "AWS_SECRET_ACCESS_KEY",
-			Value: awsSecretAccessKey,
-		})
 	}
 
 	return &batchV1.Job{

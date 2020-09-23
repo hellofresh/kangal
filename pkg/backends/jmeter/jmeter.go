@@ -13,6 +13,10 @@ import (
 	"k8s.io/client-go/kubernetes"
 	coreListersV1 "k8s.io/client-go/listers/core/v1"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+
 	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
 	"github.com/hellofresh/kangal/pkg/report"
@@ -190,6 +194,20 @@ func (c *JMeter) CheckOrUpdateStatus(ctx context.Context) error {
 		}
 	}
 
+	// TODO: move all this code from outside jmeter (to into backends package)
+	sess, err := session.NewSession(&aws.Config{
+		Endpoint:         aws.String(c.reportConfig.AWSEndpointURL),
+		Region:           aws.String(c.reportConfig.AWSRegion),
+		S3ForcePathStyle: aws.Bool(true), // this adds compatibility with GCS and ABS
+	})
+	svc := s3.New(sess)
+	req, _ := svc.PutObjectRequest(&s3.PutObjectInput{
+		ContentType: aws.String("application/x-tar"),
+		Bucket:      aws.String(c.reportConfig.AWSBucketName),
+		Key:         aws.String(fmt.Sprintf("%s.tar", c.loadTest.GetName())),
+	})
+	preSignedURL, err := req.Presign(30 * time.Minute) // TODO: turn this into a configurable parameter
+
 	job, err := c.kubeClientSet.BatchV1().Jobs(namespace.GetName()).Get(ctx, loadTestJobName, metaV1.GetOptions{})
 	if err != nil {
 		// The LoadTest resource may no longer exist, in which case we stop
@@ -197,14 +215,7 @@ func (c *JMeter) CheckOrUpdateStatus(ctx context.Context) error {
 		if errors.IsNotFound(err) {
 			_, err = c.kubeClientSet.BatchV1().Jobs(namespace.GetName()).Create(
 				ctx,
-				c.NewJMeterMasterJob(
-					c.reportConfig.AWSAccessKeyID,
-					c.reportConfig.AWSSecretAccessKey,
-					c.reportConfig.AWSRegion,
-					c.reportConfig.AWSEndpointURL,
-					c.reportConfig.AWSBucketName,
-					c.podAnnotations,
-				),
+				c.NewJMeterMasterJob(preSignedURL, c.podAnnotations),
 				metaV1.CreateOptions{},
 			)
 			return err
