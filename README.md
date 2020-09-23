@@ -24,10 +24,10 @@ ___
 In Kangal project, the name stands for "**K**ubernetes **an**d **G**o **A**utomatic **L**oader".
 But originally Kangal is the breed of a shepherd dog. Let the smart and protective dog herd your load testing projects.
 
-With Kangal, you can spin up an isolated environment in a Kubernetes cluster to run performance tests using different load generators, e.g. JMeter.
+With Kangal, you can spin up an isolated environment in a Kubernetes cluster to run performance tests using different load generators.
 
 ## Key features
-- **create** an isolated environment in a Kubernetes cluster with an opinionated JMeter installation
+- **create** an isolated Kubernetes environment with an opinionated load generator installation
 - **run** load tests against any desired environment
 - **monitor** load tests metrics in Grafana
 - **save the report** for the successful load test
@@ -73,7 +73,7 @@ Provides the following HTTP methods for `/load-test` endpoint:
 ### Kangal controller
 The general name for several Kubernetes controllers created to manage all the aspects of the performance testing process.
  - LoadTest controller  
- - JMeter jobs controller
+ - Backend jobs controller
  
 ## To start using Kangal
 To run Kangal in your Kubernetes cluster follow [docs](docs/README.md#how-do-i-use-kangal)
@@ -86,7 +86,7 @@ More detailed information can be found in [docs folder](docs/)
 To start developing Kangal you need a local Kubernetes environment, e.g. [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/)
 or [docker desktop](https://rominirani.com/tutorial-getting-started-with-kubernetes-with-docker-on-mac-7f58467203fd). 
 > Note: Depending on load generator type, load test environments created by Kangal may require a lot of resources. Make sure you increased your limits for local Kubernetes cluster. 
-> Read more about implemented load generators [here](docs/README.md). 
+> Read more about implemented load generators [here](docs/README.md#load-generator-types-aka-backends). 
 
 1. Clone the repo locally
     ```bash
