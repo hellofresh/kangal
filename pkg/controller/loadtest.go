@@ -292,7 +292,7 @@ func (c *Controller) syncHandler(key string) error {
 		// The LoadTest resource may be conflicted, in which case we stop
 		// processing.
 		if errors.IsConflict(err) {
-			utilRuntime.HandleError(fmt.Errorf("There is a conflict with loadtest '%s'. It might be because object has been removed or modified in the datastore", key))
+			utilRuntime.HandleError(fmt.Errorf("there is a conflict with loadtest '%s' between datastore and cache. it might be because object has been removed or modified in the datastore", key))
 			return nil
 		}
 		return err
@@ -336,10 +336,9 @@ func (c *Controller) syncHandler(key string) error {
 		// The LoadTest resource may be conflicted, in which case we stop
 		// processing.
 		if errors.IsConflict(err) {
-			utilRuntime.HandleError(fmt.Errorf("There is a conflict with loadtest '%s'. It might be because object has been removed or modified in the datastore", key))
+			utilRuntime.HandleError(fmt.Errorf("there is a conflict with loadtest '%s' between datastore and cache. it might be because object has been removed or modified in the datastore", key))
 			return nil
 		}
-
 		return err
 	}
 
@@ -349,10 +348,9 @@ func (c *Controller) syncHandler(key string) error {
 		// The LoadTest resource may be conflicted, in which case we stop
 		// processing.
 		if errors.IsConflict(err) {
-			utilRuntime.HandleError(fmt.Errorf("There is a conflict with loadtest '%s'. It might be because object has been removed or modified in the datastore", key))
+			utilRuntime.HandleError(fmt.Errorf("the loadtest '%s'has been modified; please apply your changes to the latest version and try again", key))
 			return nil
 		}
-
 		return err
 	}
 
