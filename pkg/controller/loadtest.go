@@ -289,10 +289,10 @@ func (c *Controller) syncHandler(key string) error {
 			return nil
 		}
 
-		// The LoadTest resource may be invalid, in which case we stop
+		// The LoadTest resource may be conflicted, in which case we stop
 		// processing.
-		if errors.IsInvalid(err) {
-			utilRuntime.HandleError(fmt.Errorf("loadtest '%s' is an ivalid object.It might be deleted.", key))
+		if errors.IsConflict(err) {
+			utilRuntime.HandleError(fmt.Errorf("There is a conflict with loadtest '%s'. It might be because object has been removed or modified in the datastore.", key))
 			return nil
 		}
 		return err
