@@ -288,6 +288,13 @@ func (c *Controller) syncHandler(key string) error {
 			utilRuntime.HandleError(fmt.Errorf("loadtest '%s' in work queue no longer exists", key))
 			return nil
 		}
+
+		// The LoadTest resource may be invalid, in which case we stop
+		// processing.
+		if errors.IsInvalid(err) {
+			utilRuntime.HandleError(fmt.Errorf("loadtest '%s' is an ivalid object.It might be deleted.", key))
+			return nil
+		}
 		return err
 	}
 	// copy object before mutate it
