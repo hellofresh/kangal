@@ -23,7 +23,7 @@ Please read [JMeter Load generator in Kangal](jmeter-in-kangal/JMeter-load-gene
 ### Adding a new load generator
 Kangal offers an opportunity to add different load generators as backends. 
 Requirements to new load generators:
-1. Create a docker image that must contain an executable of a new load generator and all required scripts to run it.
+1. Create a docker image that must contain an executable of a new load generator and all required scripts to run it. Docker image should exit once load test is finished and it should provide logs to stdout which will be used by Kangal Proxy API.
 2. Create a new backend resource definition in `/pkg/backends/new-backend`.
 The basic resource is a job that manages all the other resources and sets pods to the `finished` state when the test is over.
 
