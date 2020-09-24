@@ -33,7 +33,7 @@ The basic resource is a job that manages all the other resources and sets pods t
 
 ## Reporting in Kangal
 Reporting is an important part of load testing process. It basically contains in two parts:
-1. Live metrics during the running load test.
+1. Live metrics during the running load test - Kangal proxy scrapes logs from main job stdout Docker container.
 2. Solid report generated after the end of the test. 
 Currently, Kangal relies on report creation implemented in load generator itself. You can read more about JMeter implementation in [Reporting in JMeter](jmeter-in-kangal/Reporting-in-JMeter.md).
 
