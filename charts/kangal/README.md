@@ -6,6 +6,7 @@
 ```console
 $ helm repo add kangal https://hellofresh.github.io/kangal
 $ helm install kangal/kangal --name kangal
+$ kubectl apply -f  https://raw.githubusercontent.com/hellofresh/kangal/master/charts/kangal/crd.yaml
 ```
 
 ## Introduction
@@ -23,9 +24,11 @@ To install the chart with the release name `kangal` and specific [Kangal version
 ```console
 $ helm repo add kangal https://hellofresh.github.io/kangal
 $ helm install --name kangal --set proxy.image.tag=1.0.0 --set controller.image.tag=1.0.0 kangal/kangal
+$ kubectl apply -f  https://raw.githubusercontent.com/hellofresh/kangal/master/charts/kangal/crd.yaml
 ```
 
 The command deploys Kangal on the Kubernetes cluster in the default configuration.
+It also applies the latest version of Custom Resource Definition (CRD) to the cluster.
 
 > **Tip**: List all releases using `helm list`
 
@@ -34,6 +37,7 @@ To uninstall/delete the `kangal` deployment:
 
 ```console
 $ helm delete kangal
+$ kubectl delete crd loadtests.kangal.hellofresh.com
 ```
 
 ## Configuration
