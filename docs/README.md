@@ -1,29 +1,42 @@
 # Kangal
 
+## Table of content
+- [Kangal user flow](Kangal-user-flow.md) 
+- [Load generators](#load-generator-types-aka-backends)
+    - [Requirements for new backends](#adding-a-new-load-generator)
+    - [JMeter in Kangal](jmeter-in-kangal/JMeter-load-generator-in-kangal.md)
+- [Reporting](#reporting-in-kangal)
+- [Troubleshooting](Troubleshooting.md)
+
 Welcome to the Kangal - Kubernetes and Go Automatic Loader!
 To start using Kangal you will need to install it in your cluster. Installation guide using Helm can be found [here](https://github.com/hellofresh/kangal/blob/master/charts/kangal/README.md).
-In this section you can find information about load generator and how to write tests.
-
+In this section you can find information about load generators and how to write tests.
     
-### How is load generated?
-Currently the main load generator used in Kangal is JMeter v5.0 r1840935. JMeter is a powerfull tool which can be used for different performance testing tasks. 
-Please read [Load generator in Kangal](Load-generator-in-kangal.md) for further details.
+## Load generator types aka backends
+Currently, there are two load generator types implemented for Kangal:
+- Fake - mock up provider used for testing controller logic. Not generating any load. Useful for debugging.
 
-### Usage examples
-#### Tests with test data
-Some test scenarios require unique request or at least some amount of varied data in requests. For this purposes JMeter allows you to use external data sets in a CSV format. Read more about [CSV DataSetConfig](https://jmeter.apache.org/usermanual/component_reference.html#CSV_Data_Set_Config) in official JMeter documentation.
+- JMeter - the first real load generator implemented for Kangal. Kangal creates JMeter load test environments based on [Kangal-JMeter](https://github.com/hellofresh/kangal-jmeter) docker image. 
+JMeter is a powerful tool which can be used for different performance testing tasks. 
+Please read [JMeter Load generator in Kangal](jmeter-in-kangal/JMeter-load-generator-in-kangal.md) for further details.
 
-1. Prepare your test data in CSV file
-2. Configure test script accordingly. Find detais here [How to write and understand a JMeter test: Test with CSV Data](How-to-write-tests.md#test-with-csv-data)
-3. Add both files in POST request to Kangal API
+### Adding a new load generator
+Kangal offers an opportunity to add different load generators as backends. 
+Requirements to new load generators:
+1. Create a docker image that must contain an executable of a new load generator and all required scripts to run it. Docker image should exit once load test is finished and it should provide logs to stdout which will be used by Kangal Proxy API.
+2. Create a new backend resource definition in Kangal source code: 
+ - [/pkg/backends](https://github.com/hellofresh/kangal/tree/master/pkg/backends). 
+ - [backend.go](https://github.com/hellofresh/kangal/blob/master/pkg/backends/backend.go#L33)
+ - [CRD definition](https://github.com/hellofresh/kangal/blob/master/charts/kangal/crd.yaml#L43)
+ - [openapi.json](https://github.com/hellofresh/kangal/blob/master/openapi.json#L280)
+The basic resource is a job that manages all the other resources and sets pods to the `finished` state when the test is over.
 
-Kangal will split the test data equally between all the distributed pods you requested, so every pod will have a unique piece of your testdata file and requests from different pods will not be duplicated. If you have only one distributed pod no data splitting will take place.
+## Reporting in Kangal
+Reporting is an important part of load testing process. It basically contains in two parts:
+1. Live metrics during the running load test - Kangal proxy scrapes logs from main job stdout Docker container.
+2. Solid report generated after the end of the test. 
+Currently, Kangal relies on report creation implemented in load generator itself. You can read more about JMeter implementation in [Reporting in JMeter](jmeter-in-kangal/Reporting-in-JMeter.md).
 
-#### Tests with environment variables
-Some tests may contain sensitive information like DB connection parameters, authorisation tokens, etc. You can provide this information as environment variables which will be applied in loadtest environment before running test. 
+Kangal provides connection to S3 bucket to retrieve reports using API endpoint.
 
-Kangal allows you to use a file with env vars saved in CSV format. Please configure your test script accordingly to use env vars. Read more about using env vars in official [JMeter-plugin documentation](https://jmeter-plugins.org/wiki/Functions/#envsupfont-color-gray-size-1-since-1-2-0-font-sup) and [How to write and understand a JMeter test](How-to-write-tests.md).
-
-1. Save your environment variables in CSV file
-2. Configure test script accordingly. Find detais here [How to write and understand a JMeter test: Test with environment variables](How-to-write-tests.md#test-with-environment-variables)
-3. Add both files in POST request to Kangal API
+> Note: Pay attention to reporting when adding a new backend to Kangal.
