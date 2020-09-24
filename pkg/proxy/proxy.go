@@ -8,7 +8,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"strings"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
@@ -218,38 +217,6 @@ func (p *Proxy) GetLogs(w http.ResponseWriter, r *http.Request) {
 
 	io.WriteString(w, string(logs))
 	return
-}
-
-//fileToString converts file to string
-func fileToString(f io.ReadCloser) (string, error) {
-	buf := new(bytes.Buffer)
-	if _, err := buf.ReadFrom(f); err != nil {
-		return "", err
-	}
-
-	defer f.Close()
-	s := buf.String()
-
-	if len(s) == 0 {
-		return "", ErrFileToStringEmpty
-	}
-
-	return s, nil
-}
-
-//convertTestName converts testfile name to valid LoadTest object name
-//example: my_load_test.jmx to my-load-test
-func convertTestName(n string) string {
-	noSuffix := strings.TrimSuffix(n, ".jmx")
-
-	tf := strings.ToLower(noSuffix)
-
-	if strings.Contains(tf, "_") {
-		nu := strings.ReplaceAll(tf, "_", "-")
-		return nu
-	}
-
-	return tf
 }
 
 func doRequest(req *restClient.Request) ([]byte, error) {

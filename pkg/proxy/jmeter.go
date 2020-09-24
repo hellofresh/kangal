@@ -1,10 +1,12 @@
 package proxy
 
 import (
+	"bytes"
 	"crypto/sha1"
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -182,6 +184,23 @@ func getDistributedPods(r *http.Request) (int32, error) {
 	}
 
 	return int32(dn), nil
+}
+
+//fileToString converts file to string
+func fileToString(f io.ReadCloser) (string, error) {
+	buf := new(bytes.Buffer)
+	if _, err := buf.ReadFrom(f); err != nil {
+		return "", err
+	}
+
+	defer f.Close()
+	s := buf.String()
+
+	if len(s) == 0 {
+		return "", ErrFileToStringEmpty
+	}
+
+	return s, nil
 }
 
 // ToLoadTest converts cr structure to LoadTest
