@@ -33,6 +33,38 @@ func (m *MinioFileSystem) Open(name string) (http.File, error) {
 	}
 
 	name = strings.TrimPrefix(name, pathSeparator)
+	parts := strings.Split(name, "/")
+	if 1 == len(parts) {
+		parts = append(parts, "index.html")
+	}
+	name = strings.Join(parts, "/")
+
+	loadTestFile := parts[0]
+
+	loadTestObj, err := getObject(m, loadTestFile)
+	if err == os.ErrNotExist {
+		return m.fallbackOpen(name)
+	}
+	if err != nil {
+		return nil, os.ErrNotExist
+	}
+
+	loadTestInfo, _ := loadTestObj.Stat()
+
+	if "application/x-tar" == loadTestInfo.ContentType {
+		// TODO implement TAR reading
+	}
+
+	return &minioFile{
+		client: m.Client,
+		object: loadTestObj,
+		isDir:  false,
+		bucket: m.Bucket,
+		prefix: loadTestFile,
+	}, nil
+}
+
+func (m *MinioFileSystem) fallbackOpen(name string) (http.File, error) {
 	obj, err := getObject(m, name)
 	if err != nil {
 		return nil, os.ErrNotExist
