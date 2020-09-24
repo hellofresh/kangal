@@ -3,6 +3,7 @@ package jmeter
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"time"
 
 	"go.uber.org/zap"
@@ -13,13 +14,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 	coreListersV1 "k8s.io/client-go/listers/core/v1"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-
 	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
-	"github.com/hellofresh/kangal/pkg/report"
 )
 
 var (
@@ -34,25 +30,25 @@ var (
 
 // JMeter enables the controller to run a loadtest using JMeter
 type JMeter struct {
-	kubeClientSet    kubernetes.Interface
-	kangalClientSet  clientSetV.Interface
-	loadTest         *loadTestV1.LoadTest
-	logger           *zap.Logger
-	namespacesLister coreListersV1.NamespaceLister
-	reportConfig     report.Config
+	kubeClientSet      kubernetes.Interface
+	kangalClientSet    clientSetV.Interface
+	loadTest           *loadTestV1.LoadTest
+	logger             *zap.Logger
+	namespacesLister   coreListersV1.NamespaceLister
+	reportPreSignedURL *url.URL
 
 	podAnnotations, namespaceAnnotations map[string]string
 }
 
 //New initializes new JMeter provider handler to manage load test resources with Kangal Controller
-func New(kubeClientSet kubernetes.Interface, kangalClientSet clientSetV.Interface, lt *loadTestV1.LoadTest, logger *zap.Logger, namespacesLister coreListersV1.NamespaceLister, reportConfig report.Config, podAnnotations, namespaceAnnotations map[string]string) *JMeter {
+func New(kubeClientSet kubernetes.Interface, kangalClientSet clientSetV.Interface, lt *loadTestV1.LoadTest, logger *zap.Logger, namespacesLister coreListersV1.NamespaceLister, reportPreSignedURL *url.URL, podAnnotations, namespaceAnnotations map[string]string) *JMeter {
 	return &JMeter{
 		kubeClientSet:        kubeClientSet,
 		kangalClientSet:      kangalClientSet,
 		loadTest:             lt,
 		logger:               logger,
 		namespacesLister:     namespacesLister,
-		reportConfig:         reportConfig,
+		reportPreSignedURL:   reportPreSignedURL,
 		podAnnotations:       podAnnotations,
 		namespaceAnnotations: namespaceAnnotations,
 	}
@@ -194,20 +190,6 @@ func (c *JMeter) CheckOrUpdateStatus(ctx context.Context) error {
 		}
 	}
 
-	// TODO: move all this code from outside jmeter (to into backends package)
-	sess, err := session.NewSession(&aws.Config{
-		Endpoint:         aws.String(c.reportConfig.AWSEndpointURL),
-		Region:           aws.String(c.reportConfig.AWSRegion),
-		S3ForcePathStyle: aws.Bool(true), // this adds compatibility with GCS and ABS
-	})
-	svc := s3.New(sess)
-	req, _ := svc.PutObjectRequest(&s3.PutObjectInput{
-		ContentType: aws.String("application/x-tar"),
-		Bucket:      aws.String(c.reportConfig.AWSBucketName),
-		Key:         aws.String(fmt.Sprintf("%s.tar", c.loadTest.GetName())),
-	})
-	preSignedURL, err := req.Presign(30 * time.Minute) // TODO: turn this into a configurable parameter
-
 	job, err := c.kubeClientSet.BatchV1().Jobs(namespace.GetName()).Get(ctx, loadTestJobName, metaV1.GetOptions{})
 	if err != nil {
 		// The LoadTest resource may no longer exist, in which case we stop
@@ -215,7 +197,7 @@ func (c *JMeter) CheckOrUpdateStatus(ctx context.Context) error {
 		if errors.IsNotFound(err) {
 			_, err = c.kubeClientSet.BatchV1().Jobs(namespace.GetName()).Create(
 				ctx,
-				c.NewJMeterMasterJob(preSignedURL, c.podAnnotations),
+				c.NewJMeterMasterJob(c.reportPreSignedURL, c.podAnnotations),
 				metaV1.CreateOptions{},
 			)
 			return err

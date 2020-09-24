@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"strings"
 
@@ -241,7 +242,7 @@ func (c *JMeter) NewPod(i int, configMap *coreV1.ConfigMap, podAnnotations map[s
 }
 
 // NewJMeterMasterJob creates a new job which runs the jmeter master pod
-func (c *JMeter) NewJMeterMasterJob(preSignedURL string, podAnnotations map[string]string) *batchV1.Job {
+func (c *JMeter) NewJMeterMasterJob(preSignedURL *url.URL, podAnnotations map[string]string) *batchV1.Job {
 	loadtest := c.loadTest
 	var one int32 = 1
 	MasterConfig := loadtest.Spec.MasterConfig
@@ -255,10 +256,13 @@ func (c *JMeter) NewJMeterMasterJob(preSignedURL string, podAnnotations map[stri
 			Name:  "USE_WORKERS",
 			Value: "true",
 		},
-		{
+	}
+
+	if nil != preSignedURL {
+		jMeterEnvVars = append(jMeterEnvVars, coreV1.EnvVar{
 			Name:  "REPORT_PRESIGNED_URL",
-			Value: preSignedURL,
-		},
+			Value: preSignedURL.String(),
+		})
 	}
 
 	return &batchV1.Job{
