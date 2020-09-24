@@ -1,6 +1,9 @@
 # Kangal User Flow
 
 We expect users to communicate with Kangal by only using API, which is provided by Kangal Proxy.
+
+>You can import [openapi.json](../openapi.json) file to your Postman and have a collection of requests to Kangal. 
+
 Here is an example of requests users can send to Kangal API to manage their load test.
 
 #### Create 

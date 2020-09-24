@@ -38,13 +38,7 @@ $ helm delete kangal
 
 ## Configuration
 
-To install Kangal to your infrastructure you need to apply a custom resource definition (CRD) for new LoadTest resource 
-and create 3 deployments: Kangal-Proxy, Kangal-Controller and Kangal-openapi-UI
-
-To create required Kubernetes resource LoadTest CRD in your cluster
-```console
-$ kubectl apply -f charts/kangal/crd.yaml
-```
+To install Kangal to your infrastructure you need 3 deployments: Kangal-Proxy, Kangal-Controller and Kangal-openapi-UI
 
 The following table lists the common configurable parameters for `Kangal` chart:
 
