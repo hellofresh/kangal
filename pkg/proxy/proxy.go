@@ -8,20 +8,18 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"strings"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 	"go.uber.org/zap"
 	k8sAPIErrors "k8s.io/apimachinery/pkg/api/errors"
-	kube "k8s.io/client-go/kubernetes"
 	restClient "k8s.io/client-go/rest"
 
 	loadtest "github.com/hellofresh/kangal/pkg/controller"
 	cHttp "github.com/hellofresh/kangal/pkg/core/http"
 	mPkg "github.com/hellofresh/kangal/pkg/core/middleware"
+	kube "github.com/hellofresh/kangal/pkg/kubernetes"
 	apisLoadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
-	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned/typed/loadtest/v1"
 )
 
 const (
@@ -36,15 +34,13 @@ var (
 // Proxy handler
 type Proxy struct {
 	maxLoadTestsRun int
-	loadTestClient  loadTestV1.LoadTestInterface
-	kubeClient      kube.Interface
+	kubeClient      *kube.Client
 }
 
 // NewProxy returns new Proxy handlers
-func NewProxy(maxLoadTestsRun int, loadTestClient loadTestV1.LoadTestInterface, kubeClient kube.Interface) *Proxy {
+func NewProxy(maxLoadTestsRun int, kubeClient *kube.Client) *Proxy {
 	return &Proxy{
 		maxLoadTestsRun: maxLoadTestsRun,
-		loadTestClient:  loadTestClient,
 		kubeClient:      kubeClient,
 	}
 }
@@ -71,7 +67,7 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	// check the number of active loadtests currently running on the cluster
-	activeLoadTests, err := loadtest.CountActiveLoadtests(ctx, p.loadTestClient)
+	activeLoadTests, err := p.kubeClient.CountActiveLoadTests(ctx)
 	if err != nil {
 		logger.Error("Could not count active load tests", zap.Error(err))
 		render.Render(w, r, cHttp.ErrResponse(http.StatusInternalServerError, "Could not count active load tests"))
@@ -104,7 +100,7 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	lto, err := loadtest.CreateLoadTestCR(ctx, p.loadTestClient, loadTest, logger)
+	lto, err := p.kubeClient.CreateLoadTest(ctx, loadTest)
 	if err != nil {
 		if err == os.ErrExist {
 			render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest,
@@ -138,7 +134,7 @@ func (p *Proxy) Delete(w http.ResponseWriter, r *http.Request) {
 	ltID := chi.URLParam(r, loadTestID)
 	logger.Debug("Deleting loadtest", zap.String("ltID", ltID))
 
-	err := loadtest.DeleteLoadTestCR(ctx, p.loadTestClient, ltID, logger)
+	err := p.kubeClient.DeleteLoadTest(ctx, ltID)
 	if err != nil {
 		logger.Error("Could not delete load test with error:", zap.Error(err))
 		render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest, err.Error()))
@@ -158,7 +154,7 @@ func (p *Proxy) Get(w http.ResponseWriter, r *http.Request) {
 	ltID := chi.URLParam(r, loadTestID)
 	logger.Debug("Retrieving info for loadtest", zap.String("ltID", ltID))
 
-	result, err := loadtest.GetLoadtestCR(ctx, p.loadTestClient, ltID, logger)
+	result, err := p.kubeClient.GetLoadTest(ctx, ltID)
 	if err != nil {
 		logger.Error("Could not get load test info with error:", zap.Error(err))
 
@@ -189,7 +185,7 @@ func (p *Proxy) GetLogs(w http.ResponseWriter, r *http.Request) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), loadtest.KubeTimeout)
 	defer cancel()
-	loadTest, err := loadtest.GetLoadtestCR(ctx, p.loadTestClient, ltID, logger)
+	loadTest, err := p.kubeClient.GetLoadTest(ctx, ltID)
 	if err != nil {
 		logger.Error("Could not get load test info with error:", zap.Error(err))
 		render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest, err.Error()))
@@ -205,7 +201,7 @@ func (p *Proxy) GetLogs(w http.ResponseWriter, r *http.Request) {
 
 	ctxJMeterLogs, cancelJMeterLogs := context.WithTimeout(context.Background(), loadtest.KubeTimeout)
 	defer cancelJMeterLogs()
-	logsRequest, err := loadtest.GetMasterPodLogs(ctxJMeterLogs, p.kubeClient, namespace, logger)
+	logsRequest, err := p.kubeClient.GetMasterPodLogs(ctxJMeterLogs, namespace)
 	if err != nil {
 		logger.Error("Could not get load test logs request:", zap.Error(err))
 		render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest, err.Error()))
@@ -221,38 +217,6 @@ func (p *Proxy) GetLogs(w http.ResponseWriter, r *http.Request) {
 
 	io.WriteString(w, string(logs))
 	return
-}
-
-//fileToString converts file to string
-func fileToString(f io.ReadCloser) (string, error) {
-	buf := new(bytes.Buffer)
-	if _, err := buf.ReadFrom(f); err != nil {
-		return "", err
-	}
-
-	defer f.Close()
-	s := buf.String()
-
-	if len(s) == 0 {
-		return "", ErrFileToStringEmpty
-	}
-
-	return s, nil
-}
-
-//convertTestName converts testfile name to valid LoadTest object name
-//example: my_load_test.jmx to my-load-test
-func convertTestName(n string) string {
-	noSuffix := strings.TrimSuffix(n, ".jmx")
-
-	tf := strings.ToLower(noSuffix)
-
-	if strings.Contains(tf, "_") {
-		nu := strings.ReplaceAll(tf, "_", "-")
-		return nu
-	}
-
-	return tf
 }
 
 func doRequest(req *restClient.Request) ([]byte, error) {

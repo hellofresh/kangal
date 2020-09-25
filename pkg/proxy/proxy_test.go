@@ -5,91 +5,100 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"go.uber.org/zap"
 )
 
-func TestConvertTestName(t *testing.T) {
-	testName := "ederE_rfrg.jmx"
-	convertedName := convertTestName(testName)
-
-	assert.Equal(t, "edere-rfrg", convertedName)
-}
-
-func TestConvertTestNameWithoutSuffix(t *testing.T) {
-	testName := "123_TEST_FILE"
-	convertedName := convertTestName(testName)
-
-	assert.Equal(t, "123-test-file", convertedName)
-}
-
-func TestConvertTestNameSpecialSymbols(t *testing.T) {
-	testName := "¨¨ƒ¸¸dsgc_ŕtdv"
-	convertedName := convertTestName(testName)
-
-	assert.Equal(t, "¨¨ƒ¸¸dsgc-ŕtdv", convertedName)
-}
-
-func TestRequestValidator(t *testing.T) {
-	requestFiles := map[string]string{
-		"testFile": "testdata/valid/loadtest.jmx",
+func TestHTTPValidator(t *testing.T) {
+	for _, tt := range []struct {
+		name             string
+		distributedPods  string
+		failingLine      string
+		loadTestType     string
+		requestFiles     map[string]string
+		expectedResponse string
+	}{
+		{
+			"Valid JMeter",
+			"1",
+			"",
+			"JMeter",
+			map[string]string{
+				"testFile": "testdata/valid/loadtest.jmx",
+			},
+			"",
+		},
+		{
+			"Valid Fake",
+			"1",
+			"",
+			"Fake",
+			map[string]string{
+				"testFile": "testdata/valid/loadtest.jmx",
+			},
+			"",
+		},
+		{
+			"Empty distributed pods",
+			"0",
+			"distributedPods",
+			"Fake",
+			map[string]string{
+				"testFile": "testdata/valid/loadtest.jmx",
+			},
+			"The distributedPods field value can not be less than 1",
+		},
+		{
+			"Invalid type",
+			"1",
+			"type",
+			"IncorrectType",
+			map[string]string{
+				"testFile": "testdata/valid/loadtest.jmx",
+			},
+			"The type field must be one of JMeter, Fake",
+		},
+		{
+			"Invalid test file",
+			"1",
+			"testFile",
+			"JMeter",
+			map[string]string{
+				"testFile": "testdata/valid/testdata.csv",
+			},
+			"The testFile field file extension csv is invalid",
+		},
+		{
+			"Invalid envVars file",
+			"1",
+			"envVars",
+			"JMeter",
+			map[string]string{
+				"testFile": "testdata/valid/loadtest.jmx",
+				"envVars":  "testdata/valid/loadtest.jmx",
+			},
+			"The envVars field file extension jmx is invalid",
+		},
+		{
+			"Invalid testData file",
+			"1",
+			"testData",
+			"JMeter",
+			map[string]string{
+				"testFile": "testdata/valid/loadtest.jmx",
+				"testData": "testdata/valid/loadtest.jmx",
+			},
+			"The testData field file extension jmx is invalid",
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			request, err := buildMocFormReq(tt.requestFiles, tt.distributedPods, tt.loadTestType)
+			if err != nil {
+				t.Error(err)
+				t.FailNow()
+			}
+			result := httpValidator(request)
+			assert.Equal(t, tt.expectedResponse, result.Get(tt.failingLine))
+		})
 	}
-
-	distributedPods := "2"
-
-	request, err := buildMocFormReq(requestFiles, distributedPods, "JMeter")
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-
-	spec, err := FromHTTPRequestToJMeter(request, "JMeter", zap.NewNop())
-	require.NoError(t, err)
-
-	loadTest := &JMeter{
-		Spec:   spec,
-		Logger: zap.NewNop(),
-	}
-
-	err = loadTest.validate()
-	assert.NoError(t, err)
-}
-
-func TestRequestValidatorWrongTestFile(t *testing.T) {
-	requestFiles := map[string]string{
-		"testFile": "testdata/valid/testdata.csv",
-	}
-
-	distributedPods := "2"
-
-	request, err := buildMocFormReq(requestFiles, distributedPods, "JMeter")
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-
-	result := httpValidator(request)
-	assert.Equal(t, "The testFile field file extension csv is invalid", result.Get("testFile"))
-}
-
-func TestRequestValidatorWrongEnvVars(t *testing.T) {
-	requestFiles := map[string]string{
-		"testFile": "testdata/valid/loadtest.jmx",
-		"testData": "testdata/valid/loadtest.jmx",
-		"envVars":  "testdata/valid/loadtest.jmx",
-	}
-
-	distributedPods := "2"
-
-	request, err := buildMocFormReq(requestFiles, distributedPods, "JMeter")
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-
-	result := httpValidator(request)
-	assert.Equal(t, "The envVars field file extension jmx is invalid", result.Get("envVars"))
-	assert.Equal(t, "The testData field file extension jmx is invalid", result.Get("testData"))
 }
 
 func buildMocFormReq(requestFiles map[string]string, distributedPods, ltType string) (*http.Request, error) {

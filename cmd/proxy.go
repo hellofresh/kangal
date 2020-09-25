@@ -11,6 +11,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/hellofresh/kangal/pkg/core/observability"
+	kube "github.com/hellofresh/kangal/pkg/kubernetes"
 	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned/typed/loadtest/v1"
 	"github.com/hellofresh/kangal/pkg/proxy"
 	"github.com/hellofresh/kangal/pkg/report"
@@ -58,12 +59,13 @@ func NewProxyCmd(ctx context.Context) *cobra.Command {
 				return fmt.Errorf("building kangal clientset: %w", err)
 			}
 
-			kubeClient, err := kubernetes.NewForConfig(k8sConfig)
+			kubeClientSet, err := kubernetes.NewForConfig(k8sConfig)
 			if err != nil {
 				return fmt.Errorf("building kubernetes clientset: %w", err)
 			}
 
 			loadTestClient := kangalClientSet.LoadTests()
+			kubeClient := kube.NewClient(loadTestClient, kubeClientSet, logger)
 
 			err = report.InitObjectStorageClient(cfg.Report)
 			if err != nil {
@@ -74,10 +76,9 @@ func NewProxyCmd(ctx context.Context) *cobra.Command {
 			cfg.MasterURL = opts.masterURL
 
 			return proxy.RunServer(ctx, cfg, proxy.Runner{
-				Exporter:       pe,
-				KubeClient:     kubeClient,
-				LoadTestClient: loadTestClient,
-				Logger:         logger,
+				Exporter:   pe,
+				KubeClient: kubeClient,
+				Logger:     logger,
 			})
 		},
 	}

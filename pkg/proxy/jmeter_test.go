@@ -373,6 +373,69 @@ func TestRequestValidatorType(t *testing.T) {
 	assert.Equal(t, ErrRequiredJMeterType, err)
 }
 
+func TestRequestValidator(t *testing.T) {
+	for _, tt := range []struct {
+		name            string
+		loadTestType    apisLoadTestV1.LoadTestType
+		distributedPods int32
+		testFile        string
+		requireError    bool
+		expectedError   error
+	}{
+		{
+			"Valid JMeter",
+			apisLoadTestV1.LoadTestTypeJMeter,
+			2,
+			"some test file",
+			false,
+			nil,
+		},
+		{
+			"Valid Fake",
+			apisLoadTestV1.LoadTestTypeFake,
+			1,
+			"some test file",
+			false,
+			nil,
+		},
+		{
+			"Zero pods",
+			apisLoadTestV1.LoadTestTypeFake,
+			0,
+			"some test file",
+			true,
+			ErrRequireMinOneDistributedPod,
+		},
+		{
+			"No test file",
+			apisLoadTestV1.LoadTestTypeFake,
+			1,
+			"",
+			true,
+			ErrRequireTestFile,
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			loadTest := &JMeter{
+				Spec: &apisLoadTestV1.LoadTestSpec{
+					Type:            tt.loadTestType,
+					TestFile:        tt.testFile,
+					DistributedPods: &tt.distributedPods,
+				},
+				Logger: zap.NewNop(),
+			}
+
+			err := loadTest.validate()
+			if tt.requireError == true {
+				assert.Equal(t, tt.expectedError, err)
+			} else {
+				assert.NoError(t, err)
+			}
+
+		})
+	}
+}
+
 func TestRequestValidatorHasSpec(t *testing.T) {
 	loadTest := &JMeter{
 		Spec:   nil,
@@ -395,36 +458,4 @@ func TestRequestValidatorNoPods(t *testing.T) {
 
 	err := loadTest.validate()
 	assert.Equal(t, ErrRequireMinOneDistributedPod, err)
-}
-
-func TestRequestValidatorWrongPods(t *testing.T) {
-	var distributedPods int32 = 0
-
-	loadTest := &JMeter{
-		Spec: &apisLoadTestV1.LoadTestSpec{
-			Type:            apisLoadTestV1.LoadTestTypeJMeter,
-			TestFile:        "asdf",
-			DistributedPods: &distributedPods,
-		},
-		Logger: zap.NewNop(),
-	}
-
-	err := loadTest.validate()
-	assert.Equal(t, ErrRequireMinOneDistributedPod, err)
-}
-
-func TestRequestValidatorNoTestFile(t *testing.T) {
-	var distributedPods int32 = 2
-
-	loadTest := &JMeter{
-		Spec: &apisLoadTestV1.LoadTestSpec{
-			Type:            apisLoadTestV1.LoadTestTypeJMeter,
-			TestFile:        "",
-			DistributedPods: &distributedPods,
-		},
-		Logger: zap.NewNop(),
-	}
-
-	err := loadTest.validate()
-	assert.Equal(t, ErrRequireTestFile, err)
 }
