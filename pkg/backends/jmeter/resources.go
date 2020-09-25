@@ -204,8 +204,8 @@ func (c *JMeter) NewPod(i int, configMap *coreV1.ConfigMap, podAnnotations map[s
 					},
 					Resources: coreV1.ResourceRequirements{
 						Requests: map[coreV1.ResourceName]resource.Quantity{
-							coreV1.ResourceMemory: resource.MustParse("4Gi"),
-							coreV1.ResourceCPU:    resource.MustParse("1000m"),
+							coreV1.ResourceMemory: resource.MustParse("500Mi"),
+							coreV1.ResourceCPU:    resource.MustParse("250m"),
 						},
 						Limits: map[coreV1.ResourceName]resource.Quantity{
 							coreV1.ResourceMemory: resource.MustParse("4Gi"),
@@ -325,8 +325,8 @@ func (c *JMeter) NewJMeterMasterJob(awsAccessKeyID, awsSecretAccessKey, awsRegio
 							},
 							Resources: coreV1.ResourceRequirements{
 								Requests: map[coreV1.ResourceName]resource.Quantity{
-									coreV1.ResourceMemory: resource.MustParse("4Gi"),
-									coreV1.ResourceCPU:    resource.MustParse("1000m"),
+									coreV1.ResourceMemory: resource.MustParse("500Mi"),
+									coreV1.ResourceCPU:    resource.MustParse("250m"),
 								},
 								Limits: map[coreV1.ResourceName]resource.Quantity{
 									coreV1.ResourceMemory: resource.MustParse("4Gi"),
