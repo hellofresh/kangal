@@ -1,6 +1,7 @@
 package report
 
 import (
+	"archive/tar"
 	"net/http"
 	"os"
 	"strings"
@@ -52,7 +53,29 @@ func (m *MinioFileSystem) Open(name string) (http.File, error) {
 	loadTestInfo, _ := loadTestObj.Stat()
 
 	if "application/x-tar" == loadTestInfo.ContentType {
-		// TODO implement TAR reading
+		tarName := strings.TrimPrefix(name, loadTestFile+"/")
+		tarReader := tar.NewReader(loadTestObj)
+
+		for {
+			tarHeader, err := tarReader.Next()
+			if nil != err {
+				break
+			}
+
+			if tarName != tarHeader.Name {
+				continue
+			}
+
+			return &memoryFile{
+				at:      0,
+				Name:    tarName,
+				read:    tarReader,
+				size:    tarHeader.Size,
+				modTime: tarHeader.ModTime,
+			}, nil
+		}
+
+		return nil, os.ErrNotExist
 	}
 
 	return &minioFile{
