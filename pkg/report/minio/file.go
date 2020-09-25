@@ -48,7 +48,7 @@ type memoryFileInfo struct {
 
 func (s *memoryFileInfo) Name() string       { return s.f.Name }
 func (s *memoryFileInfo) Size() int64        { return s.f.size }
+func (s *memoryFileInfo) ModTime() time.Time { return s.f.modTime }
 func (s *memoryFileInfo) Mode() os.FileMode  { return os.ModeTemporary }
-func (s *memoryFileInfo) ModTime() time.Time { return time.Time{} }
 func (s *memoryFileInfo) IsDir() bool        { return false }
 func (s *memoryFileInfo) Sys() interface{}   { return nil }
