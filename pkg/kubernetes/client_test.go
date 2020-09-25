@@ -1,4 +1,4 @@
-package controller
+package kubernetes
 
 import (
 	"context"
@@ -14,36 +14,41 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 	k8stesting "k8s.io/client-go/testing"
 
+	"github.com/hellofresh/kangal/pkg/controller"
 	apisLoadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	fakeClientset "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned/fake"
 )
 
-func TestCreateLoadtestCR(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
+func TestCreateLoadTest(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), controller.KubeTimeout)
 	defer cancel()
 
 	var logger = zap.NewNop()
-	loadtestClientset := fakeClientset.NewSimpleClientset()
+	loadtestClientSet := fakeClientset.NewSimpleClientset()
+	kubeClientSet := fake.NewSimpleClientset()
 
 	loadTest := &apisLoadTestV1.LoadTest{}
 	loadTest.Name = "NameOfMyLoadtest"
 
-	loadtestClientset.Fake.PrependReactor("create", "loadtests", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+	loadtestClientSet.Fake.PrependReactor("create", "loadtests", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
 		return true, loadTest, nil
 	})
 
-	result, err := CreateLoadTestCR(ctx, loadtestClientset.KangalV1().LoadTests(), loadTest, logger)
+	c := NewClient(loadtestClientSet.KangalV1().LoadTests(), kubeClientSet, logger)
+
+	result, err := c.CreateLoadTest(ctx, loadTest)
 	assert.NoError(t, err)
 	assert.Equal(t, loadTest.Name, result)
 
 }
 
-func TestCreateLoadtestCRWithError(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
+func TestCreateLoadTestWithError(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), controller.KubeTimeout)
 	defer cancel()
 
 	var logger = zap.NewNop()
 	loadtestClientset := fakeClientset.NewSimpleClientset()
+	kubeClientSet := fake.NewSimpleClientset()
 	loadTest := &apisLoadTestV1.LoadTest{}
 	loadTest.Name = ""
 
@@ -51,17 +56,19 @@ func TestCreateLoadtestCRWithError(t *testing.T) {
 		return true, &apisLoadTestV1.LoadTest{}, errors.New("create returns an error")
 	})
 
-	result, err := CreateLoadTestCR(ctx, loadtestClientset.KangalV1().LoadTests(), loadTest, logger)
+	c := NewClient(loadtestClientset.KangalV1().LoadTests(), kubeClientSet, logger)
+	result, err := c.CreateLoadTest(ctx, loadTest)
 	assert.Error(t, err)
 	assert.Equal(t, "", result)
 }
 
-func TestDeleteLoadtestCR(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
+func TestDeleteLoadTest(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), controller.KubeTimeout)
 	defer cancel()
 
 	var logger = zap.NewNop()
 	loadtestClientset := fakeClientset.NewSimpleClientset()
+	kubeClientSet := fake.NewSimpleClientset()
 
 	ltID := "fake-load-test"
 
@@ -69,16 +76,18 @@ func TestDeleteLoadtestCR(t *testing.T) {
 		return true, &apisLoadTestV1.LoadTest{}, nil
 	})
 
-	deleteErr := DeleteLoadTestCR(ctx, loadtestClientset.KangalV1().LoadTests(), ltID, logger)
+	c := NewClient(loadtestClientset.KangalV1().LoadTests(), kubeClientSet, logger)
+	deleteErr := c.DeleteLoadTest(ctx, ltID)
 	assert.NoError(t, deleteErr)
 }
 
-func TestCreateLoadtestCRNoLoadtest(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
+func TestCreateLoadTestCRNoLoadTest(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), controller.KubeTimeout)
 	defer cancel()
 
 	var logger = zap.NewNop()
 	loadtestClientset := fakeClientset.NewSimpleClientset()
+	kubeClientSet := fake.NewSimpleClientset()
 
 	ltID := "fake-load-test"
 
@@ -86,16 +95,18 @@ func TestCreateLoadtestCRNoLoadtest(t *testing.T) {
 		return true, &apisLoadTestV1.LoadTest{}, errors.New("delete returns an error: no loadtest with given name found")
 	})
 
-	deleteErr := DeleteLoadTestCR(ctx, loadtestClientset.KangalV1().LoadTests(), ltID, logger)
+	c := NewClient(loadtestClientset.KangalV1().LoadTests(), kubeClientSet, logger)
+	deleteErr := c.DeleteLoadTest(ctx, ltID)
 	assert.Error(t, deleteErr)
 }
 
-func TestGetLoadtestCR(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
+func TestGetLoadTest(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), controller.KubeTimeout)
 	defer cancel()
 
 	var logger = zap.NewNop()
 	loadtestClientset := fakeClientset.NewSimpleClientset()
+	kubeClientSet := fake.NewSimpleClientset()
 
 	ltID := "fake-load-test"
 
@@ -103,15 +114,17 @@ func TestGetLoadtestCR(t *testing.T) {
 		return true, &apisLoadTestV1.LoadTest{}, nil
 	})
 
-	_, err := GetLoadtestCR(ctx, loadtestClientset.KangalV1().LoadTests(), ltID, logger)
+	c := NewClient(loadtestClientset.KangalV1().LoadTests(), kubeClientSet, logger)
+	_, err := c.GetLoadTest(ctx, ltID)
 	assert.NoError(t, err)
 }
 
-func TestCountActiveLoadtests(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
+func TestCountActiveLoadTests(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), controller.KubeTimeout)
 	defer cancel()
 
 	loadtestClientset := fakeClientset.NewSimpleClientset()
+	kubeClientSet := fake.NewSimpleClientset()
 
 	loadtestClientset.Fake.PrependReactor("list", "loadtests", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
 		return true, &apisLoadTestV1.LoadTestList{
@@ -135,17 +148,20 @@ func TestCountActiveLoadtests(t *testing.T) {
 		}, nil
 	})
 
-	counter, err := CountActiveLoadtests(ctx, loadtestClientset.KangalV1().LoadTests())
+	logger := zap.NewNop()
+	c := NewClient(loadtestClientset.KangalV1().LoadTests(), kubeClientSet, logger)
+	counter, err := c.CountActiveLoadTests(ctx)
 	assert.NoError(t, err)
 	assert.Equal(t, 2, counter)
 }
 
-func TestGetLoadtestCRNoLoadtest(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
+func TestGetLoadTestNoLoadTest(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), controller.KubeTimeout)
 	defer cancel()
 
 	var logger = zap.NewNop()
 	loadtestClientset := fakeClientset.NewSimpleClientset()
+	kubeClientSet := fake.NewSimpleClientset()
 
 	ltID := "fake-load-test"
 
@@ -153,21 +169,24 @@ func TestGetLoadtestCRNoLoadtest(t *testing.T) {
 		return true, &apisLoadTestV1.LoadTest{}, errors.New("get returns an error: no loadtest with given name found")
 	})
 
-	_, getErr := GetLoadtestCR(ctx, loadtestClientset.KangalV1().LoadTests(), ltID, logger)
+	c := NewClient(loadtestClientset.KangalV1().LoadTests(), kubeClientSet, logger)
+	_, getErr := c.GetLoadTest(ctx, ltID)
 	assert.Error(t, getErr)
 }
 
-func TestGetJMeterLogs(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
+func TestGetMasterPodLogs(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), controller.KubeTimeout)
 	defer cancel()
 
 	var logger = zap.NewNop()
+	loadtestClientset := fakeClientset.NewSimpleClientset()
 	client := &fake.Clientset{}
 	client.Fake.PrependReactor("list", "pods", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
 		return true, &corev1.PodList{}, errors.New("return an error")
 	})
 
-	_, err := GetMasterPodLogs(ctx, client, "namespace", logger)
+	c := NewClient(loadtestClientset.KangalV1().LoadTests(), client, logger)
+	_, err := c.GetMasterPodLogs(ctx, "namespace")
 	assert.Error(t, err)
 
 	client = &fake.Clientset{}
@@ -179,7 +198,8 @@ func TestGetJMeterLogs(t *testing.T) {
 	// function always returns an empty Request. Unfortunately, there is no way
 	// to easily mock this funciton like there is for "ListPods". To do this We would
 	// need to wright our own `FakePod` package, and that doesn't seem worth it.
-	_, err = GetMasterPodLogs(ctx, client, "namespace", logger)
+	c = NewClient(loadtestClientset.KangalV1().LoadTests(), client, logger)
+	_, err = c.GetMasterPodLogs(ctx, "namespace")
 	assert.Nil(t, err)
 }
 

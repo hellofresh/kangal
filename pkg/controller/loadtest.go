@@ -288,6 +288,13 @@ func (c *Controller) syncHandler(key string) error {
 			utilRuntime.HandleError(fmt.Errorf("loadtest '%s' in work queue no longer exists", key))
 			return nil
 		}
+
+		// The LoadTest resource may be conflicted, in which case we stop
+		// processing.
+		if errors.IsConflict(err) {
+			utilRuntime.HandleError(fmt.Errorf("there is a conflict with loadtest '%s' between datastore and cache. it might be because object has been removed or modified in the datastore", key))
+			return nil
+		}
 		return err
 	}
 	// copy object before mutate it
@@ -326,12 +333,24 @@ func (c *Controller) syncHandler(key string) error {
 	// check or clean LoadTest
 	err = c.checkOrDeleteLoadTest(ctx, loadTest)
 	if err != nil {
+		// The LoadTest resource may be conflicted, in which case we stop
+		// processing.
+		if errors.IsConflict(err) {
+			utilRuntime.HandleError(fmt.Errorf("there is a conflict with loadtest '%s' between datastore and cache. it might be because object has been removed or modified in the datastore", key))
+			return nil
+		}
 		return err
 	}
 
 	// Finally, we send updated loadtest resource back
 	_, err = c.kangalClientSet.KangalV1().LoadTests().Update(ctx, loadTest, metaV1.UpdateOptions{})
 	if err != nil {
+		// The LoadTest resource may be conflicted, in which case we stop
+		// processing.
+		if errors.IsConflict(err) {
+			utilRuntime.HandleError(fmt.Errorf("the loadtest '%s'has been modified; please apply your changes to the latest version and try again", key))
+			return nil
+		}
 		return err
 	}
 

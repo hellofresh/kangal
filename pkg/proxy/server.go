@@ -11,26 +11,24 @@ import (
 	"github.com/go-chi/render"
 	"go.opencensus.io/plugin/ochttp"
 	"go.uber.org/zap"
-	"k8s.io/client-go/kubernetes"
 
 	cHttp "github.com/hellofresh/kangal/pkg/core/http"
 	mPkg "github.com/hellofresh/kangal/pkg/core/middleware"
-	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned/typed/loadtest/v1"
+	kube "github.com/hellofresh/kangal/pkg/kubernetes"
 	"github.com/hellofresh/kangal/pkg/report"
 )
 
 // Runner encapsulates all Kangal Proxy API server dependencies
 type Runner struct {
-	Exporter       *prometheus.Exporter
-	KubeClient     kubernetes.Interface
-	LoadTestClient loadTestV1.LoadTestInterface
-	Logger         *zap.Logger
+	Exporter   *prometheus.Exporter
+	KubeClient *kube.Client
+	Logger     *zap.Logger
 }
 
 // RunServer runs Kangal proxy API
 func RunServer(ctx context.Context, cfg Config, rr Runner) error {
 
-	proxyHandler := NewProxy(cfg.MaxLoadTestsRun, rr.LoadTestClient, rr.KubeClient)
+	proxyHandler := NewProxy(cfg.MaxLoadTestsRun, rr.KubeClient)
 	// Start instrumented server
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
