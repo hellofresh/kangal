@@ -68,7 +68,7 @@ func (m *MinioFileSystem) Open(name string) (http.File, error) {
 
 			return &memoryFile{
 				at:      0,
-				Name:    tarName,
+				name:    tarName,
 				read:    tarReader,
 				size:    tarHeader.Size,
 				modTime: tarHeader.ModTime,

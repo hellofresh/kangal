@@ -8,7 +8,7 @@ import (
 
 type memoryFile struct {
 	at      int64
-	Name    string
+	name    string
 	read    io.Reader
 	size    int64
 	modTime time.Time
@@ -46,7 +46,7 @@ type memoryFileInfo struct {
 	f *memoryFile
 }
 
-func (s *memoryFileInfo) Name() string       { return s.f.Name }
+func (s *memoryFileInfo) Name() string       { return s.f.name }
 func (s *memoryFileInfo) Size() int64        { return s.f.size }
 func (s *memoryFileInfo) ModTime() time.Time { return s.f.modTime }
 func (s *memoryFileInfo) Mode() os.FileMode  { return os.ModeTemporary }
