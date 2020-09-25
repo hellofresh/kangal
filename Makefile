@@ -17,7 +17,7 @@ clean:
 # Runs unit-tests
 test-unit:
 	@printf "$(OK_COLOR)==> Running unit tests$(NO_COLOR)\n"
-	@CGO_ENABLED=0 go test -short -coverprofile=coverage.txt -covermode=atomic ./...
+	@CGO_ENABLED=0 go test -short ./...
 
 # Runs integration-tests
 test-integration:
