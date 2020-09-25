@@ -32,11 +32,11 @@ func (f *memoryFile) Read(b []byte) (int, error) {
 
 func (f *memoryFile) Seek(offset int64, whence int) (int64, error) {
 	switch whence {
-	case 0:
+	case io.SeekStart:
 		f.at = offset
-	case 1:
+	case io.SeekCurrent:
 		f.at += offset
-	case 2:
+	case io.SeekEnd:
 		f.at = f.size + offset
 	}
 	return f.at, nil
