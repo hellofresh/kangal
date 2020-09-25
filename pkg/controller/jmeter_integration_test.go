@@ -34,7 +34,6 @@ func TestMain(m *testing.M) {
 }
 
 func TestIntegrationJMeter(t *testing.T) {
-	t.Skip("Skipping JMeter integration tests")
 	if testing.Short() {
 		t.Skip("skipping test in short mode")
 	}
