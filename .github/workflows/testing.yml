@@ -45,6 +45,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@master
 
+      - name: Run Unit tests
+        run: |
+          make test-unit
+
       - name: Setup Golang
         uses: actions/setup-go@v2
         with:
@@ -68,3 +72,10 @@ jobs:
           AWS_BUCKET_NAME: "kangal-test"
         run: |
           ./ci/integration-tests.sh
+
+      - name: Upload codecov
+        uses: codecov/codecov-action@v1
+        if: success()
+        with:
+          file: ./coverage.txt
+          fail_ci_if_error: false
