@@ -62,7 +62,8 @@ func (m *MinioFileSystem) Open(name string) (http.File, error) {
 				break
 			}
 
-			if tarName != tarHeader.Name {
+			headerName := strings.TrimLeft(tarHeader.Name, "./")
+			if tarName != headerName {
 				continue
 			}
 
