@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	_ "net/http/pprof"
-
 	"contrib.go.opencensus.io/exporter/prometheus"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
