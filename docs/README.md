@@ -35,8 +35,20 @@ The basic resource is a job that manages all the other resources and sets pods t
 Reporting is an important part of load testing process. It basically contains in two parts:
 1. Live metrics during the running load test - Kangal proxy scrapes logs from main job stdout Docker container.
 2. Solid report generated after the end of the test. 
-Currently, Kangal relies on report creation implemented in load generator itself. You can read more about JMeter implementation in [Reporting in JMeter](jmeter-in-kangal/Reporting-in-JMeter.md).
+Currently, Kangal relies on report creation implemented in backend. You can read more about JMeter backend implementation in [Reporting in JMeter](jmeter-in-kangal/Reporting-in-JMeter.md).
 
-Kangal provides connection to S3 bucket to retrieve reports using API endpoint.
+To persist the reports the backend receives a Pre-Signed URL where which can use to upload the report. If the report contains multiple files it will be necessary to archieve/compress into a single file.
 
-> Note: Pay attention to reporting when adding a new backend to Kangal.
+Kangal also provides an API endpoint that allows to retrieve reports from storage bucket.
+
+To allow Kangal to serve the report static files is necessary to explicit set the file as a `tar` archive with no compression and **no enclosing directory**, otherwise the endpoint will just force the report download.
+
+The script below shows how to properly persist to the storage.
+
+```sh
+if [[ -n "${REPORT_PRESIGNED_URL}" ]]; then
+  echo "=== Saving report to Object storage ==="
+  tar -C /path/to/reports/ -cf /tmp/report-archive.tar .
+  curl -X PUT -H "Content-Type: application/x-tar" -T /tmp/report-archive.tar -L "${REPORT_PRESIGNED_URL}"
+fi
+```
