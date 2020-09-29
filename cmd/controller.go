@@ -16,6 +16,7 @@ import (
 	"github.com/hellofresh/kangal/pkg/core/observability"
 	clientSet "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
 	informers "github.com/hellofresh/kangal/pkg/kubernetes/generated/informers/externalversions"
+	"github.com/hellofresh/kangal/pkg/report"
 )
 
 type controllerCmdOptions struct {
@@ -77,6 +78,11 @@ func NewControllerCmd(ctx context.Context) *cobra.Command {
 
 			kubeInformerFactory := kubeInformers.NewSharedInformerFactory(kubeClient, time.Second*30)
 			kangalInformerFactory := informers.NewSharedInformerFactory(kangalClient, time.Second*30)
+
+			err = report.InitObjectStorageClient(cfg.Report)
+			if err != nil {
+				return fmt.Errorf("building reportingClient client: %w", err)
+			}
 
 			return controller.Run(ctx, cfg, controller.Runner{
 				Logger:         logger,

@@ -7,6 +7,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/go-chi/chi"
 	"github.com/minio/minio-go/v6"
 )
 
@@ -21,7 +22,7 @@ func (fakeFS) Open(name string) (http.File, error) {
 }
 
 func TestShowHandler(t *testing.T) {
-	req, err := http.NewRequest("GET", "/load-test/loadtest-name/report", nil)
+	req, err := http.NewRequest("GET", "/load-test/loadtest-name/report/", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -32,7 +33,9 @@ func TestShowHandler(t *testing.T) {
 	fs = &fakeFS{}
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(ShowHandler())
+
+	handler := chi.NewRouter()
+	handler.Get("/load-test/{id}/report/*", ShowHandler())
 
 	handler.ServeHTTP(rr, req)
 
