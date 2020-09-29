@@ -41,7 +41,6 @@ jobs:
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@master
 
-
   test:
     name: Test
     runs-on: ubuntu-latest
