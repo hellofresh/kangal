@@ -4,6 +4,14 @@ set -e
 export AWS_ACCESS_KEY_ID=""
 export AWS_SECRET_ACCESS_KEY=""
 
+while getopts "nf:" param
+do
+  case "$param" in
+    f) file="$OPTARG" ;;
+    v) set -x ;;
+  esac
+done
+
 echo "Starting kangal proxy"
 ./bin/kangal proxy --kubeconfig="$HOME/.kube/config" --max-load-tests 1 > /tmp/kangal_proxy.log 2>&1 &
 PID_PROXY=$!
