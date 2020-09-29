@@ -14,9 +14,9 @@ ___
 - [How it works](#how-it-works)
 - [Architectural diagram](#architectural-diagram)
 - [Components](#components)
-    - [LoadTest CRD](#loadtest-cr--)
-    - [Kangal Proxy](#kangal-proxy--)
-    - [Kangal Controller](#kangal-controller--)
+    - [LoadTest Custom Resource](#loadtest-custom-resource)
+    - [Kangal Proxy](#kangal-proxy)
+    - [Kangal Controller](#kangal-controller)
 - [To start using Kangal](#to-start-using-kangal)
 - [To start developing Kangal](#to-start-developing-kangal)
 - [Support](#support)
@@ -38,11 +38,11 @@ With Kangal, you can spin up an isolated environment in a Kubernetes cluster to 
 Kangal application uses Kubernetes [Custom Resources](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/).
 
 LoadTest custom resource (CR) is a main working entity.
-LoadTest custom resource definition (LoadTest CRD) can be found in [/kangal/crd.yaml](https://github.com/hellofresh/kangal/blob/master/charts/kangal/crd.yaml).
+LoadTest custom resource definition (LoadTest CRD) can be found in [charts/kangal/crd.yaml](charts/kangal/crd.yaml).
 
 Kangal application contains two main parts:
  - **Proxy** to create, delete and check load tests and reports via REST API requests
- - **Controller** to operate with LoadTest CR and other Kubernetes entities.
+ - **Controller** to operate with LoadTest CustomResource and other Kubernetes entities.
 
 Kangal also uses S3 compatible storage to save test reports. 
 
@@ -50,18 +50,18 @@ Kangal also uses S3 compatible storage to save test reports.
 The diagram below illustrates the workflow for Kangal in Kubernetes infrastructure.
 
 <p align="left">  
- <a href="https://github.com/hellofresh/kangal/blob/master/architectural_diagram.png">
-   <img alt="Architectural diagram" src="./architectural_diagram.png" >
+ <a href="architectural_diagram.png">
+   <img alt="Architectural diagram" src="architectural_diagram.png" >
  </a>
 </p>
 
 ## Components
-### LoadTest CR
+### LoadTest Custom Resource
 A new custom resource in the Kubernetes cluster which contains requirements for performance testing environments.
 
 More info about the Custom Resources in [Official Kubernetes documentation](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/)
 
-### Kangal proxy
+### Kangal Proxy
 Provides the following HTTP methods for `/load-test` endpoint:
  - POST - allowing the user to create a new LoadTest
  - GET - allowing the user to see current LoadTest status / logs / report / metrics
@@ -71,7 +71,7 @@ Provides the following HTTP methods for `/load-test` endpoint:
 
  If you prefer to use Postman you can also import [openapi.json](openapi.json) file into Postman to create a new collection.
 
-### Kangal controller
+### Kangal Controller
 The general name for several Kubernetes controllers created to manage all the aspects of the performance testing process.
  - LoadTest controller  
  - Backend jobs controller
