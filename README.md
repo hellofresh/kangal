@@ -18,6 +18,9 @@ ___
     - [Kangal Proxy](#kangal-proxy)
     - [Kangal Controller](#kangal-controller)
 - [Quickstart Guide](#quickstart-guide)
+    - [Installing using helm](#installing-using-helm)
+    - [Installing using helm template](#installing-using-helm-template)
+    - [Creating first LoadTest](#creating-first-loadtest)
 - [Developing Kangal](#developing-kangal)
 - [Contributing](#contributing)
 - [Support](#support)
@@ -79,13 +82,17 @@ The general name for several Kubernetes controllers created to manage all the as
  
 ## Quickstart Guide
 
-### Install using helm
+### Installing using helm
 
 **TODO** Short tutorial explaining how to install using helm
 
-### Install using helm template
+### Installing using helm template
 
 **TODO** Short tutorial explaining how to install using helm template command and applying manually
+
+### Creating first LoadTest
+
+**TODO** Short tutorial explaining how to create first load test with examples
 
 ---
 
