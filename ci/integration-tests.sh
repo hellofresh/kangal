@@ -13,7 +13,7 @@ if ! kill -s 0 "${PID_PROXY}"; then
     echo "Failed to run kangal proxy"
     cat /tmp/kangal_proxy.log
     exit 1
-fi
+fi   
 
 echo "Proxy is running"
 echo "Starting kangal controller"
