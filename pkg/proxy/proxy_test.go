@@ -188,7 +188,7 @@ func TestHTTPValidatorWithTimeout(t *testing.T) {
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := buildMocFormReq(tt.requestFiles, tt.distributedPods, tt.loadTestType)
+			request, err := buildMocFormReq(tt.requestFiles, tt.distributedPods, tt.loadTestType)
 
 			if err != nil {
 				t.Error(err)
@@ -197,7 +197,7 @@ func TestHTTPValidatorWithTimeout(t *testing.T) {
 
 			// Pass a context with a timeout to tell a blocking function that it
 			// should abandon its work after the timeout elapses.
-			ctx, cancel := context.WithTimeout(context.Background(), shortDuration)
+			ctx, cancel := context.WithTimeout(request.Context(), shortDuration)
 			defer cancel()
 
 			// Wait for tests to hit
