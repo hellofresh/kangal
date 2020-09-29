@@ -17,8 +17,9 @@ ___
     - [LoadTest Custom Resource](#loadtest-custom-resource)
     - [Kangal Proxy](#kangal-proxy)
     - [Kangal Controller](#kangal-controller)
-- [To start using Kangal](#to-start-using-kangal)
-- [To start developing Kangal](#to-start-developing-kangal)
+- [Quickstart Guide](#quickstart-guide)
+- [Developing Kangal](#developing-kangal)
+- [Contributing](#contributing)
 - [Support](#support)
 
 ## Why Kangal?
@@ -38,11 +39,11 @@ With Kangal, you can spin up an isolated environment in a Kubernetes cluster to 
 Kangal application uses Kubernetes [Custom Resources](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/).
 
 LoadTest custom resource (CR) is a main working entity.
-LoadTest custom resource definition (LoadTest CRD) can be found in [charts/kangal/crd.yaml](charts/kangal/crd.yaml).
+LoadTest custom resource definition (CRD) can be found in [charts/kangal/crd.yaml](charts/kangal/crd.yaml).
 
 Kangal application contains two main parts:
  - **Proxy** to create, delete and check load tests and reports via REST API requests
- - **Controller** to operate with LoadTest CustomResource and other Kubernetes entities.
+ - **Controller** to operate with LoadTest custom resource and other Kubernetes entities.
 
 Kangal also uses S3 compatible storage to save test reports. 
 
@@ -76,14 +77,25 @@ The general name for several Kubernetes controllers created to manage all the as
  - LoadTest controller  
  - Backend jobs controller
  
-## To start using Kangal
+## Quickstart Guide
+
+### Install using helm
+
+**TODO** Short tutorial explaining how to install using helm
+
+### Install using helm template
+
+**TODO** Short tutorial explaining how to install using helm template command and applying manually
+
+---
+
 To run Kangal in your Kubernetes cluster follow [docs](docs/README.md#how-do-i-use-kangal)
 
 Also check out our [User Flow](docs/Kangal-user-flow.md) guide to start creating load tests with Kangal.
 
 More detailed information can be found in [docs folder](docs/)
 
-## To start developing Kangal
+## Developing Kangal
 To start developing Kangal you need a local Kubernetes environment, e.g. [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/)
 or [docker desktop](https://rominirani.com/tutorial-getting-started-with-kubernetes-with-docker-on-mac-7f58467203fd). 
 > Note: Depending on load generator type, load test environments created by Kangal may require a lot of resources. Make sure you increased your limits for local Kubernetes cluster. 
@@ -128,7 +140,6 @@ or [docker desktop](https://rominirani.com/tutorial-getting-started-with-kuberne
     ```
 
 ## Contributing
-
 To start contributing, please check [CONTRIBUTING](CONTRIBUTING.md).
 
 ## Support
