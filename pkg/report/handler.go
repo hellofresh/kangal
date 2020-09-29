@@ -1,8 +1,10 @@
 package report
 
 import (
+	"fmt"
 	"net/http"
-	"strings"
+
+	"github.com/go-chi/chi"
 )
 
 //ShowHandler method returns response from file bucket in defined object storage
@@ -15,10 +17,14 @@ func ShowHandler() func(w http.ResponseWriter, r *http.Request) {
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		h := http.FileServer(fs)
-		// Make path from the /load-test/loadtest-name/report/ -> /loadtest-name format
-		r.URL.Path = strings.Replace(r.URL.Path, "load-test/", "", -1)
-		r.URL.Path = strings.Replace(r.URL.Path, "/report", "", -1)
-		h.ServeHTTP(w, r)
+		loadTestName := chi.URLParam(r, "id")
+		file := chi.URLParam(r, "*")
+
+		r.URL.Path = fmt.Sprintf("/%s", loadTestName)
+		if file != "" {
+			r.URL.Path += fmt.Sprintf("/%s", file)
+		}
+
+		http.FileServer(fs).ServeHTTP(w, r)
 	}
 }

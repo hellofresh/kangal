@@ -3,6 +3,7 @@ package jmeter
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"time"
 
 	"go.uber.org/zap"
@@ -15,7 +16,6 @@ import (
 
 	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
-	"github.com/hellofresh/kangal/pkg/report"
 )
 
 var (
@@ -30,25 +30,25 @@ var (
 
 // JMeter enables the controller to run a loadtest using JMeter
 type JMeter struct {
-	kubeClientSet    kubernetes.Interface
-	kangalClientSet  clientSetV.Interface
-	loadTest         *loadTestV1.LoadTest
-	logger           *zap.Logger
-	namespacesLister coreListersV1.NamespaceLister
-	reportConfig     report.Config
+	kubeClientSet      kubernetes.Interface
+	kangalClientSet    clientSetV.Interface
+	loadTest           *loadTestV1.LoadTest
+	logger             *zap.Logger
+	namespacesLister   coreListersV1.NamespaceLister
+	reportPreSignedURL *url.URL
 
 	podAnnotations, namespaceAnnotations map[string]string
 }
 
 //New initializes new JMeter provider handler to manage load test resources with Kangal Controller
-func New(kubeClientSet kubernetes.Interface, kangalClientSet clientSetV.Interface, lt *loadTestV1.LoadTest, logger *zap.Logger, namespacesLister coreListersV1.NamespaceLister, reportConfig report.Config, podAnnotations, namespaceAnnotations map[string]string) *JMeter {
+func New(kubeClientSet kubernetes.Interface, kangalClientSet clientSetV.Interface, lt *loadTestV1.LoadTest, logger *zap.Logger, namespacesLister coreListersV1.NamespaceLister, reportPreSignedURL *url.URL, podAnnotations, namespaceAnnotations map[string]string) *JMeter {
 	return &JMeter{
 		kubeClientSet:        kubeClientSet,
 		kangalClientSet:      kangalClientSet,
 		loadTest:             lt,
 		logger:               logger,
 		namespacesLister:     namespacesLister,
-		reportConfig:         reportConfig,
+		reportPreSignedURL:   reportPreSignedURL,
 		podAnnotations:       podAnnotations,
 		namespaceAnnotations: namespaceAnnotations,
 	}
@@ -197,14 +197,7 @@ func (c *JMeter) CheckOrUpdateStatus(ctx context.Context) error {
 		if errors.IsNotFound(err) {
 			_, err = c.kubeClientSet.BatchV1().Jobs(namespace.GetName()).Create(
 				ctx,
-				c.NewJMeterMasterJob(
-					c.reportConfig.AWSAccessKeyID,
-					c.reportConfig.AWSSecretAccessKey,
-					c.reportConfig.AWSRegion,
-					c.reportConfig.AWSEndpointURL,
-					c.reportConfig.AWSBucketName,
-					c.podAnnotations,
-				),
+				c.NewJMeterMasterJob(c.reportPreSignedURL, c.podAnnotations),
 				metaV1.CreateOptions{},
 			)
 			return err

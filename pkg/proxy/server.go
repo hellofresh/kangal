@@ -74,15 +74,10 @@ func RunServer(ctx context.Context, cfg Config, rr Runner) error {
 	// ---------------------------------------------------------------------- //
 	// LoadTest reports
 	// ---------------------------------------------------------------------- //
-
-	// we need to do redirects because we serve html reports
-	redirectReportHandler := func(w http.ResponseWriter, r *http.Request) {
-		// FileServer removes end slashes from the path and redirects to .. - as a workaround we changed dashboard index.html to main.html
-		url := fmt.Sprintf("%s/main.html", r.URL.Host+r.URL.Path)
+	r.Get("/load-test/{id}/report", func(w http.ResponseWriter, r *http.Request) {
+		url := fmt.Sprintf("%s/", r.URL.Host+r.URL.Path)
 		http.Redirect(w, r, url, http.StatusMovedPermanently)
-	}
-	r.Get("/load-test/{id}/report", redirectReportHandler)
-	r.Get("/load-test/{id}/report/", redirectReportHandler)
+	})
 	r.Get("/load-test/{id}/report/*", report.ShowHandler())
 
 	address := fmt.Sprintf(":%d", cfg.HTTPPort)
