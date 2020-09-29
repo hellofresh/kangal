@@ -24,6 +24,10 @@ test-integration:
 	@printf "$(OK_COLOR)==> Running integration tests$(NO_COLOR)\n"
 	@CGO_ENABLED=1 go test -race -p=1 -cover ./... -coverprofile=coverage.txt -covermode=atomic
 
+# Runs shellcheck script
+check-scripts:
+	shellcheck ci/*.sh
+
 # Builds the project
 build:
 	@printf "$(OK_COLOR)==> Building v${VERSION}$(NO_COLOR)\n"
