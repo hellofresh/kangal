@@ -105,7 +105,7 @@ func TestHTTPValidator(t *testing.T) {
 	}
 }
 
-func TestHTTPValidatorWithTimeout(t *testing.T) {
+func TestCreateWithTimeout(t *testing.T) {
 	for _, tt := range []struct {
 		name             string
 		distributedPods  string
@@ -122,73 +122,11 @@ func TestHTTPValidatorWithTimeout(t *testing.T) {
 			map[string]string{
 				"testFile": "testdata/valid/loadtest.jmx",
 			},
-			"",
-		},
-		{
-			"Valid Fake",
-			"1",
-			"",
-			"Fake",
-			map[string]string{
-				"testFile": "testdata/valid/loadtest.jmx",
-			},
-			"",
-		},
-		{
-			"Empty distributed pods",
-			"0",
-			"distributedPods",
-			"Fake",
-			map[string]string{
-				"testFile": "testdata/valid/loadtest.jmx",
-			},
-			"The distributedPods field value can not be less than 1",
-		},
-		{
-			"Invalid type",
-			"1",
-			"type",
-			"IncorrectType",
-			map[string]string{
-				"testFile": "testdata/valid/loadtest.jmx",
-			},
-			"The type field must be one of JMeter, Fake",
-		},
-		{
-			"Invalid test file",
-			"1",
-			"testFile",
-			"JMeter",
-			map[string]string{
-				"testFile": "testdata/valid/testdata.csv",
-			},
-			"The testFile field file extension csv is invalid",
-		},
-		{
-			"Invalid envVars file",
-			"1",
-			"envVars",
-			"JMeter",
-			map[string]string{
-				"testFile": "testdata/valid/loadtest.jmx",
-				"envVars":  "testdata/valid/loadtest.jmx",
-			},
-			"The envVars field file extension jmx is invalid",
-		},
-		{
-			"Invalid testData file",
-			"1",
-			"testData",
-			"JMeter",
-			map[string]string{
-				"testFile": "testdata/valid/loadtest.jmx",
-				"testData": "testdata/valid/loadtest.jmx",
-			},
-			"The testData field file extension jmx is invalid",
+			"context deadline exceeded",
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			r, err := buildMocFormReq(tt.requestFiles, tt.distributedPods, tt.loadTestType)
+			request, err := buildMocFormReq(tt.requestFiles, tt.distributedPods, tt.loadTestType)
 
 			if err != nil {
 				t.Error(err)
@@ -197,7 +135,8 @@ func TestHTTPValidatorWithTimeout(t *testing.T) {
 
 			// Pass a context with a timeout to tell a blocking function that it
 			// should abandon its work after the timeout elapses.
-			ctx, _ := context.WithTimeout(r.Context(), 1*time.Millisecond)
+			ctx, cancel := context.WithTimeout(request.Context(), shortDuration)
+			defer cancel()
 
 			// Wait for tests to hit
 			time.Sleep(1 * time.Millisecond)
@@ -206,7 +145,7 @@ func TestHTTPValidatorWithTimeout(t *testing.T) {
 			case <-time.After(1 * time.Second):
 				t.Error("Expected to have a timeout error")
 			case <-ctx.Done():
-				assert.Equal(t, ctx.Err().Error(), "context deadline exceeded")
+				assert.Equal(t, tt.expectedResponse, ctx.Err().Error())
 			}
 
 		})
