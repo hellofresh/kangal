@@ -17,7 +17,7 @@ ___
     - [LoadTest Custom Resource](#loadtest-custom-resource)
     - [Kangal Proxy](#kangal-proxy)
     - [Kangal Controller](#kangal-controller)
-- [Quickstart Guide](#quickstart-guide)
+- [Quickstart guide](#quickstart-guide)
     - [Installing using helm](#installing-using-helm)
     - [Installing using helm template](#installing-using-helm-template)
     - [Creating first LoadTest](#creating-first-loadtest)
@@ -63,7 +63,7 @@ The diagram below illustrates the workflow for Kangal in Kubernetes infrastructu
 ### LoadTest Custom Resource
 A new custom resource in the Kubernetes cluster which contains requirements for performance testing environments.
 
-More info about the Custom Resources in [Official Kubernetes documentation](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/)
+More info about the Custom Resources in [official Kubernetes documentation](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/)
 
 ### Kangal Proxy
 Provides the following HTTP methods for `/load-test` endpoint:
@@ -80,7 +80,7 @@ The general name for several Kubernetes controllers created to manage all the as
  - LoadTest controller  
  - Backend jobs controller
  
-## Quickstart Guide
+## Quickstart guide
 
 ### Installing using helm
 
