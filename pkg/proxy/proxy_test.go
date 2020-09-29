@@ -1,11 +1,15 @@
 package proxy
 
 import (
+	"context"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
+
+const shortDuration = 1 * time.Millisecond // a reasonable duration to block in an example
 
 func TestHTTPValidator(t *testing.T) {
 	for _, tt := range []struct {
@@ -97,6 +101,53 @@ func TestHTTPValidator(t *testing.T) {
 			}
 			result := httpValidator(request)
 			assert.Equal(t, tt.expectedResponse, result.Get(tt.failingLine))
+		})
+	}
+}
+
+func TestCreateWithTimeout(t *testing.T) {
+	for _, tt := range []struct {
+		name             string
+		distributedPods  string
+		failingLine      string
+		loadTestType     string
+		requestFiles     map[string]string
+		expectedResponse string
+	}{
+		{
+			"Valid JMeter",
+			"1",
+			"",
+			"JMeter",
+			map[string]string{
+				"testFile": "testdata/valid/loadtest.jmx",
+			},
+			"context deadline exceeded",
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			request, err := buildMocFormReq(tt.requestFiles, tt.distributedPods, tt.loadTestType)
+
+			if err != nil {
+				t.Error(err)
+				t.FailNow()
+			}
+
+			// Pass a context with a timeout to tell a blocking function that it
+			// should abandon its work after the timeout elapses.
+			ctx, cancel := context.WithTimeout(request.Context(), shortDuration)
+			defer cancel()
+
+			// Wait for tests to hit
+			time.Sleep(1 * time.Millisecond)
+
+			select {
+			case <-time.After(1 * time.Second):
+				t.Error("Expected to have a timeout error")
+			case <-ctx.Done():
+				assert.Equal(t, tt.expectedResponse, ctx.Err().Error())
+			}
+
 		})
 	}
 }

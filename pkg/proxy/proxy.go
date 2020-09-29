@@ -63,7 +63,7 @@ func getLoadTestType(r *http.Request) apisLoadTestV1.LoadTestType {
 func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 	logger := mPkg.GetLogger(r.Context())
 
-	ctx, cancel := context.WithTimeout(context.Background(), loadtest.KubeTimeout)
+	ctx, cancel := context.WithTimeout(r.Context(), loadtest.KubeTimeout)
 	defer cancel()
 
 	// check the number of active loadtests currently running on the cluster
@@ -128,7 +128,7 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 func (p *Proxy) Delete(w http.ResponseWriter, r *http.Request) {
 	logger := mPkg.GetLogger(r.Context())
 
-	ctx, cancel := context.WithTimeout(context.Background(), loadtest.KubeTimeout)
+	ctx, cancel := context.WithTimeout(r.Context(), loadtest.KubeTimeout)
 	defer cancel()
 
 	ltID := chi.URLParam(r, loadTestID)
@@ -148,7 +148,7 @@ func (p *Proxy) Delete(w http.ResponseWriter, r *http.Request) {
 func (p *Proxy) Get(w http.ResponseWriter, r *http.Request) {
 	logger := mPkg.GetLogger(r.Context())
 
-	ctx, cancel := context.WithTimeout(context.Background(), loadtest.KubeTimeout)
+	ctx, cancel := context.WithTimeout(r.Context(), loadtest.KubeTimeout)
 	defer cancel()
 
 	ltID := chi.URLParam(r, loadTestID)
@@ -183,8 +183,9 @@ func (p *Proxy) GetLogs(w http.ResponseWriter, r *http.Request) {
 	ltID := chi.URLParam(r, loadTestID)
 	logger.Info("Retrieving info for loadtest", zap.String("ltID", ltID))
 
-	ctx, cancel := context.WithTimeout(context.Background(), loadtest.KubeTimeout)
+	ctx, cancel := context.WithTimeout(r.Context(), loadtest.KubeTimeout)
 	defer cancel()
+
 	loadTest, err := p.kubeClient.GetLoadTest(ctx, ltID)
 	if err != nil {
 		logger.Error("Could not get load test info with error:", zap.Error(err))
