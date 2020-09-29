@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"time"
 
 	"contrib.go.opencensus.io/exporter/prometheus"
 	"github.com/go-chi/chi"
@@ -90,14 +89,7 @@ func RunServer(ctx context.Context, cfg Config, rr Runner) error {
 	rr.Logger.Info("Running HTTP server...", zap.String("address", address))
 
 	// Try and run http server, fail on error
-	srv := &http.Server{
-		Addr:    address,
-		Handler: &ochttp.Handler{Handler: r},
-
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
-	}
-	err := srv.ListenAndServe()
+	err := http.ListenAndServe(address, &ochttp.Handler{Handler: r})
 	if err != nil {
 		return fmt.Errorf("failed to run HTTP server: %w", err)
 	}
