@@ -51,16 +51,6 @@ func TestHTTPValidator(t *testing.T) {
 			"The distributedPods field value can not be less than 1",
 		},
 		{
-			"Invalid type",
-			"1",
-			"type",
-			"IncorrectType",
-			map[string]string{
-				"testFile": "testdata/valid/loadtest.jmx",
-			},
-			"The type field must be one of JMeter, Fake",
-		},
-		{
 			"Invalid test file",
 			"1",
 			"testFile",
