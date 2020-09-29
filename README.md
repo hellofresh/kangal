@@ -94,14 +94,6 @@ The general name for several Kubernetes controllers created to manage all the as
 
 **TODO** Short tutorial explaining how to create first load test with examples
 
----
-
-To run Kangal in your Kubernetes cluster follow [docs](docs/README.md#how-do-i-use-kangal)
-
-Also check out our [User Flow](docs/Kangal-user-flow.md) guide to start creating load tests with Kangal.
-
-More detailed information can be found in [docs folder](docs/)
-
 ## Developing Kangal
 To start developing Kangal you need a local Kubernetes environment, e.g. [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/)
 or [docker desktop](https://rominirani.com/tutorial-getting-started-with-kubernetes-with-docker-on-mac-7f58467203fd). 
