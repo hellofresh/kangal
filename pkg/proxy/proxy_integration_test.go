@@ -142,6 +142,12 @@ func TestIntegrationCreateLoadtestReachMaxLimit(t *testing.T) {
 		testData: "testdata/valid/testdata.csv",
 	}
 
+	requestFilesSecond := map[string]string{
+		testFile: "testdata/valid/loadtest2.jmx",
+		envVars:  "testdata/valid/envvars.csv",
+		testData: "testdata/valid/testdata.csv",
+	}
+
 	var createdLoadTestName string
 
 	t.Run("Creates first loadtest, must succeed", func(t *testing.T) {
@@ -164,12 +170,12 @@ func TestIntegrationCreateLoadtestReachMaxLimit(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("Creates second loadtest, must fail", func(t *testing.T) {
-		request, err := createRequestBody(requestFiles, distributedPods, string(loadtestType))
+		request, err := createRequestBody(requestFilesSecond, distributedPods, string(loadtestType))
 		require.NoError(t, err)
 
 		resp, err := http.Post(fmt.Sprintf("http://localhost:%d/load-test", HTTPPort), request.contentType, request.body)
 		require.NoError(t, err, "Could not create POST request")
-		require.Equal(t, http.StatusBadRequest, resp.StatusCode)
+		require.Equal(t, http.StatusTooManyRequests, resp.StatusCode)
 	})
 }
 

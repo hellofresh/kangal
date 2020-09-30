@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -e
 
+## Kill old apps
+kill -9 $(lsof -t -i tcp:8080)
+kill -9 $(lsof -t -i tcp:8888)
+
+
 export AWS_ACCESS_KEY_ID=""
 export AWS_SECRET_ACCESS_KEY=""
 
