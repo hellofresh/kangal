@@ -24,6 +24,16 @@ curl -X POST http://${KANGAL_PROXY_ADDRESS}/load-test \
   -F type=JMeter
   -F overwrite=true
 ```
+
+| Key             | Type    | Description                                         | Required |
+|-----------------|---------|-----------------------------------------------------|----------|
+| distributedPods | numeric | How many pods should run this test?                 | Yes      |
+| testFile        | file    | Test file                                           | Yes      |
+| testData        | file    | Test data to fill test file                         | Yes      |
+| envVars         | file    | Environment variables to run the test               | Yes      |
+| type            | string  | Test type. Currently values are; "Jmeter" or "Fake" | Yes      |
+| overwrite       | bool    | Do you want to delete the old test and re-create ?  | No       |
+
 #### Check 
 Check the status of the load test
 
