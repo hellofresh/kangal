@@ -65,24 +65,17 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), loadtest.KubeTimeout)
 	defer cancel()
 
-	var loadTest *apisLoadTestV1.LoadTest
-	switch ltType := getLoadTestType(r); ltType {
-	case apisLoadTestV1.LoadTestTypeJMeter, apisLoadTestV1.LoadTestTypeFake:
-		jmSpec, err := FromHTTPRequestToJMeter(r, ltType, logger)
-		if err != nil {
-			render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest, err.Error()))
-			return
-		}
+	// Making valid LoadTestSpec based on HTTP request
+	ltSpec, err := fromHTTPRequestToLoadTestSpec(r, logger)
+	if err != nil {
+		render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest, err.Error()))
+		return
+	}
 
-		jm, err := NewJMeterLoadTest(jmSpec, logger)
-		if err != nil {
-			render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest, err.Error()))
-			return
-		}
-
-		loadTest = jm.ToLoadTest()
-	default:
-		render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest, fmt.Sprintf("loadtest %q %q is not supported", backendType, ltType)))
+	// Building LoadTest based on specs
+	loadTest, err := apisLoadTestV1.BuildLoadTestObject(ltSpec)
+	if err != nil {
+		render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest, err.Error()))
 		return
 	}
 
@@ -124,7 +117,8 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	lto, err := p.kubeClient.CreateLoadTest(ctx, loadTest)
+	// Pushing LoadTest to Kubernetes
+	loadTestName, err := p.kubeClient.CreateLoadTest(ctx, loadTest)
 	if err != nil {
 		logger.Error("Could not create load test", zap.Error(err))
 		render.Render(w, r, cHttp.ErrResponse(http.StatusConflict, err.Error()))
@@ -135,7 +129,7 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, &LoadTestStatus{
 		Type:            string(loadTest.Spec.Type),
 		DistributedPods: *loadTest.Spec.DistributedPods,
-		Namespace:       lto,
+		Namespace:       loadTestName,
 		Phase:           string(apisLoadTestV1.LoadTestCreating),
 		HasEnvVars:      len(loadTest.Spec.EnvVars) != 0,
 		HasTestData:     loadTest.Spec.TestData != "",
