@@ -104,9 +104,11 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 
 	if len(labeledLoadTests.Items) > 0 {
 
+		// If users wants to overwrite
 		if loadTest.Spec.Overwrite == "true" {
-
 			for _, item := range labeledLoadTests.Items {
+
+				// Remove the old tests
 				err := p.kubeClient.DeleteLoadTest(ctx, item.Name)
 				if err != nil {
 					logger.Error("Could not delete load test with error:", zap.Error(err))
@@ -120,8 +122,6 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-
-	// Remove the old load test
 
 	lto, err := p.kubeClient.CreateLoadTest(ctx, loadTest)
 	if err != nil {
