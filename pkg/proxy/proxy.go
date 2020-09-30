@@ -112,7 +112,8 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 				err := p.kubeClient.DeleteLoadTest(ctx, item.Name)
 				if err != nil {
 					logger.Error("Could not delete load test with error:", zap.Error(err))
-					render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest, err.Error()))
+					render.Render(w, r, cHttp.ErrResponse(http.StatusConflict, err.Error()))
+
 					return
 				}
 			}
