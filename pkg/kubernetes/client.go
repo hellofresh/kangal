@@ -2,7 +2,6 @@ package kubernetes
 
 import (
 	"context"
-	"os"
 	"time"
 
 	"go.uber.org/zap"
@@ -39,10 +38,8 @@ func NewClient(loadTestClient loadTestV1.LoadTestInterface, kubeClient kubernete
 	}
 }
 
-// CreateLoadTest creates new load test from given request data
-func (c *Client) CreateLoadTest(ctx context.Context, loadTest *apisLoadTestV1.LoadTest) (string, error) {
-	c.logger.Debug("Creating load test CR ...")
-
+// ListLoadTests lists the load test from given request data
+func (c *Client) ListLoadTests(ctx context.Context, loadTest *apisLoadTestV1.LoadTest) (*apisLoadTestV1.LoadTestList, error) {
 	fileHashLabel := loadTest.Labels["test-file-hash"]
 	opts := metaV1.ListOptions{
 		LabelSelector: "test-file-hash=" + fileHashLabel,
@@ -50,13 +47,15 @@ func (c *Client) CreateLoadTest(ctx context.Context, loadTest *apisLoadTestV1.Lo
 	labeledLoadTests, err := c.ltClient.List(ctx, opts)
 	if err != nil {
 		c.logger.Error("Error on getting the list of created load tests with the given hash", zap.String("hash-label", loadTest.Labels["testFileHash"]), zap.Error(err))
-		return "", err
+		return nil, err
 	}
 
-	if len(labeledLoadTests.Items) > 0 {
-		c.logger.Error("Load test with given testfile already exists, aborting")
-		return "", os.ErrExist
-	}
+	return labeledLoadTests, nil
+}
+
+// CreateLoadTest creates new load test from given request data
+func (c *Client) CreateLoadTest(ctx context.Context, loadTest *apisLoadTestV1.LoadTest) (string, error) {
+	c.logger.Debug("Creating load test CR ...")
 
 	result, err := c.ltClient.Create(ctx, loadTest, metaV1.CreateOptions{})
 	if err != nil {

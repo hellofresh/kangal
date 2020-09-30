@@ -20,6 +20,7 @@ import (
 
 const (
 	backendType     = "type"
+	overwrite       = "overwrite"
 	distributedPods = "distributedPods"
 	testFile        = "testFile"
 	testData        = "testData"
@@ -58,6 +59,7 @@ func NewJMeterLoadTest(spec *apisLoadTestV1.LoadTestSpec, logger *zap.Logger) (*
 func httpValidator(r *http.Request) url.Values {
 	rules := govalidator.MapData{
 		"type":            []string{"required", "in:JMeter,Fake"},
+		"overwrite":       []string{"in:true,false"},
 		"distributedPods": []string{"required", "numeric_between:1,"},
 		"file:testFile":   []string{"required", "ext:jmx"},
 		"file:envVars":    []string{"ext:csv"},
@@ -84,6 +86,8 @@ func FromHTTPRequestToJMeter(r *http.Request, ltType apisLoadTestV1.LoadTestType
 	spec := &apisLoadTestV1.LoadTestSpec{
 		Type: ltType,
 	}
+
+	spec.Overwrite = r.FormValue(overwrite)
 
 	n, err := getDistributedPods(r)
 	if err != nil {

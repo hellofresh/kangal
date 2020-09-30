@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
@@ -100,14 +99,32 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	lto, err := p.kubeClient.CreateLoadTest(ctx, loadTest)
-	if err != nil {
-		if err == os.ErrExist {
+	// Find the old load test with same data
+	labeledLoadTests, err := p.kubeClient.ListLoadTests(ctx, loadTest)
+
+	if len(labeledLoadTests.Items) > 0 {
+
+		if loadTest.Spec.Overwrite == "true" {
+
+			for _, item := range labeledLoadTests.Items {
+				err := p.kubeClient.DeleteLoadTest(ctx, item.Name)
+				if err != nil {
+					logger.Error("Could not delete load test with error:", zap.Error(err))
+					render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest, err.Error()))
+					return
+				}
+			}
+		} else {
 			render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest,
 				"Load test with given testfile already exists, aborting. Please delete existing load test and try again."))
 			return
 		}
+	}
 
+	// Remove the old load test
+
+	lto, err := p.kubeClient.CreateLoadTest(ctx, loadTest)
+	if err != nil {
 		logger.Error("Could not create load test", zap.Error(err))
 		render.Render(w, r, cHttp.ErrResponse(http.StatusConflict, err.Error()))
 		return
