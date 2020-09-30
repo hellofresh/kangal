@@ -20,7 +20,7 @@ ___
 - [Quickstart guide](#quickstart-guide)
     - [Installing using helm](#installing-using-helm)
     - [Creating first LoadTest](#creating-first-loadtest)
-- [Developing Kangal](#developing-kangal)
+- [Documentation](#documentation)
 - [Contributing](#contributing)
 - [Support](#support)
 
@@ -82,18 +82,51 @@ The general name for several Kubernetes controllers created to manage all the as
 ## Quickstart guide
 
 ### Installing using helm
+First, let's create the Custom Resource Defition by running:
 
 ```shell
 $ kubectl apply -f  https://raw.githubusercontent.com/hellofresh/kangal/master/charts/kangal/crd.yaml
-$ helm repo add kangal https://hellofresh.github.io/kangal
-$ helm install --name kangal --set environment=dev kangal/kangal
 ```
 
-For more information about Helm Chart check [charts/kangal/README.md](charts/kangal/README.md).
+Now, install the chart using this commands:
+
+```shell
+$ helm repo add kangal https://hellofresh.github.io/kangal
+$ helm install --set environment=dev kangal kangal/kangal
+```
+
+That's it, Kangal should be installed, check if is all correct by running:
+
+```shell
+$ kubectl get pods
+NAME                                 READY   STATUS    RESTARTS   AGE
+kangal-controller-588677b854-r9qcs   1/1     Running   0          44s
+kangal-openapi-ui-7c5dd8997c-jj4mk   1/1     Running   0          44s
+kangal-openapi-ui-7c5dd8997c-vgm8c   1/1     Running   0          44s
+kangal-proxy-7d95c9d65-6t44b         1/1     Running   0          44s
+kangal-proxy-7d95c9d65-75dv4         1/1     Running   0          44s
+```
+
+For more information about the Helm Chart check [charts/kangal/README.md](charts/kangal/README.md).
 
 ### Creating first LoadTest
+**TODO** explain this
 
-**TODO** Short tutorial explaining how to create first load test with examples
+```shell
+$ kubectl get ingress
+NAME                HOSTS                  ADDRESS     PORTS   AGE
+kangal-openapi-ui   kangal-openapi.local   localhost   80      5m48s
+kangal-proxy        kangal-proxy.local     localhost   80      5m48s
+```
+
+```shell
+$ curl \
+    -H "Host: kangal-proxy.local" \
+    http://localhost:80/loadtest
+```
+
+## Documentation
+**TODO** link to [docs/](docs/)
 
 ## Contributing
 To start contributing, please check [CONTRIBUTING.md](CONTRIBUTING.md).
