@@ -38,8 +38,8 @@ func NewClient(loadTestClient loadTestV1.LoadTestInterface, kubeClient kubernete
 	}
 }
 
-// ListLoadTests lists the load test from given request data
-func (c *Client) ListLoadTests(ctx context.Context, loadTest *apisLoadTestV1.LoadTest) (*apisLoadTestV1.LoadTestList, error) {
+// GetLoadTestsByLabel lists the load test from given load test labels
+func (c *Client) GetLoadTestsByLabel(ctx context.Context, loadTest *apisLoadTestV1.LoadTest) (*apisLoadTestV1.LoadTestList, error) {
 	fileHashLabel := loadTest.Labels["test-file-hash"]
 	opts := metaV1.ListOptions{
 		LabelSelector: "test-file-hash=" + fileHashLabel,
