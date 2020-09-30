@@ -278,7 +278,10 @@
 					"type": {
 						"type": "string",
 						"enum": ["jMeter", "Fake"]
-					}
+					},
+					"overwrite": {
+						"type": "boolean"
+					},
 				}
 			},
 			"LoadTestStatus": {
