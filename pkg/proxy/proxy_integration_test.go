@@ -169,7 +169,7 @@ func TestIntegrationCreateLoadtestReachMaxLimit(t *testing.T) {
 
 		resp, err := http.Post(fmt.Sprintf("http://localhost:%d/load-test", HTTPPort), request.contentType, request.body)
 		require.NoError(t, err, "Could not create POST request")
-		require.Equal(t, http.StatusTooManyRequests, resp.StatusCode)
+		require.Equal(t, http.StatusBadRequest, resp.StatusCode)
 	})
 }
 
