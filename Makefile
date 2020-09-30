@@ -22,7 +22,7 @@ test-unit:
 # Runs integration-tests
 test-integration:
 	@printf "$(OK_COLOR)==> Running integration tests$(NO_COLOR)\n"
-	@CGO_ENABLED=1 go test -p=1 -cover ./...
+	@CGO_ENABLED=1 go test -race -p=1 -cover ./... -coverprofile=coverage.txt -covermode=atomic
 
 # Builds the project
 build:
