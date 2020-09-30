@@ -81,7 +81,7 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Making valid LoadTestSpec based on HTTP request
-	ltSpec, err := FromHTTPRequestToLoadTestSpec(r, logger)
+	ltSpec, err := fromHTTPRequestToLoadTestSpec(r, logger)
 	if err != nil {
 		render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest, err.Error()))
 		return

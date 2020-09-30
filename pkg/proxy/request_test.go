@@ -18,7 +18,7 @@ func TestNewFakeFromHTTPLoadTest(t *testing.T) {
 		t.FailNow()
 	}
 
-	loadTest, err := FromHTTPRequestToLoadTestSpec(r, zap.NewNop())
+	loadTest, err := fromHTTPRequestToLoadTestSpec(r, zap.NewNop())
 	require.Error(t, err)
 	assert.Equal(t, apisLoadTestV1.LoadTestSpec{}, loadTest)
 }
@@ -289,7 +289,7 @@ func TestInit(t *testing.T) {
 				t.FailNow()
 			}
 
-			spec, err := FromHTTPRequestToLoadTestSpec(request, zap.NewNop())
+			spec, err := fromHTTPRequestToLoadTestSpec(request, zap.NewNop())
 			assert.Equal(t, ti.expectedResponse, spec)
 
 			if ti.expectError {
@@ -317,7 +317,7 @@ func TestCheckLoadTestSpec(t *testing.T) {
 		t.FailNow()
 	}
 
-	spec, err := FromHTTPRequestToLoadTestSpec(request, zap.NewNop())
+	spec, err := fromHTTPRequestToLoadTestSpec(request, zap.NewNop())
 	require.NoError(t, err)
 
 	lt, err := apisLoadTestV1.BuildLoadTestObject(spec)

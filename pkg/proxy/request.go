@@ -43,8 +43,8 @@ func httpValidator(r *http.Request) url.Values {
 	return v.Validate()
 }
 
-// FromHTTPRequestToLoadTestSpec creates a load test spec from HTTP request
-func FromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger) (apisLoadTestV1.LoadTestSpec, error) {
+// fromHTTPRequestToLoadTestSpec creates a load test spec from HTTP request
+func fromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger) (apisLoadTestV1.LoadTestSpec, error) {
 	ltType := getLoadTestType(r)
 
 	if e := httpValidator(r); len(e) > 0 {
