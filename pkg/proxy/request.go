@@ -23,7 +23,7 @@ const (
 	loadTestID      = "id"
 )
 
-//RequestValidator validates request body
+//httpValidator validates request body
 func httpValidator(r *http.Request) url.Values {
 	rules := govalidator.MapData{
 		"type":            []string{"required"},
