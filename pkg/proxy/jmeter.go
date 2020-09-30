@@ -59,7 +59,7 @@ func NewJMeterLoadTest(spec *apisLoadTestV1.LoadTestSpec, logger *zap.Logger) (*
 func httpValidator(r *http.Request) url.Values {
 	rules := govalidator.MapData{
 		"type":            []string{"required", "in:JMeter,Fake"},
-		"overwrite":       []string{"in:true,false"},
+		"overwrite":       []string{"in:1,True,true,t,T,TRUE,0,False,f,F,FALSE"},
 		"distributedPods": []string{"required", "numeric_between:1,"},
 		"file:testFile":   []string{"required", "ext:jmx"},
 		"file:envVars":    []string{"ext:csv"},
@@ -87,7 +87,12 @@ func FromHTTPRequestToJMeter(r *http.Request, ltType apisLoadTestV1.LoadTestType
 		Type: ltType,
 	}
 
-	spec.Overwrite = r.FormValue(overwrite)
+	o, err := getOverwrite(r)
+	if err != nil {
+		logger.Debug("Bad value: ", zap.String("field", overwrite), zap.Bool("value", o), zap.Error(err))
+		return nil, fmt.Errorf("bad %q value: should be bool", overwrite)
+	}
+	spec.Overwrite = o
 
 	n, err := getDistributedPods(r)
 	if err != nil {
@@ -178,6 +183,21 @@ func getFileFromHTTP(r *http.Request, file string) (string, error) {
 	}
 
 	return stringTestData, nil
+}
+
+func getOverwrite(r *http.Request) (bool, error) {
+	o := r.FormValue(overwrite)
+
+	if o == "" {
+		return false, nil
+	}
+
+	overwrite, err := strconv.ParseBool(o)
+	if err != nil {
+		return false, err
+	}
+
+	return overwrite, nil
 }
 
 func getDistributedPods(r *http.Request) (int32, error) {

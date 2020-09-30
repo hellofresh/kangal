@@ -105,7 +105,7 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 	if len(labeledLoadTests.Items) > 0 {
 
 		// If users wants to overwrite
-		if loadTest.Spec.Overwrite == "true" {
+		if loadTest.Spec.Overwrite == true {
 			for _, item := range labeledLoadTests.Items {
 
 				// Remove the old tests
