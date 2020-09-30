@@ -19,7 +19,6 @@ ___
     - [Kangal Controller](#kangal-controller)
 - [Quickstart guide](#quickstart-guide)
     - [Installing using helm](#installing-using-helm)
-    - [Installing using helm template](#installing-using-helm-template)
     - [Creating first LoadTest](#creating-first-loadtest)
 - [Developing Kangal](#developing-kangal)
 - [Contributing](#contributing)
@@ -84,62 +83,20 @@ The general name for several Kubernetes controllers created to manage all the as
 
 ### Installing using helm
 
-**TODO** Short tutorial explaining how to install using helm
+```shell
+$ kubectl apply -f  https://raw.githubusercontent.com/hellofresh/kangal/master/charts/kangal/crd.yaml
+$ helm repo add kangal https://hellofresh.github.io/kangal
+$ helm install --name kangal --set environment=dev kangal/kangal
+```
 
-### Installing using helm template
-
-**TODO** Short tutorial explaining how to install using helm template command and applying manually
+For more information about Helm Chart check [charts/kangal/README.md](charts/kangal/README.md).
 
 ### Creating first LoadTest
 
 **TODO** Short tutorial explaining how to create first load test with examples
 
-## Developing Kangal
-To start developing Kangal you need a local Kubernetes environment, e.g. [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/)
-or [docker desktop](https://rominirani.com/tutorial-getting-started-with-kubernetes-with-docker-on-mac-7f58467203fd). 
-> Note: Depending on load generator type, load test environments created by Kangal may require a lot of resources. Make sure you increased your limits for local Kubernetes cluster. 
-> Read more about implemented load generators [here](docs/README.md#load-generator-types-aka-backends). 
-
-1. Clone the repo locally
-    ```bash
-    git clone https://github.com/hellofresh/kangal.git
-    ```
-
-2. Create required Kubernetes resource LoadTest CRD in your cluster
-    ```bash
-    kubectl apply -f charts/kangal/crd.yaml
-    ```
-    or just use:
-    ```bash
-    make appply-crd
-    ```
-    
-3. Download the dependencies
-    ```bash
-    go mod vendor
-    ```
-
-4. Build Kangal binary
-   ```bash
-   make build
-    ```
-    
-5. Set the environment variables
-    ``` bash
-    export WEB_HTTP_PORT=8080                    # API port for Kangal Proxy
-    export AWS_BUCKET_NAME=YOUR_BUCKET_NAME      # name of the bucket for saving reports
-    export AWS_ENDPOINT_URL=YOUR_BUCKET_ENDPOINT # storage connection parameter
-    export AWS_DEFAULT_REGION=YOUR_AWS_REGION    # storage connection parameter
-    ```
-
-6. Run both Kangal proxy and controller
-    ```bash
-    ./kangal controller --kubeconfig=$KUBECONFIG 
-    ./kangal proxy --kubeconfig=$KUBECONFIG
-    ```
-
 ## Contributing
-To start contributing, please check [CONTRIBUTING](CONTRIBUTING.md).
+To start contributing, please check [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Support
-If you need support, start with the [Troubleshooting guide](docs/Troubleshooting.md), and work your way through the process that we've outlined.
+If you need support, start with the [troubleshooting guide](docs/Troubleshooting.md), and work your way through the process that we've outlined.
