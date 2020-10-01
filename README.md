@@ -74,7 +74,7 @@ Provides the following HTTP methods for `/load-test` endpoint:
 
 ### Kangal Controller
 Component responsible to manage all the aspects of the performance testing process.
- 
+
 ## Quickstart guide
 This tutorial will guide through Kangal installation process.
 

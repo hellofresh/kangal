@@ -19,8 +19,7 @@
             <stringProp name="48873">180</stringProp>
           </collectionProp>
         </collectionProp>
-        <stringProp name="TestPlan.comments">This helper will create the load growing linearly from 1 to 200 RPS.
-It&apos;s used to form a load and can only limit it. </stringProp>
+        <stringProp name="TestPlan.comments">This helper will create the load growing linearly from 1 to 200 RPS. It&apos;s used to form a load and can only limit it.</stringProp>
       </kg.apc.jmeter.timers.VariableThroughputTimer>
       <hashTree/>
       <kg.apc.jmeter.threads.UltimateThreadGroup guiclass="kg.apc.jmeter.threads.UltimateThreadGroupGui" testclass="kg.apc.jmeter.threads.UltimateThreadGroup" testname="jp@gc - Ultimate Thread Group" enabled="true">
@@ -38,8 +37,7 @@ It&apos;s used to form a load and can only limit it. </stringProp>
           <intProp name="LoopController.loops">-1</intProp>
         </elementProp>
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
-        <stringProp name="TestPlan.comments">This helper will create enough threads at every particular moment
-to let Throughput Shaping Timer limit the load and create requested load. </stringProp>
+        <stringProp name="TestPlan.comments">This helper will create enough threads at every particular moment to let Throughput Shaping Timer limit the load and create requested load.</stringProp>
       </kg.apc.jmeter.threads.UltimateThreadGroup>
       <hashTree>
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="HTTP Request" enabled="true">
