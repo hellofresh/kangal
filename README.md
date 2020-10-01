@@ -134,10 +134,10 @@ $ curl \
 {"type":"JMeter","distributedPods":1,"loadtestName":"loadtest-dunking-hedgehog","phase":"creating","hasEnvVars":false,"hasTestData":false}
 ```
 
-Your first load test was created successfully, with the name `loadtest-dunking-hedgehog`.
+Your first load test was created successfully, in this example with the name `loadtest-dunking-hedgehog`.
 
-Kangal Controller will automatically create a Namespace for your load test and deploy the backend (in this case JMeter).
-Follow that by running:
+Kangal Controller will automatically create a namespace for your load test and deploy the backend (in this case JMeter).
+Check that by running:
 
 ```
 $ kubectl get namespaces
@@ -146,7 +146,7 @@ NAME                        STATUS   AGE
 loadtest-dunking-hedgehog   Active   3s
 ```
 
-And to check if the Pods started correctly, use:
+And you can check if the Pods started correctly using:
 
 ```
 $ kubectl get pods --namespace=loadtest-dunking-hedgehog
