@@ -79,7 +79,7 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Find the old load test with same data
+	// Find the old load test with the same data
 	labeledLoadTests, err := p.kubeClient.GetLoadTestsByLabel(ctx, loadTest)
 
 	if len(labeledLoadTests.Items) > 0 {
