@@ -1,7 +1,7 @@
 # Kangal - Automatic loader
 [![Artifact HUB](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/kangal)](https://artifacthub.io/packages/search?repo=kangal)
 [![codecov](https://codecov.io/gh/hellofresh/kangal/branch/master/graph/badge.svg)](https://codecov.io/gh/hellofresh/kangal)
-<p align="center"><img src="./kangal_logo.svg" width="320"></p>
+<p align="center"><img src="kangal_logo.svg" width="320"></p>
 
 Run performance tests in Kubernetes cluster with Kangal.
 ___
