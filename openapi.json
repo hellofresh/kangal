@@ -281,7 +281,7 @@
 					},
 					"overwrite": {
 						"type": "boolean"
-					},
+					}
 				}
 			},
 			"LoadTestStatus": {
