@@ -10,7 +10,7 @@ import (
 	apisLoadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 )
 
-func TestNewJMeterFromHTTPLoadTest(t *testing.T) {
+func TestNewFakeFromHTTPLoadTest(t *testing.T) {
 	ltType := apisLoadTestV1.LoadTestTypeFake
 	r, err := buildMocFormReq(map[string]string{}, "", string(ltType))
 	if err != nil {
@@ -18,9 +18,9 @@ func TestNewJMeterFromHTTPLoadTest(t *testing.T) {
 		t.FailNow()
 	}
 
-	loadTest, err := FromHTTPRequestToJMeter(r, ltType, zap.NewNop())
+	loadTest, err := fromHTTPRequestToLoadTestSpec(r, zap.NewNop())
 	require.Error(t, err)
-	assert.Nil(t, loadTest)
+	assert.Equal(t, apisLoadTestV1.LoadTestSpec{}, loadTest)
 }
 
 func TestDistributedPods(t *testing.T) {
@@ -216,7 +216,7 @@ func TestInit(t *testing.T) {
 		tag              string
 		requestFile      map[string]string
 		distributedPods  string
-		expectedResponse *apisLoadTestV1.LoadTestSpec
+		expectedResponse apisLoadTestV1.LoadTestSpec
 		expectError      bool
 	}{
 		{
@@ -227,7 +227,7 @@ func TestInit(t *testing.T) {
 				testData: "testdata/valid/testdata.csv",
 			},
 			distributedPods: "2",
-			expectedResponse: &apisLoadTestV1.LoadTestSpec{
+			expectedResponse: apisLoadTestV1.LoadTestSpec{
 				Type:            ltType,
 				DistributedPods: &expectedDP,
 				TestFile:        "load-test file\n",
@@ -244,7 +244,7 @@ func TestInit(t *testing.T) {
 				testData: "testdata/valid/testdata.csv",
 			},
 			distributedPods:  "aa",
-			expectedResponse: nil,
+			expectedResponse: apisLoadTestV1.LoadTestSpec{},
 			expectError:      true,
 		},
 		{
@@ -255,7 +255,7 @@ func TestInit(t *testing.T) {
 				testData: "testdata/valid/testdata.csv",
 			},
 			distributedPods:  "2",
-			expectedResponse: nil,
+			expectedResponse: apisLoadTestV1.LoadTestSpec{},
 			expectError:      true,
 		},
 		{
@@ -266,7 +266,7 @@ func TestInit(t *testing.T) {
 				testData: "testdata/valid/testdata.csv",
 			},
 			distributedPods:  "2",
-			expectedResponse: nil,
+			expectedResponse: apisLoadTestV1.LoadTestSpec{},
 			expectError:      true,
 		},
 		{
@@ -277,7 +277,7 @@ func TestInit(t *testing.T) {
 				testData: "testdata/invalid/empty.csv",
 			},
 			distributedPods:  "2",
-			expectedResponse: nil,
+			expectedResponse: apisLoadTestV1.LoadTestSpec{},
 			expectError:      true,
 		},
 	} {
@@ -289,7 +289,7 @@ func TestInit(t *testing.T) {
 				t.FailNow()
 			}
 
-			spec, err := FromHTTPRequestToJMeter(request, ltType, zap.NewNop())
+			spec, err := fromHTTPRequestToLoadTestSpec(request, zap.NewNop())
 			assert.Equal(t, ti.expectedResponse, spec)
 
 			if ti.expectError {
@@ -302,35 +302,14 @@ func TestInit(t *testing.T) {
 	}
 }
 
-func TestHash(t *testing.T) {
-	jmeter := &JMeter{
-		Spec: &apisLoadTestV1.LoadTestSpec{
-			Type:     apisLoadTestV1.LoadTestTypeJMeter,
-			TestFile: "",
-		},
-	}
-
-	assert.Equal(t, "da39a3ee5e6b4b0d3255bfef95601890afd80709", jmeter.Hash())
-}
-
-func TestJMeterCR(t *testing.T) {
+func TestCheckLoadTestSpec(t *testing.T) {
 	ltType := apisLoadTestV1.LoadTestTypeJMeter
-	expectedDP := int32(2)
 	requestFiles := map[string]string{
 		envVars:  "testdata/valid/envvars.csv",
 		testFile: "testdata/valid/loadtest.jmx",
 		testData: "testdata/valid/testdata.csv",
 	}
 	distributedPods := "2"
-	jmeter := &JMeter{
-		Spec: &apisLoadTestV1.LoadTestSpec{
-			Type:            ltType,
-			DistributedPods: &expectedDP,
-			TestFile:        "load-test file\n",
-			TestData:        "test data 1\ntest data 2\n",
-			EnvVars:         "envVar1,value1\nenvVar2,value2\n",
-		},
-	}
 
 	request, err := buildMocFormReq(requestFiles, distributedPods, string(ltType))
 	if err != nil {
@@ -338,124 +317,11 @@ func TestJMeterCR(t *testing.T) {
 		t.FailNow()
 	}
 
-	spec, err := FromHTTPRequestToJMeter(request, ltType, zap.NewNop())
+	spec, err := fromHTTPRequestToLoadTestSpec(request, zap.NewNop())
 	require.NoError(t, err)
 
-	jm, err := NewJMeterLoadTest(spec, zap.NewNop())
-
+	lt, err := apisLoadTestV1.BuildLoadTestObject(spec)
 	assert.NoError(t, err)
-	assert.Equal(t, jmeter.Spec, jm.Spec)
-}
-
-func TestRequestValidatorValidSpec(t *testing.T) {
-	var distributedPods int32 = 3
-
-	loadTest := &JMeter{
-		Spec: &apisLoadTestV1.LoadTestSpec{
-			Type:            apisLoadTestV1.LoadTestTypeJMeter,
-			TestFile:        "asdf",
-			DistributedPods: &distributedPods,
-		},
-		Logger: zap.NewNop(),
-	}
-
-	err := loadTest.validate()
-	assert.NoError(t, err)
-}
-
-func TestRequestValidatorType(t *testing.T) {
-	loadTest := &JMeter{
-		Spec:   &apisLoadTestV1.LoadTestSpec{},
-		Logger: zap.NewNop(),
-	}
-
-	err := loadTest.validate()
-	assert.Equal(t, ErrRequiredJMeterType, err)
-}
-
-func TestRequestValidator(t *testing.T) {
-	for _, tt := range []struct {
-		name            string
-		loadTestType    apisLoadTestV1.LoadTestType
-		distributedPods int32
-		testFile        string
-		requireError    bool
-		expectedError   error
-	}{
-		{
-			"Valid JMeter",
-			apisLoadTestV1.LoadTestTypeJMeter,
-			2,
-			"some test file",
-			false,
-			nil,
-		},
-		{
-			"Valid Fake",
-			apisLoadTestV1.LoadTestTypeFake,
-			1,
-			"some test file",
-			false,
-			nil,
-		},
-		{
-			"Zero pods",
-			apisLoadTestV1.LoadTestTypeFake,
-			0,
-			"some test file",
-			true,
-			ErrRequireMinOneDistributedPod,
-		},
-		{
-			"No test file",
-			apisLoadTestV1.LoadTestTypeFake,
-			1,
-			"",
-			true,
-			ErrRequireTestFile,
-		},
-	} {
-		t.Run(tt.name, func(t *testing.T) {
-			loadTest := &JMeter{
-				Spec: &apisLoadTestV1.LoadTestSpec{
-					Type:            tt.loadTestType,
-					TestFile:        tt.testFile,
-					DistributedPods: &tt.distributedPods,
-				},
-				Logger: zap.NewNop(),
-			}
-
-			err := loadTest.validate()
-			if tt.requireError == true {
-				assert.Equal(t, tt.expectedError, err)
-			} else {
-				assert.NoError(t, err)
-			}
-
-		})
-	}
-}
-
-func TestRequestValidatorHasSpec(t *testing.T) {
-	loadTest := &JMeter{
-		Spec:   nil,
-		Logger: zap.NewNop(),
-	}
-
-	err := loadTest.validate()
-	assert.Equal(t, ErrEmptySpec, err)
-}
-
-func TestRequestValidatorNoPods(t *testing.T) {
-	loadTest := &JMeter{
-		Spec: &apisLoadTestV1.LoadTestSpec{
-			Type:            apisLoadTestV1.LoadTestTypeJMeter,
-			TestFile:        "asdf",
-			DistributedPods: nil,
-		},
-		Logger: zap.NewNop(),
-	}
-
-	err := loadTest.validate()
-	assert.Equal(t, ErrRequireMinOneDistributedPod, err)
+	assert.NotEmpty(t, lt.Name)
+	assert.NotEmpty(t, lt.Labels)
 }
