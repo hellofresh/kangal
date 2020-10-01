@@ -60,7 +60,7 @@ The diagram below illustrates the workflow for Kangal in Kubernetes infrastructu
 ### LoadTest Custom Resource
 A new custom resource in the Kubernetes cluster which contains requirements for performance testing environments.
 
-More info about the Custom Resources in [official Kubernetes documentation](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/)
+More info about the Custom Resources in [official Kubernetes documentation](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/).
 
 ### Kangal Proxy
 Provides the following HTTP methods for `/load-test` endpoint:
@@ -156,7 +156,9 @@ loadtest-worker-000     1/1     Running   0          22s
 ```
 
 ## Documentation
-**TODO** link to [docs/README.md](docs/README.md)
+To better understand how Kangal works follow [docs/README.md](docs/README.md).
+
+Also check out our [User Flow](docs/Kangal-user-flow.md) guide to better understand Kangal Proxy.
 
 ## Contributing
 To start contributing, please check [CONTRIBUTING.md](CONTRIBUTING.md).
