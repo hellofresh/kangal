@@ -73,9 +73,7 @@ Provides the following HTTP methods for `/load-test` endpoint:
  If you prefer to use Postman you can also import [openapi.json](openapi.json) file into Postman to create a new collection.
 
 ### Kangal Controller
-The general name for several Kubernetes controllers created to manage all the aspects of the performance testing process.
- - LoadTest controller  
- - Backend jobs controller
+Component responsible to manage all the aspects of the performance testing process.
  
 ## Quickstart guide
 This tutorial will guide through Kangal installation process.
