@@ -156,10 +156,10 @@ loadtest-worker-000     1/1     Running   0          22s
 ## Documentation
 To better understand how Kangal works follow [docs/README.md](docs/README.md).
 
-Also check out our [User Flow](docs/Kangal-user-flow.md) guide to better understand Kangal Proxy.
+Also check out our [User Flow](docs/user-flow.md) guide to better understand Kangal Proxy.
 
 ## Contributing
 To start contributing, please check [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Support
-If you need support, start with the [troubleshooting guide](docs/Troubleshooting.md), and work your way through the process that we've outlined.
+If you need support, start with the [troubleshooting guide](docs/troubleshooting.md), and work your way through the process that we've outlined.

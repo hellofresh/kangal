@@ -4,7 +4,7 @@
 - [Kangal user flow](Kangal-user-flow.md) 
 - [Load generators](#load-generator-types-aka-backends)
     - [Requirements for new backends](#adding-a-new-load-generator)
-    - [JMeter in Kangal](jmeter-in-kangal/JMeter-load-generator-in-kangal.md)
+    - [JMeter in Kangal](jmeter/JMeter-load-generator-in-kangal.md)
 - [Reporting](#reporting-in-kangal)
 - [Troubleshooting](Troubleshooting.md)
 
@@ -18,7 +18,7 @@ Currently, there are two load generator types implemented for Kangal:
 
 - JMeter - the first real load generator implemented for Kangal. Kangal creates JMeter load test environments based on [Kangal-JMeter](https://github.com/hellofresh/kangal-jmeter) docker image. 
 JMeter is a powerful tool which can be used for different performance testing tasks. 
-Please read [JMeter Load generator in Kangal](jmeter-in-kangal/JMeter-load-generator-in-kangal.md) for further details.
+Please read [JMeter Load generator in Kangal](jmeter/JMeter-load-generator-in-kangal.md) for further details.
 
 ### Adding a new load generator
 Kangal offers an opportunity to add different load generators as backends. 
@@ -35,7 +35,7 @@ The basic resource is a job that manages all the other resources and sets pods t
 Reporting is an important part of load testing process. It basically contains in two parts:
 1. Live metrics during the running load test - Kangal proxy scrapes logs from main job stdout Docker container.
 2. Solid report generated after the end of the test. 
-Currently, Kangal relies on report creation implemented in backend. You can read more about JMeter backend implementation in [Reporting in JMeter](jmeter-in-kangal/Reporting-in-JMeter.md).
+Currently, Kangal relies on report creation implemented in backend. You can read more about JMeter backend implementation in [Reporting in JMeter](jmeter/Reporting-in-JMeter.md).
 
 To persist the reports the backend receives a Pre-Signed URL where which can use to upload the report. If the report contains multiple files it will be necessary to archieve/compress into a single file.
 
