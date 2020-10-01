@@ -369,9 +369,7 @@ Values to manipulate:
 
 With the values given in example test, you will get 2000 threads / 200 seconds = 10 threads/sec. With the loop count = 1 it will give us 10 RPS. 
 
-<p align="center">  
-<img src="images/constant_thread_group.png" height="500">
-</p>
+<p align="center"><img src="images/constant_thread_group.png" height="500"></p>
 
 ## Test with CSV Data
 Some test scenarios require unique request or at least some amount of varied data in requests. For this purposes JMeter allows you to use external data sets in a CSV format. 
@@ -379,9 +377,7 @@ Some test scenarios require unique request or at least some amount of varied dat
 ### CSV Data Set Config
 This config element should be nested under HTTP request sampler. Read more about [CSV DataSetConfig](https://jmeter.apache.org/usermanual/component_reference.html#CSV_Data_Set_Config) in official JMeter documentation.
 
-<p align="center">  
-<img src="images/dataset_config.png" height="500">
-</p>
+<p align="center"><img src="images/dataset_config.png" height="500"></p>
 
 > **Important note!** In Kangal the path to the testdata file is always the same **/testdata/testdata.csv**. Please specify this path in Filename field of your CSV Data Set Config. Otherwise the test run by Kangal will not see the the provided data. 
 
@@ -390,9 +386,7 @@ Some tests may contain sensitive information like DB connection parameters, auth
 
 You don't need any special configuration elements to use environment variables in test. You only need to have the plugin [Custom JMeter Functions](https://jmeter-plugins.org/wiki/Functions/#envsupfont-color-gray-size-1-since-1-2-0-font-sup) installed. Check [Required JMeter Plugins versions](JMeter-load-generator-in-kangal.md#required-jmeter-plugins-versions) doc for details.
 
-<p align="center">  
-<img src="images/http_auth_manager.png" height="500">
-</p>
+<p align="center"><img src="images/http_auth_manager.png" height="500"></p>
 
 In the example above the environment variable AUTH_CLIENT_ID used in HTTP Authorisation Manager. 
 

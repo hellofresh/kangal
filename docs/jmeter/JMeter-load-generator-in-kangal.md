@@ -36,13 +36,9 @@ Install plugins:
 2. Open JMeter UI and click the right button in the top row
 3. In the opened window got to Available Plugins tab and chose the plugin from the list. Then press **Apply Changes and restart JMeter** button.
 
-<p align="center">  
-<img src="images/jmeter_plugins.png" height="500">
-</p>
+<p align="center"><img src="images/jmeter_plugins.png" height="500"></p>
 
-<p align="center">  
-<img src="images/jmeter_plugins_install.png" height="500">
-</p>
+<p align="center"><img src="images/jmeter_plugins_install.png" height="500"></p>
 
 List of external JMeter plugins used in Kangal setup:
 

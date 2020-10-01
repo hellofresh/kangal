@@ -50,7 +50,7 @@ Kangal also uses S3 compatible storage to save test reports.
 ## Architectural diagram
 The diagram below illustrates the workflow for Kangal in Kubernetes infrastructure.
 
-<p align="left">  
+<p align="left">
  <a href="architectural_diagram.png">
    <img alt="Architectural diagram" src="architectural_diagram.png">
  </a>
