@@ -27,7 +27,7 @@ Please read [docs/jmeter/README.md](jmeter/README.md) for further details.
 ## Adding a new load generator
 Kangal can be easily extended by adding different load generators as backends. 
 
-Requirements to add new load generators are:
+### Requirements for adding a new load generators
 
 1. Create a docker image that must contain an executable of a new load generator and all required scripts to run it. Docker image should exit once load test is finished and it should provide logs to stdout which will be used by Kangal Proxy.
 
