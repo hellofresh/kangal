@@ -205,12 +205,12 @@ func (c *JMeter) NewPod(i int, configMap *coreV1.ConfigMap, podAnnotations map[s
 					},
 					Resources: coreV1.ResourceRequirements{
 						Requests: map[coreV1.ResourceName]resource.Quantity{
-							coreV1.ResourceMemory: resource.MustParse("4Gi"),
-							coreV1.ResourceCPU:    resource.MustParse("1000m"),
+							coreV1.ResourceMemory: resource.MustParse(c.config.WorkerMemoryRequests),
+							coreV1.ResourceCPU:    resource.MustParse(c.config.WorkerCPURequests),
 						},
 						Limits: map[coreV1.ResourceName]resource.Quantity{
-							coreV1.ResourceMemory: resource.MustParse("4Gi"),
-							coreV1.ResourceCPU:    resource.MustParse("2000m"),
+							coreV1.ResourceMemory: resource.MustParse(c.config.WorkerMemoryLimits),
+							coreV1.ResourceCPU:    resource.MustParse(c.config.WorkerCPULimits),
 						},
 					},
 					EnvFrom: []coreV1.EnvFromSource{
@@ -307,12 +307,12 @@ func (c *JMeter) NewJMeterMasterJob(preSignedURL *url.URL, podAnnotations map[st
 							},
 							Resources: coreV1.ResourceRequirements{
 								Requests: map[coreV1.ResourceName]resource.Quantity{
-									coreV1.ResourceMemory: resource.MustParse("4Gi"),
-									coreV1.ResourceCPU:    resource.MustParse("1000m"),
+									coreV1.ResourceMemory: resource.MustParse(c.config.MasterMemoryRequests),
+									coreV1.ResourceCPU:    resource.MustParse(c.config.MasterCPURequests),
 								},
 								Limits: map[coreV1.ResourceName]resource.Quantity{
-									coreV1.ResourceMemory: resource.MustParse("4Gi"),
-									coreV1.ResourceCPU:    resource.MustParse("2000m"),
+									coreV1.ResourceMemory: resource.MustParse(c.config.MasterMemoryLimits),
+									coreV1.ResourceCPU:    resource.MustParse(c.config.MasterCPULimits),
 								},
 							},
 						},
