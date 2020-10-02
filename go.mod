@@ -3,7 +3,6 @@ module github.com/hellofresh/kangal
 go 1.15
 
 require (
-	bou.ke/monkey v1.0.2
 	contrib.go.opencensus.io/exporter/prometheus v0.2.0
 	github.com/felixge/httpsnoop v1.0.1
 	github.com/go-chi/chi v4.1.2+incompatible

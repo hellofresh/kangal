@@ -28,7 +28,7 @@ type Runner struct {
 // RunServer runs Kangal proxy API
 func RunServer(ctx context.Context, cfg Config, rr Runner) error {
 
-	proxyHandler := NewProxy(cfg.MaxLoadTestsRun, rr.KubeClient)
+	proxyHandler := NewProxy(cfg.MaxLoadTestsRun, rr.KubeClient, fromHTTPRequestToLoadTestSpec)
 	// Start instrumented server
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
