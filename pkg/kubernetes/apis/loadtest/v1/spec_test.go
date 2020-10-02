@@ -11,6 +11,7 @@ func TestBuildLoadTestSpec(t *testing.T) {
 
 	type args struct {
 		loadTestType    LoadTestType
+		overwrite       bool
 		distributedPods int32
 		testFileStr     string
 		testDataStr     string
@@ -26,11 +27,13 @@ func TestBuildLoadTestSpec(t *testing.T) {
 			name: "Spec is valid",
 			args: args{
 				loadTestType:    "Fake",
+				overwrite:       true,
 				distributedPods: 3,
 				testFileStr:     "something in the file",
 			},
 			want: LoadTestSpec{
 				Type:            "Fake",
+				Overwrite:       true,
 				MasterConfig:    ImageDetails{},
 				WorkerConfig:    ImageDetails{},
 				DistributedPods: &distributedPods,
@@ -44,6 +47,7 @@ func TestBuildLoadTestSpec(t *testing.T) {
 			name: "Spec invalid - invalid load test type",
 			args: args{
 				loadTestType:    "Invalid Type",
+				overwrite:       true,
 				distributedPods: 3,
 				testFileStr:     "something in the file",
 			},
@@ -54,6 +58,7 @@ func TestBuildLoadTestSpec(t *testing.T) {
 			name: "Spec invalid - invalid distributed pods",
 			args: args{
 				loadTestType:    "Fake",
+				overwrite:       true,
 				distributedPods: 0,
 				testFileStr:     "something in the file",
 			},
@@ -64,6 +69,7 @@ func TestBuildLoadTestSpec(t *testing.T) {
 			name: "Spec invalid - invalid test file string",
 			args: args{
 				loadTestType:    "Fake",
+				overwrite:       true,
 				distributedPods: 3,
 			},
 			want:    LoadTestSpec{},
@@ -72,7 +78,7 @@ func TestBuildLoadTestSpec(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := BuildLoadTestSpec(tt.args.loadTestType, tt.args.distributedPods, tt.args.testFileStr, tt.args.testDataStr, tt.args.envVarsStr)
+			got, err := BuildLoadTestSpec(tt.args.loadTestType, tt.args.overwrite, tt.args.distributedPods, tt.args.testFileStr, tt.args.testDataStr, tt.args.envVarsStr)
 
 			if tt.wantErr {
 				assert.Error(t, err)
