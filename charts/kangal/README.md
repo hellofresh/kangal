@@ -59,9 +59,9 @@ The following table lists the common configurable parameters for `Kangal` chart:
 | `nameOverride`                    | String to partially override kangal.fullname template with a string (will prepend the release name) | `nil`                        |
 | `configmap.AWS_ACCESS_KEY_ID`     | AWS access key ID. If not defined report will not be stored                                         | ``                           |
 | `configmap.AWS_SECRET_ACCESS_KEY` | AWS secret access key                                                                               | ``                           |
-| `configmap.AWS_BUCKET_NAME`       | The name of the bucket for saving reports                                                           | `kangal`                     |
-| `configmap.AWS_ENDPOINT_URL`      | Storage connection parameter                                                                        | `s3.eu-west-1.amazonaws.com` |
-| `configmap.AWS_DEFAULT_REGION`    | Storage connection parameter                                                                        | `eu-west-1`                  |
+| `configmap.AWS_BUCKET_NAME`       | The name of the bucket for saving reports                                                           | `my-bucket`                  |
+| `configmap.AWS_ENDPOINT_URL`      | Storage connection parameter                                                                        | `s3.us-east-1.amazonaws.com` |
+| `configmap.AWS_DEFAULT_REGION`    | Storage connection parameter                                                                        | `us-east-1`                  |
 
 Deployment specific configurations:
 
