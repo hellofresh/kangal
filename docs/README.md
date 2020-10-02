@@ -54,7 +54,7 @@ To persist reports backends receives a Pre-Signed URL where which can use to upl
 
 To allow Kangal to serve the report static files is necessary to explicit set the file as a `tar` archive with no compression and **no enclosing directory**, otherwise the endpoint will just force the report download.
 
-The script below is an example on how to properly persist to the storage.
+The script below is an example of how to properly persist to the storage.
 
 ```sh
 if [[ -n "${REPORT_PRESIGNED_URL}" ]]; then
