@@ -100,6 +100,26 @@ func TestCreateLoadTestCRNoLoadTest(t *testing.T) {
 	assert.Error(t, deleteErr)
 }
 
+func TestGetLoadTestsByLabel(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), controller.KubeTimeout)
+	defer cancel()
+
+	var logger = zap.NewNop()
+	loadtestClientset := fakeClientset.NewSimpleClientset()
+	kubeClientSet := fake.NewSimpleClientset()
+
+	loadTest := &apisLoadTestV1.LoadTest{}
+	loadTest.Name = "NameOfMyLoadtest"
+
+	loadtestClientset.Fake.PrependReactor("list", "loadtests", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+		return true, &apisLoadTestV1.LoadTestList{}, nil
+	})
+
+	c := NewClient(loadtestClientset.KangalV1().LoadTests(), kubeClientSet, logger)
+	_, err := c.GetLoadTestsByLabel(ctx, loadTest)
+	assert.NoError(t, err)
+}
+
 func TestGetLoadTest(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), controller.KubeTimeout)
 	defer cancel()

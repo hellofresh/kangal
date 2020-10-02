@@ -43,6 +43,7 @@ type LoadTestPodsStatus struct {
 // LoadTestSpec is the spec for a LoadTest resource
 type LoadTestSpec struct {
 	Type            LoadTestType `json:"type"`
+	Overwrite       bool         `json:"overwrite"`
 	MasterConfig    ImageDetails `json:"masterConfig"`
 	WorkerConfig    ImageDetails `json:"workerConfig"`
 	DistributedPods *int32       `json:"distributedPods"`
