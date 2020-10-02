@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -121,18 +122,18 @@ func TestIntegrationJMeter(t *testing.T) {
 	})
 
 	t.Run("Checking master pod is created", func(t *testing.T) {
-		var master coreV1.PodList
-		for i := 0; i < 60; i++ {
-			WaitForResource(ShortWaitSec)
-			master, _ = GetMasterPod(client.CoreV1(), expectedLoadtestName)
-			if len(master.Items) < 1 {
-				continue
-			}
-			if master.Items[0].Status.Phase == "Running" {
-				break
-			}
-		}
-		assert.Equal(t, "Running", string(master.Items[0].Status.Phase))
+		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		defer cancel()
+
+		watchObj, _ := client.CoreV1().Pods(expectedLoadtestName).Watch(context.Background(), metaV1.ListOptions{
+			LabelSelector: "app=loadtest-master",
+		})
+
+		watchEvent, err := WaitResourceWithContext(ctx, watchObj, (WaitCondition{}).PodRunning)
+		require.NoError(t, err)
+
+		pod := watchEvent.Object.(*coreV1.Pod)
+		assert.Equal(t, coreV1.PodRunning, pod.Status.Phase)
 	})
 
 	t.Run("Checking Job is created", func(t *testing.T) {

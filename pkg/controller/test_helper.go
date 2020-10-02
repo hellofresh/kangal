@@ -273,6 +273,11 @@ func WaitResource(obj watch.Interface, condFunc watchtools.ConditionFunc) (*watc
 	return watchtools.UntilWithoutRetry(ctx, obj, condFunc)
 }
 
+// WaitResourceWithContext is WaitResource with custom context when the default context is not suitable
+func WaitResourceWithContext(ctx context.Context, obj watch.Interface, condFunc watchtools.ConditionFunc) (*watch.Event, error) {
+	return watchtools.UntilWithoutRetry(ctx, obj, condFunc)
+}
+
 // WaitForResource sleeps to wait kubernetes resources to be created
 func WaitForResource(d time.Duration) {
 	time.Sleep(d * time.Second)
