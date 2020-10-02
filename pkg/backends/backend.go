@@ -28,12 +28,17 @@ type LoadTestType interface {
 	CheckOrUpdateStatus(ctx context.Context) error
 }
 
+// Config contains all configurations related to kangal backends
+type Config struct {
+	JMeter jmeter.Config
+}
+
 // NewLoadTest returns a new LoadTestType
-func NewLoadTest(loadTest *loadTestV1.LoadTest, kubeClientSet kubernetes.Interface, kangalClientSet clientSetV.Interface, logger *zap.Logger, namespacesLister coreListersV1.NamespaceLister, reportConfig report.Config, podAnnotations, namespaceAnnotations map[string]string) (LoadTestType, error) {
+func NewLoadTest(loadTest *loadTestV1.LoadTest, kubeClientSet kubernetes.Interface, kangalClientSet clientSetV.Interface, logger *zap.Logger, namespacesLister coreListersV1.NamespaceLister, reportConfig report.Config, podAnnotations, namespaceAnnotations map[string]string, backendsConfig Config) (LoadTestType, error) {
 	switch loadTest.Spec.Type {
 	case loadTestV1.LoadTestTypeJMeter:
 		presignedURL := report.NewPreSignedPutURL(loadTest.GetName())
-		return jmeter.New(kubeClientSet, kangalClientSet, loadTest, logger, namespacesLister, presignedURL, podAnnotations, namespaceAnnotations), nil
+		return jmeter.New(kubeClientSet, kangalClientSet, loadTest, logger, namespacesLister, presignedURL, podAnnotations, namespaceAnnotations, backendsConfig.JMeter), nil
 	case loadTestV1.LoadTestTypeFake:
 		return fake.New(kubeClientSet, loadTest, logger), nil
 	}

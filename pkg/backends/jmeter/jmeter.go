@@ -36,12 +36,13 @@ type JMeter struct {
 	logger             *zap.Logger
 	namespacesLister   coreListersV1.NamespaceLister
 	reportPreSignedURL *url.URL
+	config             Config
 
 	podAnnotations, namespaceAnnotations map[string]string
 }
 
 //New initializes new JMeter provider handler to manage load test resources with Kangal Controller
-func New(kubeClientSet kubernetes.Interface, kangalClientSet clientSetV.Interface, lt *loadTestV1.LoadTest, logger *zap.Logger, namespacesLister coreListersV1.NamespaceLister, reportPreSignedURL *url.URL, podAnnotations, namespaceAnnotations map[string]string) *JMeter {
+func New(kubeClientSet kubernetes.Interface, kangalClientSet clientSetV.Interface, lt *loadTestV1.LoadTest, logger *zap.Logger, namespacesLister coreListersV1.NamespaceLister, reportPreSignedURL *url.URL, podAnnotations, namespaceAnnotations map[string]string, jMeterConfig Config) *JMeter {
 	return &JMeter{
 		kubeClientSet:        kubeClientSet,
 		kangalClientSet:      kangalClientSet,
@@ -51,6 +52,7 @@ func New(kubeClientSet kubernetes.Interface, kangalClientSet clientSetV.Interfac
 		reportPreSignedURL:   reportPreSignedURL,
 		podAnnotations:       podAnnotations,
 		namespaceAnnotations: namespaceAnnotations,
+		config:               jMeterConfig,
 	}
 }
 
