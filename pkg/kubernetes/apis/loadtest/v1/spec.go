@@ -12,7 +12,7 @@ var (
 )
 
 //BuildLoadTestSpec initialize spec for LoadTest custom resource
-func BuildLoadTestSpec(loadTestType LoadTestType, distributedPods int32, testFileStr, testDataStr, envVarsStr string) (LoadTestSpec, error) {
+func BuildLoadTestSpec(loadTestType LoadTestType, overwrite bool, distributedPods int32, testFileStr, testDataStr, envVarsStr string) (LoadTestSpec, error) {
 	lt := LoadTestSpec{}
 
 	if loadTestType != LoadTestTypeJMeter && loadTestType != LoadTestTypeFake {
@@ -28,6 +28,7 @@ func BuildLoadTestSpec(loadTestType LoadTestType, distributedPods int32, testFil
 	}
 
 	lt.Type = loadTestType
+	lt.Overwrite = overwrite
 	lt.DistributedPods = &distributedPods
 	lt.TestFile = testFileStr
 	lt.TestData = testDataStr

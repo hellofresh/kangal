@@ -142,6 +142,12 @@ func TestIntegrationCreateLoadtestReachMaxLimit(t *testing.T) {
 		testData: "testdata/valid/testdata.csv",
 	}
 
+	requestFilesSecond := map[string]string{
+		testFile: "testdata/valid/loadtest2.jmx",
+		envVars:  "testdata/valid/envvars.csv",
+		testData: "testdata/valid/testdata.csv",
+	}
+
 	var createdLoadTestName string
 
 	t.Run("Creates first loadtest, must succeed", func(t *testing.T) {
