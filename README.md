@@ -76,7 +76,7 @@ Provides the following HTTP methods for `/load-test` endpoint:
 Component responsible to manage all the aspects of the performance testing process.
 
 ## Quickstart guide
-This tutorial will guide through Kangal installation process.
+This tutorial will guide through Kangal installation process and usage.
 
 ### Installing using helm
 First, let's create the Custom Resource Definition by running:
