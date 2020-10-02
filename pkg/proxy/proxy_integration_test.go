@@ -170,7 +170,7 @@ func TestIntegrationCreateLoadtestReachMaxLimit(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("Creates second loadtest, must fail", func(t *testing.T) {
-		request, err := createRequestWrapper(requestFiles, distributedPods, string(loadtestType))
+		request, err := createRequestWrapper(requestFilesSecond, distributedPods, string(loadtestType))
 		require.NoError(t, err)
 
 		resp, err := http.Post(fmt.Sprintf("http://localhost:%d/load-test", HTTPPort), request.contentType, request.body)
