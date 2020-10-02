@@ -48,7 +48,7 @@ Kangal Proxy provides an API endpoint that allows to retrieve persisted reports 
 > Kangal relies on report creation to be implemented in the backend.
 
 ### Persisting reports
-To persist reports backends receives a Pre-Signed URL where which can use to upload it.
+Kangal generates a Pre-Signed URL and backend can use it to persist a report.
 
 > If the report contains multiple files it will be necessary to archieve/compress into a single file.
 
