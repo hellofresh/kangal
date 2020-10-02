@@ -12,7 +12,7 @@ Create a new load test by making a POST request to Kangal Proxy.
 
 > Other load generator types may require other data in request.
 
-<p align="center"><img src="/docs/jmeter/images/sending_request_postman.png" height="500"></p>
+<p align="center"><img src="jmeter/images/sending_request_postman.png" height="500"></p>
 
 ```
 curl -X POST http://${KANGAL_PROXY_ADDRESS}/load-test \
@@ -41,7 +41,7 @@ curl -X GET http://${KANGAL_PROXY_ADDRESS}/load-test/loadtest-name/logs
 
 You can also monitor the behavior of your service with your custom tools e.g. Graphite.
 
-Example of monitoring for JMeter is described at [docs/jmeter/reporting.md](/docs/jmeter/reporting.md).
+Example of monitoring for JMeter is described at [docs/jmeter/reporting.md](jmeter/reporting.md).
 
 ## Get static report. 
 When the test is finished successfully the backend will save the report.

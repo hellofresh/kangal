@@ -4,8 +4,8 @@
 - [Load generators types (aka backends)](#load-generator-types-aka-backends)
 - [Adding a new load generator](#adding-a-new-load-generator)
 - [Reporting](#reporting)
-- [Troubleshooting](docs/troubleshooting.md)
-- [User flow](docs/user-flow.md) 
+- [Troubleshooting](troubleshooting.md)
+- [User flow](user-flow.md) 
 
 Welcome to the Kangal - **K**ubernetes **an**d **G**o **A**utomatic **L**oader!
 
@@ -22,7 +22,7 @@ Currently, there are two load generator types implemented for Kangal:
 ### JMeter
 JMeter is a powerful tool which can be used for different performance testing tasks.
 
-Please read [docs/jmeter/README.md](/docs/jmeter/README.md) for further details.
+Please read [docs/jmeter/README.md](jmeter/README.md) for further details.
 
 ## Adding a new load generator
 Kangal can be easily extended to add different load generators as backends. 
@@ -45,7 +45,7 @@ Reporting is an important part of load testing process. It basically contains in
 
 Kangal Proxy provides an API endpoint that allows to retrieve persisted reports (`/load-test/:name/report/`).
 
-> Kangal relies on report creation implemented in the backend.
+> Kangal relies on report creation to be implemented in the backend.
 
 ### Persisting reports
 To persist reports backends receives a Pre-Signed URL where which can use to upload it.
@@ -54,7 +54,7 @@ To persist reports backends receives a Pre-Signed URL where which can use to upl
 
 To allow Kangal to serve the report static files is necessary to explicit set the file as a `tar` archive with no compression and **no enclosing directory**, otherwise the endpoint will just force the report download.
 
-The script below shows how to properly persist to the storage.
+The script below is an example on how to properly persist to the storage.
 
 ```sh
 if [[ -n "${REPORT_PRESIGNED_URL}" ]]; then
