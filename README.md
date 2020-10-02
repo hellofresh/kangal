@@ -18,7 +18,7 @@ ___
 - [Quickstart guide](#quickstart-guide)
     - [Installing using helm](#installing-using-helm)
     - [Creating first LoadTest](#creating-first-loadtest)
-- [Documentation](#documentation)
+- [Documentation](docs/README.md)
 - [Contributing](#contributing)
 - [Support](#support)
 
@@ -152,11 +152,6 @@ NAME                    READY   STATUS    RESTARTS   AGE
 loadtest-master-f6xpb   1/1     Running   0          18s
 loadtest-worker-000     1/1     Running   0          22s
 ```
-
-## Documentation
-To better understand how Kangal works follow [docs/README.md](docs/README.md).
-
-Also check out our [User Flow](docs/user-flow.md) guide to better understand Kangal Proxy.
 
 ## Contributing
 To start contributing, please check [CONTRIBUTING.md](CONTRIBUTING.md).
