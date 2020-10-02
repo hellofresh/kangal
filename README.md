@@ -153,6 +153,9 @@ loadtest-master-f6xpb   1/1     Running   0          18s
 loadtest-worker-000     1/1     Running   0          22s
 ```
 
+## Documentation
+Read more at [docs/README.md](docs/README.md).
+
 ## Contributing
 To start contributing, please check [CONTRIBUTING.md](CONTRIBUTING.md).
 
