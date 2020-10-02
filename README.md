@@ -134,8 +134,7 @@ $ curl \
 
 Your first load test was created successfully, in this example with the name `loadtest-dunking-hedgehog`.
 
-Kangal Controller will automatically create a namespace for your load test and deploy the backend (in this case JMeter).
-Check that by running:
+Kangal Controller will automatically create a namespace for your load test and deploy the backend (in this case JMeter), check that by running:
 
 ```
 $ kubectl get namespaces
