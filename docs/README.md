@@ -25,7 +25,7 @@ JMeter is a powerful tool which can be used for different performance testing ta
 Please read [docs/jmeter/README.md](jmeter/README.md) for further details.
 
 ## Adding a new load generator
-Kangal can be easily extended to add different load generators as backends. 
+Kangal can be easily extended by adding different load generators as backends. 
 
 Requirements to add new load generators are:
 
