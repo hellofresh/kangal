@@ -9,7 +9,7 @@
 
 Welcome to the Kangal - **K**ubernetes **an**d **G**o **A**utomatic **L**oader!
 
-For installation instructions, read the [Quickstart guide](/README.md) or the [Helm Chart](/charts/kangal/README.md).
+For installation instructions, read the [Quickstart guide](/README.md#quickstart-guide) or the [Helm Chart](/charts/kangal/README.md).
 
 In this section you can find information about load generators and how to write tests.
     
