@@ -34,7 +34,6 @@ func TestMain(m *testing.M) {
 }
 
 func TestIntegrationJMeter(t *testing.T) {
-	t.Skip("Skipping JMeter integration tests")
 	if testing.Short() {
 		t.Skip("skipping test in short mode")
 	}
@@ -123,9 +122,12 @@ func TestIntegrationJMeter(t *testing.T) {
 
 	t.Run("Checking master pod is created", func(t *testing.T) {
 		var master coreV1.PodList
-		for i := 0; i < 5; i++ {
+		for i := 0; i < 60; i++ {
 			WaitForResource(ShortWaitSec)
 			master, _ = GetMasterPod(client.CoreV1(), expectedLoadtestName)
+			if len(master.Items) < 1 {
+				continue
+			}
 			if master.Items[0].Status.Phase == "Running" {
 				break
 			}
