@@ -6,15 +6,13 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"strconv"
 	"testing"
 	"time"
 
 	"bou.ke/monkey"
-	"go.uber.org/zap"
-
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/fake"
@@ -28,7 +26,8 @@ import (
 
 const shortDuration = 1 * time.Millisecond // a reasonable duration to block in an example
 var (
-	loadTest          = &apisLoadTestV1.LoadTest{}
+	loadTest     = &apisLoadTestV1.LoadTest{}
+	loadTestList = &apisLoadTestV1.LoadTestList{}
 	kubeClientSet     = fake.NewSimpleClientset()
 	loadtestClientSet = fakeClientset.NewSimpleClientset()
 )
@@ -227,6 +226,7 @@ func TestProxyCreate(t *testing.T) {
 				lt.EnvVars = tt.requestFiles["envVars"]
 				return lt, nil
 			})
+			defer monkey.UnpatchAll()
 
 			w := httptest.NewRecorder()
 			handler(w, req)
@@ -246,21 +246,31 @@ func TestProxyCreateLimit(t *testing.T) {
 		name             string
 		expectedResponse string
 		expectedStatus   int
-		testsCount       int
+		testsList        *apisLoadTestV1.LoadTestList
 		error            error
 	}{
 		{
 			"Limit exceeded",
 			"{\"error\":\"Number of active load tests reached limit\"}\n",
 			http.StatusTooManyRequests,
-			10,
+			&apisLoadTestV1.LoadTestList{
+				Items: []apisLoadTestV1.LoadTest{
+					{
+						Status: apisLoadTestV1.LoadTestStatus{
+							Phase: apisLoadTestV1.LoadTestRunning,
+						},
+					},
+				},
+			},
 			nil,
 		},
 		{
 			"Can't count tests",
 			"{\"error\":\"Could not count active load tests\"}\n",
 			http.StatusInternalServerError,
-			0,
+			&apisLoadTestV1.LoadTestList{
+				Items: []apisLoadTestV1.LoadTest{},
+			},
 			errors.New("some error"),
 		},
 	} {
@@ -270,6 +280,12 @@ func TestProxyCreateLimit(t *testing.T) {
 
 		loadtestClientSet.Fake.PrependReactor("create", "loadtests", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
 			return true, loadTest, nil
+		})
+		loadtestClientSet.Fake.PrependReactor("list", "loadtests", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+			return true, nil, nil
+		})
+		loadtestClientSet.Fake.PrependReactor("list", "loadtests", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+			return true, tt.testsList, tt.error
 		})
 		c := kube.NewClient(loadtestClientSet.KangalV1().LoadTests(), kubeClientSet, logger)
 
@@ -284,12 +300,11 @@ func TestProxyCreateLimit(t *testing.T) {
 		req.Header.Set("Content-Type", requestWrap.contentType)
 		w := httptest.NewRecorder()
 
-		monkey.PatchInstanceMethod(reflect.TypeOf(c), "CountActiveLoadTests", func(*kube.Client, context.Context) (int, error) { return tt.testsCount, tt.error })
-
 		monkey.Patch(fromHTTPRequestToLoadTestSpec, func(*http.Request, *zap.Logger) (apisLoadTestV1.LoadTestSpec, error) {
 			lt := apisLoadTestV1.LoadTestSpec{}
 			return lt, nil
 		})
+		defer monkey.UnpatchAll()
 		handler(w, req)
 
 		resp := w.Result()
