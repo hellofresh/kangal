@@ -120,7 +120,7 @@ kangal-openapi-ui   kangal-openapi.local   localhost   80      5m48s
 kangal-proxy        kangal-proxy.local     localhost   80      5m48s
 ```
 
-> This is assuming you have a proper configured [Ingress Controller](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/), if is not the case you can use [Port Forwarding](https://kubernetes.io/docs/tasks/access-application-cluster/port-forward-access-application-cluster/).
+> This is assuming you have a properly configured [Ingress Controller](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/). If it is not the case you can use [Port Forwarding](https://kubernetes.io/docs/tasks/access-application-cluster/port-forward-access-application-cluster/).
 
 With this information, you are now able to do a request to create the first load test.
 Let's start by downloading an example JMeter test and POST it to Kangal proxy.
