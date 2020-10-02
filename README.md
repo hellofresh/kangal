@@ -126,8 +126,9 @@ $ curl -s -O https://raw.githubusercontent.com/hellofresh/kangal/master/examples
 $ curl \
     -H "Host: kangal-proxy.local" \
     -F "distributedPods=1" \
-    -F "type=JMeter" \
     -F "testFile=@constant_load.jmx" \
+    -F "type=JMeter" \
+    -F "overwrite=true" \
     http://localhost:80/load-test
 {"type":"JMeter","distributedPods":1,"loadtestName":"loadtest-dunking-hedgehog","phase":"creating","hasEnvVars":false,"hasTestData":false}
 ```

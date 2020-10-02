@@ -16,6 +16,7 @@ import (
 
 const (
 	backendType     = "type"
+	overwrite       = "overwrite"
 	distributedPods = "distributedPods"
 	testFile        = "testFile"
 	testData        = "testData"
@@ -27,6 +28,7 @@ const (
 func httpValidator(r *http.Request) url.Values {
 	rules := govalidator.MapData{
 		"type":            []string{"required"},
+		"overwrite":       []string{"in:1,True,true,t,T,TRUE,0,False,false,f,F,FALSE"},
 		"distributedPods": []string{"numeric_between:1,"},
 		"file:testFile":   []string{"ext:jmx"},
 		"file:envVars":    []string{"ext:csv"},
@@ -50,6 +52,12 @@ func fromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger) (apisLoa
 	if e := httpValidator(r); len(e) > 0 {
 		logger.Debug("User request validation failed", zap.Any("errors", e))
 		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf(e.Encode())
+	}
+
+	o, err := getOverwrite(r)
+	if err != nil {
+		logger.Debug("Bad value: ", zap.String("field", overwrite), zap.Bool("value", o), zap.Error(err))
+		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("bad %q value: should be bool", overwrite)
 	}
 
 	dp, err := getDistributedPods(r)
@@ -76,7 +84,7 @@ func fromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger) (apisLoa
 		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %q from request: %w", envVars, err)
 	}
 
-	return apisLoadTestV1.BuildLoadTestSpec(ltType, dp, tf, td, ev)
+	return apisLoadTestV1.BuildLoadTestSpec(ltType, o, dp, tf, td, ev)
 }
 
 func getEnvVars(r *http.Request) (string, error) {
@@ -108,6 +116,21 @@ func getFileFromHTTP(r *http.Request, file string) (string, error) {
 	}
 
 	return stringTestData, nil
+}
+
+func getOverwrite(r *http.Request) (bool, error) {
+	o := r.FormValue(overwrite)
+
+	if o == "" {
+		return false, nil
+	}
+
+	overwrite, err := strconv.ParseBool(o)
+	if err != nil {
+		return false, err
+	}
+
+	return overwrite, nil
 }
 
 func getDistributedPods(r *http.Request) (int32, error) {

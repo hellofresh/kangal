@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
@@ -66,20 +65,6 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), loadtest.KubeTimeout)
 	defer cancel()
 
-	// check the number of active loadtests currently running on the cluster
-	activeLoadTests, err := p.kubeClient.CountActiveLoadTests(ctx)
-	if err != nil {
-		logger.Error("Could not count active load tests", zap.Error(err))
-		render.Render(w, r, cHttp.ErrResponse(http.StatusInternalServerError, "Could not count active load tests"))
-		return
-	}
-
-	if activeLoadTests >= p.maxLoadTestsRun {
-		logger.Warn("number of active load tests reached limit", zap.Int("current", activeLoadTests), zap.Int("limit", p.maxLoadTestsRun))
-		render.Render(w, r, cHttp.ErrResponse(http.StatusTooManyRequests, "Number of active load tests reached limit"))
-		return
-	}
-
 	// Making valid LoadTestSpec based on HTTP request
 	ltSpec, err := fromHTTPRequestToLoadTestSpec(r, logger)
 	if err != nil {
@@ -94,15 +79,47 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Pushing LoadTest to Kubernetes
-	loadTestName, err := p.kubeClient.CreateLoadTest(ctx, loadTest)
-	if err != nil {
-		if errors.Is(err, os.ErrExist) {
+	// Find the old load test with the same data
+	labeledLoadTests, err := p.kubeClient.GetLoadTestsByLabel(ctx, loadTest)
+
+	if len(labeledLoadTests.Items) > 0 {
+
+		// If users wants to overwrite
+		if loadTest.Spec.Overwrite == true {
+			for _, item := range labeledLoadTests.Items {
+
+				// Remove the old tests
+				err := p.kubeClient.DeleteLoadTest(ctx, item.Name)
+				if err != nil {
+					logger.Error("Could not delete load test with error:", zap.Error(err))
+					render.Render(w, r, cHttp.ErrResponse(http.StatusConflict, err.Error()))
+					return
+				}
+			}
+		} else {
 			render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest,
 				"Load test with given testfile already exists, aborting. Please delete existing load test and try again."))
 			return
 		}
+	}
 
+	// check the number of active loadtests currently running on the cluster
+	activeLoadTests, err := p.kubeClient.CountActiveLoadTests(ctx)
+	if err != nil {
+		logger.Error("Could not count active load tests", zap.Error(err))
+		render.Render(w, r, cHttp.ErrResponse(http.StatusInternalServerError, "Could not count active load tests"))
+		return
+	}
+
+	if activeLoadTests >= p.maxLoadTestsRun {
+		logger.Warn("number of active load tests reached limit", zap.Int("current", activeLoadTests), zap.Int("limit", p.maxLoadTestsRun))
+		render.Render(w, r, cHttp.ErrResponse(http.StatusTooManyRequests, "Number of active load tests reached limit"))
+		return
+	}
+
+	// Pushing LoadTest to Kubernetes
+	loadTestName, err := p.kubeClient.CreateLoadTest(ctx, loadTest)
+	if err != nil {
 		logger.Error("Could not create load test", zap.Error(err))
 		render.Render(w, r, cHttp.ErrResponse(http.StatusConflict, err.Error()))
 		return

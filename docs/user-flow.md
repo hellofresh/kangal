@@ -21,7 +21,8 @@ curl -X POST http://${KANGAL_PROXY_ADDRESS}/load-test \
   -F testFile=@examples/constant_load.jmx \
   -F testData=@artifacts/loadtests/testData.csv \
   -F envVars=@artifacts/loadtests/envVars.csv \
-  -F type=JMeter
+  -F type=JMeter \
+  -F overwrite=true
 ```
 
 ## Check 
