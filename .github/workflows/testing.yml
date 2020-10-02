@@ -54,14 +54,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@master
 
-      - name: Run Unit tests
-        run: |
-          make test-unit
-
       - name: Setup Golang
         uses: actions/setup-go@v2
         with:
           go-version: '^1.15'
+
+      - name: Run Unit tests
+        run: |
+          make test-unit
 
       - name: Setup Kind
         uses: engineerd/setup-kind@v0.4.0
