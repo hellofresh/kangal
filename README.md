@@ -102,6 +102,10 @@ kangal-openapi-ui-7c5dd8997c-jj4mk   1/1     Running   0          44s
 kangal-openapi-ui-7c5dd8997c-vgm8c   1/1     Running   0          44s
 kangal-proxy-7d95c9d65-6t44b         1/1     Running   0          44s
 kangal-proxy-7d95c9d65-75dv4         1/1     Running   0          44s
+
+$ kubectl get crd
+NAME                                          CREATED AT
+loadtests.kangal.hellofresh.com               2019-11-15T10:59:05Z
 ```
 
 For more information about the Helm Chart check [charts/kangal/README.md](charts/kangal/README.md).
