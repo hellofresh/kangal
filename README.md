@@ -111,7 +111,7 @@ loadtests.kangal.hellofresh.com               2019-11-15T10:59:05Z
 For more information about the Helm Chart check [charts/kangal/README.md](charts/kangal/README.md).
 
 ### Creating first LoadTest
-To run an LoadTest you first need to find Kangal proxy endpoint, use this command:
+To run a LoadTest you first need to find Kangal proxy endpoint. Use this command:
 
 ```shell
 $ kubectl get ingress
