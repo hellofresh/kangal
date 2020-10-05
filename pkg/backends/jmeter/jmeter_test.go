@@ -1,12 +1,18 @@
 package jmeter
 
 import (
+	"context"
+	"net/url"
 	"testing"
 
+	"github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned/fake"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 	batchV1 "k8s.io/api/batch/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/informers"
+	k8sfake "k8s.io/client-go/kubernetes/fake"
 
 	loadtestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 )
@@ -117,4 +123,60 @@ func TestGetLoadTestPhaseFromJob(t *testing.T) {
 		phase := getLoadTestPhaseFromJob(test.JobStatus)
 		assert.Equal(t, test.ExpectedPhase, phase)
 	}
+}
+
+func TestJMeter_CheckOrCreateResources(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Arbitrary test values
+	distributedPodsNum := int32(2)
+	namespace := "loadtest-namespace"
+
+	// Fake clients
+	kubeClient := k8sfake.NewSimpleClientset()
+	client := fake.NewSimpleClientset()
+	informers := informers.NewSharedInformerFactory(kubeClient, 0)
+	namespaceLister := informers.Core().V1().Namespaces().Lister()
+	logger, _ := zap.NewDevelopment()
+
+	c := New(
+		kubeClient,
+		client,
+		&loadtestV1.LoadTest{
+			ObjectMeta: metaV1.ObjectMeta{
+				Name: "loadtest-name",
+			},
+			Spec: loadtestV1.LoadTestSpec{
+				DistributedPods: &distributedPodsNum,
+			},
+			Status: loadtestV1.LoadTestStatus{
+				Phase:     "",
+				Namespace: namespace,
+				JobStatus: batchV1.JobStatus{},
+				Pods:      loadtestV1.LoadTestPodsStatus{},
+			},
+		},
+		logger,
+		namespaceLister,
+		&url.URL{},
+		map[string]string{"": ""},
+		map[string]string{"": ""},
+		Config{
+			MasterCPULimits:      "100m",
+			MasterCPURequests:    "200m",
+			MasterMemoryLimits:   "100Mi",
+			MasterMemoryRequests: "200Mi",
+			WorkerCPULimits:      "300m",
+			WorkerCPURequests:    "400m",
+			WorkerMemoryLimits:   "300Mi",
+			WorkerMemoryRequests: "400Mi",
+		},
+	)
+
+	c.CheckOrCreateResources(ctx)
+
+	services, err := kubeClient.CoreV1().Services(namespace).List(ctx, metaV1.ListOptions{})
+	require.NoError(t, err, "Error when listing services")
+	assert.NotZero(t, len(services.Items), "Expected non-zero service amount after CheckOrCreateResources but found zero services")
 }

@@ -1,11 +1,14 @@
 package jmeter
 
 import (
+	"net/url"
 	"os"
 	"testing"
 
+	loadtestv1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
+	v1 "k8s.io/api/core/v1"
 )
 
 var logger = zap.NewNop()
@@ -114,4 +117,37 @@ func TestGetNamespaceFromInvalidName(t *testing.T) {
 	assert.Error(t, err)
 	assert.Equal(t, expectedError, err.Error())
 	assert.Equal(t, "", res)
+}
+
+func TestPodResourceConfiguration(t *testing.T) {
+	c := &JMeter{
+		loadTest: &loadtestv1.LoadTest{
+			Spec: loadtestv1.LoadTestSpec{
+				MasterConfig: loadtestv1.ImageDetails{},
+				WorkerConfig: loadtestv1.ImageDetails{},
+			},
+		},
+		config: Config{
+			MasterCPULimits:      "100m",
+			MasterCPURequests:    "200m",
+			MasterMemoryLimits:   "100Mi",
+			MasterMemoryRequests: "200Mi",
+			WorkerCPULimits:      "300m",
+			WorkerCPURequests:    "400m",
+			WorkerMemoryLimits:   "300Mi",
+			WorkerMemoryRequests: "400Mi",
+		},
+	}
+
+	masterJob := c.NewJMeterMasterJob(&url.URL{}, map[string]string{"": ""})
+	assert.Equal(t, masterJob.Spec.Template.Spec.Containers[0].Resources.Limits.Cpu().String(), c.config.MasterCPULimits)
+	assert.Equal(t, masterJob.Spec.Template.Spec.Containers[0].Resources.Requests.Cpu().String(), c.config.MasterCPURequests)
+	assert.Equal(t, masterJob.Spec.Template.Spec.Containers[0].Resources.Limits.Memory().String(), c.config.MasterMemoryLimits)
+	assert.Equal(t, masterJob.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().String(), c.config.MasterMemoryRequests)
+
+	workerPod := c.NewPod(0, &v1.ConfigMap{}, map[string]string{"": ""})
+	assert.Equal(t, workerPod.Spec.Containers[0].Resources.Limits.Cpu().String(), c.config.WorkerCPULimits)
+	assert.Equal(t, workerPod.Spec.Containers[0].Resources.Requests.Cpu().String(), c.config.WorkerCPURequests)
+	assert.Equal(t, workerPod.Spec.Containers[0].Resources.Limits.Memory().String(), c.config.WorkerMemoryLimits)
+	assert.Equal(t, workerPod.Spec.Containers[0].Resources.Requests.Memory().String(), c.config.WorkerMemoryRequests)
 }
