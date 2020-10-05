@@ -115,7 +115,7 @@ WEB_HTTP_PORT=8080 ./kangal proxy --kubeconfig=$KUBECONFIG
 ```
 
 ## Troubleshooting
-Read more at [docs/troubleshooting.md](docs/troubleshooting.md).
+Read more at [docs/troubleshooting.md](troubleshooting.md).
 
 ## User flow
-Read more at [docs/user-flow.md](docs/user-flow.md).
+Read more at [docs/user-flow.md](user-flow.md).
