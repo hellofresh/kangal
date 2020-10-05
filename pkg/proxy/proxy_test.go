@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
+	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/fake"
 	k8stesting "k8s.io/client-go/testing"
@@ -160,17 +161,16 @@ func TestProxyCreate(t *testing.T) {
 	for _, tt := range []struct {
 		name                string
 		distributedPods     int
-		failingLine         string
 		loadTestType        apisLoadTestV1.LoadTestType
 		requestFiles        map[string]string
 		expectedCode        int
 		expectedResponse    string
 		expectedContentType string
+		creationError       error
 	}{
 		{
 			"Valid request, only test file",
 			10,
-			"",
 			apisLoadTestV1.LoadTestTypeJMeter,
 			map[string]string{
 				"testFile": "testdata/valid/loadtest.jmx",
@@ -178,11 +178,11 @@ func TestProxyCreate(t *testing.T) {
 			http.StatusCreated,
 			"{\"type\":\"JMeter\",\"distributedPods\":10,\"phase\":\"creating\",\"hasEnvVars\":false,\"hasTestData\":false}\n",
 			"application/json; charset=utf-8",
+			nil,
 		},
 		{
 			"Valid request, all files",
 			10,
-			"",
 			apisLoadTestV1.LoadTestTypeFake,
 			map[string]string{
 				"testFile": "testdata/valid/loadtest.jmx",
@@ -192,6 +192,19 @@ func TestProxyCreate(t *testing.T) {
 			http.StatusCreated,
 			"{\"type\":\"Fake\",\"distributedPods\":10,\"phase\":\"creating\",\"hasEnvVars\":true,\"hasTestData\":true}\n",
 			"application/json; charset=utf-8",
+			nil,
+		},
+		{
+			"Error on creation",
+			10,
+			apisLoadTestV1.LoadTestTypeFake,
+			map[string]string{
+				"testFile": "testdata/valid/loadtest.jmx",
+			},
+			http.StatusConflict,
+			"{\"error\":\"test creation error\"}\n",
+			"application/json; charset=utf-8",
+			errors.New("test creation error"),
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
@@ -201,9 +214,9 @@ func TestProxyCreate(t *testing.T) {
 				loadtestClientSet = fakeClientset.NewSimpleClientset()
 				logger            = zaptest.NewLogger(t)
 			)
-
+			ctx := mPkg.SetLogger(context.Background(), logger)
 			loadtestClientSet.Fake.PrependReactor("create", "loadtests", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
-				return true, loadTest, nil
+				return true, loadTest, tt.creationError
 			})
 			c := kube.NewClient(loadtestClientSet.KangalV1().LoadTests(), kubeClientSet, logger)
 
@@ -222,6 +235,8 @@ func TestProxyCreate(t *testing.T) {
 			req := httptest.NewRequest("POST", "http://example.com/foo", requestWrap.body)
 			req.Header.Set("Content-Type", requestWrap.contentType)
 
+			req = req.WithContext(ctx)
+
 			w := httptest.NewRecorder()
 			handler(w, req)
 
@@ -234,7 +249,98 @@ func TestProxyCreate(t *testing.T) {
 		})
 	}
 }
+func TestNewProxyRecreate(t *testing.T) {
+	for _, tt := range []struct {
+		name             string
+		testsList        *apisLoadTestV1.LoadTestList
+		expectedResponse string
+		expectedStatus   int
+		overwrite        bool
+		err              error
+	}{
+		{
+			"Test already exists",
+			&apisLoadTestV1.LoadTestList{
+				Items: []apisLoadTestV1.LoadTest{
+					{
+						ObjectMeta: metaV1.ObjectMeta{
+							Labels: map[string]string{
+								"test-file-hash": "1eb2058ca019f1e95ecb5f2a5d9f691656d729f7",
+							},
+						},
+						Status: apisLoadTestV1.LoadTestStatus{
+							Phase: apisLoadTestV1.LoadTestRunning,
+						},
+					},
+				},
+			},
+			"{\"error\":\"Load test with given testfile already exists, aborting. Please delete existing load test and try again.\"}\n",
+			http.StatusBadRequest,
+			false,
+			nil,
+		},
+		{
+			"Can't overwrite existing loadtest",
+			&apisLoadTestV1.LoadTestList{
+				Items: []apisLoadTestV1.LoadTest{
+					{
+						ObjectMeta: metaV1.ObjectMeta{
+							Labels: map[string]string{
+								"test-file-hash": "1eb2058ca019f1e95ecb5f2a5d9f691656d729f7",
+							},
+						},
+						Status: apisLoadTestV1.LoadTestStatus{
+							Phase: apisLoadTestV1.LoadTestRunning,
+						},
+					},
+				},
+			},
+			"{\"error\":\"loadtests.kangal.hellofresh.com \\\"\\\" not found\"}\n",
+			http.StatusConflict,
+			true,
+			nil,
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				kubeClientSet     = fake.NewSimpleClientset()
+				loadtestClientSet = fakeClientset.NewSimpleClientset()
+				logger            = zaptest.NewLogger(t)
+			)
+			ctx := mPkg.SetLogger(context.Background(), logger)
+			c := kube.NewClient(loadtestClientSet.KangalV1().LoadTests(), kubeClientSet, logger)
 
+			s := specData{
+				files: map[string]string{
+					"testFile": "111.jmx"},
+				overwrite: tt.overwrite,
+			}
+
+			testProxyHandler := NewProxy(1, c, s.fakeSpecCreator)
+			handler := testProxyHandler.Create
+
+			loadtestClientSet.Fake.PrependReactor("list", "loadtests", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+				return true, tt.testsList, tt.err
+			})
+
+			requestWrap, _ := createRequestWrapper(map[string]string{
+				"testFile": "111.jmx"}, "2", "Fake")
+
+			req := httptest.NewRequest("POST", "http://example.com/load-test", requestWrap.body)
+			req = req.WithContext(ctx)
+			req.Header.Set("Content-Type", requestWrap.contentType)
+			w := httptest.NewRecorder()
+
+			handler(w, req)
+
+			resp := w.Result()
+			respBody, _ := ioutil.ReadAll(resp.Body)
+
+			assert.Equal(t, tt.expectedStatus, resp.StatusCode)
+			assert.Equal(t, tt.expectedResponse, string(respBody))
+		})
+	}
+}
 func TestProxyCreateWithErrors(t *testing.T) {
 	for _, tt := range []struct {
 		name             string
@@ -274,9 +380,7 @@ func TestProxyCreateWithErrors(t *testing.T) {
 			"Can't count labeled tests",
 			"{\"error\":\"Could not count active load tests with given hash\"}\n",
 			http.StatusInternalServerError,
-			&apisLoadTestV1.LoadTestList{
-				Items: []apisLoadTestV1.LoadTest{},
-			},
+			&apisLoadTestV1.LoadTestList{},
 			nil,
 			errors.New("some error on counting labeled tests"),
 		},
@@ -351,6 +455,7 @@ type specData struct {
 	distributedPods int
 	ltType          string
 	files           map[string]string
+	overwrite       bool
 	err             error
 }
 
@@ -362,5 +467,6 @@ func (s *specData) fakeSpecCreator(*http.Request, *zap.Logger) (apisLoadTestV1.L
 	lt.TestFile = s.files["testFile"]
 	lt.TestData = s.files["testData"]
 	lt.EnvVars = s.files["envVars"]
+	lt.Overwrite = s.overwrite
 	return lt, s.err
 }
