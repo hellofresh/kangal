@@ -4,6 +4,7 @@
 - [Load generators types (aka backends)](#load-generator-types-aka-backends)
 - [Adding a new load generator](#adding-a-new-load-generator)
 - [Reporting](#reporting)
+- [Developer guide](#developer-guide) 
 - [Troubleshooting](troubleshooting.md)
 - [User flow](user-flow.md) 
 
@@ -28,7 +29,6 @@ Please read [docs/jmeter/README.md](jmeter/README.md) for further details.
 Kangal can be easily extended by adding different load generators as backends. 
 
 ### Requirements for adding a new load generators
-
 1. Create a docker image that must contain an executable of a new load generator and all required scripts to run it. Docker image should exit once load test is finished and it should provide logs to stdout which will be used by Kangal Proxy.
 
 2. Create a new backend resource definition in Kangal source code: 
@@ -63,3 +63,59 @@ if [[ -n "${REPORT_PRESIGNED_URL}" ]]; then
   curl -X PUT -H "Content-Type: application/x-tar" -T /tmp/report-archive.tar -L "${REPORT_PRESIGNED_URL}"
 fi
 ```
+
+## Developer guide
+To start developing Kangal you need a local Kubernetes environment, e.g. [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/) or [docker desktop](https://rominirani.com/tutorial-getting-started-with-kubernetes-with-docker-on-mac-7f58467203fd).
+> Note: Depending on load generator type, load test environments created by Kangal may require a lot of resources. Make sure you increased your limits for local Kubernetes cluster.
+
+1. Clone the repo locally
+
+```bash
+git clone https://github.com/hellofresh/kangal.git
+cd kangal
+```
+
+2. Create required Kubernetes resource LoadTest CRD in your cluster
+
+```bash
+kubectl apply -f charts/kagal/crd.yaml
+```
+
+or just use:
+
+```bash
+make appply-crd
+```
+    
+3. Download the dependencies
+
+```bash
+go mod vendor
+```
+
+4. Build Kangal binary
+
+```bash
+make build
+```
+    
+5. Set the environment variables
+
+``` bash
+export AWS_BUCKET_NAME=YOUR_BUCKET_NAME      # name of the bucket for saving reports
+export AWS_ENDPOINT_URL=YOUR_BUCKET_ENDPOINT # storage connection parameter
+export AWS_DEFAULT_REGION=YOUR_AWS_REGION    # storage connection parameter
+```
+
+6. Run both Kangal proxy and controller
+
+```bash
+WEB_HTTP_PORT=8888 ./kangal controller --kubeconfig=$KUBECONFIG
+WEB_HTTP_PORT=8080 ./kangal proxy --kubeconfig=$KUBECONFIG
+```
+
+## Troubleshooting
+Read more at [docs/troubleshooting.md](docs/troubleshooting.md).
+
+## User flow
+Read more at [docs/user-flow.md](docs/user-flow.md).
