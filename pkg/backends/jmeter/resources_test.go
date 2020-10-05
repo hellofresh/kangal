@@ -140,14 +140,14 @@ func TestPodResourceConfiguration(t *testing.T) {
 	}
 
 	masterJob := c.NewJMeterMasterJob(&url.URL{}, map[string]string{"": ""})
-	assert.Equal(t, masterJob.Spec.Template.Spec.Containers[0].Resources.Limits.Cpu().String(), c.config.MasterCPULimits)
-	assert.Equal(t, masterJob.Spec.Template.Spec.Containers[0].Resources.Requests.Cpu().String(), c.config.MasterCPURequests)
-	assert.Equal(t, masterJob.Spec.Template.Spec.Containers[0].Resources.Limits.Memory().String(), c.config.MasterMemoryLimits)
-	assert.Equal(t, masterJob.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().String(), c.config.MasterMemoryRequests)
+	assert.Equal(t, c.config.MasterCPULimits, masterJob.Spec.Template.Spec.Containers[0].Resources.Limits.Cpu().String())
+	assert.Equal(t, c.config.MasterCPURequests, masterJob.Spec.Template.Spec.Containers[0].Resources.Requests.Cpu().String())
+	assert.Equal(t, c.config.MasterMemoryLimits, masterJob.Spec.Template.Spec.Containers[0].Resources.Limits.Memory().String())
+	assert.Equal(t, c.config.MasterMemoryRequests, masterJob.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().String())
 
 	workerPod := c.NewPod(0, &v1.ConfigMap{}, map[string]string{"": ""})
-	assert.Equal(t, workerPod.Spec.Containers[0].Resources.Limits.Cpu().String(), c.config.WorkerCPULimits)
-	assert.Equal(t, workerPod.Spec.Containers[0].Resources.Requests.Cpu().String(), c.config.WorkerCPURequests)
-	assert.Equal(t, workerPod.Spec.Containers[0].Resources.Limits.Memory().String(), c.config.WorkerMemoryLimits)
-	assert.Equal(t, workerPod.Spec.Containers[0].Resources.Requests.Memory().String(), c.config.WorkerMemoryRequests)
+	assert.Equal(t, c.config.WorkerCPULimits, workerPod.Spec.Containers[0].Resources.Limits.Cpu().String())
+	assert.Equal(t, c.config.WorkerCPURequests, workerPod.Spec.Containers[0].Resources.Requests.Cpu().String())
+	assert.Equal(t, c.config.WorkerMemoryLimits, workerPod.Spec.Containers[0].Resources.Limits.Memory().String())
+	assert.Equal(t, c.config.WorkerMemoryRequests, workerPod.Spec.Containers[0].Resources.Requests.Memory().String())
 }
