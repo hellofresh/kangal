@@ -52,3 +52,25 @@ List of external JMeter plugins used in Kangal setup:
 * jpgc-functions [Custom JMeter Functions](https://jmeter-plugins.org/wiki/Functions/)
 
 You can also use and modify example test files from Kangal repo, described [here](How-to-write-tests.md) and [Load generator in Kangal](JMeter-load-generator-in-kangal.md). But we strongly recommend you to read the [offical docs](https://jmeter.apache.org/usermanual/test_plan.html) to understand major concepts.
+
+### Configuring JMeter Resource Requirements
+By default, Kangal does not specify resource requirements for loadtests run with JMeter as a backend.
+
+You can specify resource limits and requests for JMeter master and worker containers to ensure that when the load generator runs, it has sufficient resources and will not fail before the service does.
+
+The following environment variables can be specified to configure this parameter:
+
+```
+JMETER_MASTER_CPU_LIMITS
+JMETER_MASTER_CPU_REQUESTS
+JMETER_MASTER_MEMORY_LIMITS
+JMETER_MASTER_MEMORY_REQUESTS
+JMETER_WORKER_CPU_LIMITS
+JMETER_WORKER_CPU_REQUESTS
+JMETER_WORKER_MEMORY_LIMITS
+JMETER_WORKER_MEMORY_REQUESTS
+```
+
+More information regarding resource limits and requests can be found in the following page(s):
+- https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+- https://cloud.google.com/blog/products/gcp/kubernetes-best-practices-resource-requests-and-limits
