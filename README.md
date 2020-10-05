@@ -134,10 +134,35 @@ $ curl \
     -F "type=JMeter" \
     -F "overwrite=true" \
     http://localhost:80/load-test
-{"type":"JMeter","distributedPods":1,"loadtestName":"loadtest-dunking-hedgehog","phase":"creating","hasEnvVars":false,"hasTestData":false}
+```
+```json
+{
+    "type": "JMeter",
+    "distributedPods": 1,
+    "loadtestName": "loadtest-dunking-hedgehog",
+    "phase": "creating",
+    "hasEnvVars": false,
+    "hasTestData": false
+}
 ```
 
 Your first load test was created successfully, in this example with the name `loadtest-dunking-hedgehog`.
+
+Check the load status with:
+
+```shell
+$ curl http://localhost:8080/load-test/loadtest-dunking-hedgehog
+```
+```json
+{
+    "type": "JMeter",
+    "distributedPods": 1,
+    "loadtestName": "loadtest-dunking-hedgehog",
+    "phase": "running",
+    "hasEnvVars": false,
+    "hasTestData": false
+}
+```
 
 Kangal Controller will automatically create a namespace for your load test and deploy the backend (in this case JMeter), check that by running:
 
