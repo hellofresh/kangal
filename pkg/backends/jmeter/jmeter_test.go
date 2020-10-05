@@ -162,16 +162,7 @@ func TestJMeter_CheckOrCreateResources(t *testing.T) {
 		&url.URL{},
 		map[string]string{"": ""},
 		map[string]string{"": ""},
-		Config{
-			MasterCPULimits:      "100m",
-			MasterCPURequests:    "200m",
-			MasterMemoryLimits:   "100Mi",
-			MasterMemoryRequests: "200Mi",
-			WorkerCPULimits:      "300m",
-			WorkerCPURequests:    "400m",
-			WorkerMemoryLimits:   "300Mi",
-			WorkerMemoryRequests: "400Mi",
-		},
+		Config{},
 	)
 
 	c.CheckOrCreateResources(ctx)
