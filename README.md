@@ -151,7 +151,7 @@ Your first load test was created successfully, in this example with the name `lo
 Check the load status with:
 
 ```shell
-$ curl http://localhost:8080/load-test/loadtest-dunking-hedgehog
+$ curl http://localhost:80/load-test/loadtest-dunking-hedgehog
 ```
 ```json
 {
