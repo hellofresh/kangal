@@ -1,6 +1,7 @@
 # Troubleshooting
 
 ## Problems with Kangal installation
+
 To troubleshoot Kangal you will need access to your Kubernetes cluster.
 
 - Log in to the cluster where Kangal is installed
@@ -8,4 +9,5 @@ To troubleshoot Kangal you will need access to your Kubernetes cluster.
 - Check logs of Kangal Proxy and Kangal Controller
 
 ## Problems with a specific load test
-You can make basic troubleshooting using Kangal API endpoints or either exploring load test Pods if is the case of your backend.
+
+You can make basic troubleshooting using Kangal API endpoints.
