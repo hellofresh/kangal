@@ -5,7 +5,7 @@
 This chart bootstraps a [kangal](https://github.com/hellofresh/kangal) deployment using the [Helm](https://helm.sh) package manager.
 
 ## Prerequisites
-- Helm 3+
+- Helm 2+
 - Kubernetes 1.12+
 
 ## Installing the Chart
@@ -26,6 +26,13 @@ $ helm install \
   kangal kangal/kangal
 ```
 
+> for Helm v2:
+> ```shell
+> $ helm install \
+>   --set environment=dev \
+>   --name kangal kangal/kangal
+> ```
+
 To install the chart with the release name `kangal` and use an specific version:
 ```shell
 $ helm install \
@@ -34,6 +41,15 @@ $ helm install \
   --set controller.image.tag=1.0.3 \
   kangal kangal/kangal
 ```
+
+> for Helm v2:
+> ```shell
+> $ helm install \
+>   --set environment=dev \
+>   --set proxy.image.tag=1.0.3 \
+>   --set controller.image.tag=1.0.3 \
+>   --name kangal kangal/kangal
+> ```
 
 The command deploys Kangal on the Kubernetes cluster in the default configuration.
 It also applies the latest version of Custom Resource Definition (CRD) to the cluster.
