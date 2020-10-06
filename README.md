@@ -85,12 +85,24 @@ First, let's create the Custom Resource Definition by running:
 $ kubectl apply -f https://raw.githubusercontent.com/hellofresh/kangal/master/charts/kangal/crd.yaml
 ```
 
-Now, install the chart using following commands:
+Add the the repository to Helm:
 
 ```shell
 $ helm repo add kangal https://hellofresh.github.io/kangal
+```
+
+Now, install the chart using following command:
+
+```shell
 $ helm install --set environment=dev kangal kangal/kangal
 ```
+
+> for Helm v2:
+> ```shell
+> $ helm install \
+>   --set environment=dev \
+>   --name kangal kangal/kangal
+> ```
 
 That's it, Kangal should be installed, check if is all correct by running:
 
