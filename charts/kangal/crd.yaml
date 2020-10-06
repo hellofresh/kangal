@@ -40,7 +40,7 @@ spec:
               properties:
                 type:
                   type: string
-                  enum: [ JMeter, Fake ]
+                  enum: [ JMeter, Fake, Locust ]
                 distributedPods:
                   minimum: 1
                   type: integer

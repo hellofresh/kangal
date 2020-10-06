@@ -277,7 +277,7 @@
 					},
 					"type": {
 						"type": "string",
-						"enum": ["jMeter", "Fake"]
+						"enum": ["jMeter", "Fake", "Locust"]
 					},
 					"overwrite": {
 						"type": "boolean"
@@ -306,7 +306,7 @@
 					},
 					"type": {
 						"type": "string",
-						"enum": ["jMeter", "Fake"]
+						"enum": ["jMeter", "Fake", "Locust"]
 					}
 				}
 			},

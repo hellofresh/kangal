@@ -1,6 +1,8 @@
 package v1
 
-import "errors"
+import (
+	"errors"
+)
 
 var (
 	// ErrInvalidLoadTestType error on LoadTest type if not of allowed types
@@ -15,7 +17,7 @@ var (
 func BuildLoadTestSpec(loadTestType LoadTestType, overwrite bool, distributedPods int32, testFileStr, testDataStr, envVarsStr string) (LoadTestSpec, error) {
 	lt := LoadTestSpec{}
 
-	if loadTestType != LoadTestTypeJMeter && loadTestType != LoadTestTypeFake {
+	if false == HasLoadTestType(loadTestType) {
 		return lt, ErrInvalidLoadTestType
 	}
 
