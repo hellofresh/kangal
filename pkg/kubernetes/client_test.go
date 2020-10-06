@@ -101,23 +101,57 @@ func TestCreateLoadTestCRNoLoadTest(t *testing.T) {
 }
 
 func TestGetLoadTestsByLabel(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), controller.KubeTimeout)
-	defer cancel()
+	for _, tt := range []struct {
+		name             string
+		expectedResponse string
+		expectedStatus   int
+		testsList        *apisLoadTestV1.LoadTestList
+		error            error
+	}{
+		{
+			"No error",
+			"",
+			1,
+			&apisLoadTestV1.LoadTestList{
+				Items: []apisLoadTestV1.LoadTest{
+					{
+						Status: apisLoadTestV1.LoadTestStatus{
+							Phase: apisLoadTestV1.LoadTestRunning,
+						},
+					},
+				},
+			},
+			nil,
+		},
+		{
+			"Error",
+			"",
+			1,
+			&apisLoadTestV1.LoadTestList{},
+			errors.New("test error"),
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), controller.KubeTimeout)
+			defer cancel()
 
-	var logger = zap.NewNop()
-	loadtestClientset := fakeClientset.NewSimpleClientset()
-	kubeClientSet := fake.NewSimpleClientset()
+			var logger = zap.NewNop()
+			loadtestClientset := fakeClientset.NewSimpleClientset()
+			kubeClientSet := fake.NewSimpleClientset()
 
-	loadTest := &apisLoadTestV1.LoadTest{}
-	loadTest.Name = "NameOfMyLoadtest"
+			loadTest := &apisLoadTestV1.LoadTest{}
+			loadTest.Name = "NameOfMyLoadtest"
 
-	loadtestClientset.Fake.PrependReactor("list", "loadtests", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
-		return true, &apisLoadTestV1.LoadTestList{}, nil
-	})
+			loadtestClientset.Fake.PrependReactor("list", "loadtests", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+				return true, tt.testsList, tt.error
+			})
 
-	c := NewClient(loadtestClientset.KangalV1().LoadTests(), kubeClientSet, logger)
-	_, err := c.GetLoadTestsByLabel(ctx, loadTest)
-	assert.NoError(t, err)
+			c := NewClient(loadtestClientset.KangalV1().LoadTests(), kubeClientSet, logger)
+			_, err := c.GetLoadTestsByLabel(ctx, loadTest)
+			assert.Equal(t, tt.error, err)
+
+		})
+	}
 }
 
 func TestGetLoadTest(t *testing.T) {

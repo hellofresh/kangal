@@ -9,14 +9,14 @@ import (
 	"path/filepath"
 )
 
-// Request contains request body and contentType prepared in createRequestBody func
-type Request struct {
+// RequestWrapper contains request body and contentType prepared in createRequestWrapper func
+type RequestWrapper struct {
 	body        io.Reader
 	contentType string
 }
 
-func createRequestBody(requestFiles map[string]string, distributedPods string, loadtestType string) (*Request, error) {
-	request := &Request{}
+func createRequestWrapper(requestFiles map[string]string, distributedPods string, loadtestType string) (*RequestWrapper, error) {
+	request := &RequestWrapper{}
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
 

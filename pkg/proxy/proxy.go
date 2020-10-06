@@ -30,17 +30,21 @@ var (
 	ErrFileToStringEmpty error = errors.New("file is empty")
 )
 
+type loadTestSpecCreator func(*http.Request, *zap.Logger) (apisLoadTestV1.LoadTestSpec, error)
+
 // Proxy handler
 type Proxy struct {
-	maxLoadTestsRun int
-	kubeClient      *kube.Client
+	maxLoadTestsRun     int
+	kubeClient          *kube.Client
+	httpToSpecConverter loadTestSpecCreator
 }
 
 // NewProxy returns new Proxy handlers
-func NewProxy(maxLoadTestsRun int, kubeClient *kube.Client) *Proxy {
+func NewProxy(maxLoadTestsRun int, kubeClient *kube.Client, specCreator loadTestSpecCreator) *Proxy {
 	return &Proxy{
-		maxLoadTestsRun: maxLoadTestsRun,
-		kubeClient:      kubeClient,
+		maxLoadTestsRun:     maxLoadTestsRun,
+		kubeClient:          kubeClient,
+		httpToSpecConverter: specCreator,
 	}
 }
 
@@ -66,7 +70,7 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	// Making valid LoadTestSpec based on HTTP request
-	ltSpec, err := fromHTTPRequestToLoadTestSpec(r, logger)
+	ltSpec, err := p.httpToSpecConverter(r, logger)
 	if err != nil {
 		render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest, err.Error()))
 		return
@@ -81,6 +85,11 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 
 	// Find the old load test with the same data
 	labeledLoadTests, err := p.kubeClient.GetLoadTestsByLabel(ctx, loadTest)
+	if err != nil {
+		logger.Error("Could not count active load tests with given hash", zap.Error(err))
+		render.Render(w, r, cHttp.ErrResponse(http.StatusInternalServerError, "Could not count active load tests with given hash"))
+		return
+	}
 
 	if len(labeledLoadTests.Items) > 0 {
 
