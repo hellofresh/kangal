@@ -43,3 +43,9 @@ List of external JMeter plugins used in Kangal setup:
 
 You can also use and modify example test files from [Kangal repository](/examples) as described at [docs/jmeter/writing-tests.md](/docs/jmeter/how-to-write-tests.md).
 Reading the [offical documentation](https://jmeter.apache.org/usermanual/test_plan.html) is strongly recommend to understand major concepts.
+
+## Writing tests
+Read more at [docs/jmeter/writing-tests.md](writing-tests.md).
+
+## Reporting
+Read more at [docs/jmeter/reporting.md](reporting.md).
