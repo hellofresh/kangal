@@ -1,9 +1,7 @@
 # Kangal - Automatic loader
 [![Artifact HUB](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/kangal)](https://artifacthub.io/packages/search?repo=kangal)
 [![codecov](https://codecov.io/gh/hellofresh/kangal/branch/master/graph/badge.svg)](https://codecov.io/gh/hellofresh/kangal)
-<p align="center">  
-<img src="./kangal_logo.svg" width="320">
-</p>
+<p align="center"><img src="kangal_logo.svg" width="320"></p>
 
 Run performance tests in Kubernetes cluster with Kangal.
 ___
@@ -14,11 +12,14 @@ ___
 - [How it works](#how-it-works)
 - [Architectural diagram](#architectural-diagram)
 - [Components](#components)
-    - [LoadTest CRD](#loadtest-cr--)
-    - [Kangal Proxy](#kangal-proxy--)
-    - [Kangal Controller](#kangal-controller--)
-- [To start using Kangal](#to-start-using-kangal)
-- [To start developing Kangal](#to-start-developing-kangal)
+    - [LoadTest Custom Resource](#loadtest-custom-resource)
+    - [Kangal Proxy](#kangal-proxy)
+    - [Kangal Controller](#kangal-controller)
+- [Quickstart guide](#quickstart-guide)
+    - [Installing using helm](#installing-using-helm)
+    - [Creating first LoadTest](#creating-first-loadtest)
+- [Documentation](docs/README.md)
+- [Contributing](#contributing)
 - [Support](#support)
 
 ## Why Kangal?
@@ -38,30 +39,30 @@ With Kangal, you can spin up an isolated environment in a Kubernetes cluster to 
 Kangal application uses Kubernetes [Custom Resources](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/).
 
 LoadTest custom resource (CR) is a main working entity.
-LoadTest custom resource definition (LoadTest CRD) can be found in [/kangal/crd.yaml](https://github.com/hellofresh/kangal/blob/master/charts/kangal/crd.yaml).
+LoadTest custom resource definition (CRD) can be found in [charts/kangal/crd.yaml](charts/kangal/crd.yaml).
 
 Kangal application contains two main parts:
  - **Proxy** to create, delete and check load tests and reports via REST API requests
- - **Controller** to operate with LoadTest CR and other Kubernetes entities.
+ - **Controller** to operate with LoadTest custom resource and other Kubernetes entities.
 
 Kangal also uses S3 compatible storage to save test reports. 
 
 ## Architectural diagram
 The diagram below illustrates the workflow for Kangal in Kubernetes infrastructure.
 
-<p align="left">  
- <a href="https://github.com/hellofresh/kangal/blob/master/architectural_diagram.png">
-   <img alt="Architectural diagram" src="./architectural_diagram.png" >
+<p align="left">
+ <a href="architectural_diagram.png">
+   <img alt="Architectural diagram" src="architectural_diagram.png">
  </a>
 </p>
 
 ## Components
-### LoadTest CR
+### LoadTest Custom Resource
 A new custom resource in the Kubernetes cluster which contains requirements for performance testing environments.
 
-More info about the Custom Resources in [Official Kubernetes documentation](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/)
+More info about the Custom Resources in [official Kubernetes documentation](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/).
 
-### Kangal proxy
+### Kangal Proxy
 Provides the following HTTP methods for `/load-test` endpoint:
  - POST - allowing the user to create a new LoadTest
  - GET - allowing the user to see current LoadTest status / logs / report / metrics
@@ -71,65 +72,131 @@ Provides the following HTTP methods for `/load-test` endpoint:
 
  If you prefer to use Postman you can also import [openapi.json](openapi.json) file into Postman to create a new collection.
 
-### Kangal controller
-The general name for several Kubernetes controllers created to manage all the aspects of the performance testing process.
- - LoadTest controller  
- - Backend jobs controller
- 
-## To start using Kangal
-To run Kangal in your Kubernetes cluster follow [docs](docs/README.md#how-do-i-use-kangal)
+### Kangal Controller
+The component is responsible for managing all the aspects of the performance testing process.
 
-Also check out our [User Flow](docs/Kangal-user-flow.md) guide to start creating load tests with Kangal.
+## Quickstart guide
+This tutorial will guide through Kangal installation process and usage.
 
-More detailed information can be found in [docs folder](docs/)
+### Installing using helm
+First, let's create the Custom Resource Definition by running:
 
-## To start developing Kangal
-To start developing Kangal you need a local Kubernetes environment, e.g. [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/)
-or [docker desktop](https://rominirani.com/tutorial-getting-started-with-kubernetes-with-docker-on-mac-7f58467203fd). 
-> Note: Depending on load generator type, load test environments created by Kangal may require a lot of resources. Make sure you increased your limits for local Kubernetes cluster. 
-> Read more about implemented load generators [here](docs/README.md#load-generator-types-aka-backends). 
+```shell
+$ kubectl apply -f https://raw.githubusercontent.com/hellofresh/kangal/master/charts/kangal/crd.yaml
+```
 
-1. Clone the repo locally
-    ```bash
-    git clone https://github.com/hellofresh/kangal.git
-    ```
+Add the repository to Helm:
 
-2. Create required Kubernetes resource LoadTest CRD in your cluster
-    ```bash
-    kubectl apply -f charts/kangal/crd.yaml
-    ```
-    or just use:
-    ```bash
-    make appply-crd
-    ```
-    
-3. Download the dependencies
-    ```bash
-    go mod vendor
-    ```
+```shell
+$ helm repo add kangal https://hellofresh.github.io/kangal
+```
 
-4. Build Kangal binary
-   ```bash
-   make build
-    ```
-    
-5. Set the environment variables
-    ``` bash
-    export WEB_HTTP_PORT=8080                    # API port for Kangal Proxy
-    export AWS_BUCKET_NAME=YOUR_BUCKET_NAME      # name of the bucket for saving reports
-    export AWS_ENDPOINT_URL=YOUR_BUCKET_ENDPOINT # storage connection parameter
-    export AWS_DEFAULT_REGION=YOUR_AWS_REGION    # storage connection parameter
-    ```
+Now, install the chart using the following command:
 
-6. Run both Kangal proxy and controller
-    ```bash
-    ./kangal controller --kubeconfig=$KUBECONFIG 
-    ./kangal proxy --kubeconfig=$KUBECONFIG
-    ```
+```shell
+$ helm install --set environment=dev kangal kangal/kangal
+```
+
+> for Helm v2:
+> ```shell
+> $ helm install --set environment=dev --name kangal kangal/kangal
+> ```
+
+That's it, Kangal should be installed, check if is all correct by running:
+
+```shell
+$ kubectl get pods
+NAME                                 READY   STATUS    RESTARTS   AGE
+kangal-controller-588677b854-r9qcs   1/1     Running   0          44s
+kangal-openapi-ui-7c5dd8997c-jj4mk   1/1     Running   0          44s
+kangal-openapi-ui-7c5dd8997c-vgm8c   1/1     Running   0          44s
+kangal-proxy-7d95c9d65-6t44b         1/1     Running   0          44s
+kangal-proxy-7d95c9d65-75dv4         1/1     Running   0          44s
+
+$ kubectl get crd
+NAME                              CREATED AT
+loadtests.kangal.hellofresh.com   2020-10-05T13:22:59Z
+```
+
+For more information about the Helm Chart check [charts/kangal/README.md](charts/kangal/README.md).
+
+### Creating first LoadTest
+To run a LoadTest you first need to find Kangal proxy endpoint. Use this command:
+
+```shell
+$ kubectl get ingress
+NAME                HOSTS                  ADDRESS     PORTS   AGE
+kangal-openapi-ui   kangal-openapi.local   localhost   80      5m48s
+kangal-proxy        kangal-proxy.local     localhost   80      5m48s
+```
+
+> This is assuming you have a properly configured [Ingress Controller](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/). If it is not the case you can use [Port Forwarding](https://kubernetes.io/docs/tasks/access-application-cluster/port-forward-access-application-cluster/).
+
+With this information, you are now able to do a request to create the first load test.
+Let's start by downloading an example JMeter test and POST it to Kangal proxy.
+
+```shell
+$ curl -s -O https://raw.githubusercontent.com/hellofresh/kangal/master/examples/constant_load.jmx
+$ curl \
+    -H "Host: kangal-proxy.local" \
+    -F "distributedPods=1" \
+    -F "testFile=@constant_load.jmx" \
+    -F "type=JMeter" \
+    -F "overwrite=true" \
+    http://localhost:80/load-test
+```
+```json
+{
+    "type": "JMeter",
+    "distributedPods": 1,
+    "loadtestName": "loadtest-dunking-hedgehog",
+    "phase": "creating",
+    "hasEnvVars": false,
+    "hasTestData": false
+}
+```
+
+Your first load test was created successfully, in this example with the name `loadtest-dunking-hedgehog`.
+
+Check the load status with:
+
+```shell
+$ curl http://localhost:80/load-test/loadtest-dunking-hedgehog
+```
+```json
+{
+    "type": "JMeter",
+    "distributedPods": 1,
+    "loadtestName": "loadtest-dunking-hedgehog",
+    "phase": "running",
+    "hasEnvVars": false,
+    "hasTestData": false
+}
+```
+
+Kangal Controller will automatically create a namespace for your load test and deploy the backend (in this case JMeter), check that by running:
+
+```
+$ kubectl get namespaces
+NAME                        STATUS   AGE
+...
+loadtest-dunking-hedgehog   Active   3s
+```
+
+And you can check if the Pods started correctly using:
+
+```
+$ kubectl get pods --namespace=loadtest-dunking-hedgehog
+NAME                    READY   STATUS    RESTARTS   AGE
+loadtest-master-f6xpb   1/1     Running   0          18s
+loadtest-worker-000     1/1     Running   0          22s
+```
+
+## Documentation
+Read more at [docs/README.md](docs/README.md).
 
 ## Contributing
-
-To start contributing, please check [CONTRIBUTING](CONTRIBUTING.md).
+To start contributing, please check [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Support
-If you need support, start with the [Troubleshooting guide](docs/Troubleshooting.md), and work your way through the process that we've outlined.
+If you need support, start with the [troubleshooting guide](docs/troubleshooting.md), and work your way through the process that we've outlined.

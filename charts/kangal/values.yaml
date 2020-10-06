@@ -145,6 +145,7 @@ openapi-ui:
     path: /
     hosts:
       http: "kangal-openapi.local"
+
   # Annotations to be added to pod
   podAnnotations: {}
 
@@ -164,6 +165,6 @@ configMap:
   #  Kangal supports S3 compatible object storage APIs
   AWS_ACCESS_KEY_ID: ""
   AWS_SECRET_ACCESS_KEY: ""
-  AWS_ENDPOINT_URL: "s3.eu-west-1.amazonaws.com"
-  AWS_BUCKET_NAME: "hf-kangal"
-  AWS_DEFAULT_REGION: "eu-west-1"
+  AWS_ENDPOINT_URL: "s3.us-east-1.amazonaws.com"
+  AWS_BUCKET_NAME: "my-bucket"
+  AWS_DEFAULT_REGION: "us-east-1"
