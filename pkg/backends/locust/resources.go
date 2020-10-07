@@ -47,14 +47,14 @@ func newMasterJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.Confi
 	}
 
 	envVars := []coreV1.EnvVar{
-		{Name: "LOCUST_EXIT_CODE_ON_ERROR", Value: "0"},
-		{Name: "LOCUST_EXPECT_WORKERS", Value: fmt.Sprintf("%d", expectWorkers)},
 		{Name: "LOCUST_HEADLESS", Value: "true"},
 		{Name: "LOCUST_MODE_MASTER", Value: "true"},
+		{Name: "LOCUST_EXPECT_WORKERS", Value: fmt.Sprintf("%d", expectWorkers)},
 		{Name: "LOCUST_LOCUSTFILE", Value: "/data/locustfile.py"},
 		{Name: "LOCUST_CSV", Value: "/tmp/report"},
-		{Name: "LOCUST_HOST", Value: "https://httpdump.io/ezigh"},
-		{Name: "LOCUST_RUN_TIME", Value: "3m"},
+		{Name: "LOCUST_HOST", Value: loadTest.Spec.TargetURL},
+		{Name: "LOCUST_RUN_TIME", Value: loadTest.Spec.Duration.String()},
+		{Name: "LOCUST_EXIT_CODE_ON_ERROR", Value: "0"},
 	}
 
 	if nil != preSignedURL {
@@ -170,7 +170,7 @@ func newWorkerJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.Confi
 	envVars := []coreV1.EnvVar{
 		{Name: "LOCUST_MODE_WORKER", Value: "true"},
 		{Name: "LOCUST_LOCUSTFILE", Value: "/data/locustfile.py"},
-		{Name: "LOCUST_MASTER_NODE_HOST", Value: fmt.Sprintf("%s.%s", masterService.GetName(), masterService.GetNamespace())},
+		{Name: "LOCUST_MASTER_NODE_HOST", Value: masterService.GetName()},
 		{Name: "LOCUST_MASTER_NODE_PORT", Value: "5557"},
 	}
 

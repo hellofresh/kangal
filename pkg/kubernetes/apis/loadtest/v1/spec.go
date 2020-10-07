@@ -2,6 +2,7 @@ package v1
 
 import (
 	"errors"
+	"time"
 )
 
 var (
@@ -14,7 +15,7 @@ var (
 )
 
 //BuildLoadTestSpec initialize spec for LoadTest custom resource
-func BuildLoadTestSpec(loadTestType LoadTestType, overwrite bool, distributedPods int32, testFileStr, testDataStr, envVarsStr string) (LoadTestSpec, error) {
+func BuildLoadTestSpec(loadTestType LoadTestType, overwrite bool, distributedPods int32, testFileStr, testDataStr, envVarsStr string, targetURL string, duration time.Duration) (LoadTestSpec, error) {
 	lt := LoadTestSpec{}
 
 	if false == HasLoadTestType(loadTestType) {
@@ -35,6 +36,8 @@ func BuildLoadTestSpec(loadTestType LoadTestType, overwrite bool, distributedPod
 	lt.TestFile = testFileStr
 	lt.TestData = testDataStr
 	lt.EnvVars = envVarsStr
+	lt.TargetURL = targetURL
+	lt.Duration = duration
 
 	return lt, nil
 }

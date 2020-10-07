@@ -50,6 +50,10 @@ spec:
                   type: string
                 envVars:
                   type: string
+                targetURL:
+                  type: string
+                duration:
+                  type: integer
                 masterConfig:
                   type: object
                   properties:

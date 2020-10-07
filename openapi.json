@@ -281,6 +281,12 @@
 					},
 					"overwrite": {
 						"type": "boolean"
+					},
+					"targetURL": {
+						"type": "string"
+					},
+					"duration": {
+						"type": "string"
 					}
 				}
 			},

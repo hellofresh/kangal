@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"time"
 
 	"github.com/thedevsaddam/govalidator"
 	"go.uber.org/zap"
@@ -21,6 +22,8 @@ const (
 	testFile        = "testFile"
 	testData        = "testData"
 	envVars         = "envVars"
+	targetURL       = "targetURL"
+	duration        = "duration"
 	loadTestID      = "id"
 )
 
@@ -33,6 +36,8 @@ func httpValidator(r *http.Request) url.Values {
 		"file:testFile":   []string{"ext:jmx,py"},
 		"file:envVars":    []string{"ext:csv"},
 		"file:testData":   []string{"ext:csv"},
+		"targetURL":       []string{"http"},
+		"duration":        []string{"duration"},
 	}
 
 	opts := govalidator.Options{
@@ -84,7 +89,19 @@ func fromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger) (apisLoa
 		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %q from request: %w", envVars, err)
 	}
 
-	return apisLoadTestV1.BuildLoadTestSpec(ltType, o, dp, tf, td, ev)
+	turl, err := getTargetURL(r)
+	if err != nil {
+		logger.Debug("Bad value", zap.String("field", targetURL), zap.Error(err))
+		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %q from request: %w", targetURL, err)
+	}
+
+	dur, err := getDuration(r)
+	if err != nil {
+		logger.Debug("Bad value", zap.String("field", duration), zap.Error(err))
+		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %q from request: %w", duration, err)
+	}
+
+	return apisLoadTestV1.BuildLoadTestSpec(ltType, o, dp, tf, td, ev, turl, dur)
 }
 
 func getEnvVars(r *http.Request) (string, error) {
@@ -118,6 +135,30 @@ func getFileFromHTTP(r *http.Request, file string) (string, error) {
 	return stringTestData, nil
 }
 
+func getTargetURL(r *http.Request) (string, error) {
+	return r.FormValue(targetURL), nil
+}
+
+func getDuration(r *http.Request) (time.Duration, error) {
+	val := r.FormValue(duration)
+
+	if "" == val {
+		return time.Duration(0), nil
+	}
+
+	return time.ParseDuration(val)
+}
+
+func getDistributedPods(r *http.Request) (int32, error) {
+	nn := r.FormValue(distributedPods)
+	dn, err := strconv.Atoi(nn)
+	if err != nil {
+		return 0, err
+	}
+
+	return int32(dn), nil
+}
+
 func getOverwrite(r *http.Request) (bool, error) {
 	o := r.FormValue(overwrite)
 
@@ -131,16 +172,6 @@ func getOverwrite(r *http.Request) (bool, error) {
 	}
 
 	return overwrite, nil
-}
-
-func getDistributedPods(r *http.Request) (int32, error) {
-	nn := r.FormValue(distributedPods)
-	dn, err := strconv.Atoi(nn)
-	if err != nil {
-		return 0, err
-	}
-
-	return int32(dn), nil
 }
 
 //fileToString converts file to string
