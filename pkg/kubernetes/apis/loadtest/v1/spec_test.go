@@ -2,6 +2,7 @@ package v1
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -16,6 +17,8 @@ func TestBuildLoadTestSpec(t *testing.T) {
 		testFileStr     string
 		testDataStr     string
 		envVarsStr      string
+		targetURL       string
+		duration        time.Duration
 	}
 	tests := []struct {
 		name    string
@@ -78,7 +81,7 @@ func TestBuildLoadTestSpec(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := BuildLoadTestSpec(tt.args.loadTestType, tt.args.overwrite, tt.args.distributedPods, tt.args.testFileStr, tt.args.testDataStr, tt.args.envVarsStr)
+			got, err := BuildLoadTestSpec(tt.args.loadTestType, tt.args.overwrite, tt.args.distributedPods, tt.args.testFileStr, tt.args.testDataStr, tt.args.envVarsStr, tt.args.targetURL, tt.args.duration)
 
 			if tt.wantErr {
 				assert.Error(t, err)
