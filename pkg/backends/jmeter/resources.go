@@ -203,16 +203,12 @@ func (c *JMeter) NewPod(i int, configMap *coreV1.ConfigMap, podAnnotations map[s
 							MountPath: "/testdata",
 						},
 					},
-					Resources: coreV1.ResourceRequirements{
-						Requests: map[coreV1.ResourceName]resource.Quantity{
-							coreV1.ResourceMemory: resource.MustParse("4Gi"),
-							coreV1.ResourceCPU:    resource.MustParse("1000m"),
-						},
-						Limits: map[coreV1.ResourceName]resource.Quantity{
-							coreV1.ResourceMemory: resource.MustParse("4Gi"),
-							coreV1.ResourceCPU:    resource.MustParse("2000m"),
-						},
-					},
+					Resources: buildResourceRequirements(
+						c.config.WorkerCPULimits,
+						c.config.WorkerCPURequests,
+						c.config.WorkerMemoryLimits,
+						c.config.WorkerMemoryRequests,
+					),
 					EnvFrom: []coreV1.EnvFromSource{
 						{
 							SecretRef: &coreV1.SecretEnvSource{
@@ -305,16 +301,12 @@ func (c *JMeter) NewJMeterMasterJob(preSignedURL *url.URL, podAnnotations map[st
 									SubPath:   "jmeter.properties",
 								},
 							},
-							Resources: coreV1.ResourceRequirements{
-								Requests: map[coreV1.ResourceName]resource.Quantity{
-									coreV1.ResourceMemory: resource.MustParse("4Gi"),
-									coreV1.ResourceCPU:    resource.MustParse("1000m"),
-								},
-								Limits: map[coreV1.ResourceName]resource.Quantity{
-									coreV1.ResourceMemory: resource.MustParse("4Gi"),
-									coreV1.ResourceCPU:    resource.MustParse("2000m"),
-								},
-							},
+							Resources: buildResourceRequirements(
+								c.config.MasterCPULimits,
+								c.config.MasterCPURequests,
+								c.config.MasterMemoryLimits,
+								c.config.MasterMemoryRequests,
+							),
 						},
 					},
 					Volumes: []coreV1.Volume{
@@ -456,4 +448,32 @@ func getNamespaceFromLoadTestName(loadTestName string, logger *zap.Logger) (newN
 	}
 	newNamespaceName = nsName[loadTestNameLength-2] + "-" + nsName[loadTestNameLength-1]
 	return newNamespaceName, nil
+}
+
+// buildResourceRequirements creates ResourceRequirements that allows not all values to be specified
+// This is necessary because setting a resource requirement with value 0 produces a different behavior
+func buildResourceRequirements(cpuLimit, cpuRequest, memLimit, memRequest string) coreV1.ResourceRequirements {
+	limits := make(map[coreV1.ResourceName]resource.Quantity)
+	requests := make(map[coreV1.ResourceName]resource.Quantity)
+
+	if quantity, err := resource.ParseQuantity(cpuLimit); err == nil {
+		limits[coreV1.ResourceCPU] = quantity
+	}
+
+	if quantity, err := resource.ParseQuantity(cpuRequest); err == nil {
+		requests[coreV1.ResourceCPU] = quantity
+	}
+
+	if quantity, err := resource.ParseQuantity(memLimit); err == nil {
+		limits[coreV1.ResourceMemory] = quantity
+	}
+
+	if quantity, err := resource.ParseQuantity(memRequest); err == nil {
+		requests[coreV1.ResourceMemory] = quantity
+	}
+
+	return coreV1.ResourceRequirements{
+		Limits:   limits,
+		Requests: requests,
+	}
 }

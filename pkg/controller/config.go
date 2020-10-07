@@ -3,6 +3,7 @@ package controller
 import (
 	"time"
 
+	"github.com/hellofresh/kangal/pkg/backends"
 	"github.com/hellofresh/kangal/pkg/core/observability"
 	"github.com/hellofresh/kangal/pkg/report"
 )
@@ -16,7 +17,8 @@ type Config struct {
 	// load test lives for, the default is 1 hour. (ex. 5h)
 	CleanUpThreshold time.Duration `envconfig:"CLEANUP_THRESHOLD" default:"1h"`
 	// S3 compatible configuration access keys and endpoints needed to store load test reports
-	Report report.Config
+	Report   report.Config
+	Backends backends.Config
 
 	MasterURL            string
 	KubeConfig           string
