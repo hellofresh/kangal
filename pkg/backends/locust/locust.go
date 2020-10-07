@@ -67,7 +67,7 @@ func (c *Locust) CheckOrCreateResources(ctx context.Context) error {
 	}
 
 	configMap := newConfigMap(c.loadTest)
-	_, err = c.kubeClientSet.
+	configMap, err = c.kubeClientSet.
 		CoreV1().
 		ConfigMaps(c.loadTest.Status.Namespace).
 		Create(ctx, configMap, metaV1.CreateOptions{})
@@ -76,13 +76,30 @@ func (c *Locust) CheckOrCreateResources(ctx context.Context) error {
 		return err
 	}
 
-	masterJob := newMasterJob(c.loadTest, c.reportPreSignedURL, c.podAnnotations)
-	_, err = c.kubeClientSet.
+	masterJob := newMasterJob(c.loadTest, configMap, c.reportPreSignedURL, c.podAnnotations)
+	masterJob, err = c.kubeClientSet.
 		BatchV1().
 		Jobs(c.loadTest.Status.Namespace).
 		Create(ctx, masterJob, metaV1.CreateOptions{})
 	if err != nil && !errors.IsAlreadyExists(err) {
 		c.logger.Error("Error on creating master job", zap.Error(err))
+		return err
+	}
+
+	masterService := newMasterService(c.loadTest, masterJob)
+	masterService, err = c.kubeClientSet.CoreV1().Services(c.loadTest.Status.Namespace).Create(ctx, masterService, metaV1.CreateOptions{})
+	if err != nil && !errors.IsAlreadyExists(err) {
+		c.logger.Error("Error on creating master service", zap.Error(err))
+		return err
+	}
+
+	workerJob := newWorkerJob(c.loadTest, configMap, masterService, c.podAnnotations)
+	workerJob, err = c.kubeClientSet.
+		BatchV1().
+		Jobs(c.loadTest.Status.Namespace).
+		Create(ctx, workerJob, metaV1.CreateOptions{})
+	if err != nil && !errors.IsAlreadyExists(err) {
+		c.logger.Error("Error on creating worker job", zap.Error(err))
 		return err
 	}
 
