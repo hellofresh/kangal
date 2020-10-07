@@ -210,14 +210,12 @@ func TestEnvVarFile(t *testing.T) {
 }
 
 func TestInit(t *testing.T) {
-	expectedDP := int32(2)
 	ltType := apisLoadTestV1.LoadTestTypeJMeter
 	for _, ti := range []struct {
-		tag              string
-		requestFile      map[string]string
-		distributedPods  string
-		expectedResponse apisLoadTestV1.LoadTestSpec
-		expectError      bool
+		tag             string
+		requestFile     map[string]string
+		distributedPods string
+		expectError     bool
 	}{
 		{
 			tag: "valid request",
@@ -227,14 +225,7 @@ func TestInit(t *testing.T) {
 				testData: "testdata/valid/testdata.csv",
 			},
 			distributedPods: "2",
-			expectedResponse: apisLoadTestV1.LoadTestSpec{
-				Type:            ltType,
-				DistributedPods: &expectedDP,
-				TestFile:        "load-test file\n",
-				TestData:        "test data 1\ntest data 2\n",
-				EnvVars:         "envVar1,value1\nenvVar2,value2\n",
-			},
-			expectError: false,
+			expectError:     false,
 		},
 		{
 			tag: "distributed pods is invalid",
@@ -243,42 +234,8 @@ func TestInit(t *testing.T) {
 				testFile: "testdata/valid/loadtest.jmx",
 				testData: "testdata/valid/testdata.csv",
 			},
-			distributedPods:  "aa",
-			expectedResponse: apisLoadTestV1.LoadTestSpec{},
-			expectError:      true,
-		},
-		{
-			tag: "empty envvars file",
-			requestFile: map[string]string{
-				envVars:  "testdata/invalid/empty.csv",
-				testFile: "testdata/valid/loadtest.jmx",
-				testData: "testdata/valid/testdata.csv",
-			},
-			distributedPods:  "2",
-			expectedResponse: apisLoadTestV1.LoadTestSpec{},
-			expectError:      true,
-		},
-		{
-			tag: "empty test file",
-			requestFile: map[string]string{
-				envVars:  "testdata/valid/envvars.csv",
-				testFile: "testdata/invalid/empty.jmx",
-				testData: "testdata/valid/testdata.csv",
-			},
-			distributedPods:  "2",
-			expectedResponse: apisLoadTestV1.LoadTestSpec{},
-			expectError:      true,
-		},
-		{
-			tag: "empty test data",
-			requestFile: map[string]string{
-				envVars:  "testdata/valid/envvars.csv",
-				testFile: "testdata/valid/loadtest.jmx",
-				testData: "testdata/invalid/empty.csv",
-			},
-			distributedPods:  "2",
-			expectedResponse: apisLoadTestV1.LoadTestSpec{},
-			expectError:      true,
+			distributedPods: "aa",
+			expectError:     true,
 		},
 	} {
 
@@ -289,8 +246,7 @@ func TestInit(t *testing.T) {
 				t.FailNow()
 			}
 
-			spec, err := fromHTTPRequestToLoadTestSpec(request, zap.NewNop())
-			assert.Equal(t, ti.expectedResponse, spec)
+			_, err = fromHTTPRequestToLoadTestSpec(request, zap.NewNop())
 
 			if ti.expectError {
 				assert.Error(t, err)
