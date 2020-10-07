@@ -135,16 +135,6 @@ func getFileFromHTTP(r *http.Request, file string) (string, error) {
 	return stringTestData, nil
 }
 
-func getDistributedPods(r *http.Request) (int32, error) {
-	nn := r.FormValue(distributedPods)
-	dn, err := strconv.Atoi(nn)
-	if err != nil {
-		return 0, err
-	}
-
-	return int32(dn), nil
-}
-
 func getOverwrite(r *http.Request) (bool, error) {
 	o := r.FormValue(overwrite)
 
@@ -158,6 +148,16 @@ func getOverwrite(r *http.Request) (bool, error) {
 	}
 
 	return overwrite, nil
+}
+
+func getDistributedPods(r *http.Request) (int32, error) {
+	nn := r.FormValue(distributedPods)
+	dn, err := strconv.Atoi(nn)
+	if err != nil {
+		return 0, err
+	}
+
+	return int32(dn), nil
 }
 
 func getTargetURL(r *http.Request) (string, error) {
