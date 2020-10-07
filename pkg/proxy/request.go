@@ -135,20 +135,6 @@ func getFileFromHTTP(r *http.Request, file string) (string, error) {
 	return stringTestData, nil
 }
 
-func getTargetURL(r *http.Request) (string, error) {
-	return r.FormValue(targetURL), nil
-}
-
-func getDuration(r *http.Request) (time.Duration, error) {
-	val := r.FormValue(duration)
-
-	if "" == val {
-		return time.Duration(0), nil
-	}
-
-	return time.ParseDuration(val)
-}
-
 func getDistributedPods(r *http.Request) (int32, error) {
 	nn := r.FormValue(distributedPods)
 	dn, err := strconv.Atoi(nn)
@@ -172,6 +158,20 @@ func getOverwrite(r *http.Request) (bool, error) {
 	}
 
 	return overwrite, nil
+}
+
+func getTargetURL(r *http.Request) (string, error) {
+	return r.FormValue(targetURL), nil
+}
+
+func getDuration(r *http.Request) (time.Duration, error) {
+	val := r.FormValue(duration)
+
+	if "" == val {
+		return time.Duration(0), nil
+	}
+
+	return time.ParseDuration(val)
 }
 
 //fileToString converts file to string
