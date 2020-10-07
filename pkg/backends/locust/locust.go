@@ -106,11 +106,12 @@ func (c *Locust) CheckOrCreateResources(ctx context.Context) error {
 	return nil
 }
 
-// CheckOrUpdateLoadTestStatus check current LoadTest progress
+// CheckOrUpdateStatus check current LoadTest progress
 func (*Locust) CheckOrUpdateStatus(ctx context.Context) error {
 	return nil
 }
 
+// New creates a instance of Locust backend
 func New(
 	kubeClientSet kubernetes.Interface,
 	kangalClientSet clientSetV.Interface,
