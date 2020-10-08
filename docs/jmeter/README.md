@@ -25,7 +25,7 @@ To create and edit jmx files we recommend you to install JMeter locally.
 ## Installing JMeter for local test development
 1. Install Java 8+ from [official Java website](https://www.java.com/de/download/).
 2. Install JMeter v5.0 r1840935 from [official JMeter website](https://archive.apache.org/dist/jmeter/binaries/) or using [brew](https://stackoverflow.com/questions/22610316/how-do-i-install-jmeter-on-a-mac).
-3. Run JMeter UI from your terminal by command jmeter or follow the [official documentation](https://jmeter.apache.org/usermanual/get-started.html#running).
+3. Run JMeter UI from your terminal by command `jmeter` or follow the [official documentation](https://jmeter.apache.org/usermanual/get-started.html#running).
 
 ## Required JMeter plugins
 1. Check if you have Plugins Manager installed, if not follow the [official instructions](https://jmeter-plugins.org/wiki/PluginsManager/).
