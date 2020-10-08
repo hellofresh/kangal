@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
+	k8sAPIErrors "k8s.io/apimachinery/pkg/api/errors"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/fake"
@@ -249,6 +250,7 @@ func TestProxyCreate(t *testing.T) {
 		})
 	}
 }
+
 func TestNewProxyRecreate(t *testing.T) {
 	for _, tt := range []struct {
 		name             string
@@ -341,6 +343,7 @@ func TestNewProxyRecreate(t *testing.T) {
 		})
 	}
 }
+
 func TestProxyCreateWithErrors(t *testing.T) {
 	for _, tt := range []struct {
 		name             string
@@ -432,6 +435,137 @@ func TestProxyCreateWithErrors(t *testing.T) {
 			respBody, _ := ioutil.ReadAll(resp.Body)
 
 			assert.Equal(t, tt.expectedStatus, resp.StatusCode)
+			assert.Equal(t, tt.expectedResponse, string(respBody))
+		})
+	}
+}
+
+func TestProxyGet(t *testing.T) {
+	var pods = int32(1)
+	for _, tt := range []struct {
+		name             string
+		loadTest         apisLoadTestV1.LoadTest
+		expectedCode     int
+		expectedResponse string
+		error            error
+	}{
+		{
+			"Valid request",
+			apisLoadTestV1.LoadTest{
+				Spec: apisLoadTestV1.LoadTestSpec{
+					Type:            "JMeter",
+					Overwrite:       false,
+					DistributedPods: &pods,
+				},
+				Status: apisLoadTestV1.LoadTestStatus{
+					Phase:     apisLoadTestV1.LoadTestRunning,
+					Namespace: "aaa",
+				}},
+			http.StatusOK,
+			"{\"type\":\"JMeter\",\"distributedPods\":1,\"loadtestName\":\"aaa\",\"phase\":\"running\",\"hasEnvVars\":false,\"hasTestData\":false}\n",
+			nil,
+		},
+		{
+			"Error",
+			apisLoadTestV1.LoadTest{},
+			http.StatusInternalServerError,
+			"{\"error\":\"some test error\"}\n",
+			errors.New("some test error"),
+		},
+		{
+			"Not found",
+			apisLoadTestV1.LoadTest{},
+			http.StatusNotFound,
+			"{\"error\":\"loadtest.kangal.hellofresh.com \\\"name\\\" not found\"}\n",
+			k8sAPIErrors.NewNotFound(apisLoadTestV1.Resource("loadtest"), "name"),
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				kubeClientSet     = fake.NewSimpleClientset()
+				loadtestClientSet = fakeClientset.NewSimpleClientset()
+				logger            = zaptest.NewLogger(t)
+			)
+			ctx := mPkg.SetLogger(context.Background(), logger)
+			loadtestClientSet.Fake.PrependReactor("get", "loadtests", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+				return true, &tt.loadTest, tt.error
+			})
+			c := kube.NewClient(loadtestClientSet.KangalV1().LoadTests(), kubeClientSet, logger)
+
+			s := specData{
+				distributedPods: 1,
+				ltType:          "JMeter",
+				err:             nil,
+			}
+
+			testProxyHandler := NewProxy(1, c, s.fakeSpecCreator)
+			handler := testProxyHandler.Get
+
+			req := httptest.NewRequest("GET", "http://example.com/load-test/testname", nil)
+
+			req = req.WithContext(ctx)
+
+			w := httptest.NewRecorder()
+			handler(w, req)
+
+			resp := w.Result()
+			respBody, _ := ioutil.ReadAll(resp.Body)
+
+			assert.Equal(t, tt.expectedCode, resp.StatusCode)
+			assert.Equal(t, tt.expectedResponse, string(respBody))
+		})
+	}
+}
+
+func TestProxyDelete(t *testing.T) {
+	for _, tt := range []struct {
+		name             string
+		expectedCode     int
+		expectedResponse string
+		error            error
+	}{
+		{
+			"Delete test",
+			http.StatusNoContent,
+			"",
+			nil,
+		},
+		{
+			"Error on deleting test",
+			http.StatusBadRequest,
+			"{\"error\":\"some error\"}\n",
+			errors.New("some error"),
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				loadTest          = &apisLoadTestV1.LoadTest{}
+				kubeClientSet     = fake.NewSimpleClientset()
+				loadtestClientSet = fakeClientset.NewSimpleClientset()
+				logger            = zaptest.NewLogger(t)
+			)
+			ctx := mPkg.SetLogger(context.Background(), logger)
+			loadtestClientSet.Fake.PrependReactor("delete", "loadtests", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+				return true, loadTest, tt.error
+			})
+			c := kube.NewClient(loadtestClientSet.KangalV1().LoadTests(), kubeClientSet, logger)
+
+			s := specData{}
+
+			testProxyHandler := NewProxy(1, c, s.fakeSpecCreator)
+			handler := testProxyHandler.Delete
+
+			req := httptest.NewRequest("DELETE", "http://example.com/load-test/some-test", nil)
+
+			req = req.WithContext(ctx)
+
+			w := httptest.NewRecorder()
+			handler(w, req)
+
+			resp := w.Result()
+			respBody, _ := ioutil.ReadAll(resp.Body)
+
+			assert.Equal(t, tt.expectedCode, resp.StatusCode)
 			assert.Equal(t, tt.expectedResponse, string(respBody))
 		})
 	}
