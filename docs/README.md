@@ -52,7 +52,7 @@ Kangal generates a Pre-Signed URL and backend can use it to persist a report.
 
 > If the report contains multiple files it will be necessary to archieve/compress into a single file.
 
-To allow Kangal to serve the report static files is necessary to explicit set the file as a `tar` archive with no compression and **no enclosing directory**, otherwise the endpoint will just force the report download.
+To allow Kangal to serve the report static files it is necessary to explicitly set the file as a `tar` archive with no compression and **no enclosing directory**, otherwise, the endpoint will just force the report download.
 
 The script below is an example of how to properly persist to the storage.
 
