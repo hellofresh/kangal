@@ -62,16 +62,6 @@ func TestBuildJMeterLoadTestSpec(t *testing.T) {
 			want:    v1.LoadTestSpec{},
 			wantErr: true,
 		},
-		{
-			name: "Spec invalid - require test data",
-			args: args{
-				overwrite:       true,
-				distributedPods: 3,
-				testFileStr:     "something in the file",
-			},
-			want:    v1.LoadTestSpec{},
-			wantErr: true,
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

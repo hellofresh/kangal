@@ -11,8 +11,6 @@ var (
 	ErrRequireMinOneDistributedPod = errors.New("LoadTest must specify 1 or more DistributedPods")
 	// ErrRequireTestFile the TestFile filed is required to not be an empty string
 	ErrRequireTestFile = errors.New("LoadTest TestFile is required")
-	// ErrRequireTestData the TestData filed is required to not be an empty string
-	ErrRequireTestData = errors.New("LoadTest TestData field is required")
 )
 
 //BuildLoadTestSpec validates input and returns valid LoadTestSpec for JMeter backend provider
@@ -24,9 +22,6 @@ func BuildLoadTestSpec(overwrite bool, distributedPods int32, testFileStr, testD
 	}
 	if testFileStr == "" {
 		return lt, ErrRequireTestFile
-	}
-	if testDataStr == "" {
-		return lt, ErrRequireTestData
 	}
 	return loadTestV1.NewSpec(loadTestV1.LoadTestTypeJMeter, overwrite, distributedPods, testFileStr, testDataStr, envVarsStr, loadTestV1.ImageDetails{Image: masterImage, Tag: imageTag}, loadTestV1.ImageDetails{Image: workerImage, Tag: imageTag}), nil
 }
