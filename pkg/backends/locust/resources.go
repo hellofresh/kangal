@@ -6,26 +6,33 @@ import (
 
 	batchV1 "k8s.io/api/batch/v1"
 	coreV1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
+	"github.com/hellofresh/kangal/pkg/backends/jmeter"
 	loadtestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 )
 
-var (
-	defaultBackoffLimit  int32 = 1
-	defaultExpectWorkers int32 = 1
-)
+type Resources struct {
+	CPULimits      string
+	CPURequests    string
+	MemoryLimits   string
+	MemoryRequests string
+}
+
+func newConfigMapName(loadTest *loadtestV1.LoadTest) string {
+	return fmt.Sprintf("%s-testfile", loadTest.ObjectMeta.Name)
+}
 
 func newConfigMap(loadTest *loadtestV1.LoadTest) *coreV1.ConfigMap {
-	name := fmt.Sprintf("%s-testfile", loadTest.ObjectMeta.Name)
+	name := newConfigMapName(loadTest)
 
 	ownerRef := metaV1.NewControllerRef(loadTest, loadtestV1.SchemeGroupVersion.WithKind("LoadTest"))
 
 	return &coreV1.ConfigMap{
 		ObjectMeta: metaV1.ObjectMeta{
 			Name:            name,
+			Namespace:       loadTest.Status.Namespace,
 			OwnerReferences: []metaV1.OwnerReference{*ownerRef},
 		},
 		Data: map[string]string{
@@ -34,27 +41,25 @@ func newConfigMap(loadTest *loadtestV1.LoadTest) *coreV1.ConfigMap {
 	}
 }
 
-func newMasterJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.ConfigMap, preSignedURL *url.URL, podAnnotations map[string]string) *batchV1.Job {
-	name := fmt.Sprintf("%s-master", loadTest.ObjectMeta.Name)
+func newMasterJobName(loadTest *loadtestV1.LoadTest) string {
+	return fmt.Sprintf("%s-master", loadTest.ObjectMeta.Name)
+}
+
+func newMasterJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.ConfigMap, preSignedURL *url.URL, masterResources Resources, podAnnotations map[string]string) *batchV1.Job {
+	name := newMasterJobName(loadTest)
 
 	ownerRef := metaV1.NewControllerRef(loadTest, loadtestV1.SchemeGroupVersion.WithKind("LoadTest"))
 
 	image := fmt.Sprintf("%s:%s", loadTest.Spec.MasterConfig.Image, loadTest.Spec.MasterConfig.Tag)
 
-	expectWorkers := defaultExpectWorkers
-	if nil != loadTest.Spec.DistributedPods {
-		expectWorkers = *loadTest.Spec.DistributedPods
-	}
-
 	envVars := []coreV1.EnvVar{
 		{Name: "LOCUST_HEADLESS", Value: "true"},
 		{Name: "LOCUST_MODE_MASTER", Value: "true"},
-		{Name: "LOCUST_EXPECT_WORKERS", Value: fmt.Sprintf("%d", expectWorkers)},
+		{Name: "LOCUST_EXPECT_WORKERS", Value: fmt.Sprintf("%d", *loadTest.Spec.DistributedPods)},
 		{Name: "LOCUST_LOCUSTFILE", Value: "/data/locustfile.py"},
 		{Name: "LOCUST_CSV", Value: "/tmp/report"},
 		{Name: "LOCUST_HOST", Value: loadTest.Spec.TargetURL},
 		{Name: "LOCUST_RUN_TIME", Value: loadTest.Spec.Duration.String()},
-		{Name: "LOCUST_EXIT_CODE_ON_ERROR", Value: "0"},
 	}
 
 	if nil != preSignedURL {
@@ -64,16 +69,20 @@ func newMasterJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.Confi
 		})
 	}
 
+	// Locust does not support recovering after a failure
+	backoffLimit := int32(0)
+
 	return &batchV1.Job{
 		ObjectMeta: metaV1.ObjectMeta{
-			Name: name,
+			Name:      name,
+			Namespace: loadTest.Status.Namespace,
 			Labels: map[string]string{
 				"app": name,
 			},
 			OwnerReferences: []metaV1.OwnerReference{*ownerRef},
 		},
 		Spec: batchV1.JobSpec{
-			BackoffLimit: &defaultBackoffLimit,
+			BackoffLimit: &backoffLimit,
 			Template: coreV1.PodTemplateSpec{
 				ObjectMeta: metaV1.ObjectMeta{
 					Labels: map[string]string{
@@ -96,16 +105,12 @@ func newMasterJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.Confi
 									SubPath:   "locustfile.py",
 								},
 							},
-							Resources: coreV1.ResourceRequirements{
-								Requests: map[coreV1.ResourceName]resource.Quantity{
-									coreV1.ResourceMemory: resource.MustParse("1Gi"),
-									coreV1.ResourceCPU:    resource.MustParse("500m"),
-								},
-								Limits: map[coreV1.ResourceName]resource.Quantity{
-									coreV1.ResourceMemory: resource.MustParse("4Gi"),
-									coreV1.ResourceCPU:    resource.MustParse("2000m"),
-								},
-							},
+							Resources: buildResourceRequirements(
+								masterResources.CPULimits,
+								masterResources.CPURequests,
+								masterResources.MemoryLimits,
+								masterResources.MemoryRequests,
+							),
 						},
 					},
 					Volumes: []coreV1.Volume{
@@ -133,7 +138,8 @@ func newMasterService(loadTest *loadtestV1.LoadTest, masterJob *batchV1.Job) *co
 
 	return &coreV1.Service{
 		ObjectMeta: metaV1.ObjectMeta{
-			Name: name,
+			Name:      name,
+			Namespace: loadTest.Status.Namespace,
 			Labels: map[string]string{
 				"app": name,
 			},
@@ -155,17 +161,16 @@ func newMasterService(loadTest *loadtestV1.LoadTest, masterJob *batchV1.Job) *co
 	}
 }
 
-func newWorkerJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.ConfigMap, masterService *coreV1.Service, podAnnotations map[string]string) *batchV1.Job {
-	name := fmt.Sprintf("%s-worker", loadTest.ObjectMeta.Name)
+func newWorkerJobName(loadTest *loadtestV1.LoadTest) string {
+	return fmt.Sprintf("%s-worker", loadTest.ObjectMeta.Name)
+}
+
+func newWorkerJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.ConfigMap, masterService *coreV1.Service, workerResources Resources, podAnnotations map[string]string) *batchV1.Job {
+	name := newWorkerJobName(loadTest)
 
 	ownerRef := metaV1.NewControllerRef(loadTest, loadtestV1.SchemeGroupVersion.WithKind("LoadTest"))
 
 	image := fmt.Sprintf("%s:%s", loadTest.Spec.MasterConfig.Image, loadTest.Spec.MasterConfig.Tag)
-
-	expectWorkers := defaultExpectWorkers
-	if nil != loadTest.Spec.DistributedPods {
-		expectWorkers = *loadTest.Spec.DistributedPods
-	}
 
 	envVars := []coreV1.EnvVar{
 		{Name: "LOCUST_MODE_WORKER", Value: "true"},
@@ -174,18 +179,22 @@ func newWorkerJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.Confi
 		{Name: "LOCUST_MASTER_NODE_PORT", Value: "5557"},
 	}
 
+	// Locust does not support recovering after a failure
+	backoffLimit := int32(0)
+
 	return &batchV1.Job{
 		ObjectMeta: metaV1.ObjectMeta{
-			Name: name,
+			Name:      name,
+			Namespace: loadTest.Status.Namespace,
 			Labels: map[string]string{
 				"app": name,
 			},
 			OwnerReferences: []metaV1.OwnerReference{*ownerRef},
 		},
 		Spec: batchV1.JobSpec{
-			Parallelism:  &expectWorkers,
-			Completions:  &expectWorkers,
-			BackoffLimit: &defaultBackoffLimit,
+			Parallelism:  loadTest.Spec.DistributedPods,
+			Completions:  loadTest.Spec.DistributedPods,
+			BackoffLimit: &backoffLimit,
 			Template: coreV1.PodTemplateSpec{
 				ObjectMeta: metaV1.ObjectMeta{
 					Labels: map[string]string{
@@ -208,16 +217,12 @@ func newWorkerJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.Confi
 									SubPath:   "locustfile.py",
 								},
 							},
-							Resources: coreV1.ResourceRequirements{
-								Requests: map[coreV1.ResourceName]resource.Quantity{
-									coreV1.ResourceMemory: resource.MustParse("1Gi"),
-									coreV1.ResourceCPU:    resource.MustParse("500m"),
-								},
-								Limits: map[coreV1.ResourceName]resource.Quantity{
-									coreV1.ResourceMemory: resource.MustParse("4Gi"),
-									coreV1.ResourceCPU:    resource.MustParse("2000m"),
-								},
-							},
+							Resources: buildResourceRequirements(
+								workerResources.CPULimits,
+								workerResources.CPURequests,
+								workerResources.MemoryLimits,
+								workerResources.MemoryRequests,
+							),
 						},
 					},
 					Volumes: []coreV1.Volume{
@@ -236,4 +241,8 @@ func newWorkerJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.Confi
 			},
 		},
 	}
+}
+
+func buildResourceRequirements(cpuLimit, cpuRequest, memLimit, memRequest string) coreV1.ResourceRequirements {
+	return jmeter.BuildResourceRequirements(cpuLimit, cpuRequest, memLimit, memRequest)
 }

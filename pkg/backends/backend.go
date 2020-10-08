@@ -32,6 +32,7 @@ type LoadTestType interface {
 // Config contains all configurations related to kangal backends
 type Config struct {
 	JMeter jmeter.Config
+	Locust locust.Config
 }
 
 // NewLoadTest returns a new LoadTestType
@@ -43,7 +44,7 @@ func NewLoadTest(loadTest *loadTestV1.LoadTest, kubeClientSet kubernetes.Interfa
 	case loadTestV1.LoadTestTypeFake:
 		return fake.New(kubeClientSet, loadTest, logger), nil
 	case loadTestV1.LoadTestTypeLocust:
-		return locust.New(kubeClientSet, kangalClientSet, loadTest, logger, presignedURL, podAnnotations), nil
+		return locust.New(kubeClientSet, kangalClientSet, loadTest, logger, presignedURL, backendsConfig.Locust, podAnnotations), nil
 	}
 	return nil, fmt.Errorf("load test provider not found: %s", loadTest.Spec.Type)
 }

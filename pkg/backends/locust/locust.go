@@ -2,13 +2,16 @@ package locust
 
 import (
 	"context"
+	"fmt"
 	"net/url"
 
+	batchV1 "k8s.io/api/batch/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
 	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
+	loadtestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
 	"go.uber.org/zap"
 )
@@ -25,6 +28,8 @@ type Locust struct {
 	loadTest           *loadTestV1.LoadTest
 	logger             *zap.Logger
 	reportPreSignedURL *url.URL
+	masterResources    Resources
+	workerResources    Resources
 	podAnnotations     map[string]string
 }
 
@@ -53,21 +58,23 @@ func (c *Locust) SetDefaults() error {
 
 // CheckOrCreateResources check for resources or create the needed resources for the loadtest type
 func (c *Locust) CheckOrCreateResources(ctx context.Context) error {
-	configMaps, err := c.kubeClientSet.
-		CoreV1().
-		ConfigMaps(c.loadTest.Status.Namespace).
-		List(ctx, metaV1.ListOptions{})
+	workerJobs, err := c.kubeClientSet.
+		BatchV1().
+		Jobs(c.loadTest.Status.Namespace).
+		List(ctx, metaV1.ListOptions{
+			FieldSelector: fmt.Sprintf("metadata.name=%s", newWorkerJobName(c.loadTest)),
+		})
 	if err != nil {
-		c.logger.Error("Error on listing configmaps", zap.Error(err))
+		c.logger.Error("Error on listing jobs", zap.Error(err))
 		return err
 	}
 
-	if len(configMaps.Items) > 0 {
+	if len(workerJobs.Items) > 0 {
 		return nil
 	}
 
 	configMap := newConfigMap(c.loadTest)
-	configMap, err = c.kubeClientSet.
+	_, err = c.kubeClientSet.
 		CoreV1().
 		ConfigMaps(c.loadTest.Status.Namespace).
 		Create(ctx, configMap, metaV1.CreateOptions{})
@@ -76,8 +83,8 @@ func (c *Locust) CheckOrCreateResources(ctx context.Context) error {
 		return err
 	}
 
-	masterJob := newMasterJob(c.loadTest, configMap, c.reportPreSignedURL, c.podAnnotations)
-	masterJob, err = c.kubeClientSet.
+	masterJob := newMasterJob(c.loadTest, configMap, c.reportPreSignedURL, c.masterResources, c.podAnnotations)
+	_, err = c.kubeClientSet.
 		BatchV1().
 		Jobs(c.loadTest.Status.Namespace).
 		Create(ctx, masterJob, metaV1.CreateOptions{})
@@ -87,14 +94,14 @@ func (c *Locust) CheckOrCreateResources(ctx context.Context) error {
 	}
 
 	masterService := newMasterService(c.loadTest, masterJob)
-	masterService, err = c.kubeClientSet.CoreV1().Services(c.loadTest.Status.Namespace).Create(ctx, masterService, metaV1.CreateOptions{})
+	_, err = c.kubeClientSet.CoreV1().Services(c.loadTest.Status.Namespace).Create(ctx, masterService, metaV1.CreateOptions{})
 	if err != nil && !errors.IsAlreadyExists(err) {
 		c.logger.Error("Error on creating master service", zap.Error(err))
 		return err
 	}
 
-	workerJob := newWorkerJob(c.loadTest, configMap, masterService, c.podAnnotations)
-	workerJob, err = c.kubeClientSet.
+	workerJob := newWorkerJob(c.loadTest, configMap, masterService, c.workerResources, c.podAnnotations)
+	_, err = c.kubeClientSet.
 		BatchV1().
 		Jobs(c.loadTest.Status.Namespace).
 		Create(ctx, workerJob, metaV1.CreateOptions{})
@@ -107,7 +114,42 @@ func (c *Locust) CheckOrCreateResources(ctx context.Context) error {
 }
 
 // CheckOrUpdateStatus check current LoadTest progress
-func (*Locust) CheckOrUpdateStatus(ctx context.Context) error {
+func (c *Locust) CheckOrUpdateStatus(ctx context.Context) error {
+	if c.loadTest.Status.Phase == loadTestV1.LoadTestErrored ||
+		c.loadTest.Status.Phase == loadTestV1.LoadTestFinished {
+		return nil
+	}
+
+	_, err := c.kubeClientSet.
+		CoreV1().
+		ConfigMaps(c.loadTest.Status.Namespace).
+		Get(ctx, newConfigMapName(c.loadTest), metaV1.GetOptions{})
+	if err != nil {
+		if errors.IsNotFound(err) {
+			c.loadTest.Status.Phase = loadTestV1.LoadTestFinished
+			return nil
+		}
+		return err
+	}
+
+	workerJob, err := c.kubeClientSet.
+		BatchV1().
+		Jobs(c.loadTest.Status.Namespace).
+		Get(ctx, newWorkerJobName(c.loadTest), metaV1.GetOptions{})
+	if err != nil {
+		return err
+	}
+
+	masterJob, err := c.kubeClientSet.
+		BatchV1().
+		Jobs(c.loadTest.Status.Namespace).
+		Get(ctx, newMasterJobName(c.loadTest), metaV1.GetOptions{})
+	if err != nil {
+		return err
+	}
+
+	setLoadTestStatusFromJobs(c.loadTest, masterJob, workerJob)
+
 	return nil
 }
 
@@ -118,6 +160,7 @@ func New(
 	loadTest *loadTestV1.LoadTest,
 	logger *zap.Logger,
 	reportPreSignedURL *url.URL,
+	config Config,
 	podAnnotations map[string]string,
 ) *Locust {
 	return &Locust{
@@ -126,6 +169,42 @@ func New(
 		loadTest:           loadTest,
 		logger:             logger,
 		reportPreSignedURL: reportPreSignedURL,
-		podAnnotations:     podAnnotations,
+		masterResources: Resources{
+			CPULimits:      config.MasterCPULimits,
+			CPURequests:    config.MasterCPURequests,
+			MemoryLimits:   config.MasterMemoryLimits,
+			MemoryRequests: config.MasterMemoryRequests,
+		},
+		workerResources: Resources{
+			CPULimits:      config.WorkerCPULimits,
+			CPURequests:    config.WorkerCPURequests,
+			MemoryLimits:   config.WorkerMemoryLimits,
+			MemoryRequests: config.WorkerMemoryRequests,
+		},
+		podAnnotations: podAnnotations,
 	}
+}
+
+func setLoadTestStatusFromJobs(loadTest *loadtestV1.LoadTest, masterJob *batchV1.Job, workerJob *batchV1.Job) {
+	if workerJob.Status.Active > int32(0) || masterJob.Status.Active > int32(0) {
+		loadTest.Status.Phase = loadTestV1.LoadTestRunning
+		return
+	}
+
+	if workerJob.Status.Succeeded == 0 && workerJob.Status.Failed == 0 {
+		loadTest.Status.Phase = loadTestV1.LoadTestStarting
+		return
+	}
+
+	if masterJob.Status.Succeeded == 0 && masterJob.Status.Failed == 0 {
+		loadTest.Status.Phase = loadTestV1.LoadTestStarting
+		return
+	}
+
+	if workerJob.Status.Failed > int32(0) || masterJob.Status.Failed > int32(0) {
+		loadTest.Status.Phase = loadTestV1.LoadTestErrored
+		return
+	}
+
+	loadTest.Status.Phase = loadTestV1.LoadTestFinished
 }
