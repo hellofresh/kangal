@@ -14,4 +14,4 @@ You can use InfluxDB as a datasource for Grafana and create a set of useful grap
 ## Static report
 JMeter also offers a functionality to generate HTML report dashboards after the end of the test. Read more about it [in official JMeter documentation](https://jmeter.apache.org/usermanual/generating-dashboard.html).
 
-The [hellofreshtech/kangal-jmeter](https://github.com/hellofresh/kangal-jmeter) docker image implements this functionality.
+The [hellofresh/kangal-jmeter](https://github.com/hellofresh/kangal-jmeter) docker image implements this functionality.
