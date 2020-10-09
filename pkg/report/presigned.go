@@ -1,7 +1,6 @@
 package report
 
 import (
-	"fmt"
 	"net/url"
 )
 
@@ -11,10 +10,7 @@ func NewPreSignedPutURL(loadTestName string) *url.URL {
 		return nil
 	}
 
-	presignedURL, err := minioClient.PresignedPutObject(bucketName, loadTestName, expires)
-	if nil != err {
-		fmt.Printf("failed to presign url: %s", err.Error())
-	}
+	presignedURL, _ := minioClient.PresignedPutObject(bucketName, loadTestName, expires)
 
 	return presignedURL
 }
