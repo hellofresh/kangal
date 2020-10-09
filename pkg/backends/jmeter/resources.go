@@ -203,7 +203,7 @@ func (c *JMeter) NewPod(i int, configMap *coreV1.ConfigMap, podAnnotations map[s
 							MountPath: "/testdata",
 						},
 					},
-					Resources: BuildResourceRequirements(
+					Resources: buildResourceRequirements(
 						c.config.WorkerCPULimits,
 						c.config.WorkerCPURequests,
 						c.config.WorkerMemoryLimits,
@@ -300,7 +300,7 @@ func (c *JMeter) NewJMeterMasterJob(preSignedURL *url.URL, podAnnotations map[st
 									SubPath:   "jmeter.properties",
 								},
 							},
-							Resources: BuildResourceRequirements(
+							Resources: buildResourceRequirements(
 								c.config.MasterCPULimits,
 								c.config.MasterCPURequests,
 								c.config.MasterMemoryLimits,
@@ -449,9 +449,9 @@ func getNamespaceFromLoadTestName(loadTestName string, logger *zap.Logger) (newN
 	return newNamespaceName, nil
 }
 
-// BuildResourceRequirements creates ResourceRequirements that allows not all values to be specified
+// buildResourceRequirements creates ResourceRequirements that allows not all values to be specified
 // This is necessary because setting a resource requirement with value 0 produces a different behavior
-func BuildResourceRequirements(cpuLimit, cpuRequest, memLimit, memRequest string) coreV1.ResourceRequirements {
+func buildResourceRequirements(cpuLimit, cpuRequest, memLimit, memRequest string) coreV1.ResourceRequirements {
 	limits := make(map[coreV1.ResourceName]resource.Quantity)
 	requests := make(map[coreV1.ResourceName]resource.Quantity)
 

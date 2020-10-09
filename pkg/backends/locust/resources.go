@@ -9,7 +9,6 @@ import (
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	"github.com/hellofresh/kangal/pkg/backends/jmeter"
 	loadtestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 )
 
@@ -241,8 +240,4 @@ func newWorkerJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.Confi
 			},
 		},
 	}
-}
-
-func buildResourceRequirements(cpuLimit, cpuRequest, memLimit, memRequest string) coreV1.ResourceRequirements {
-	return jmeter.BuildResourceRequirements(cpuLimit, cpuRequest, memLimit, memRequest)
 }
