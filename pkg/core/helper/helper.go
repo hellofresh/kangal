@@ -9,6 +9,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
+// Resources contains resources limits/requests
 type Resources struct {
 	CPULimits      string
 	CPURequests    string
