@@ -2,12 +2,9 @@ package locust
 
 import (
 	"encoding/csv"
-	"fmt"
 	"io"
-	"os"
 	"strings"
 
-	"go.uber.org/zap"
 	coreV1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
@@ -36,4 +33,23 @@ func buildResourceRequirements(cpuLimit, cpuRequest, memLimit, memRequest string
 		Limits:   limits,
 		Requests: requests,
 	}
+}
+
+func readEnvs(envVars string) (map[string]string, error) {
+	m := make(map[string]string)
+	reader := csv.NewReader(strings.NewReader(envVars))
+	for {
+		line, err := reader.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		if len(line) != 2 {
+			return nil, ErrInvalidCSVFormat
+		}
+		m[line[0]] = line[1]
+	}
+	return m, nil
 }

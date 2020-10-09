@@ -6,6 +6,7 @@ import (
 	"net/url"
 
 	batchV1 "k8s.io/api/batch/v1"
+	coreV1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -83,7 +84,32 @@ func (c *Locust) CheckOrCreateResources(ctx context.Context) error {
 		return err
 	}
 
-	masterJob := newMasterJob(c.loadTest, configMap, c.reportPreSignedURL, c.masterResources, c.podAnnotations)
+	var secret *coreV1.Secret
+
+	if c.loadTest.Spec.EnvVars != "" {
+		envs, err := readEnvs(c.loadTest.Spec.EnvVars)
+		if err != nil {
+			c.logger.Error("Error reading envVars", zap.Error(err))
+			return err
+		}
+		if len(envs) > 0 {
+			secret = newSecret(c.loadTest, envs)
+			if nil != err {
+				c.logger.Error("Error on creating secret", zap.Error(err))
+				return err
+			}
+			_, err = c.kubeClientSet.
+				CoreV1().
+				Secrets(c.loadTest.Status.Namespace).
+				Create(ctx, secret, metaV1.CreateOptions{})
+			if err != nil && !errors.IsAlreadyExists(err) {
+				c.logger.Error("Error on creating testfile configmap", zap.Error(err))
+				return err
+			}
+		}
+	}
+
+	masterJob := newMasterJob(c.loadTest, configMap, secret, c.reportPreSignedURL, c.masterResources, c.podAnnotations)
 	_, err = c.kubeClientSet.
 		BatchV1().
 		Jobs(c.loadTest.Status.Namespace).
@@ -100,7 +126,7 @@ func (c *Locust) CheckOrCreateResources(ctx context.Context) error {
 		return err
 	}
 
-	workerJob := newWorkerJob(c.loadTest, configMap, masterService, c.workerResources, c.podAnnotations)
+	workerJob := newWorkerJob(c.loadTest, configMap, secret, masterService, c.workerResources, c.podAnnotations)
 	_, err = c.kubeClientSet.
 		BatchV1().
 		Jobs(c.loadTest.Status.Namespace).

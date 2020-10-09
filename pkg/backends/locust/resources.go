@@ -40,11 +40,32 @@ func newConfigMap(loadTest *loadtestV1.LoadTest) *coreV1.ConfigMap {
 	}
 }
 
+func newSecretName(loadTest *loadtestV1.LoadTest) string {
+	return fmt.Sprintf("%s-envvar", loadTest.ObjectMeta.Name)
+}
+
+func newSecret(loadTest *loadtestV1.LoadTest, envs map[string]string) *coreV1.Secret {
+	name := newSecretName(loadTest)
+
+	ownerRef := metaV1.NewControllerRef(loadTest, loadtestV1.SchemeGroupVersion.WithKind("LoadTest"))
+
+	return &coreV1.Secret{
+		ObjectMeta: metaV1.ObjectMeta{
+			Name: name,
+			Labels: map[string]string{
+				"app": name,
+			},
+			OwnerReferences: []metaV1.OwnerReference{*ownerRef},
+		},
+		StringData: envs,
+	}
+}
+
 func newMasterJobName(loadTest *loadtestV1.LoadTest) string {
 	return fmt.Sprintf("%s-master", loadTest.ObjectMeta.Name)
 }
 
-func newMasterJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.ConfigMap, preSignedURL *url.URL, masterResources Resources, podAnnotations map[string]string) *batchV1.Job {
+func newMasterJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.ConfigMap, envVarSecret *coreV1.Secret, preSignedURL *url.URL, masterResources Resources, podAnnotations map[string]string) *batchV1.Job {
 	name := newMasterJobName(loadTest)
 
 	ownerRef := metaV1.NewControllerRef(loadTest, loadtestV1.SchemeGroupVersion.WithKind("LoadTest"))
@@ -65,6 +86,17 @@ func newMasterJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.Confi
 		envVars = append(envVars, coreV1.EnvVar{
 			Name:  "REPORT_PRESIGNED_URL",
 			Value: preSignedURL.String(),
+		})
+	}
+
+	envFrom := []coreV1.EnvFromSource{}
+	if envVarSecret != nil {
+		envFrom = append(envFrom, coreV1.EnvFromSource{
+			SecretRef: &coreV1.SecretEnvSource{
+				LocalObjectReference: coreV1.LocalObjectReference{
+					Name: newSecretName(loadTest),
+				},
+			},
 		})
 	}
 
@@ -110,6 +142,7 @@ func newMasterJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.Confi
 								masterResources.MemoryLimits,
 								masterResources.MemoryRequests,
 							),
+							EnvFrom: envFrom,
 						},
 					},
 					Volumes: []coreV1.Volume{
@@ -164,7 +197,7 @@ func newWorkerJobName(loadTest *loadtestV1.LoadTest) string {
 	return fmt.Sprintf("%s-worker", loadTest.ObjectMeta.Name)
 }
 
-func newWorkerJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.ConfigMap, masterService *coreV1.Service, workerResources Resources, podAnnotations map[string]string) *batchV1.Job {
+func newWorkerJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.ConfigMap, envVarSecret *coreV1.Secret, masterService *coreV1.Service, workerResources Resources, podAnnotations map[string]string) *batchV1.Job {
 	name := newWorkerJobName(loadTest)
 
 	ownerRef := metaV1.NewControllerRef(loadTest, loadtestV1.SchemeGroupVersion.WithKind("LoadTest"))
@@ -176,6 +209,17 @@ func newWorkerJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.Confi
 		{Name: "LOCUST_LOCUSTFILE", Value: "/data/locustfile.py"},
 		{Name: "LOCUST_MASTER_NODE_HOST", Value: masterService.GetName()},
 		{Name: "LOCUST_MASTER_NODE_PORT", Value: "5557"},
+	}
+
+	envFrom := []coreV1.EnvFromSource{}
+	if envVarSecret != nil {
+		envFrom = append(envFrom, coreV1.EnvFromSource{
+			SecretRef: &coreV1.SecretEnvSource{
+				LocalObjectReference: coreV1.LocalObjectReference{
+					Name: newSecretName(loadTest),
+				},
+			},
+		})
 	}
 
 	// Locust does not support recovering after a failure
@@ -222,6 +266,7 @@ func newWorkerJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.Confi
 								workerResources.MemoryLimits,
 								workerResources.MemoryRequests,
 							),
+							EnvFrom: envFrom,
 						},
 					},
 					Volumes: []coreV1.Volume{
