@@ -11,6 +11,7 @@ import (
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
+	"github.com/hellofresh/kangal/pkg/core/helper"
 	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	loadtestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
@@ -29,8 +30,8 @@ type Locust struct {
 	loadTest           *loadTestV1.LoadTest
 	logger             *zap.Logger
 	reportPreSignedURL *url.URL
-	masterResources    Resources
-	workerResources    Resources
+	masterResources    helper.Resources
+	workerResources    helper.Resources
 	podAnnotations     map[string]string
 }
 
@@ -87,7 +88,7 @@ func (c *Locust) CheckOrCreateResources(ctx context.Context) error {
 	var secret *coreV1.Secret
 
 	if c.loadTest.Spec.EnvVars != "" {
-		envs, err := readEnvs(c.loadTest.Spec.EnvVars)
+		envs, err := helper.ReadEnvs(c.loadTest.Spec.EnvVars)
 		if err != nil {
 			c.logger.Error("Error reading envVars", zap.Error(err))
 			return err
@@ -195,13 +196,13 @@ func New(
 		loadTest:           loadTest,
 		logger:             logger,
 		reportPreSignedURL: reportPreSignedURL,
-		masterResources: Resources{
+		masterResources: helper.Resources{
 			CPULimits:      config.MasterCPULimits,
 			CPURequests:    config.MasterCPURequests,
 			MemoryLimits:   config.MasterMemoryLimits,
 			MemoryRequests: config.MasterMemoryRequests,
 		},
-		workerResources: Resources{
+		workerResources: helper.Resources{
 			CPULimits:      config.WorkerCPULimits,
 			CPURequests:    config.WorkerCPURequests,
 			MemoryLimits:   config.WorkerMemoryLimits,

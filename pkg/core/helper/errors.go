@@ -1,4 +1,4 @@
-package locust
+package helper
 
 import "errors"
 

@@ -9,15 +9,9 @@ import (
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
+	"github.com/hellofresh/kangal/pkg/core/helper"
 	loadtestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 )
-
-type Resources struct {
-	CPULimits      string
-	CPURequests    string
-	MemoryLimits   string
-	MemoryRequests string
-}
 
 func newConfigMapName(loadTest *loadtestV1.LoadTest) string {
 	return fmt.Sprintf("%s-testfile", loadTest.ObjectMeta.Name)
@@ -65,7 +59,7 @@ func newMasterJobName(loadTest *loadtestV1.LoadTest) string {
 	return fmt.Sprintf("%s-master", loadTest.ObjectMeta.Name)
 }
 
-func newMasterJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.ConfigMap, envVarSecret *coreV1.Secret, preSignedURL *url.URL, masterResources Resources, podAnnotations map[string]string) *batchV1.Job {
+func newMasterJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.ConfigMap, envvarSecret *coreV1.Secret, preSignedURL *url.URL, masterResources helper.Resources, podAnnotations map[string]string) *batchV1.Job {
 	name := newMasterJobName(loadTest)
 
 	ownerRef := metaV1.NewControllerRef(loadTest, loadtestV1.SchemeGroupVersion.WithKind("LoadTest"))
@@ -90,7 +84,7 @@ func newMasterJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.Confi
 	}
 
 	envFrom := []coreV1.EnvFromSource{}
-	if envVarSecret != nil {
+	if envvarSecret != nil {
 		envFrom = append(envFrom, coreV1.EnvFromSource{
 			SecretRef: &coreV1.SecretEnvSource{
 				LocalObjectReference: coreV1.LocalObjectReference{
@@ -136,13 +130,8 @@ func newMasterJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.Confi
 									SubPath:   "locustfile.py",
 								},
 							},
-							Resources: buildResourceRequirements(
-								masterResources.CPULimits,
-								masterResources.CPURequests,
-								masterResources.MemoryLimits,
-								masterResources.MemoryRequests,
-							),
-							EnvFrom: envFrom,
+							Resources: helper.BuildResourceRequirements(masterResources),
+							EnvFrom:   envFrom,
 						},
 					},
 					Volumes: []coreV1.Volume{
@@ -197,7 +186,7 @@ func newWorkerJobName(loadTest *loadtestV1.LoadTest) string {
 	return fmt.Sprintf("%s-worker", loadTest.ObjectMeta.Name)
 }
 
-func newWorkerJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.ConfigMap, envVarSecret *coreV1.Secret, masterService *coreV1.Service, workerResources Resources, podAnnotations map[string]string) *batchV1.Job {
+func newWorkerJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.ConfigMap, envvarSecret *coreV1.Secret, masterService *coreV1.Service, workerResources helper.Resources, podAnnotations map[string]string) *batchV1.Job {
 	name := newWorkerJobName(loadTest)
 
 	ownerRef := metaV1.NewControllerRef(loadTest, loadtestV1.SchemeGroupVersion.WithKind("LoadTest"))
@@ -212,7 +201,7 @@ func newWorkerJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.Confi
 	}
 
 	envFrom := []coreV1.EnvFromSource{}
-	if envVarSecret != nil {
+	if envvarSecret != nil {
 		envFrom = append(envFrom, coreV1.EnvFromSource{
 			SecretRef: &coreV1.SecretEnvSource{
 				LocalObjectReference: coreV1.LocalObjectReference{
@@ -260,13 +249,8 @@ func newWorkerJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.Confi
 									SubPath:   "locustfile.py",
 								},
 							},
-							Resources: buildResourceRequirements(
-								workerResources.CPULimits,
-								workerResources.CPURequests,
-								workerResources.MemoryLimits,
-								workerResources.MemoryRequests,
-							),
-							EnvFrom: envFrom,
+							Resources: helper.BuildResourceRequirements(workerResources),
+							EnvFrom:   envFrom,
 						},
 					},
 					Volumes: []coreV1.Volume{
