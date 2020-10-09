@@ -281,6 +281,7 @@ func (c *JMeter) NewJMeterMasterJob(preSignedURL *url.URL, podAnnotations map[st
 					},
 					Annotations: podAnnotations,
 				},
+
 				Spec: coreV1.PodSpec{
 					RestartPolicy: "Never",
 					Containers: []coreV1.Container{
