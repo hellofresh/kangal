@@ -2,11 +2,11 @@
 
 ## Table of content
 - [Load generators types (aka backends)](#load-generator-types-aka-backends)
+- [User flow](user-flow.md) 
 - [Adding a new load generator](#adding-a-new-load-generator)
 - [Reporting](#reporting)
 - [Developer guide](#developer-guide) 
 - [Troubleshooting](troubleshooting.md)
-- [User flow](user-flow.md) 
 
 Welcome to the Kangal - **K**ubernetes **an**d **G**o **A**utomatic **L**oader!
 
@@ -30,6 +30,9 @@ Please read [docs/jmeter/README.md](jmeter/README.md) for further details.
 Locust is an easy to use, scriptable and scalable performance testing tool. You define the behaviour of your users in regular Python code, instead of using a clunky UI or domain specific language. This makes Locust infinitely expandable and very developer friendly.
 
 Please read [docs/locust/README.md](locust/README.md) for further details.
+
+## User flow
+Read more at [docs/user-flow.md](user-flow.md).
 
 ## Adding a new load generator
 Kangal can be easily extended by adding different load generators as backends. 
@@ -122,6 +125,3 @@ WEB_HTTP_PORT=8080 ./kangal proxy --kubeconfig=$KUBECONFIG
 
 ## Troubleshooting
 Read more at [docs/troubleshooting.md](troubleshooting.md).
-
-## User flow
-Read more at [docs/user-flow.md](user-flow.md).
