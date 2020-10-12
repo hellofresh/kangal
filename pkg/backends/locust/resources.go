@@ -13,6 +13,11 @@ import (
 	loadtestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 )
 
+var (
+	loadTestMasterLabelKey   = "app"
+	loadTestMasterLabelValue = "loadtest-master"
+)
+
 func newConfigMapName(loadTest *loadtestV1.LoadTest) string {
 	return fmt.Sprintf("%s-testfile", loadTest.ObjectMeta.Name)
 }
@@ -102,7 +107,8 @@ func newMasterJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.Confi
 			Name:      name,
 			Namespace: loadTest.Status.Namespace,
 			Labels: map[string]string{
-				"app": name,
+				"name":                 name,
+				loadTestMasterLabelKey: loadTestMasterLabelValue,
 			},
 			OwnerReferences: []metaV1.OwnerReference{*ownerRef},
 		},
@@ -111,7 +117,8 @@ func newMasterJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.Confi
 			Template: coreV1.PodTemplateSpec{
 				ObjectMeta: metaV1.ObjectMeta{
 					Labels: map[string]string{
-						"app": name,
+						"name":                 name,
+						loadTestMasterLabelKey: loadTestMasterLabelValue,
 					},
 					Annotations: podAnnotations,
 				},
