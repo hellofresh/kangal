@@ -36,6 +36,7 @@ func TestLocustCheckOrCreateResources(t *testing.T) {
 				Name: "loadtest-name",
 			},
 			Spec: loadtestV1.LoadTestSpec{
+				EnvVars:         "my-secret,my-super-secret\n",
 				DistributedPods: &distributedPods,
 			},
 			Status: loadtestV1.LoadTestStatus{
@@ -48,7 +49,7 @@ func TestLocustCheckOrCreateResources(t *testing.T) {
 		logger,
 		&url.URL{},
 		Config{},
-		map[string]string{"": ""},
+		map[string]string{},
 	)
 
 	err := c.CheckOrCreateResources(ctx)

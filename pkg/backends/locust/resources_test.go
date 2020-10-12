@@ -86,6 +86,19 @@ func TestGetLoadTestStatusFromJobs(t *testing.T) {
 			},
 			Expected: loadtestV1.LoadTestRunning,
 		},
+		{ // Both succeeded
+			MasterJob: &batchV1.Job{
+				Status: batchV1.JobStatus{
+					Succeeded: int32(1),
+				},
+			},
+			WorkerJob: &batchV1.Job{
+				Status: batchV1.JobStatus{
+					Succeeded: int32(2),
+				},
+			},
+			Expected: loadtestV1.LoadTestFinished,
+		},
 	}
 
 	for _, scenario := range scenarios {
