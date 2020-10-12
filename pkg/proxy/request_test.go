@@ -1,7 +1,11 @@
 package proxy
 
 import (
+	"bytes"
+	"net/http"
+	"net/url"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -324,4 +328,21 @@ func TestCheckLoadTestSpec(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, lt.Name)
 	assert.NotEmpty(t, lt.Labels)
+}
+
+func TestGetDuration(t *testing.T) {
+	expected := 1 * time.Minute
+
+	req, err := http.NewRequest("POST", "/load-test", new(bytes.Buffer))
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+
+	req.Form = url.Values{"duration": []string{"1m"}}
+	req.ParseForm()
+
+	actual, err := getDuration(req)
+	assert.NoError(t, err)
+	assert.Equal(t, expected, actual)
 }

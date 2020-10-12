@@ -270,3 +270,22 @@ func newWorkerJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.Confi
 		},
 	}
 }
+
+func getLoadTestStatusFromJobs(masterJob *batchV1.Job, workerJob *batchV1.Job) loadtestV1.LoadTestPhase {
+	if workerJob.Status.Failed > int32(0) || masterJob.Status.Failed > int32(0) {
+		return loadtestV1.LoadTestErrored
+	}
+
+	if workerJob.Status.Active > int32(0) || masterJob.Status.Active > int32(0) {
+		return loadtestV1.LoadTestRunning
+	}
+
+	if workerJob.Status.Succeeded == 0 && workerJob.Status.Failed == 0 {
+		return loadtestV1.LoadTestStarting
+	}
+	if masterJob.Status.Succeeded == 0 && masterJob.Status.Failed == 0 {
+		return loadtestV1.LoadTestStarting
+	}
+
+	return loadtestV1.LoadTestFinished
+}

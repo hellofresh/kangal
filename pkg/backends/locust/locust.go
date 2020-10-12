@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/url"
 
-	batchV1 "k8s.io/api/batch/v1"
 	coreV1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -13,7 +12,6 @@ import (
 
 	"github.com/hellofresh/kangal/pkg/core/helper"
 	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
-	loadtestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
 	"go.uber.org/zap"
 )
@@ -175,7 +173,7 @@ func (c *Locust) CheckOrUpdateStatus(ctx context.Context) error {
 		return err
 	}
 
-	setLoadTestStatusFromJobs(c.loadTest, masterJob, workerJob)
+	c.loadTest.Status.Phase = getLoadTestStatusFromJobs(masterJob, workerJob)
 
 	return nil
 }
@@ -210,28 +208,4 @@ func New(
 		},
 		podAnnotations: podAnnotations,
 	}
-}
-
-func setLoadTestStatusFromJobs(loadTest *loadtestV1.LoadTest, masterJob *batchV1.Job, workerJob *batchV1.Job) {
-	if workerJob.Status.Active > int32(0) || masterJob.Status.Active > int32(0) {
-		loadTest.Status.Phase = loadTestV1.LoadTestRunning
-		return
-	}
-
-	if workerJob.Status.Succeeded == 0 && workerJob.Status.Failed == 0 {
-		loadTest.Status.Phase = loadTestV1.LoadTestStarting
-		return
-	}
-
-	if masterJob.Status.Succeeded == 0 && masterJob.Status.Failed == 0 {
-		loadTest.Status.Phase = loadTestV1.LoadTestStarting
-		return
-	}
-
-	if workerJob.Status.Failed > int32(0) || masterJob.Status.Failed > int32(0) {
-		loadTest.Status.Phase = loadTestV1.LoadTestErrored
-		return
-	}
-
-	loadTest.Status.Phase = loadTestV1.LoadTestFinished
 }
