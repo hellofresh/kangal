@@ -47,6 +47,15 @@ Kangal application contains two main parts:
 
 Kangal also uses S3 compatible storage to save test reports. 
 
+## Supported backends
+Currently, there are the following load generator types implemented for Kangal:
+
+- **Fake**
+- [**JMeter**](https://jmeter.apache.org/)
+- [**Locust**](https://locust.io/)
+
+Read more about each of then at [docs/README.md](docs/README.md).
+
 ## Architectural diagram
 The diagram below illustrates the workflow for Kangal in Kubernetes infrastructure.
 
@@ -142,7 +151,6 @@ $ curl \
     -F "distributedPods=1" \
     -F "testFile=@constant_load.jmx" \
     -F "type=JMeter" \
-    -F "overwrite=true" \
     http://localhost:80/load-test
 ```
 ```json

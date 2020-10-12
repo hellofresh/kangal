@@ -8,13 +8,12 @@ Here is an example of requests users can send to Kangal API to manage their load
 ## Create 
 Create a new load test by making a POST request to Kangal Proxy.
 
-> This example CURL command uses JMeter load test type and jmx test file, those files can be found on [Kangal repository](https://github.com/hellofresh/kangal).
-
-> Other load generator types may require other data in request.
+### Using JMeter
+The example CURL command below uses jmx test file, those files can be found on [Kangal repository](https://github.com/hellofresh/kangal/examples/).
 
 <p align="center"><img src="jmeter/images/sending_request_postman.png" height="500"></p>
 
-```
+```shell
 curl -X POST http://${KANGAL_PROXY_ADDRESS}/load-test \
   -H 'Content-Type: multipart/form-data' \
   -F distributedPods=1 \
@@ -22,6 +21,21 @@ curl -X POST http://${KANGAL_PROXY_ADDRESS}/load-test \
   -F testData=@artifacts/loadtests/testData.csv \
   -F envVars=@artifacts/loadtests/envVars.csv \
   -F type=JMeter \
+  -F overwrite=true
+```
+
+### Using Locust
+The example CURL command below uses py test file, those files can be found on [Kangal repository](https://github.com/hellofresh/kangal/examples/).
+
+```shell
+curl -X POST http://${KANGAL_PROXY_ADDRESS}/load-test \
+  -H 'Content-Type: multipart/form-data' \
+  -F distributedPods=1 \
+  -F testFile=@examples/locustfile.py \
+  -F envVars=@artifacts/loadtests/envVars.csv \
+  -F type=Locust \
+  -F duration=10m \
+  -F targetURL=http://my-app.example.com/ \
   -F overwrite=true
 ```
 

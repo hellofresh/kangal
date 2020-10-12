@@ -15,7 +15,7 @@ For installation instructions, read the [Quickstart guide](/README.md#quickstart
 In this section you can find information about load generators and how to write tests.
     
 ## Load generator types (aka backends)
-Currently, there are two load generator types implemented for Kangal:
+Currently, there are the following load generator types implemented for Kangal:
 
 - **Fake** - Mock up provider used for testing purpouses, not generating any load.
 - **JMeter** - Kangal creates JMeter load test environments based on [hellofreshtech/kangal-jmeter](https://github.com/hellofresh/kangal-jmeter) docker image.
