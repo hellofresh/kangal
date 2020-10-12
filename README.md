@@ -10,6 +10,7 @@ ___
 - [Why Kangal?](#why-kangal)
 - [Key features](#key-features)
 - [How it works](#how-it-works)
+- [Supported backends](#supported-backends)
 - [Architectural diagram](#architectural-diagram)
 - [Components](#components)
     - [LoadTest Custom Resource](#loadtest-custom-resource)
