@@ -145,3 +145,15 @@ Deployment specific configurations:
 | `controller.service.enablePrometheus` | ServiceMonitor for Prometheus enabled flag | `false`                 |
 | `controller.service.type`             | Service type                               | `ClusterIP`             |
 | `controller.service.ports.http`       | Service port                               | `80`                    |
+
+### Kangal Controller (Locust specific)
+| Parameter                                      | Description                 | Default |
+|------------------------------------------------|-----------------------------|---------|
+| `controller.env.LOCUST_MASTER_CPU_LIMITS`      | Master container CPU limits | ``      |
+| `controller.env.LOCUST_MASTER_CPU_REQUESTS`    | Master CPU requests         | ``      |
+| `controller.env.LOCUST_MASTER_MEMORY_LIMITS`   | Master memory limits        | ``      |
+| `controller.env.LOCUST_MASTER_MEMORY_REQUESTS` | Master memory requests      | ``      |
+| `controller.env.LOCUST_WORKER_CPU_LIMITS`      | Master container CPU limits | ``      |
+| `controller.env.LOCUST_WORKER_CPU_REQUESTS`    | Master CPU requests         | ``      |
+| `controller.env.LOCUST_WORKER_MEMORY_LIMITS`   | Master memory limits        | ``      |
+| `controller.env.LOCUST_WORKER_MEMORY_REQUESTS` | Master memory requests      | ``      |
