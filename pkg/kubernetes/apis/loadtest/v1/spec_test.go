@@ -2,7 +2,6 @@ package v1
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -17,8 +16,8 @@ func TestBuildLoadTestSpec(t *testing.T) {
 		testFileStr     string
 		testDataStr     string
 		envVarsStr      string
-		targetURL       string
-		duration        time.Duration
+		masterConfig    ImageDetails
+		workerConfig    ImageDetails
 	}
 	tests := []struct {
 		name    string
@@ -27,17 +26,24 @@ func TestBuildLoadTestSpec(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "Spec is valid",
+			name: "Spec is creating",
 			args: args{
 				loadTestType:    "Fake",
 				overwrite:       true,
 				distributedPods: 3,
 				testFileStr:     "something in the file",
+				masterConfig: ImageDetails{
+					Image: "image",
+					Tag:   "tag",
+				},
 			},
 			want: LoadTestSpec{
-				Type:            "Fake",
-				Overwrite:       true,
-				MasterConfig:    ImageDetails{},
+				Type:      "Fake",
+				Overwrite: true,
+				MasterConfig: ImageDetails{
+					Image: "image",
+					Tag:   "tag",
+				},
 				WorkerConfig:    ImageDetails{},
 				DistributedPods: &distributedPods,
 				TestFile:        "something in the file",
@@ -46,48 +52,10 @@ func TestBuildLoadTestSpec(t *testing.T) {
 			},
 			wantErr: false,
 		},
-		{
-			name: "Spec invalid - invalid load test type",
-			args: args{
-				loadTestType:    "Invalid Type",
-				overwrite:       true,
-				distributedPods: 3,
-				testFileStr:     "something in the file",
-			},
-			want:    LoadTestSpec{},
-			wantErr: true,
-		},
-		{
-			name: "Spec invalid - invalid distributed pods",
-			args: args{
-				loadTestType:    "Fake",
-				overwrite:       true,
-				distributedPods: 0,
-				testFileStr:     "something in the file",
-			},
-			want:    LoadTestSpec{},
-			wantErr: true,
-		},
-		{
-			name: "Spec invalid - invalid test file string",
-			args: args{
-				loadTestType:    "Fake",
-				overwrite:       true,
-				distributedPods: 3,
-			},
-			want:    LoadTestSpec{},
-			wantErr: true,
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := BuildLoadTestSpec(tt.args.loadTestType, tt.args.overwrite, tt.args.distributedPods, tt.args.testFileStr, tt.args.testDataStr, tt.args.envVarsStr, tt.args.targetURL, tt.args.duration)
-
-			if tt.wantErr {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
-			}
+			got := NewSpec(tt.args.loadTestType, tt.args.overwrite, tt.args.distributedPods, tt.args.testFileStr, tt.args.testDataStr, tt.args.envVarsStr, tt.args.masterConfig, tt.args.workerConfig)
 			assert.Equal(t, tt.want, got)
 		})
 	}

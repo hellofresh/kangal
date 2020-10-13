@@ -2,7 +2,6 @@ package v1
 
 import (
 	"errors"
-	"time"
 )
 
 var (
@@ -14,30 +13,17 @@ var (
 	ErrRequireTestFile = errors.New("LoadTest TestFile is required")
 )
 
-//BuildLoadTestSpec initialize spec for LoadTest custom resource
-func BuildLoadTestSpec(loadTestType LoadTestType, overwrite bool, distributedPods int32, testFileStr, testDataStr, envVarsStr string, targetURL string, duration time.Duration) (LoadTestSpec, error) {
-	lt := LoadTestSpec{}
-
-	if false == HasLoadTestType(loadTestType) {
-		return lt, ErrInvalidLoadTestType
+//NewSpec initialize spec for LoadTest custom resource
+func NewSpec(loadTestType LoadTestType, overwrite bool, distributedPods int32, testFileStr, testDataStr, envVarsStr string, masterConfig, workerConfig ImageDetails) LoadTestSpec {
+	lt := LoadTestSpec{
+		Type:            loadTestType,
+		Overwrite:       overwrite,
+		MasterConfig:    masterConfig,
+		WorkerConfig:    workerConfig,
+		DistributedPods: &distributedPods,
+		TestFile:        testFileStr,
+		TestData:        testDataStr,
+		EnvVars:         envVarsStr,
 	}
-
-	if distributedPods <= int32(0) {
-		return lt, ErrRequireMinOneDistributedPod
-	}
-
-	if testFileStr == "" {
-		return lt, ErrRequireTestFile
-	}
-
-	lt.Type = loadTestType
-	lt.Overwrite = overwrite
-	lt.DistributedPods = &distributedPods
-	lt.TestFile = testFileStr
-	lt.TestData = testDataStr
-	lt.EnvVars = envVarsStr
-	lt.TargetURL = targetURL
-	lt.Duration = duration
-
-	return lt, nil
+	return lt
 }
