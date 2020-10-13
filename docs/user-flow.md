@@ -8,7 +8,7 @@ Here is an example of requests users can send to Kangal API to manage their load
 ## Create 
 Create a new load test by making a POST request to Kangal Proxy.
 
-> **Note**: The example CURL commands below uses example test files, those files can be found on [Kangal repository](https://github.com/hellofresh/kangal/).
+> **Note**: The sample CURL commands below use example test files, those files can be found in [Kangal repository](https://github.com/hellofresh/kangal/).
 
 ### Using JMeter
 ```shell
