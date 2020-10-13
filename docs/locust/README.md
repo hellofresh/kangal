@@ -5,13 +5,11 @@
 - [Writing tests](#writing-tests)
 - [Reporting](#reporting)
 
-Locust is one of the load generators used in Kangal. An easy to use, scriptable and scalable performance testing tool. You define the behaviour of your users in regular Python code, instead of using a clunky UI or domain specific language. This makes Locust infinitely expandable and very developer friendly.
-
-Currently Kangal uses the official docker image [locustio/locust](https://hub.docker.com/r/locustio/locust).
+Locust is one of the load generators used in Kangal and uses the official docker image [locustio/locust](https://hub.docker.com/r/locustio/locust).
 
 Kangal requires a py testfile describing the test.
 
-Check it out [Locust official website](https://locust.io/).
+For more information, check [Locust official website](https://locust.io/).
 
 ## Configuring Locust resource requirements
 By default, Kangal does not specify resource requirements for loadtests run with Locust as a backend.
