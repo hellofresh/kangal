@@ -28,6 +28,8 @@ type Locust struct {
 	loadTest           *loadTestV1.LoadTest
 	logger             *zap.Logger
 	reportPreSignedURL *url.URL
+	image              string
+	imageTag           string
 	masterResources    helper.Resources
 	workerResources    helper.Resources
 	podAnnotations     map[string]string
@@ -40,17 +42,17 @@ func (c *Locust) SetDefaults() error {
 	}
 
 	if c.loadTest.Spec.MasterConfig.Image == "" {
-		c.loadTest.Spec.MasterConfig.Image = defaultImage
+		c.loadTest.Spec.MasterConfig.Image = c.image
 	}
 	if c.loadTest.Spec.MasterConfig.Tag == "" {
-		c.loadTest.Spec.MasterConfig.Tag = defaultImageTag
+		c.loadTest.Spec.MasterConfig.Tag = c.imageTag
 	}
 
 	if c.loadTest.Spec.WorkerConfig.Image == "" {
-		c.loadTest.Spec.WorkerConfig.Image = defaultImage
+		c.loadTest.Spec.WorkerConfig.Image = c.image
 	}
 	if c.loadTest.Spec.WorkerConfig.Tag == "" {
-		c.loadTest.Spec.WorkerConfig.Tag = defaultImageTag
+		c.loadTest.Spec.WorkerConfig.Tag = c.imageTag
 	}
 
 	return nil
@@ -188,12 +190,24 @@ func New(
 	config Config,
 	podAnnotations map[string]string,
 ) *Locust {
+	image := defaultImage
+	if config.Image != "" {
+		image = config.Image
+	}
+
+	imageTag := defaultImageTag
+	if config.ImageTag != "" {
+		imageTag = config.ImageTag
+	}
+
 	return &Locust{
 		kubeClientSet:      kubeClientSet,
 		kangalClientSet:    kangalClientSet,
 		loadTest:           loadTest,
 		logger:             logger,
 		reportPreSignedURL: reportPreSignedURL,
+		image:              image,
+		imageTag:           imageTag,
 		masterResources: helper.Resources{
 			CPULimits:      config.MasterCPULimits,
 			CPURequests:    config.MasterCPURequests,

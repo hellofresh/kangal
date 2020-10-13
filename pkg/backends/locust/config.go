@@ -2,6 +2,8 @@ package locust
 
 // Config specific to Locust backend
 type Config struct {
+	Image                string `envconfig:"LOCUST_IMAGE"`
+	ImageTag             string `envconfig:"LOCUST_IMAGE_TAG"`
 	MasterCPULimits      string `envconfig:"LOCUST_MASTER_CPU_LIMITS"`
 	MasterCPURequests    string `envconfig:"LOCUST_MASTER_CPU_REQUESTS"`
 	MasterMemoryLimits   string `envconfig:"LOCUST_MASTER_MEMORY_LIMITS"`
