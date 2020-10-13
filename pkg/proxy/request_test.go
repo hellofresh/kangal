@@ -331,18 +331,46 @@ func TestCheckLoadTestSpec(t *testing.T) {
 }
 
 func TestGetDuration(t *testing.T) {
-	expected := 1 * time.Minute
-
-	req, err := http.NewRequest("POST", "/load-test", new(bytes.Buffer))
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
+	scenarios := []struct {
+		duration    string
+		expected    time.Duration
+		expectError bool
+	}{
+		{
+			duration:    "1m",
+			expected:    1 * time.Minute,
+			expectError: false,
+		},
+		{
+			duration:    "1d",
+			expected:    time.Duration(0),
+			expectError: true,
+		},
+		{
+			duration:    "",
+			expected:    time.Duration(0),
+			expectError: false,
+		},
 	}
 
-	req.Form = url.Values{"duration": []string{"1m"}}
-	req.ParseForm()
+	for _, scenario := range scenarios {
+		req, err := http.NewRequest("POST", "/load-test", new(bytes.Buffer))
+		if err != nil {
+			t.Error(err)
+			t.FailNow()
+		}
 
-	actual, err := getDuration(req)
-	assert.NoError(t, err)
-	assert.Equal(t, expected, actual)
+		req.Form = url.Values{"duration": []string{scenario.duration}}
+		req.ParseForm()
+
+		actual, err := getDuration(req)
+
+		if scenario.expectError {
+			assert.Error(t, err)
+		} else {
+			assert.NoError(t, err)
+		}
+
+		assert.Equal(t, scenario.expected, actual)
+	}
 }
