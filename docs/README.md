@@ -42,7 +42,7 @@ Kangal can be easily extended by adding different load generators as backends.
 
 2. Create a new backend resource definition in Kangal source code: 
  - [pkg/backends/](/pkg/backends)
- - [pkg/backends/backend.go](/pkg/backends/backend.go#L41)
+ - [pkg/backends/backend.go](/pkg/backends/backend.go#L40)
  - [charts/kangal/crd.yaml](/charts/kangal/crd.yaml#L43)
  - [openapi.json](/openapi.json#L280)
 
