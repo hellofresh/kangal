@@ -31,7 +31,7 @@ curl -X POST http://${KANGAL_PROXY_ADDRESS}/load-test \
   -F envVars=@artifacts/loadtests/envVars.csv \
   -F type=Locust \
   -F duration=10m \
-  -F targetURL=http://my-app.example.com/ \
+  -F targetURL=http://my-app.example.com \
   -F overwrite=true
 ```
 
