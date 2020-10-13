@@ -44,3 +44,14 @@ func NewLoadTest(loadTest *loadTestV1.LoadTest, kubeClientSet kubernetes.Interfa
 	}
 	return nil, fmt.Errorf("load test provider not found: %s", loadTest.Spec.Type)
 }
+
+// BuildLoadTestSpecByBackend returns a valid LoadTestSpec based on backend rules
+func BuildLoadTestSpecByBackend(loadTestType loadTestV1.LoadTestType, overwrite bool, distributedPods int32, testFileStr, testDataStr, envVarsStr string) (loadTestV1.LoadTestSpec, error) {
+	switch loadTestType {
+	case loadTestV1.LoadTestTypeJMeter:
+		return jmeter.BuildLoadTestSpec(overwrite, distributedPods, testFileStr, testDataStr, envVarsStr)
+	case loadTestV1.LoadTestTypeFake:
+		return fake.BuildLoadTestSpec(overwrite)
+	}
+	return loadTestV1.LoadTestSpec{}, fmt.Errorf("load test provider not found to build specs: %s", loadTestType)
+}

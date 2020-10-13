@@ -11,6 +11,7 @@ import (
 	"github.com/thedevsaddam/govalidator"
 	"go.uber.org/zap"
 
+	"github.com/hellofresh/kangal/pkg/backends"
 	apisLoadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 )
 
@@ -84,7 +85,7 @@ func fromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger) (apisLoa
 		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %q from request: %w", envVars, err)
 	}
 
-	return apisLoadTestV1.BuildLoadTestSpec(ltType, o, dp, tf, td, ev)
+	return backends.BuildLoadTestSpecByBackend(ltType, o, dp, tf, td, ev)
 }
 
 func getEnvVars(r *http.Request) (string, error) {

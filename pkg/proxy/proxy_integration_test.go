@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"testing"
@@ -16,7 +15,6 @@ import (
 	coreV1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 
 	testhelper "github.com/hellofresh/kangal/pkg/controller"
 	apisLoadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
@@ -41,8 +39,6 @@ func TestIntegrationCreateLoadtestFormPostAllFiles(t *testing.T) {
 
 	distributedPods := "2"
 	loadtestType := apisLoadTestV1.LoadTestTypeFake
-	testdataString := "test data 1\ntest data 2\n"
-	envvarsString := "envVar1,value1\nenvVar2,value2\n"
 
 	requestFiles := map[string]string{
 		testFile: "testdata/valid/loadtest.jmx",
@@ -71,18 +67,6 @@ func TestIntegrationCreateLoadtestFormPostAllFiles(t *testing.T) {
 	t.Run("Checking the loadtest is created", func(t *testing.T) {
 		err := testhelper.WaitLoadtest(clientSet, createdLoadTestName)
 		require.NoError(t, err)
-	})
-
-	t.Run("Checking if the loadtest testData is correct", func(t *testing.T) {
-		data, err := testhelper.GetLoadtestTestdata(clientSet, createdLoadTestName)
-		require.NoError(t, err)
-		assert.Equal(t, testdataString, data)
-	})
-
-	t.Run("Checking if the loadtest envVars is correct", func(t *testing.T) {
-		envVars, err := testhelper.GetLoadtestEnvVars(clientSet, createdLoadTestName)
-		require.NoError(t, err)
-		assert.Equal(t, envvarsString, envVars)
 	})
 }
 
@@ -175,7 +159,9 @@ func TestIntegrationCreateLoadtestReachMaxLimit(t *testing.T) {
 
 		resp, err := http.Post(fmt.Sprintf("http://localhost:%d/load-test", HTTPPort), request.contentType, request.body)
 		require.NoError(t, err, "Could not create POST request")
-		require.Equal(t, http.StatusTooManyRequests, resp.StatusCode)
+		body, _ := ioutil.ReadAll(resp.Body)
+		t.Logf(string(body))
+		require.Equal(t, http.StatusBadRequest, resp.StatusCode)
 	})
 }
 
@@ -241,7 +227,7 @@ func TestIntegrationCreateLoadtestEmptyTestFile(t *testing.T) {
 
 	var body io.ReadCloser
 
-	t.Run("Creates the loadtest", func(t *testing.T) {
+	t.Run("Creates the loadtest with empty testFile", func(t *testing.T) {
 		request, err := createRequestWrapper(requestFiles, distributedPods, string(loadtestType))
 		require.NoError(t, err)
 
@@ -254,13 +240,13 @@ func TestIntegrationCreateLoadtestEmptyTestFile(t *testing.T) {
 
 	defer body.Close()
 
-	t.Run("Check loadtest response", func(t *testing.T) {
+	t.Run("Expect loadtest bad request response", func(t *testing.T) {
 		var dat map[string]interface{}
 
-		respbody, err := ioutil.ReadAll(body)
+		respBody, err := ioutil.ReadAll(body)
 		require.NoError(t, err, "Could not get response body")
 
-		unmarshalErr := json.Unmarshal(respbody, &dat)
+		unmarshalErr := json.Unmarshal(respBody, &dat)
 		require.NoError(t, unmarshalErr, "Could not unmarshal response body")
 
 		expectedMessage := `error getting "testFile" from request: file is empty`
@@ -473,48 +459,4 @@ func TestIntegrationGetLoadtestLogs(t *testing.T) {
 		_, err = ioutil.ReadAll(res.Body)
 		require.NoError(t, err, "Could not get response body")
 	})
-}
-
-func kubeTestClient() clientSetV.Clientset {
-	if len(os.Getenv("KUBECONFIG")) == 0 {
-		log.Println("Skipping kube config builder, KUBECONFIG is missed")
-		return clientSetV.Clientset{}
-	}
-	config, err := testhelper.BuildConfig()
-
-	clientSet, err := clientSetV.NewForConfig(config)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return *clientSet
-}
-
-func kubeClient(t *testing.T) *kubernetes.Clientset {
-	t.Helper()
-
-	config, err := testhelper.BuildConfig()
-	require.NoError(t, err)
-
-	cSet, err := kubernetes.NewForConfig(config)
-	require.NoError(t, err)
-
-	return cSet
-}
-
-func parseBody(res *http.Response) (createdLoadTestName string) {
-	var dat LoadTestStatus
-
-	defer res.Body.Close()
-	respbody, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		log.Fatal("Unable to read the response body:", err)
-	}
-
-	unmarshalErr := json.Unmarshal(respbody, &dat)
-	if unmarshalErr != nil {
-		log.Fatal(fmt.Sprintf("The response body was unable to be unmarshaled: %s", string(respbody)), err)
-	}
-
-	return dat.Namespace
 }
