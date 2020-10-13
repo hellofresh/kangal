@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
+	corev1 "k8s.io/api/core/v1"
 	k8sAPIErrors "k8s.io/apimachinery/pkg/api/errors"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -454,7 +455,6 @@ func TestProxyGet(t *testing.T) {
 			apisLoadTestV1.LoadTest{
 				Spec: apisLoadTestV1.LoadTestSpec{
 					Type:            "JMeter",
-					Overwrite:       false,
 					DistributedPods: &pods,
 				},
 				Status: apisLoadTestV1.LoadTestStatus{
@@ -569,6 +569,120 @@ func TestProxyDelete(t *testing.T) {
 			assert.Equal(t, tt.expectedResponse, string(respBody))
 		})
 	}
+}
+
+func TestProxyGetLogs(t *testing.T) {
+	var pods = int32(1)
+	for _, tt := range []struct {
+		name             string
+		loadTest         apisLoadTestV1.LoadTest
+		expectedCode     int
+		expectedResponse string
+		ltError          error
+		podError         error
+	}{
+		{
+			"No content",
+			apisLoadTestV1.LoadTest{
+				Status: apisLoadTestV1.LoadTestStatus{
+					Phase:     apisLoadTestV1.LoadTestRunning,
+					Namespace: "",
+				}},
+			http.StatusNoContent,
+			"{\"error\":\"no logs found in load test resources\"}\n",
+			nil,
+			nil,
+		},
+		{
+			"Valid response",
+			apisLoadTestV1.LoadTest{
+				ObjectMeta: metaV1.ObjectMeta{
+					Name: "test-name-ololo",
+				},
+				Spec: apisLoadTestV1.LoadTestSpec{
+					Type:            "JMeter",
+					Overwrite:       false,
+					DistributedPods: &pods,
+				},
+				Status: apisLoadTestV1.LoadTestStatus{
+					Phase:     apisLoadTestV1.LoadTestRunning,
+					Namespace: "aaa",
+				}},
+			http.StatusBadRequest,
+			"{\"error\":\"error on listing pods\"}\n",
+			nil,
+			errors.New("error on listing pods"),
+		},
+		{
+			"Can't get load test",
+			apisLoadTestV1.LoadTest{
+				Spec: apisLoadTestV1.LoadTestSpec{
+					Type:            "JMeter",
+					Overwrite:       false,
+					DistributedPods: &pods,
+				},
+				Status: apisLoadTestV1.LoadTestStatus{
+					Phase:     apisLoadTestV1.LoadTestRunning,
+					Namespace: "aaa",
+				}},
+			http.StatusBadRequest,
+			"{\"error\":\"some error\"}\n",
+			errors.New("some error"),
+			nil,
+		},
+		//{
+		//	"Valid",
+		//	apisLoadTestV1.LoadTest{
+		//		Spec: apisLoadTestV1.LoadTestSpec{
+		//			Type:            "JMeter",
+		//			Overwrite:       false,
+		//			DistributedPods: &pods,
+		//		},
+		//		Status: apisLoadTestV1.LoadTestStatus{
+		//			Phase:     apisLoadTestV1.LoadTestRunning,
+		//			Namespace: "aaa",
+		//		}},
+		//	http.StatusOK,
+		//	"{\"error\":\"some error\"}\n",
+		//	nil,
+		//	nil,
+		//},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				kubeClientSet     = fake.NewSimpleClientset()
+				loadtestClientSet = fakeClientset.NewSimpleClientset()
+				logger            = zaptest.NewLogger(t)
+			)
+			ctx := mPkg.SetLogger(context.Background(), logger)
+			loadtestClientSet.Fake.PrependReactor("get", "loadtests", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+				return true, &tt.loadTest, tt.ltError
+			})
+			kubeClientSet.Fake.PrependReactor("list", "pods", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+				return true, &corev1.PodList{}, tt.podError
+			})
+			c := kube.NewClient(loadtestClientSet.KangalV1().LoadTests(), kubeClientSet, logger)
+
+			s := specData{}
+
+			testProxyHandler := NewProxy(1, c, s.fakeSpecCreator)
+			handler := testProxyHandler.GetLogs
+
+			req := httptest.NewRequest("GET", "http://example.com/load-test/some-test/logs", nil)
+
+			req = req.WithContext(ctx)
+
+			w := httptest.NewRecorder()
+			handler(w, req)
+
+			resp := w.Result()
+			respBody, _ := ioutil.ReadAll(resp.Body)
+
+			assert.Equal(t, tt.expectedCode, resp.StatusCode)
+			assert.Equal(t, tt.expectedResponse, string(respBody))
+		})
+	}
+
 }
 
 func buildMocFormReq(requestFiles map[string]string, distributedPods, ltType string) (*http.Request, error) {
