@@ -1,6 +1,7 @@
 # Locust
 
 ## Table of content
+- [How it works](#how-it-works)
 - [Configuring Locust resource requirements](#configuring-locust-resource-requirements)
 - [Writing tests](#writing-tests)
 - [Reporting](#reporting)
@@ -10,6 +11,66 @@ Locust is one of the load generators used in Kangal and uses the official docker
 Kangal requires a py testfile describing the test.
 
 For more information, check [Locust official website](https://locust.io/).
+
+## How it works
+You can create Locust load tests using Kangal Proxy.
+
+Let's create a simple test file named `locustfile.py` with this content:
+```python
+from locust import HttpUser, task, between
+
+class ExampleLoadTest(HttpUser):
+    wait_time = between(5, 15)
+
+    @task
+    def example_page(self):
+        self.client.get('/example-page')
+```
+
+Now, send this to Kangal using this command:
+```shell
+$ curl -X POST http://${KANGAL_PROXY_ADDRESS}/load-test \
+  -H 'Content-Type: multipart/form-data' \
+  -F distributedPods=1 \
+  -F testFile=@locustfile.py \
+  -F type=Locust \
+  -F duration=10m \
+  -F targetURL=http://my-app.example.com
+```
+
+Let's break it down the parameters:
+- `distributedPods` is the number of Locust workers desired
+- `testFile` is the locustfile containing your test
+- `type` is the backend you want to use, `Locust` in this case
+- `duration` configures how long the load test will run for
+- `targetURL` is the host to be prefixed on all relative URLs in the locustfile
+
+> Note: If you don't specify `duration`, your tests will run infinitely.
+
+> Note: If you don't specify `targetURL`, be sure to use absolute URLs on your locustfile or your tests will fail.
+
+Here's another example:
+```python
+from locust import HttpUser, task, between
+
+class ExampleLoadTest(HttpUser):
+    wait_time = between(5, 15)
+
+    @task
+    def example_page(self):
+        self.client.get('http://my-app.example.com/example-page')
+```
+
+And again, upload it to Kangal:
+```shell
+$ curl -X POST http://${KANGAL_PROXY_ADDRESS}/load-test \
+  -H 'Content-Type: multipart/form-data' \
+  -F distributedPods=1 \
+  -F testFile=@locustfile.py \
+  -F type=Locust
+```
+
+In this last example, the test will run infinitely and no `targetURL` were specified.
 
 ## Configuring Locust resource requirements
 By default, Kangal does not specify resource requirements for loadtests run with Locust as a backend.
