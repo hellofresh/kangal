@@ -31,7 +31,7 @@ LOCUST_WORKER_MEMORY_LIMITS
 LOCUST_WORKER_MEMORY_REQUESTS
 ```
 
-You have to specify this variables on Kangal Controller, read more at [charts/kangal/README.md](/charts/kangal/README.md#kangal-controller-locust-specific).
+You have to specify these variables on Kangal Controller, read more at [charts/kangal/README.md](/charts/kangal/README.md#kangal-controller-locust-specific).
 
 More information regarding resource limits and requests can be found in the following page(s):
 - https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
