@@ -2,6 +2,7 @@ package v1
 
 import (
 	"errors"
+	"time"
 )
 
 var (
@@ -14,8 +15,8 @@ var (
 )
 
 //NewSpec initialize spec for LoadTest custom resource
-func NewSpec(loadTestType LoadTestType, overwrite bool, distributedPods int32, testFileStr, testDataStr, envVarsStr string, masterConfig, workerConfig ImageDetails) LoadTestSpec {
-	lt := LoadTestSpec{
+func NewSpec(loadTestType LoadTestType, overwrite bool, distributedPods int32, testFileStr, testDataStr, envVarsStr string, masterConfig, workerConfig ImageDetails, targetURL string, duration time.Duration) LoadTestSpec {
+	return LoadTestSpec{
 		Type:            loadTestType,
 		Overwrite:       overwrite,
 		MasterConfig:    masterConfig,
@@ -24,6 +25,7 @@ func NewSpec(loadTestType LoadTestType, overwrite bool, distributedPods int32, t
 		TestFile:        testFileStr,
 		TestData:        testDataStr,
 		EnvVars:         envVarsStr,
+		TargetURL:       targetURL,
+		Duration:        duration,
 	}
-	return lt
 }

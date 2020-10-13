@@ -102,7 +102,7 @@ func fromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger) (apisLoa
 		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %q from request: %w", duration, err)
 	}
 
-	return backends.BuildLoadTestSpecByBackend(ltType, o, dp, tf, td, ev)
+	return backends.BuildLoadTestSpecByBackend(ltType, o, dp, tf, td, ev, turl, dur)
 }
 
 func getEnvVars(r *http.Request) (string, error) {

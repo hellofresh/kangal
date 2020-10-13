@@ -114,23 +114,6 @@ const (
 	LoadTestTypeLocust LoadTestType = "Locust"
 )
 
-var loadTestTypes []LoadTestType = []LoadTestType{
-	LoadTestTypeJMeter,
-	LoadTestTypeFake,
-	LoadTestTypeLocust,
-}
-
-// HasLoadTestType tests if given loadTestType is registered
-func HasLoadTestType(loadTestType LoadTestType) bool {
-	for _, current := range loadTestTypes {
-		if current == loadTestType {
-			return true
-		}
-	}
-
-	return false
-}
-
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // LoadTestList is a list of LoadTest resources

@@ -3,6 +3,7 @@ package backends
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"go.uber.org/zap"
 	"k8s.io/client-go/kubernetes"
@@ -50,12 +51,14 @@ func NewLoadTest(loadTest *loadTestV1.LoadTest, kubeClientSet kubernetes.Interfa
 }
 
 // BuildLoadTestSpecByBackend returns a valid LoadTestSpec based on backend rules
-func BuildLoadTestSpecByBackend(loadTestType loadTestV1.LoadTestType, overwrite bool, distributedPods int32, testFileStr, testDataStr, envVarsStr string) (loadTestV1.LoadTestSpec, error) {
+func BuildLoadTestSpecByBackend(loadTestType loadTestV1.LoadTestType, overwrite bool, distributedPods int32, testFileStr, testDataStr, envVarsStr, targetURL string, duration time.Duration) (loadTestV1.LoadTestSpec, error) {
 	switch loadTestType {
 	case loadTestV1.LoadTestTypeJMeter:
 		return jmeter.BuildLoadTestSpec(overwrite, distributedPods, testFileStr, testDataStr, envVarsStr)
 	case loadTestV1.LoadTestTypeFake:
 		return fake.BuildLoadTestSpec(overwrite)
+	case loadTestV1.LoadTestTypeLocust:
+		return locust.BuildLoadTestSpec(overwrite, distributedPods, testFileStr, envVarsStr, targetURL, duration)
 	}
 	return loadTestV1.LoadTestSpec{}, fmt.Errorf("load test provider not found to build specs: %s", loadTestType)
 }

@@ -2,6 +2,7 @@ package v1
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -18,6 +19,8 @@ func TestBuildLoadTestSpec(t *testing.T) {
 		envVarsStr      string
 		masterConfig    ImageDetails
 		workerConfig    ImageDetails
+		targetURL       string
+		duration        time.Duration
 	}
 	tests := []struct {
 		name    string
@@ -55,7 +58,7 @@ func TestBuildLoadTestSpec(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := NewSpec(tt.args.loadTestType, tt.args.overwrite, tt.args.distributedPods, tt.args.testFileStr, tt.args.testDataStr, tt.args.envVarsStr, tt.args.masterConfig, tt.args.workerConfig)
+			got := NewSpec(tt.args.loadTestType, tt.args.overwrite, tt.args.distributedPods, tt.args.testFileStr, tt.args.testDataStr, tt.args.envVarsStr, tt.args.masterConfig, tt.args.workerConfig, tt.args.targetURL, tt.args.duration)
 			assert.Equal(t, tt.want, got)
 		})
 	}
