@@ -228,6 +228,36 @@ func TestInit(t *testing.T) {
 			expectError:     false,
 		},
 		{
+			tag: "invalid request - wrong testFile format",
+			requestFile: map[string]string{
+				envVars:  "testdata/valid/envvars.csv",
+				testFile: "testdata/valid/envvars.csv",
+				testData: "testdata/valid/testdata.csv",
+			},
+			distributedPods: "2",
+			expectError:     true,
+		},
+		{
+			tag: "invalid request - wrong testData format",
+			requestFile: map[string]string{
+				envVars:  "testdata/valid/envvars.csv",
+				testFile: "testdata/valid/loadtest.jmx",
+				testData: "testdata/valid/loadtest.jmx",
+			},
+			distributedPods: "2",
+			expectError:     true,
+		},
+		{
+			tag: "invalid request - wrong envVars format",
+			requestFile: map[string]string{
+				envVars:  "testdata/valid/loadtest.jmx",
+				testFile: "testdata/valid/loadtest.jmx",
+				testData: "testdata/valid/envvars.csv",
+			},
+			distributedPods: "2",
+			expectError:     true,
+		},
+		{
 			tag: "distributed pods is invalid",
 			requestFile: map[string]string{
 				envVars:  "testdata/valid/envvars.csv",
