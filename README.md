@@ -55,7 +55,7 @@ Currently, there are the following load generator types implemented for Kangal:
 - [**JMeter**](https://jmeter.apache.org/)
 - [**Locust**](https://locust.io/)
 
-Read more about each of then at [docs/README.md](docs/README.md).
+Read more about each of them in [docs/README.md](docs/README.md).
 
 ## Architectural diagram
 The diagram below illustrates the workflow for Kangal in Kubernetes infrastructure.
