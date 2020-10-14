@@ -26,13 +26,17 @@ type Request struct {
 	contentType string
 }
 
-func createRequestWrapper(requestFiles map[string]string, distributedPods string, loadtestType string) (*Request, error) {
+func createRequestWrapper(requestFiles map[string]string, distributedPods string, loadtestType string, tagsString string) (*Request, error) {
 	request := &Request{}
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
 
 	if err := writer.WriteField("distributedPods", distributedPods); err != nil {
 		return request, fmt.Errorf("error adding pod nr: %w", err)
+	}
+
+	if err := writer.WriteField("tags", tagsString); err != nil {
+		return request, fmt.Errorf("error adding tags: %w", err)
 	}
 
 	if err := writer.WriteField("type", loadtestType); err != nil {

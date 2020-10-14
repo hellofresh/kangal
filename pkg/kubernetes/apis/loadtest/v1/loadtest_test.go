@@ -18,15 +18,24 @@ func TestBuildLoadTestObject(t *testing.T) {
 	spec := LoadTestSpec{
 		Type:            ltType,
 		DistributedPods: &expectedDP,
+		Tags:            map[string]string{"department": "platform", "team": "kangal"},
 		TestFile:        "load-test file\n",
 		TestData:        "test data 1\ntest data 2\n",
 		EnvVars:         "envVar1,value1\nenvVar2,value2\n",
 	}
 
+	expectedLabels := map[string]string{
+		"test-file-hash":      "5a7919885ef46f2e0bd66602944128fde2dce928",
+		"test-tag-department": "platform",
+		"test-tag-team":       "kangal",
+	}
+
 	expectedLt := LoadTest{
-		TypeMeta:   metaV1.TypeMeta{},
-		ObjectMeta: metaV1.ObjectMeta{},
-		Spec:       spec,
+		TypeMeta: metaV1.TypeMeta{},
+		ObjectMeta: metaV1.ObjectMeta{
+			Labels: expectedLabels,
+		},
+		Spec: spec,
 		Status: LoadTestStatus{
 			Phase: LoadTestCreating,
 		},
@@ -34,6 +43,67 @@ func TestBuildLoadTestObject(t *testing.T) {
 
 	lt, err := BuildLoadTestObject(spec)
 	assert.NoError(t, err)
+	assert.Equal(t, expectedLt.ObjectMeta.Labels, lt.ObjectMeta.Labels)
 	assert.Equal(t, expectedLt.Spec, lt.Spec)
 	assert.Equal(t, expectedLt.Status.Phase, lt.Status.Phase)
+}
+
+func TestLoadTestTagsFromString(t *testing.T) {
+	testCases := []struct {
+		scenario       string
+		input          string
+		expectedResult LoadTestTags
+		expectedError  string
+	}{
+		{
+			scenario:       "no input no error",
+			expectedResult: LoadTestTags{},
+		},
+		{
+			scenario:       "no value no error",
+			input:          ",",
+			expectedResult: LoadTestTags{},
+		},
+		{
+			scenario:      "missing label",
+			input:         ":value-only",
+			expectedError: "missing tag label",
+		},
+		{
+			scenario:      "missing value",
+			input:         "label:",
+			expectedError: "missing tag value",
+		},
+		{
+			scenario:      "value is too long",
+			input:         "label:MW5Ex91GtG5qTRnC2DIxWo17t6yjkJBCtp9Mh5q0J7R7RXDcoAvRcYmL5Uqc8YeR",
+			expectedError: "tag value is too long",
+		},
+		{
+			scenario: "multiple tags",
+			input:    "tag1:value1,tag2:value2,,,,tag3:value3",
+			expectedResult: LoadTestTags{
+				"tag1": "value1",
+				"tag2": "value2",
+				"tag3": "value3",
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.scenario, func(t *testing.T) {
+			t.Parallel()
+
+			result, err := LoadTestTagsFromString(tc.input)
+
+			assert.Equal(t, tc.expectedResult, result)
+
+			if tc.expectedError == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tc.expectedError)
+			}
+		})
+	}
 }

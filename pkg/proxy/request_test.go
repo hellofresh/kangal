@@ -16,7 +16,7 @@ import (
 
 func TestNewFakeFromHTTPLoadTest(t *testing.T) {
 	ltType := apisLoadTestV1.LoadTestTypeFake
-	r, err := buildMocFormReq(map[string]string{}, "", string(ltType))
+	r, err := buildMocFormReq(map[string]string{}, "", string(ltType), "")
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
@@ -48,7 +48,7 @@ func TestDistributedPods(t *testing.T) {
 		},
 	} {
 		t.Run(ti.tag, func(t *testing.T) {
-			request, err := buildMocFormReq(map[string]string{}, ti.distributedPods, string(apisLoadTestV1.LoadTestTypeJMeter))
+			request, err := buildMocFormReq(map[string]string{}, ti.distributedPods, string(apisLoadTestV1.LoadTestTypeJMeter), "")
 			if err != nil {
 				t.Error(err)
 				t.FailNow()
@@ -97,7 +97,7 @@ func TestTestFile(t *testing.T) {
 		},
 	} {
 		t.Run(ti.tag, func(t *testing.T) {
-			request, err := buildMocFormReq(ti.requestFile, "1", string(apisLoadTestV1.LoadTestTypeJMeter))
+			request, err := buildMocFormReq(ti.requestFile, "1", string(apisLoadTestV1.LoadTestTypeJMeter), "")
 			if err != nil {
 				t.Error(err)
 				t.FailNow()
@@ -146,7 +146,7 @@ func TestDataFile(t *testing.T) {
 		},
 	} {
 		t.Run(ti.tag, func(t *testing.T) {
-			request, err := buildMocFormReq(ti.requestFile, "1", string(apisLoadTestV1.LoadTestTypeJMeter))
+			request, err := buildMocFormReq(ti.requestFile, "1", string(apisLoadTestV1.LoadTestTypeJMeter), "")
 			if err != nil {
 				t.Error(err)
 				t.FailNow()
@@ -195,7 +195,7 @@ func TestEnvVarFile(t *testing.T) {
 		},
 	} {
 		t.Run(ti.tag, func(t *testing.T) {
-			request, err := buildMocFormReq(ti.requestFile, "1", string(apisLoadTestV1.LoadTestTypeJMeter))
+			request, err := buildMocFormReq(ti.requestFile, "1", string(apisLoadTestV1.LoadTestTypeJMeter), "")
 			if err != nil {
 				t.Error(err)
 				t.FailNow()
@@ -213,12 +213,79 @@ func TestEnvVarFile(t *testing.T) {
 	}
 }
 
+func TestTags(t *testing.T) {
+	testCases := []struct {
+		scenario       string
+		input          string
+		expectedResult apisLoadTestV1.LoadTestTags
+		expectedError  string
+	}{
+		{
+			scenario:       "no input no error",
+			expectedResult: apisLoadTestV1.LoadTestTags{},
+		},
+		{
+			scenario:       "no value no error",
+			input:          ",",
+			expectedResult: apisLoadTestV1.LoadTestTags{},
+		},
+		{
+			scenario:      "missing label",
+			input:         ":value-only",
+			expectedError: "missing tag label",
+		},
+		{
+			scenario:      "missing value",
+			input:         "label:",
+			expectedError: "missing tag value",
+		},
+		{
+			scenario:      "value is too long",
+			input:         "label:MW5Ex91GtG5qTRnC2DIxWo17t6yjkJBCtp9Mh5q0J7R7RXDcoAvRcYmL5Uqc8YeR",
+			expectedError: "tag value is too long",
+		},
+		{
+			scenario: "multiple tags",
+			input:    "tag1:value1,tag2:value2,,,,tag3:value3",
+			expectedResult: apisLoadTestV1.LoadTestTags{
+				"tag1": "value1",
+				"tag2": "value2",
+				"tag3": "value3",
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.scenario, func(t *testing.T) {
+			t.Parallel()
+
+			req, err := buildMocFormReq(nil, "1", string(apisLoadTestV1.LoadTestTypeJMeter), tc.input)
+			if err != nil {
+				t.Error(err)
+				t.FailNow()
+			}
+
+			result, err := getTags(req)
+
+			assert.Equal(t, tc.expectedResult, result)
+
+			if tc.expectedError == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tc.expectedError)
+			}
+		})
+	}
+}
+
 func TestInit(t *testing.T) {
 	ltType := apisLoadTestV1.LoadTestTypeJMeter
 	for _, ti := range []struct {
 		tag             string
 		requestFile     map[string]string
 		distributedPods string
+		tags            string
 		expectError     bool
 	}{
 		{
@@ -229,6 +296,7 @@ func TestInit(t *testing.T) {
 				testData: "testdata/valid/testdata.csv",
 			},
 			distributedPods: "2",
+			tags:            "label:value",
 			expectError:     false,
 		},
 		{
@@ -239,6 +307,39 @@ func TestInit(t *testing.T) {
 				testData: "testdata/valid/testdata.csv",
 			},
 			distributedPods: "2",
+			expectError:     true,
+		},
+		{
+			tag: "tag is missing label",
+			requestFile: map[string]string{
+				envVars:  "testdata/valid/envvars.csv",
+				testFile: "testdata/valid/loadtest.jmx",
+				testData: "testdata/valid/testdata.csv",
+			},
+			distributedPods: "2",
+			tags:            ":value",
+			expectError:     true,
+		},
+		{
+			tag: "tag is missing value",
+			requestFile: map[string]string{
+				envVars:  "testdata/valid/envvars.csv",
+				testFile: "testdata/valid/loadtest.jmx",
+				testData: "testdata/valid/testdata.csv",
+			},
+			distributedPods: "2",
+			tags:            "label:",
+			expectError:     true,
+		},
+		{
+			tag: "tag is too long",
+			requestFile: map[string]string{
+				envVars:  "testdata/valid/envvars.csv",
+				testFile: "testdata/valid/loadtest.jmx",
+				testData: "testdata/valid/testdata.csv",
+			},
+			distributedPods: "2",
+			tags:            "label:MW5Ex91GtG5qTRnC2DIxWo17t6yjkJBCtp9Mh5q0J7R7RXDcoAvRcYmL5Uqc8YeR",
 			expectError:     true,
 		},
 		{
@@ -274,7 +375,7 @@ func TestInit(t *testing.T) {
 	} {
 
 		t.Run(ti.tag, func(t *testing.T) {
-			request, err := buildMocFormReq(ti.requestFile, ti.distributedPods, string(ltType))
+			request, err := buildMocFormReq(ti.requestFile, ti.distributedPods, string(ltType), ti.tags)
 			if err != nil {
 				t.Error(err)
 				t.FailNow()
@@ -301,7 +402,7 @@ func TestCheckLoadTestSpec(t *testing.T) {
 	}
 	distributedPods := "2"
 
-	request, err := buildMocFormReq(requestFiles, distributedPods, string(ltType))
+	request, err := buildMocFormReq(requestFiles, distributedPods, string(ltType), "label:value")
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
