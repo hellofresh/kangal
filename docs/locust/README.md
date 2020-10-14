@@ -6,7 +6,7 @@
 - [Writing tests](#writing-tests)
 - [Reporting](#reporting)
 
-Locust is one of the load generators used in Kangal and uses the official docker image [locustio/locust](https://hub.docker.com/r/locustio/locust).
+Locust is one of the load generators implemented in Kangal. It uses the official docker image [locustio/locust](https://hub.docker.com/r/locustio/locust).
 
 Kangal requires a py testfile describing the test.
 
