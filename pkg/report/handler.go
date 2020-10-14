@@ -2,12 +2,13 @@ package report
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/go-chi/chi"
-
-	kube "github.com/hellofresh/kangal/pkg/kubernetes"
+	"github.com/go-chi/render"
+	khttp "github.com/hellofresh/kangal/pkg/core/http"
+	kk8s "github.com/hellofresh/kangal/pkg/kubernetes"
+	"k8s.io/apimachinery/pkg/api/errors"
 )
 
 var httpClient = &http.Client{}
@@ -35,7 +36,7 @@ func ShowHandler() func(w http.ResponseWriter, r *http.Request) {
 }
 
 //PersistHandler method streams request to storage presigned URL
-func PersistHandler(kubeClient *kube.Client) func(w http.ResponseWriter, r *http.Request) {
+func PersistHandler(kubeClient *kk8s.Client) func(w http.ResponseWriter, r *http.Request) {
 	if minioClient == nil {
 		panic("client was not initialized, please initialize object storage client")
 	}
@@ -44,20 +45,24 @@ func PersistHandler(kubeClient *kube.Client) func(w http.ResponseWriter, r *http
 		loadTestName := chi.URLParam(r, "id")
 
 		_, err := kubeClient.GetLoadTest(r.Context(), loadTestName)
+		if errors.IsNotFound(err) {
+			render.Render(w, r, khttp.ErrResponse(http.StatusNotFound, err.Error()))
+			return
+		}
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			render.Render(w, r, khttp.ErrResponse(http.StatusInternalServerError, err.Error()))
 			return
 		}
 
 		url, err := newPreSignedPutURL(loadTestName)
 		if nil != err {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			render.Render(w, r, khttp.ErrResponse(http.StatusInternalServerError, err.Error()))
 			return
 		}
 
 		proxyReq, err := http.NewRequest(r.Method, url.String(), r.Body)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			render.Render(w, r, khttp.ErrResponse(http.StatusInternalServerError, err.Error()))
 			return
 		}
 		for header, values := range r.Header {
@@ -69,17 +74,11 @@ func PersistHandler(kubeClient *kube.Client) func(w http.ResponseWriter, r *http
 
 		proxyResp, err := httpClient.Do(proxyReq)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			render.Render(w, r, khttp.ErrResponse(http.StatusInternalServerError, err.Error()))
 			return
 		}
 
-		proxyRespBody, err := ioutil.ReadAll(proxyResp.Body)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		w.WriteHeader(proxyResp.StatusCode)
-		w.Write(proxyRespBody)
+		render.Status(r, proxyResp.StatusCode)
+		render.JSON(w, r, "Report persisted")
 	}
 }
