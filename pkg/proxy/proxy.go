@@ -260,7 +260,7 @@ func (p *Proxy) Get(w http.ResponseWriter, r *http.Request) {
 func (p *Proxy) GetLogs(w http.ResponseWriter, r *http.Request) {
 	logger := mPkg.GetLogger(r.Context())
 	ltID := chi.URLParam(r, loadTestID)
-	logger.Info("Retrieving info for loadtest", zap.String("ltID", ltID))
+	logger.Info("Retrieving logs for loadtest", zap.String("ltID", ltID))
 
 	ctx, cancel := context.WithTimeout(r.Context(), loadtest.KubeTimeout)
 	defer cancel()
