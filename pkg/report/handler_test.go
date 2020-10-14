@@ -6,9 +6,17 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/go-chi/chi"
+	kk8s "github.com/hellofresh/kangal/pkg/kubernetes"
+	loadtestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
+	"github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned/fake"
 	"github.com/minio/minio-go/v6"
+	"go.uber.org/zap"
+	"k8s.io/apimachinery/pkg/runtime"
+	k8sfake "k8s.io/client-go/kubernetes/fake"
+	k8stesting "k8s.io/client-go/testing"
 )
 
 // fakeFS mocks http.FileSystem
@@ -43,5 +51,53 @@ func TestShowHandler(t *testing.T) {
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf("handler returned wrong status code: got %v want %v",
 			status, http.StatusOK)
+	}
+}
+
+type roundTripFunc func(req *http.Request) *http.Response
+
+func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
+	return f(req), nil
+}
+
+func TestPersistHandler(t *testing.T) {
+	req, err := http.NewRequest("PUT", "/load-test/loadtest-name/report", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// init dependencies for report package
+	minioClient, _ = minio.NewWithRegion("localhost:80", "access-key", "secret-access-key", false, "us-east1")
+	bucketName = "bucket-name"
+	expires = time.Second
+	httpClient = &http.Client{Transport: roundTripFunc(func(req *http.Request) *http.Response {
+		return &http.Response{
+			StatusCode: 200,
+			// Must be set to non-nil value or it panics
+			Header: make(http.Header),
+		}
+	})}
+
+	kangalFakeClientSet := fake.NewSimpleClientset()
+	kangalFakeClientSet.PrependReactor("get", "loadtests", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+		return true, &loadtestV1.LoadTest{}, nil
+	})
+
+	kangalKubeClient := kk8s.NewClient(
+		kangalFakeClientSet.KangalV1().LoadTests(),
+		k8sfake.NewSimpleClientset(),
+		zap.NewNop(),
+	)
+
+	rr := httptest.NewRecorder()
+
+	handler := chi.NewRouter()
+	handler.Put("/load-test/{id}/report", PersistHandler(kangalKubeClient))
+	handler.ServeHTTP(rr, req)
+
+	// Check the status code is what we expect.
+	if rr.Code != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			rr.Code, http.StatusOK)
 	}
 }
