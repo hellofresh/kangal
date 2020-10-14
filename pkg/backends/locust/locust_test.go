@@ -46,7 +46,7 @@ func TestLocustCheckOrCreateResources(t *testing.T) {
 			},
 		},
 		logger,
-		"",
+		"http://kangal-proxy.local/load-test/loadtest-name/report",
 		Config{},
 		map[string]string{},
 	)
@@ -93,7 +93,7 @@ func TestLocustCheckOrUpdateStatus(t *testing.T) {
 			},
 		},
 		logger,
-		"",
+		"http://kangal-proxy.local/load-test/loadtest-name/report",
 		Config{},
 		map[string]string{"": ""},
 	)
