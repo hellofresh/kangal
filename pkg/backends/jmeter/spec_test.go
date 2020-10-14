@@ -14,6 +14,7 @@ func TestBuildJMeterLoadTestSpec(t *testing.T) {
 	type args struct {
 		overwrite       bool
 		distributedPods int32
+		tags            v1.LoadTestTags
 		testFileStr     string
 		testDataStr     string
 		envVarsStr      string
@@ -29,6 +30,7 @@ func TestBuildJMeterLoadTestSpec(t *testing.T) {
 			args: args{
 				overwrite:       true,
 				distributedPods: 3,
+				tags:            v1.LoadTestTags{"team": "kangal"},
 				testFileStr:     "something in the file",
 				testDataStr:     "some test data",
 			},
@@ -38,6 +40,7 @@ func TestBuildJMeterLoadTestSpec(t *testing.T) {
 				MasterConfig:    v1.ImageDetails{Image: masterImage, Tag: imageTag},
 				WorkerConfig:    v1.ImageDetails{Image: workerImage, Tag: imageTag},
 				DistributedPods: &distributedPods,
+				Tags:            v1.LoadTestTags{"team": "kangal"},
 				TestFile:        "something in the file",
 				TestData:        "some test data",
 				EnvVars:         "",
@@ -65,7 +68,7 @@ func TestBuildJMeterLoadTestSpec(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := BuildLoadTestSpec(tt.args.overwrite, tt.args.distributedPods, tt.args.testFileStr, tt.args.testDataStr, tt.args.envVarsStr)
+			got, err := BuildLoadTestSpec(tt.args.overwrite, tt.args.distributedPods, tt.args.tags, tt.args.testFileStr, tt.args.testDataStr, tt.args.envVarsStr)
 
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -77,6 +80,7 @@ func TestBuildJMeterLoadTestSpec(t *testing.T) {
 			assert.Equal(t, tt.want.MasterConfig, got.MasterConfig)
 			assert.Equal(t, tt.want.WorkerConfig, got.WorkerConfig)
 			assert.Equal(t, &tt.want.DistributedPods, &got.DistributedPods)
+			assert.Equal(t, tt.want.Tags, got.Tags)
 			assert.Equal(t, tt.want.TestFile, got.TestFile)
 			assert.Equal(t, tt.want.TestData, got.TestData)
 		})

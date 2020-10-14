@@ -117,6 +117,18 @@ func GetLoadtestTestdata(clientSet clientSetV.Clientset, loadtestName string) (s
 	return result.Spec.TestData, nil
 }
 
+// GetLoadtestLabels returns load test labels.
+func GetLoadtestLabels(clientSet clientSetV.Clientset, loadtestName string) (map[string]string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
+	defer cancel()
+
+	result, err := clientSet.KangalV1().LoadTests().Get(ctx, loadtestName, metaV1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return result.Labels, nil
+}
+
 // GetLoadtests returns a list of load tests
 func GetLoadtests(clientSet clientSetV.Clientset) ([]string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)

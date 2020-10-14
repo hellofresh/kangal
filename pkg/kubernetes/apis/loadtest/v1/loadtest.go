@@ -3,9 +3,15 @@ package v1
 import (
 	"crypto/sha1"
 	"encoding/hex"
+	"fmt"
+	"strings"
 
 	"github.com/technosophos/moniker"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
+const (
+	maxTagLength = 63 // K8s limit.
 )
 
 //BuildLoadTestObject initialize new LoadTest custom resource
@@ -16,6 +22,11 @@ func BuildLoadTestObject(spec LoadTestSpec) (*LoadTest, error) {
 
 	labels := map[string]string{
 		"test-file-hash": getHashFromString(spec.TestFile),
+	}
+
+	for tagName, tagValue := range spec.Tags {
+		tagName = fmt.Sprintf("test-tag-%s", tagName)
+		labels[tagName] = tagValue
 	}
 
 	return &LoadTest{
@@ -29,6 +40,48 @@ func BuildLoadTestObject(spec LoadTestSpec) (*LoadTest, error) {
 			Phase: LoadTestCreating,
 		},
 	}, nil
+}
+
+// LoadTestTagsFromString builds tags from string.
+func LoadTestTagsFromString(tagsStr string) (LoadTestTags, error) {
+	if tagsStr == "" {
+		return LoadTestTags{}, nil
+	}
+
+	pairs := strings.Split(strings.TrimSpace(tagsStr), ",")
+	tags := make(LoadTestTags, len(pairs))
+
+	for _, pair := range pairs {
+		pair = strings.TrimSpace(pair)
+		if len(pair) < 1 {
+			continue
+		}
+
+		parts := strings.SplitN(pair, ":", 2)
+		label := strings.TrimSpace(parts[0])
+
+		if len(label) == 0 {
+			return nil, ErrTagMissingLabel
+		}
+
+		if len(parts) != 2 {
+			return nil, ErrTagMissingValue
+		}
+
+		value := strings.TrimSpace(parts[1])
+
+		if len(value) == 0 {
+			return nil, ErrTagMissingValue
+		}
+
+		if len(value) > maxTagLength {
+			return nil, ErrTagValueMaxLengthExceeded
+		}
+
+		tags[label] = value
+	}
+
+	return tags, nil
 }
 
 func getHashFromString(str string) string {

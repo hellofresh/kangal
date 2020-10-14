@@ -173,6 +173,126 @@ func TestGetLoadTest(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestClient_ListLoadTest(t *testing.T) {
+	distributedPods := int32(2)
+	remainCount := int64(42)
+
+	testCases := []struct {
+		scenario       string
+		opt            ListOptions
+		result         *apisLoadTestV1.LoadTestList
+		error          error
+		expectedResult *apisLoadTestV1.LoadTestList
+		expectedError  string
+	}{
+		{
+			scenario:      "error in client",
+			result:        &apisLoadTestV1.LoadTestList{},
+			error:         errors.New("client error"),
+			expectedError: "client error",
+		},
+		{
+			scenario: "success",
+			opt: ListOptions{
+				Tags: map[string]string{
+					"team": "kangal",
+				},
+				Limit:    10,
+				Continue: "continue",
+			},
+			result: &apisLoadTestV1.LoadTestList{
+				ListMeta: metav1.ListMeta{
+					Continue:           "continue",
+					RemainingItemCount: &remainCount,
+				},
+				Items: []apisLoadTestV1.LoadTest{
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"test-tag-team": "kangal",
+							},
+						},
+						Spec: apisLoadTestV1.LoadTestSpec{
+							Type:            apisLoadTestV1.LoadTestTypeJMeter,
+							Overwrite:       false,
+							MasterConfig:    apisLoadTestV1.ImageDetails{},
+							WorkerConfig:    apisLoadTestV1.ImageDetails{},
+							DistributedPods: &distributedPods,
+							Tags:            apisLoadTestV1.LoadTestTags{"team": "kangal"},
+							TestFile:        "file content\n",
+							TestData:        "test data\n",
+						},
+						Status: apisLoadTestV1.LoadTestStatus{
+							Phase:     apisLoadTestV1.LoadTestStarting,
+							Namespace: "random",
+						},
+					},
+				},
+			},
+			expectedResult: &apisLoadTestV1.LoadTestList{
+				ListMeta: metav1.ListMeta{
+					Continue:           "continue",
+					RemainingItemCount: &remainCount,
+				},
+				Items: []apisLoadTestV1.LoadTest{
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"test-tag-team": "kangal",
+							},
+						},
+						Spec: apisLoadTestV1.LoadTestSpec{
+							Type:            apisLoadTestV1.LoadTestTypeJMeter,
+							Overwrite:       false,
+							MasterConfig:    apisLoadTestV1.ImageDetails{},
+							WorkerConfig:    apisLoadTestV1.ImageDetails{},
+							DistributedPods: &distributedPods,
+							Tags:            apisLoadTestV1.LoadTestTags{"team": "kangal"},
+							TestFile:        "file content\n",
+							TestData:        "test data\n",
+						},
+						Status: apisLoadTestV1.LoadTestStatus{
+							Phase:     apisLoadTestV1.LoadTestStarting,
+							Namespace: "random",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.scenario, func(t *testing.T) {
+			t.Parallel()
+
+			ctx, cancel := context.WithTimeout(context.Background(), controller.KubeTimeout)
+			defer cancel()
+
+			loadTestClientSet := fakeClientset.NewSimpleClientset()
+			kubeClientSet := fake.NewSimpleClientset()
+
+			loadTest := &apisLoadTestV1.LoadTest{}
+			loadTest.Name = "NameOfMyLoadTest"
+
+			loadTestClientSet.Fake.PrependReactor("list", "loadtests", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+				return true, tc.result, tc.error
+			})
+
+			c := NewClient(loadTestClientSet.KangalV1().LoadTests(), kubeClientSet, zap.NewNop())
+			result, err := c.ListLoadTest(ctx, tc.opt)
+
+			assert.Equal(t, tc.expectedResult, result)
+
+			if tc.expectedError == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tc.expectedError)
+			}
+		})
+	}
+}
+
 func TestCountActiveLoadTests(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), controller.KubeTimeout)
 	defer cancel()

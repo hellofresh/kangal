@@ -13,6 +13,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/hellofresh/kangal/pkg/backends"
+	"github.com/hellofresh/kangal/pkg/kubernetes"
 	apisLoadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 )
 
@@ -20,6 +21,7 @@ const (
 	backendType     = "type"
 	overwrite       = "overwrite"
 	distributedPods = "distributedPods"
+	tags            = "tags"
 	testFile        = "testFile"
 	testData        = "testData"
 	envVars         = "envVars"
@@ -51,6 +53,36 @@ func httpValidator(r *http.Request) url.Values {
 	return v.Validate()
 }
 
+func fromHTTPRequestToListOptions(r *http.Request) (*kubernetes.ListOptions, error) {
+	opt := kubernetes.ListOptions{}
+	params := r.URL.Query()
+
+	// Build tags filter.
+	if tagsString := params.Get("tags"); tagsString != "" {
+		tags, err := apisLoadTestV1.LoadTestTagsFromString(tagsString)
+		if err != nil {
+			return nil, err
+		}
+
+		opt.Tags = tags
+	}
+
+	// Build limit filter.
+	if limitVal := params.Get("limit"); limitVal != "" {
+		limit, err := strconv.ParseInt(limitVal, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+
+		opt.Limit = limit
+	}
+
+	// Build continue.
+	opt.Continue = params.Get("continue")
+
+	return &opt, nil
+}
+
 // fromHTTPRequestToLoadTestSpec creates a load test spec from HTTP request
 func fromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger) (apisLoadTestV1.LoadTestSpec, error) {
 	ltType := getLoadTestType(r)
@@ -70,6 +102,12 @@ func fromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger) (apisLoa
 	if err != nil {
 		logger.Debug("Bad value: ", zap.String("field", "distributedPods"), zap.Int32("value", dp), zap.Error(err))
 		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("bad %q value: should be integer", distributedPods)
+	}
+
+	tagList, err := getTags(r)
+	if err != nil {
+		logger.Debug("Bad value: ", zap.String("field", "tags"), zap.String("tags", tags), zap.Error(err))
+		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %q from request: %w", tags, err)
 	}
 
 	tf, err := getTestFile(r)
@@ -102,7 +140,7 @@ func fromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger) (apisLoa
 		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %q from request: %w", duration, err)
 	}
 
-	return backends.BuildLoadTestSpecByBackend(ltType, o, dp, tf, td, ev, turl, dur)
+	return backends.BuildLoadTestSpecByBackend(ltType, o, dp, tagList, tf, td, ev, turl, dur)
 }
 
 func getEnvVars(r *http.Request) (string, error) {
@@ -190,4 +228,8 @@ func fileToString(f io.ReadCloser) (string, error) {
 	}
 
 	return s, nil
+}
+
+func getTags(r *http.Request) (apisLoadTestV1.LoadTestTags, error) {
+	return apisLoadTestV1.LoadTestTagsFromString(r.FormValue(tags))
 }

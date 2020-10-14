@@ -35,6 +35,20 @@ curl -X POST http://${KANGAL_PROXY_ADDRESS}/load-test \
   -F overwrite=true
 ```
 
+You can also tag the load test so that you can find them later, the format is `tag1:value1,tag2:value2`
+
+```bash
+curl -X POST http://${KANGAL_PROXY_ADDRESS}/load-test \
+  -H 'Content-Type: multipart/form-data' \
+  -F distributedPods=1 \
+  -F testFile=@examples/constant_load.jmx \
+  -F testData=@artifacts/loadtests/testData.csv \
+  -F envVars=@artifacts/loadtests/envVars.csv \
+  -F type=JMeter \
+  -F tags=tag1:value1,tag2:value2 \
+  -F overwrite=true
+```
+
 ## Check 
 Check the status of the load test.
 
@@ -66,4 +80,24 @@ Delete your finished load test.
 
 ```
 curl -X DELETE http://${KANGAL_PROXY_ADDRESS}/load-test/loadtest-name
+```
+
+## List
+
+You can find out all the load tests
+
+```bash
+curl http://${KANGAL_PROXY_ADDRESS}/load-test
+```
+
+You can filter by `tags`
+
+```bash
+curl 'http://${KANGAL_PROXY_ADDRESS}/load-test?tags=tag1:value1'
+```
+
+And limit your search
+
+```bash
+curl 'http://${KANGAL_PROXY_ADDRESS}/load-test?tags=tag1:value1&limit=10'
 ```
