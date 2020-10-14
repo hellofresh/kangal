@@ -11,10 +11,10 @@ import (
 	"go.uber.org/zap"
 	batchV1 "k8s.io/api/batch/v1"
 	coreV1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
+	"github.com/hellofresh/kangal/pkg/core/helper"
 	loadtestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 )
 
@@ -116,7 +116,7 @@ func (c *JMeter) NewSecret() (*coreV1.Secret, error) {
 	loadtest := c.loadTest
 	envVars := loadtest.Spec.EnvVars
 
-	secretMap, err := readSecret(envVars, c.logger)
+	secretMap, err := helper.ReadEnvs(envVars)
 	if err != nil {
 		c.logger.Error("Error on creating secrets from envVars file", zap.Error(err))
 		return nil, err
@@ -203,12 +203,7 @@ func (c *JMeter) NewPod(i int, configMap *coreV1.ConfigMap, podAnnotations map[s
 							MountPath: "/testdata",
 						},
 					},
-					Resources: buildResourceRequirements(
-						c.config.WorkerCPULimits,
-						c.config.WorkerCPURequests,
-						c.config.WorkerMemoryLimits,
-						c.config.WorkerMemoryRequests,
-					),
+					Resources: helper.BuildResourceRequirements(c.workerResources),
 					EnvFrom: []coreV1.EnvFromSource{
 						{
 							SecretRef: &coreV1.SecretEnvSource{
@@ -301,12 +296,7 @@ func (c *JMeter) NewJMeterMasterJob(preSignedURL *url.URL, podAnnotations map[st
 									SubPath:   "jmeter.properties",
 								},
 							},
-							Resources: buildResourceRequirements(
-								c.config.MasterCPULimits,
-								c.config.MasterCPURequests,
-								c.config.MasterMemoryLimits,
-								c.config.MasterMemoryRequests,
-							),
+							Resources: helper.BuildResourceRequirements(c.masterResources),
 						},
 					},
 					Volumes: []coreV1.Volume{
@@ -416,29 +406,6 @@ func splitTestData(testdata string, n int, logger *zap.Logger) ([][][]string, er
 	return chunks, nil
 }
 
-// ReadSecret reads data from csv file to save it as a map for creating a secret
-func readSecret(envVars string, logger *zap.Logger) (map[string]string, error) {
-	m := make(map[string]string)
-
-	reader := csv.NewReader(strings.NewReader(envVars))
-	for {
-		line, err := reader.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			logger.Error("Error on reading envVars csv file ", zap.Error(err))
-			return nil, err
-		}
-		if len(line) != 2 {
-			logger.Error("Invalid secret format in envVars file")
-			return nil, os.ErrInvalid
-		}
-		m[line[0]] = line[1]
-	}
-	return m, nil
-}
-
 func getNamespaceFromLoadTestName(loadTestName string, logger *zap.Logger) (newNamespaceName string, err error) {
 	nsName := strings.Split(loadTestName, "-")
 	loadTestNameLength := len(nsName)
@@ -448,32 +415,4 @@ func getNamespaceFromLoadTestName(loadTestName string, logger *zap.Logger) (newN
 	}
 	newNamespaceName = nsName[loadTestNameLength-2] + "-" + nsName[loadTestNameLength-1]
 	return newNamespaceName, nil
-}
-
-// buildResourceRequirements creates ResourceRequirements that allows not all values to be specified
-// This is necessary because setting a resource requirement with value 0 produces a different behavior
-func buildResourceRequirements(cpuLimit, cpuRequest, memLimit, memRequest string) coreV1.ResourceRequirements {
-	limits := make(map[coreV1.ResourceName]resource.Quantity)
-	requests := make(map[coreV1.ResourceName]resource.Quantity)
-
-	if quantity, err := resource.ParseQuantity(cpuLimit); err == nil {
-		limits[coreV1.ResourceCPU] = quantity
-	}
-
-	if quantity, err := resource.ParseQuantity(cpuRequest); err == nil {
-		requests[coreV1.ResourceCPU] = quantity
-	}
-
-	if quantity, err := resource.ParseQuantity(memLimit); err == nil {
-		limits[coreV1.ResourceMemory] = quantity
-	}
-
-	if quantity, err := resource.ParseQuantity(memRequest); err == nil {
-		requests[coreV1.ResourceMemory] = quantity
-	}
-
-	return coreV1.ResourceRequirements{
-		Limits:   limits,
-		Requests: requests,
-	}
 }

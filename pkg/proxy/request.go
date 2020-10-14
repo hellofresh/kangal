@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"time"
 
 	"github.com/thedevsaddam/govalidator"
 	"go.uber.org/zap"
@@ -22,6 +23,8 @@ const (
 	testFile        = "testFile"
 	testData        = "testData"
 	envVars         = "envVars"
+	targetURL       = "targetURL"
+	duration        = "duration"
 	loadTestID      = "id"
 )
 
@@ -31,9 +34,11 @@ func httpValidator(r *http.Request) url.Values {
 		"type":            []string{"required"},
 		"overwrite":       []string{"in:1,True,true,t,T,TRUE,0,False,false,f,F,FALSE"},
 		"distributedPods": []string{"numeric_between:1,"},
-		"file:testFile":   []string{"ext:jmx"},
+		"file:testFile":   []string{"ext:jmx,py"},
 		"file:envVars":    []string{"ext:csv"},
 		"file:testData":   []string{"ext:csv"},
+		"targetURL":       []string{"http"},
+		"duration":        []string{"duration"},
 	}
 
 	opts := govalidator.Options{
@@ -85,7 +90,19 @@ func fromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger) (apisLoa
 		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %q from request: %w", envVars, err)
 	}
 
-	return backends.BuildLoadTestSpecByBackend(ltType, o, dp, tf, td, ev)
+	turl, err := getTargetURL(r)
+	if err != nil {
+		logger.Debug("Bad value", zap.String("field", targetURL), zap.Error(err))
+		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %q from request: %w", targetURL, err)
+	}
+
+	dur, err := getDuration(r)
+	if err != nil {
+		logger.Debug("Bad value", zap.String("field", duration), zap.Error(err))
+		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %q from request: %w", duration, err)
+	}
+
+	return backends.BuildLoadTestSpecByBackend(ltType, o, dp, tf, td, ev, turl, dur)
 }
 
 func getEnvVars(r *http.Request) (string, error) {
@@ -142,6 +159,20 @@ func getDistributedPods(r *http.Request) (int32, error) {
 	}
 
 	return int32(dn), nil
+}
+
+func getTargetURL(r *http.Request) (string, error) {
+	return r.FormValue(targetURL), nil
+}
+
+func getDuration(r *http.Request) (time.Duration, error) {
+	val := r.FormValue(duration)
+
+	if "" == val {
+		return time.Duration(0), nil
+	}
+
+	return time.ParseDuration(val)
 }
 
 //fileToString converts file to string

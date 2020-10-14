@@ -2,9 +2,9 @@ package jmeter
 
 import (
 	"net/url"
-	"os"
 	"testing"
 
+	"github.com/hellofresh/kangal/pkg/core/helper"
 	loadtestv1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
@@ -66,32 +66,6 @@ func TestSplitTestDataTrimComma(t *testing.T) {
 	assert.Equal(t, " four", string(result[0][0][3]))
 }
 
-func TestReadSecret(t *testing.T) {
-	teststring := "aaa,1\nbbb,2\nccc,3\n"
-
-	result, err := readSecret(teststring, logger)
-	assert.NoError(t, err)
-	assert.Equal(t, int(3), len(result))
-	assert.Equal(t, "2", string(result["bbb"]))
-}
-
-func TestReadSecretInvalid(t *testing.T) {
-	teststring := "aaa:1\nbbb;2\nccc;3\n"
-	expectedError := os.ErrInvalid
-
-	_, err := readSecret(teststring, logger)
-	assert.Error(t, err)
-	assert.Equal(t, expectedError, err)
-}
-
-func TestReadSecretEmpty(t *testing.T) {
-	teststring := ""
-
-	result, err := readSecret(teststring, logger)
-	assert.NoError(t, err)
-	assert.Equal(t, int(0), len(result))
-}
-
 func TestSplitTestDataInvalid(t *testing.T) {
 	teststring := "aaa1,rfergerf efesv\nbbb;2\nccc;3\n"
 	testnum := 1
@@ -127,27 +101,29 @@ func TestPodResourceConfiguration(t *testing.T) {
 				WorkerConfig: loadtestv1.ImageDetails{},
 			},
 		},
-		config: Config{
-			MasterCPULimits:      "100m",
-			MasterCPURequests:    "200m",
-			MasterMemoryLimits:   "100Mi",
-			MasterMemoryRequests: "200Mi",
-			WorkerCPULimits:      "300m",
-			WorkerCPURequests:    "400m",
-			WorkerMemoryLimits:   "300Mi",
-			WorkerMemoryRequests: "400Mi",
+		masterResources: helper.Resources{
+			CPULimits:      "100m",
+			CPURequests:    "200m",
+			MemoryLimits:   "100Mi",
+			MemoryRequests: "200Mi",
+		},
+		workerResources: helper.Resources{
+			CPULimits:      "300m",
+			CPURequests:    "400m",
+			MemoryLimits:   "300Mi",
+			MemoryRequests: "400Mi",
 		},
 	}
 
 	masterJob := c.NewJMeterMasterJob(&url.URL{}, map[string]string{"": ""})
-	assert.Equal(t, c.config.MasterCPULimits, masterJob.Spec.Template.Spec.Containers[0].Resources.Limits.Cpu().String())
-	assert.Equal(t, c.config.MasterCPURequests, masterJob.Spec.Template.Spec.Containers[0].Resources.Requests.Cpu().String())
-	assert.Equal(t, c.config.MasterMemoryLimits, masterJob.Spec.Template.Spec.Containers[0].Resources.Limits.Memory().String())
-	assert.Equal(t, c.config.MasterMemoryRequests, masterJob.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().String())
+	assert.Equal(t, c.masterResources.CPULimits, masterJob.Spec.Template.Spec.Containers[0].Resources.Limits.Cpu().String())
+	assert.Equal(t, c.masterResources.CPURequests, masterJob.Spec.Template.Spec.Containers[0].Resources.Requests.Cpu().String())
+	assert.Equal(t, c.masterResources.MemoryLimits, masterJob.Spec.Template.Spec.Containers[0].Resources.Limits.Memory().String())
+	assert.Equal(t, c.masterResources.MemoryRequests, masterJob.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().String())
 
 	workerPod := c.NewPod(0, &v1.ConfigMap{}, map[string]string{"": ""})
-	assert.Equal(t, c.config.WorkerCPULimits, workerPod.Spec.Containers[0].Resources.Limits.Cpu().String())
-	assert.Equal(t, c.config.WorkerCPURequests, workerPod.Spec.Containers[0].Resources.Requests.Cpu().String())
-	assert.Equal(t, c.config.WorkerMemoryLimits, workerPod.Spec.Containers[0].Resources.Limits.Memory().String())
-	assert.Equal(t, c.config.WorkerMemoryRequests, workerPod.Spec.Containers[0].Resources.Requests.Memory().String())
+	assert.Equal(t, c.workerResources.CPULimits, workerPod.Spec.Containers[0].Resources.Limits.Cpu().String())
+	assert.Equal(t, c.workerResources.CPURequests, workerPod.Spec.Containers[0].Resources.Requests.Cpu().String())
+	assert.Equal(t, c.workerResources.MemoryLimits, workerPod.Spec.Containers[0].Resources.Limits.Memory().String())
+	assert.Equal(t, c.workerResources.MemoryRequests, workerPod.Spec.Containers[0].Resources.Requests.Memory().String())
 }
