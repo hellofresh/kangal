@@ -40,7 +40,7 @@ spec:
               properties:
                 type:
                   type: string
-                  enum: [ JMeter, Fake ]
+                  enum: [ JMeter, Fake, Locust ]
                 distributedPods:
                   minimum: 1
                   type: integer
@@ -50,6 +50,10 @@ spec:
                   type: string
                 envVars:
                   type: string
+                targetURL:
+                  type: string
+                duration:
+                  type: integer
                 masterConfig:
                   type: object
                   properties:

@@ -14,6 +14,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	coreListersV1 "k8s.io/client-go/listers/core/v1"
 
+	"github.com/hellofresh/kangal/pkg/core/helper"
 	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
 )
@@ -36,13 +37,14 @@ type JMeter struct {
 	logger             *zap.Logger
 	namespacesLister   coreListersV1.NamespaceLister
 	reportPreSignedURL *url.URL
-	config             Config
+	masterResources    helper.Resources
+	workerResources    helper.Resources
 
 	podAnnotations, namespaceAnnotations map[string]string
 }
 
 //New initializes new JMeter provider handler to manage load test resources with Kangal Controller
-func New(kubeClientSet kubernetes.Interface, kangalClientSet clientSetV.Interface, lt *loadTestV1.LoadTest, logger *zap.Logger, namespacesLister coreListersV1.NamespaceLister, reportPreSignedURL *url.URL, podAnnotations, namespaceAnnotations map[string]string, jMeterConfig Config) *JMeter {
+func New(kubeClientSet kubernetes.Interface, kangalClientSet clientSetV.Interface, lt *loadTestV1.LoadTest, logger *zap.Logger, namespacesLister coreListersV1.NamespaceLister, reportPreSignedURL *url.URL, podAnnotations, namespaceAnnotations map[string]string, config Config) *JMeter {
 	return &JMeter{
 		kubeClientSet:        kubeClientSet,
 		kangalClientSet:      kangalClientSet,
@@ -52,7 +54,18 @@ func New(kubeClientSet kubernetes.Interface, kangalClientSet clientSetV.Interfac
 		reportPreSignedURL:   reportPreSignedURL,
 		podAnnotations:       podAnnotations,
 		namespaceAnnotations: namespaceAnnotations,
-		config:               jMeterConfig,
+		masterResources: helper.Resources{
+			CPULimits:      config.MasterCPULimits,
+			CPURequests:    config.MasterCPURequests,
+			MemoryLimits:   config.MasterMemoryLimits,
+			MemoryRequests: config.MasterMemoryRequests,
+		},
+		workerResources: helper.Resources{
+			CPULimits:      config.WorkerCPULimits,
+			CPURequests:    config.WorkerCPURequests,
+			MemoryLimits:   config.WorkerMemoryLimits,
+			MemoryRequests: config.WorkerMemoryRequests,
+		},
 	}
 }
 

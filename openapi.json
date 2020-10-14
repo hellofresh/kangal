@@ -277,10 +277,16 @@
 					},
 					"type": {
 						"type": "string",
-						"enum": ["jMeter", "Fake"]
+						"enum": ["jMeter", "Fake", "Locust"]
 					},
 					"overwrite": {
 						"type": "boolean"
+					},
+					"targetURL": {
+						"type": "string"
+					},
+					"duration": {
+						"type": "string"
 					}
 				}
 			},
@@ -306,7 +312,7 @@
 					},
 					"type": {
 						"type": "string",
-						"enum": ["jMeter", "Fake"]
+						"enum": ["jMeter", "Fake", "Locust"]
 					}
 				}
 			},

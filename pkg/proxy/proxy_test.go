@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
 	corev1 "k8s.io/api/core/v1"
@@ -572,7 +573,9 @@ func TestProxyDelete(t *testing.T) {
 }
 
 func TestProxyGetLogs(t *testing.T) {
-	var pods = int32(1)
+	var (
+		pods = int32(1)
+	)
 	for _, tt := range []struct {
 		name             string
 		loadTest         apisLoadTestV1.LoadTest
@@ -594,16 +597,8 @@ func TestProxyGetLogs(t *testing.T) {
 			nil,
 		},
 		{
-			"Valid response",
+			"Error on getting master pod",
 			apisLoadTestV1.LoadTest{
-				ObjectMeta: metaV1.ObjectMeta{
-					Name: "test-name-ololo",
-				},
-				Spec: apisLoadTestV1.LoadTestSpec{
-					Type:            "JMeter",
-					Overwrite:       false,
-					DistributedPods: &pods,
-				},
 				Status: apisLoadTestV1.LoadTestStatus{
 					Phase:     apisLoadTestV1.LoadTestRunning,
 					Namespace: "aaa",
@@ -624,29 +619,13 @@ func TestProxyGetLogs(t *testing.T) {
 				Status: apisLoadTestV1.LoadTestStatus{
 					Phase:     apisLoadTestV1.LoadTestRunning,
 					Namespace: "aaa",
-				}},
+				},
+			},
 			http.StatusBadRequest,
-			"{\"error\":\"some error\"}\n",
-			errors.New("some error"),
+			"{\"error\":\"error on getting loadtest\"}\n",
+			errors.New("error on getting loadtest"),
 			nil,
 		},
-		//{
-		//	"Valid",
-		//	apisLoadTestV1.LoadTest{
-		//		Spec: apisLoadTestV1.LoadTestSpec{
-		//			Type:            "JMeter",
-		//			Overwrite:       false,
-		//			DistributedPods: &pods,
-		//		},
-		//		Status: apisLoadTestV1.LoadTestStatus{
-		//			Phase:     apisLoadTestV1.LoadTestRunning,
-		//			Namespace: "aaa",
-		//		}},
-		//	http.StatusOK,
-		//	"{\"error\":\"some error\"}\n",
-		//	nil,
-		//	nil,
-		//},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			var (
@@ -678,7 +657,7 @@ func TestProxyGetLogs(t *testing.T) {
 			resp := w.Result()
 			respBody, _ := ioutil.ReadAll(resp.Body)
 
-			assert.Equal(t, tt.expectedCode, resp.StatusCode)
+			require.Equal(t, tt.expectedCode, resp.StatusCode)
 			assert.Equal(t, tt.expectedResponse, string(respBody))
 		})
 	}

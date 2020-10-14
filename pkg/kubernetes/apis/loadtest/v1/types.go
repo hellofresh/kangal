@@ -17,6 +17,8 @@ limitations under the License.
 package v1
 
 import (
+	"time"
+
 	batchv1 "k8s.io/api/batch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -42,14 +44,16 @@ type LoadTestPodsStatus struct {
 
 // LoadTestSpec is the spec for a LoadTest resource
 type LoadTestSpec struct {
-	Type            LoadTestType `json:"type"`
-	Overwrite       bool         `json:"overwrite"`
-	MasterConfig    ImageDetails `json:"masterConfig"`
-	WorkerConfig    ImageDetails `json:"workerConfig"`
-	DistributedPods *int32       `json:"distributedPods"`
-	TestFile        string       `json:"testFile"`
-	TestData        string       `json:"testData,omitempty"`
-	EnvVars         string       `json:"envVars,omitempty"`
+	Type            LoadTestType  `json:"type"`
+	Overwrite       bool          `json:"overwrite"`
+	MasterConfig    ImageDetails  `json:"masterConfig"`
+	WorkerConfig    ImageDetails  `json:"workerConfig"`
+	DistributedPods *int32        `json:"distributedPods"`
+	TestFile        string        `json:"testFile"`
+	TestData        string        `json:"testData,omitempty"`
+	EnvVars         string        `json:"envVars,omitempty"`
+	TargetURL       string        `json:"targetURL,omitempty"`
+	Duration        time.Duration `json:"duration,omitempty"`
 }
 
 // MasterConfig is the configuration information for each resource type
@@ -106,6 +110,8 @@ const (
 	LoadTestTypeJMeter LoadTestType = "JMeter"
 	// LoadTestTypeFake tells controller to use fake provider
 	LoadTestTypeFake LoadTestType = "Fake"
+	// LoadTestTypeLocust tells controller to use fake provider
+	LoadTestTypeLocust LoadTestType = "Locust"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
