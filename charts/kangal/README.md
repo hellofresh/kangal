@@ -134,17 +134,18 @@ Deployment specific configurations:
 | `openapi-ui.env.VALIDATOR_URL`        | The URL to spec validator                       | `null`                                 |
 
 ### Kangal Controller
-| Parameter                             | Description                                | Default                 |
-|---------------------------------------|--------------------------------------------|-------------------------|
-| `controller.image.repository`         | Repository of the image                    | `hellofreshtech/kangal` |
-| `controller.image.tag`                | Tag of the image                           | `latest`                |
-| `controller.image.pullPolicy`         | Pull policy of the image                   | `Always`                |
-| `controller.args`                     | Argument for `kangal` command              | `["controller"]`        |
-| `controller.replicaCount`             | Number of pod replicas                     | `1`                     |
-| `controller.service.enabled`          | Service enabled flag                       | `true`                  |
-| `controller.service.enablePrometheus` | ServiceMonitor for Prometheus enabled flag | `false`                 |
-| `controller.service.type`             | Service type                               | `ClusterIP`             |
-| `controller.service.ports.http`       | Service port                               | `80`                    |
+| Parameter                             | Description                                | Default                      |
+|---------------------------------------|--------------------------------------------|------------------------------|
+| `controller.image.repository`         | Repository of the image                    | `hellofreshtech/kangal`      |
+| `controller.image.tag`                | Tag of the image                           | `latest`                     |
+| `controller.image.pullPolicy`         | Pull policy of the image                   | `Always`                     |
+| `controller.args`                     | Argument for `kangal` command              | `["controller"]`             |
+| `controller.replicaCount`             | Number of pod replicas                     | `1`                          |
+| `controller.service.enabled`          | Service enabled flag                       | `true`                       |
+| `controller.service.enablePrometheus` | ServiceMonitor for Prometheus enabled flag | `false`                      |
+| `controller.service.type`             | Service type                               | `ClusterIP`                  |
+| `controller.service.ports.http`       | Service port                               | `80`                         |
+| `controller.env.KANGAL_PROXY_URL`     | Kangal Proxy URL used to persist reports   | `https://kangal-proxy.local` |
 
 ### Kangal Controller (Locust specific)
 | Parameter                                      | Description                 | Default           |

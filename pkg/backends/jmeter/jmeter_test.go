@@ -2,7 +2,6 @@ package jmeter
 
 import (
 	"context"
-	"net/url"
 	"testing"
 
 	"github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned/fake"
@@ -159,7 +158,7 @@ func TestJMeter_CheckOrCreateResources(t *testing.T) {
 		},
 		logger,
 		namespaceLister,
-		&url.URL{},
+		"",
 		map[string]string{"": ""},
 		map[string]string{"": ""},
 		Config{},

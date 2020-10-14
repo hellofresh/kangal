@@ -1,16 +1,17 @@
 package report
 
 import (
+	"errors"
 	"net/url"
 )
 
-// NewPreSignedPutURL returns a signed URL that allows to upload a single file
-func NewPreSignedPutURL(loadTestName string) *url.URL {
+var ErrNoMinioClient = errors.New("Minio client not initialized")
+
+// newPreSignedPutURL returns a signed URL that allows to upload a single file
+func newPreSignedPutURL(loadTestName string) (*url.URL, error) {
 	if nil == minioClient {
-		return nil
+		return nil, ErrNoMinioClient
 	}
 
-	presignedURL, _ := minioClient.PresignedPutObject(bucketName, loadTestName, expires)
-
-	return presignedURL
+	return minioClient.PresignedPutObject(bucketName, loadTestName, expires)
 }

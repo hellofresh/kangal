@@ -2,7 +2,6 @@ package locust
 
 import (
 	"context"
-	"net/url"
 	"testing"
 
 	batchV1 "k8s.io/api/batch/v1"
@@ -47,7 +46,7 @@ func TestLocustCheckOrCreateResources(t *testing.T) {
 			},
 		},
 		logger,
-		&url.URL{},
+		"",
 		Config{},
 		map[string]string{},
 	)
@@ -94,7 +93,7 @@ func TestLocustCheckOrUpdateStatus(t *testing.T) {
 			},
 		},
 		logger,
-		&url.URL{},
+		"",
 		Config{},
 		map[string]string{"": ""},
 	)

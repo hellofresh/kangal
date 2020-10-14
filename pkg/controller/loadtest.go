@@ -301,7 +301,12 @@ func (c *Controller) syncHandler(key string) error {
 	loadTest := loadTestFromCache.DeepCopy()
 	defer c.updateLoadTestStatus(ctx, loadTest)
 
-	backend, err := backends.NewLoadTest(loadTest, c.kubeClientSet, c.kangalClientSet, c.logger, c.namespacesLister, c.cfg.Report, c.cfg.PodAnnotations, c.cfg.NamespaceAnnotations, c.cfg.Backends)
+	var reportURL string
+	if c.cfg.KangalProxyURL != "" {
+		reportURL = fmt.Sprintf("%s/load-test/%s/report", c.cfg.KangalProxyURL, loadTest.GetName())
+	}
+
+	backend, err := backends.NewLoadTest(loadTest, c.kubeClientSet, c.kangalClientSet, c.logger, c.namespacesLister, reportURL, c.cfg.PodAnnotations, c.cfg.NamespaceAnnotations, c.cfg.Backends)
 	if err != nil {
 		return fmt.Errorf("failed to create new backend: %w", err)
 	}

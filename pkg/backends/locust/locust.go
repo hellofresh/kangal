@@ -3,7 +3,6 @@ package locust
 import (
 	"context"
 	"fmt"
-	"net/url"
 
 	coreV1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -23,16 +22,16 @@ var (
 
 // Locust enables the controller to run a loadtest using locust.io
 type Locust struct {
-	kubeClientSet      kubernetes.Interface
-	kangalClientSet    clientSetV.Interface
-	loadTest           *loadTestV1.LoadTest
-	logger             *zap.Logger
-	reportPreSignedURL *url.URL
-	image              string
-	imageTag           string
-	masterResources    helper.Resources
-	workerResources    helper.Resources
-	podAnnotations     map[string]string
+	kubeClientSet   kubernetes.Interface
+	kangalClientSet clientSetV.Interface
+	loadTest        *loadTestV1.LoadTest
+	logger          *zap.Logger
+	reportURL       string
+	image           string
+	imageTag        string
+	masterResources helper.Resources
+	workerResources helper.Resources
+	podAnnotations  map[string]string
 }
 
 // SetDefaults mutates the LoadTest object to add default values to empty fields
@@ -110,7 +109,7 @@ func (c *Locust) CheckOrCreateResources(ctx context.Context) error {
 		}
 	}
 
-	masterJob := newMasterJob(c.loadTest, configMap, secret, c.reportPreSignedURL, c.masterResources, c.podAnnotations)
+	masterJob := newMasterJob(c.loadTest, configMap, secret, c.reportURL, c.masterResources, c.podAnnotations)
 	_, err = c.kubeClientSet.
 		BatchV1().
 		Jobs(c.loadTest.Status.Namespace).
@@ -186,7 +185,7 @@ func New(
 	kangalClientSet clientSetV.Interface,
 	loadTest *loadTestV1.LoadTest,
 	logger *zap.Logger,
-	reportPreSignedURL *url.URL,
+	reportURL string,
 	config Config,
 	podAnnotations map[string]string,
 ) *Locust {
@@ -201,13 +200,13 @@ func New(
 	}
 
 	return &Locust{
-		kubeClientSet:      kubeClientSet,
-		kangalClientSet:    kangalClientSet,
-		loadTest:           loadTest,
-		logger:             logger,
-		reportPreSignedURL: reportPreSignedURL,
-		image:              image,
-		imageTag:           imageTag,
+		kubeClientSet:   kubeClientSet,
+		kangalClientSet: kangalClientSet,
+		loadTest:        loadTest,
+		logger:          logger,
+		reportURL:       reportURL,
+		image:           image,
+		imageTag:        imageTag,
 		masterResources: helper.Resources{
 			CPULimits:      config.MasterCPULimits,
 			CPURequests:    config.MasterCPURequests,

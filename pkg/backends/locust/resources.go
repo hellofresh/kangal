@@ -2,7 +2,6 @@ package locust
 
 import (
 	"fmt"
-	"net/url"
 
 	batchV1 "k8s.io/api/batch/v1"
 	coreV1 "k8s.io/api/core/v1"
@@ -64,7 +63,7 @@ func newMasterJobName(loadTest *loadtestV1.LoadTest) string {
 	return fmt.Sprintf("%s-master", loadTest.ObjectMeta.Name)
 }
 
-func newMasterJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.ConfigMap, envvarSecret *coreV1.Secret, preSignedURL *url.URL, masterResources helper.Resources, podAnnotations map[string]string) *batchV1.Job {
+func newMasterJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.ConfigMap, envvarSecret *coreV1.Secret, reportURL string, masterResources helper.Resources, podAnnotations map[string]string) *batchV1.Job {
 	name := newMasterJobName(loadTest)
 
 	ownerRef := metaV1.NewControllerRef(loadTest, loadtestV1.SchemeGroupVersion.WithKind("LoadTest"))
@@ -81,10 +80,10 @@ func newMasterJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.Confi
 		{Name: "LOCUST_RUN_TIME", Value: loadTest.Spec.Duration.String()},
 	}
 
-	if nil != preSignedURL {
+	if "" != reportURL {
 		envVars = append(envVars, coreV1.EnvVar{
 			Name:  "REPORT_PRESIGNED_URL",
-			Value: preSignedURL.String(),
+			Value: reportURL,
 		})
 	}
 
