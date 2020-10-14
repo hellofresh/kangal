@@ -13,7 +13,9 @@ import (
 	loadtestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	"github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned/fake"
 	"github.com/minio/minio-go/v6"
+	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	k8sfake "k8s.io/client-go/kubernetes/fake"
 	k8stesting "k8s.io/client-go/testing"
@@ -61,6 +63,34 @@ func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 func TestPersistHandler(t *testing.T) {
+	var scenarios = []struct {
+		fakeResponseStatusCode int
+		getLoadTestsFn         func(action k8stesting.Action) (handled bool, ret runtime.Object, err error)
+		expectedStatusCode     int
+	}{
+		{
+			fakeResponseStatusCode: http.StatusOK,
+			getLoadTestsFn: func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+				return true, &loadtestV1.LoadTest{}, nil
+			},
+			expectedStatusCode: http.StatusOK,
+		},
+		{
+			fakeResponseStatusCode: http.StatusOK,
+			getLoadTestsFn: func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+				return true, nil, k8serrors.NewNotFound(loadtestV1.Resource("loadtests"), "loadtest-name")
+			},
+			expectedStatusCode: http.StatusNotFound,
+		},
+		{
+			fakeResponseStatusCode: http.StatusUnauthorized,
+			getLoadTestsFn: func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+				return true, &loadtestV1.LoadTest{}, nil
+			},
+			expectedStatusCode: http.StatusUnauthorized,
+		},
+	}
+
 	req, err := http.NewRequest("PUT", "/load-test/loadtest-name/report", nil)
 	if err != nil {
 		t.Fatal(err)
@@ -70,34 +100,30 @@ func TestPersistHandler(t *testing.T) {
 	minioClient, _ = minio.NewWithRegion("localhost:80", "access-key", "secret-access-key", false, "us-east1")
 	bucketName = "bucket-name"
 	expires = time.Second
-	httpClient = &http.Client{Transport: roundTripFunc(func(req *http.Request) *http.Response {
-		return &http.Response{
-			StatusCode: 200,
-			// Must be set to non-nil value or it panics
-			Header: make(http.Header),
-		}
-	})}
 
-	kangalFakeClientSet := fake.NewSimpleClientset()
-	kangalFakeClientSet.PrependReactor("get", "loadtests", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
-		return true, &loadtestV1.LoadTest{}, nil
-	})
+	for _, scenario := range scenarios {
+		httpClient = &http.Client{Transport: roundTripFunc(func(req *http.Request) *http.Response {
+			return &http.Response{
+				StatusCode: scenario.fakeResponseStatusCode,
+				// Must be set to non-nil value or it panics
+				Header: make(http.Header),
+			}
+		})}
 
-	kangalKubeClient := kk8s.NewClient(
-		kangalFakeClientSet.KangalV1().LoadTests(),
-		k8sfake.NewSimpleClientset(),
-		zap.NewNop(),
-	)
+		kangalFakeClientSet := fake.NewSimpleClientset()
+		kangalFakeClientSet.PrependReactor("get", "loadtests", scenario.getLoadTestsFn)
 
-	rr := httptest.NewRecorder()
+		kangalKubeClient := kk8s.NewClient(
+			kangalFakeClientSet.KangalV1().LoadTests(),
+			k8sfake.NewSimpleClientset(),
+			zap.NewNop(),
+		)
 
-	handler := chi.NewRouter()
-	handler.Put("/load-test/{id}/report", PersistHandler(kangalKubeClient))
-	handler.ServeHTTP(rr, req)
+		rr := httptest.NewRecorder()
+		handler := chi.NewRouter()
+		handler.Put("/load-test/{id}/report", PersistHandler(kangalKubeClient))
+		handler.ServeHTTP(rr, req)
 
-	// Check the status code is what we expect.
-	if rr.Code != http.StatusOK {
-		t.Errorf("handler returned wrong status code: got %v want %v",
-			rr.Code, http.StatusOK)
+		assert.Equal(t, rr.Code, scenario.expectedStatusCode)
 	}
 }
