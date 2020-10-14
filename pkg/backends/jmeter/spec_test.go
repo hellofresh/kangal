@@ -35,8 +35,8 @@ func TestBuildJMeterLoadTestSpec(t *testing.T) {
 			want: v1.LoadTestSpec{
 				Type:            "JMeter",
 				Overwrite:       true,
-				MasterConfig:    v1.ImageDetails{Image: masterImage, Tag: imageTag},
-				WorkerConfig:    v1.ImageDetails{Image: workerImage, Tag: imageTag},
+				MasterConfig:    v1.ImageDetails{},
+				WorkerConfig:    v1.ImageDetails{},
 				DistributedPods: &distributedPods,
 				TestFile:        "something in the file",
 				TestData:        "some test data",

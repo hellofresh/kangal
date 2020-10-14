@@ -24,9 +24,6 @@ var (
 	MaxWaitTimeForPods = time.Minute * 10
 	//loadTestWorkerLabelSelector is the selector used for selecting jmeter worker resources
 	loadTestWorkerLabelSelector = fmt.Sprintf("%s=%s", loadTestWorkerPodLabelKey, loadTestWorkerPodLabelValue)
-	masterImage                 = "hellofreshtech/kangal-jmeter-master"
-	workerImage                 = "hellofreshtech/kangal-jmeter-worker"
-	imageTag                    = "latest"
 )
 
 // JMeter enables the controller to run a loadtest using JMeter
@@ -37,7 +34,11 @@ type JMeter struct {
 	logger             *zap.Logger
 	namespacesLister   coreListersV1.NamespaceLister
 	reportPreSignedURL *url.URL
+	masterImage        string
+	masterImageTag     string
 	masterResources    helper.Resources
+	workerImage        string
+	workerImageTag     string
 	workerResources    helper.Resources
 
 	podAnnotations, namespaceAnnotations map[string]string
@@ -54,12 +55,16 @@ func New(kubeClientSet kubernetes.Interface, kangalClientSet clientSetV.Interfac
 		reportPreSignedURL:   reportPreSignedURL,
 		podAnnotations:       podAnnotations,
 		namespaceAnnotations: namespaceAnnotations,
+		masterImage:          config.MasterImage,
+		masterImageTag:       config.MasterImageTag,
 		masterResources: helper.Resources{
 			CPULimits:      config.MasterCPULimits,
 			CPURequests:    config.MasterCPURequests,
 			MemoryLimits:   config.MasterMemoryLimits,
 			MemoryRequests: config.MasterMemoryRequests,
 		},
+		workerImage:    config.WorkerImage,
+		workerImageTag: config.WorkerImageTag,
 		workerResources: helper.Resources{
 			CPULimits:      config.WorkerCPULimits,
 			CPURequests:    config.WorkerCPURequests,
@@ -76,19 +81,19 @@ func (c *JMeter) SetDefaults() error {
 	}
 
 	if c.loadTest.Spec.MasterConfig.Image == "" {
-		c.loadTest.Spec.MasterConfig.Image = masterImage
+		c.loadTest.Spec.MasterConfig.Image = c.masterImage
 	}
 
 	if c.loadTest.Spec.MasterConfig.Tag == "" {
-		c.loadTest.Spec.MasterConfig.Tag = imageTag
+		c.loadTest.Spec.MasterConfig.Tag = c.masterImageTag
 	}
 
 	if c.loadTest.Spec.WorkerConfig.Image == "" {
-		c.loadTest.Spec.WorkerConfig.Image = workerImage
+		c.loadTest.Spec.WorkerConfig.Image = c.workerImage
 	}
 
 	if c.loadTest.Spec.WorkerConfig.Tag == "" {
-		c.loadTest.Spec.WorkerConfig.Tag = imageTag
+		c.loadTest.Spec.WorkerConfig.Tag = c.workerImageTag
 	}
 
 	return nil
