@@ -2,6 +2,7 @@ package report
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/go-chi/chi"
@@ -78,7 +79,18 @@ func PersistHandler(kubeClient *kk8s.Client) func(w http.ResponseWriter, r *http
 			return
 		}
 
+		body := "Report persisted"
+
+		if http.StatusOK != proxyResp.StatusCode {
+			b, err := ioutil.ReadAll(proxyResp.Body)
+			if err != nil {
+				render.Render(w, r, khttp.ErrResponse(http.StatusInternalServerError, err.Error()))
+				return
+			}
+			body = string(b)
+		}
+
 		render.Status(r, proxyResp.StatusCode)
-		render.JSON(w, r, "Report persisted")
+		render.JSON(w, r, body)
 	}
 }
