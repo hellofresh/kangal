@@ -12,6 +12,7 @@ func TestBuildFakeLoadTestSpec(t *testing.T) {
 	var distributedPods int32 = 1
 
 	type args struct {
+		tags      loadtestv1.LoadTestTags
 		overwrite bool
 	}
 	tests := []struct {
@@ -23,6 +24,7 @@ func TestBuildFakeLoadTestSpec(t *testing.T) {
 		{
 			name: "Spec is valid",
 			args: args{
+				tags:      loadtestv1.LoadTestTags{"team": "kangal"},
 				overwrite: true,
 			},
 			want: loadtestv1.LoadTestSpec{
@@ -34,6 +36,7 @@ func TestBuildFakeLoadTestSpec(t *testing.T) {
 				},
 				WorkerConfig:    loadtestv1.ImageDetails{},
 				DistributedPods: &distributedPods,
+				Tags:            loadtestv1.LoadTestTags{"team": "kangal"},
 				TestFile:        "",
 				TestData:        "",
 				EnvVars:         "",
@@ -43,7 +46,7 @@ func TestBuildFakeLoadTestSpec(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := BuildLoadTestSpec(tt.args.overwrite)
+			got, err := BuildLoadTestSpec(tt.args.tags, tt.args.overwrite)
 
 			if tt.wantErr {
 				assert.Error(t, err)

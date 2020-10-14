@@ -48,6 +48,11 @@ func RunServer(ctx context.Context, cfg Config, rr Runner) error {
 	loadtestRoute := "/load-test"
 	loadtestRouteWithID := fmt.Sprintf("%s/{id}", loadtestRoute)
 
+	r.Method(http.MethodGet,
+		loadtestRoute,
+		ochttp.WithRouteTag(http.HandlerFunc(proxyHandler.List), loadtestRoute),
+	)
+
 	r.Method(http.MethodPost,
 		loadtestRoute,
 		ochttp.WithRouteTag(http.HandlerFunc(proxyHandler.Create), loadtestRoute),

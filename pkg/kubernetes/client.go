@@ -2,6 +2,8 @@ package kubernetes
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
 	"go.uber.org/zap"
@@ -27,6 +29,16 @@ type Client struct {
 	ltClient   loadTestV1.LoadTestInterface
 	kubeClient kubernetes.Interface
 	logger     *zap.Logger
+}
+
+// ListOptions is options to find load tests.
+type ListOptions struct {
+	// List of tags.
+	Tags map[string]string
+	// Limit.
+	Limit int64
+	// Continue.
+	Continue string
 }
 
 //NewClient creates new Kubernetes client
@@ -90,6 +102,34 @@ func (c *Client) GetLoadTest(ctx context.Context, loadTest string) (*apisLoadTes
 		return nil, err
 	}
 	return result, nil
+}
+
+// ListLoadTest returns list of load tests.
+func (c *Client) ListLoadTest(ctx context.Context, opt ListOptions) (*apisLoadTestV1.LoadTestList, error) {
+	k8sOpt := metaV1.ListOptions{
+		Limit:    opt.Limit,
+		Continue: opt.Continue,
+	}
+
+	// Label Selector.
+	labelSelectors := make([]string, 0, len(opt.Tags))
+
+	for label, value := range opt.Tags {
+		labelSelectors = append(labelSelectors, fmt.Sprintf("test-tag-%s=%s", label, value))
+	}
+
+	k8sOpt.LabelSelector = strings.Join(labelSelectors, ",")
+
+	// List load tests.
+	c.logger.Debug("List load tests")
+
+	loadTests, err := c.ltClient.List(ctx, k8sOpt)
+	if err != nil {
+		c.logger.Error("failed to list load tests", zap.Error(err))
+		return nil, err
+	}
+
+	return loadTests, nil
 }
 
 // CountActiveLoadTests returns a number of currently running load tests

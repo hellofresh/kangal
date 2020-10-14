@@ -48,18 +48,74 @@ func NewProxy(maxLoadTestsRun int, kubeClient *kube.Client, specCreator loadTest
 	}
 }
 
+// LoadTestStatusPage represents a page of load tests.
+type LoadTestStatusPage struct {
+	Limit    int64            `json:"limit"`
+	Continue string           `json:"continue"`
+	Remain   *int64           `json:"remain"`
+	Items    []LoadTestStatus `json:"items"`
+}
+
 // LoadTestStatus defines response structure for status request
 type LoadTestStatus struct {
-	Type            string `json:"type"`
-	DistributedPods int32  `json:"distributedPods"`        // number of distributed pods requested
-	Namespace       string `json:"loadtestName,omitempty"` // namespace created equals the loadtest name
-	Phase           string `json:"phase,omitempty"`        // jmeter loadtest status
-	HasEnvVars      bool   `json:"hasEnvVars"`
-	HasTestData     bool   `json:"hasTestData"`
+	Type            string                      `json:"type"`
+	DistributedPods int32                       `json:"distributedPods"`        // number of distributed pods requested
+	Namespace       string                      `json:"loadtestName,omitempty"` // namespace created equals the loadtest name
+	Phase           string                      `json:"phase,omitempty"`        // jmeter loadtest status
+	Tags            apisLoadTestV1.LoadTestTags `json:"tags"`
+	HasEnvVars      bool                        `json:"hasEnvVars"`
+	HasTestData     bool                        `json:"hasTestData"`
 }
 
 func getLoadTestType(r *http.Request) apisLoadTestV1.LoadTestType {
 	return apisLoadTestV1.LoadTestType(r.FormValue(backendType))
+}
+
+// List lists all the load tests.
+func (p *Proxy) List(w http.ResponseWriter, r *http.Request) {
+	logger := mPkg.GetLogger(r.Context())
+
+	ctx, cancel := context.WithTimeout(r.Context(), loadtest.KubeTimeout)
+	defer cancel()
+
+	opt, err := fromHTTPRequestToListOptions(r)
+	if err != nil {
+		logger.Error("could not parse filter", zap.Error(err))
+		render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest, err.Error()))
+
+		return
+	}
+
+	logger.Debug("Retrieving info for load tests")
+
+	loadTests, err := p.kubeClient.ListLoadTest(ctx, *opt)
+	if err != nil {
+		logger.Error("could not list load tests", zap.Error(err))
+		render.Render(w, r, cHttp.ErrResponse(http.StatusInternalServerError, err.Error()))
+
+		return
+	}
+
+	items := make([]LoadTestStatus, len(loadTests.Items))
+
+	for i, lt := range loadTests.Items {
+		items[i] = LoadTestStatus{
+			Type:            string(lt.Spec.Type),
+			DistributedPods: *lt.Spec.DistributedPods,
+			Namespace:       lt.Status.Namespace,
+			Phase:           string(lt.Status.Phase),
+			Tags:            lt.Spec.Tags,
+			HasEnvVars:      len(lt.Spec.EnvVars) != 0,
+			HasTestData:     len(lt.Spec.TestData) != 0,
+		}
+	}
+
+	render.JSON(w, r, &LoadTestStatusPage{
+		Limit:    opt.Limit,
+		Continue: loadTests.Continue,
+		Remain:   loadTests.RemainingItemCount,
+		Items:    items,
+	})
 }
 
 //Create creates loadtest CR on POST request
@@ -140,6 +196,7 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 		DistributedPods: *loadTest.Spec.DistributedPods,
 		Namespace:       loadTestName,
 		Phase:           string(apisLoadTestV1.LoadTestCreating),
+		Tags:            loadTest.Spec.Tags,
 		HasEnvVars:      len(loadTest.Spec.EnvVars) != 0,
 		HasTestData:     loadTest.Spec.TestData != "",
 	})
@@ -193,6 +250,7 @@ func (p *Proxy) Get(w http.ResponseWriter, r *http.Request) {
 		DistributedPods: *result.Spec.DistributedPods,
 		Namespace:       result.Status.Namespace,
 		Phase:           string(result.Status.Phase),
+		Tags:            result.Spec.Tags,
 		HasEnvVars:      len(result.Spec.EnvVars) != 0,
 		HasTestData:     len(result.Spec.TestData) != 0,
 	})

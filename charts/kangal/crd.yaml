@@ -44,6 +44,11 @@ spec:
                 distributedPods:
                   minimum: 1
                   type: integer
+                tags:
+                  type: object
+                  nullable: true
+                  additionalProperties:
+                    type: string
                 testFile:
                   type: string
                 testData:

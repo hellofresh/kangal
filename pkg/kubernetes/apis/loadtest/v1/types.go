@@ -49,12 +49,16 @@ type LoadTestSpec struct {
 	MasterConfig    ImageDetails  `json:"masterConfig"`
 	WorkerConfig    ImageDetails  `json:"workerConfig"`
 	DistributedPods *int32        `json:"distributedPods"`
+	Tags            LoadTestTags  `json:"tags"`
 	TestFile        string        `json:"testFile"`
 	TestData        string        `json:"testData,omitempty"`
 	EnvVars         string        `json:"envVars,omitempty"`
 	TargetURL       string        `json:"targetURL,omitempty"`
 	Duration        time.Duration `json:"duration,omitempty"`
 }
+
+// LoadTestTags is a list of tags of a LoadTest resource.
+type LoadTestTags map[string]string
 
 // MasterConfig is the configuration information for each resource type
 type MasterConfig struct {

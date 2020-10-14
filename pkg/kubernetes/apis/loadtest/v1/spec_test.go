@@ -14,6 +14,7 @@ func TestBuildLoadTestSpec(t *testing.T) {
 		loadTestType    LoadTestType
 		overwrite       bool
 		distributedPods int32
+		tags            LoadTestTags
 		testFileStr     string
 		testDataStr     string
 		envVarsStr      string
@@ -34,6 +35,7 @@ func TestBuildLoadTestSpec(t *testing.T) {
 				loadTestType:    "Fake",
 				overwrite:       true,
 				distributedPods: 3,
+				tags:            LoadTestTags{"team": "kangal"},
 				testFileStr:     "something in the file",
 				masterConfig: ImageDetails{
 					Image: "image",
@@ -49,6 +51,7 @@ func TestBuildLoadTestSpec(t *testing.T) {
 				},
 				WorkerConfig:    ImageDetails{},
 				DistributedPods: &distributedPods,
+				Tags:            LoadTestTags{"team": "kangal"},
 				TestFile:        "something in the file",
 				TestData:        "",
 				EnvVars:         "",
@@ -58,7 +61,7 @@ func TestBuildLoadTestSpec(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := NewSpec(tt.args.loadTestType, tt.args.overwrite, tt.args.distributedPods, tt.args.testFileStr, tt.args.testDataStr, tt.args.envVarsStr, tt.args.masterConfig, tt.args.workerConfig, tt.args.targetURL, tt.args.duration)
+			got := NewSpec(tt.args.loadTestType, tt.args.overwrite, tt.args.distributedPods, tt.args.tags, tt.args.testFileStr, tt.args.testDataStr, tt.args.envVarsStr, tt.args.masterConfig, tt.args.workerConfig, tt.args.targetURL, tt.args.duration)
 			assert.Equal(t, tt.want, got)
 		})
 	}

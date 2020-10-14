@@ -14,6 +14,62 @@
 	}],
 	"paths": {
 		"/load-test": {
+			"get": {
+				"tags": ["load-tests"],
+				"summary": "List all the load tests",
+				"operationId": "listLoadTest",
+				"parameters": [
+					{
+						"name": "tags",
+						"in": "query",
+						"description": "Filter the result by tags, value is in format: tag1:value1,tag2:value2",
+						"schema": {
+							"type": "string"
+						},
+						"example": "department:platform,team:kangal"
+					},
+					{
+						"name": "limit",
+						"in": "query",
+						"description": "Limit the result when querying on a large cluster",
+						"schema": {
+							"type": "integer"
+						},
+						"example": "500"
+					},
+					{
+						"name": "continue",
+						"in": "query",
+						"description": "Continue the next page when querying on a large cluster",
+						"schema": {
+							"type": "integer"
+						},
+						"example": "ENCODED_CONTINUE_TOKEN"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Expected response to a valid request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/LoadTestStatusPage"
+								}
+							}
+						}
+					},
+					"default": {
+						"description": "unexpected error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								}
+							}
+						}
+					}
+				}
+			},
 			"post": {
 				"tags": ["load-tests"],
 				"summary": "Create a new loadTest",
@@ -290,6 +346,27 @@
 					}
 				}
 			},
+			"LoadTestStatusPage": {
+				"type": "object",
+				"properties": {
+					"limit": {
+						"type": "integer"
+					},
+					"continue": {
+						"type": "string"
+					},
+					"remain": {
+						"type": "integer",
+						"nullable": true
+					},
+					"items": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/LoadTestStatus"
+						}
+					}
+				}
+			},
 			"LoadTestStatus": {
 				"type": "object",
 				"properties": {
@@ -303,6 +380,12 @@
 					"phase": {
 						"type": "string",
 						"enum": ["creating", "starting", "running", "finished", "errored"]
+					},
+					"tags": {
+						"type": "object",
+						"additionalProperties": {
+							"type": "string"
+						}
 					},
 					"hasEnvVars": {
 						"type": "boolean"

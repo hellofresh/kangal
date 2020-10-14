@@ -100,7 +100,7 @@ func TestHTTPValidator(t *testing.T) {
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			request, err := buildMocFormReq(tt.requestFiles, tt.distributedPods, tt.loadTestType)
+			request, err := buildMocFormReq(tt.requestFiles, tt.distributedPods, tt.loadTestType, "")
 			if err != nil {
 				t.Error(err)
 				t.FailNow()
@@ -132,7 +132,7 @@ func TestCreateWithTimeout(t *testing.T) {
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			request, err := buildMocFormReq(tt.requestFiles, tt.distributedPods, tt.loadTestType)
+			request, err := buildMocFormReq(tt.requestFiles, tt.distributedPods, tt.loadTestType, "")
 
 			if err != nil {
 				t.Error(err)
@@ -158,10 +158,121 @@ func TestCreateWithTimeout(t *testing.T) {
 	}
 }
 
+func TestProxy_List(t *testing.T) {
+	distributedPods := int32(2)
+	remainCount := int64(42)
+
+	testCases := []struct {
+		scenario            string
+		urlParams           string
+		result              *apisLoadTestV1.LoadTestList
+		error               error
+		expectedCode        int
+		expectedResponse    string
+		expectedContentType string
+	}{
+		{
+			scenario:            "error in client",
+			result:              &apisLoadTestV1.LoadTestList{},
+			error:               errors.New("client error"),
+			expectedCode:        500,
+			expectedContentType: "application/json; charset=utf-8",
+			expectedResponse:    "{\"error\":\"client error\"}\n",
+		},
+		{
+			scenario:            "invalid limit",
+			urlParams:           "limit=foobar",
+			result:              &apisLoadTestV1.LoadTestList{},
+			expectedCode:        400,
+			expectedContentType: "application/json; charset=utf-8",
+			expectedResponse:    "{\"error\":\"strconv.ParseInt: parsing \\\"foobar\\\": invalid syntax\"}\n",
+		},
+		{
+			scenario:            "invalid tags",
+			urlParams:           "tags=:value",
+			result:              &apisLoadTestV1.LoadTestList{},
+			expectedCode:        400,
+			expectedContentType: "application/json; charset=utf-8",
+			expectedResponse:    "{\"error\":\"missing tag label\"}\n",
+		},
+		{
+			scenario:  "success",
+			urlParams: "tags=department:platform,team:kangal&limit=10",
+			result: &apisLoadTestV1.LoadTestList{
+				ListMeta: metaV1.ListMeta{
+					Continue:           "continue",
+					RemainingItemCount: &remainCount,
+				},
+				Items: []apisLoadTestV1.LoadTest{
+					{
+						ObjectMeta: metaV1.ObjectMeta{
+							Labels: map[string]string{
+								"test-tag-department": "platform",
+								"test-tag-team":       "kangal",
+							},
+						},
+						Spec: apisLoadTestV1.LoadTestSpec{
+							Type:            apisLoadTestV1.LoadTestTypeJMeter,
+							Overwrite:       false,
+							MasterConfig:    apisLoadTestV1.ImageDetails{},
+							WorkerConfig:    apisLoadTestV1.ImageDetails{},
+							DistributedPods: &distributedPods,
+							Tags:            apisLoadTestV1.LoadTestTags{"department": "platform", "team": "kangal"},
+							TestFile:        "file content\n",
+							TestData:        "test data\n",
+						},
+						Status: apisLoadTestV1.LoadTestStatus{
+							Phase:     apisLoadTestV1.LoadTestRunning,
+							Namespace: "random",
+						},
+					},
+				},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json; charset=utf-8",
+			expectedResponse:    "{\"limit\":10,\"continue\":\"continue\",\"remain\":42,\"items\":[{\"type\":\"JMeter\",\"distributedPods\":2,\"loadtestName\":\"random\",\"phase\":\"running\",\"tags\":{\"department\":\"platform\",\"team\":\"kangal\"},\"hasEnvVars\":false,\"hasTestData\":true}]}\n",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.scenario, func(t *testing.T) {
+			t.Parallel()
+
+			var (
+				kubeClientSet     = fake.NewSimpleClientset()
+				loadTestClientSet = fakeClientset.NewSimpleClientset()
+				logger            = zaptest.NewLogger(t)
+			)
+			ctx := mPkg.SetLogger(context.Background(), logger)
+			loadTestClientSet.Fake.PrependReactor("list", "loadtests", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+				return true, tc.result, tc.error
+			})
+			c := kube.NewClient(loadTestClientSet.KangalV1().LoadTests(), kubeClientSet, logger)
+
+			testProxyHandler := NewProxy(1, c, nil)
+
+			req := httptest.NewRequest("POST", "http://example.com/foo?"+tc.urlParams, nil)
+			req = req.WithContext(ctx)
+
+			w := httptest.NewRecorder()
+			testProxyHandler.List(w, req)
+
+			resp := w.Result()
+			respBody, _ := ioutil.ReadAll(resp.Body)
+
+			assert.Equal(t, tc.expectedCode, resp.StatusCode)
+			assert.Equal(t, resp.Header.Get("Content-Type"), tc.expectedContentType)
+			assert.Equal(t, tc.expectedResponse, string(respBody))
+		})
+	}
+}
+
 func TestProxyCreate(t *testing.T) {
 	for _, tt := range []struct {
 		name                string
 		distributedPods     int
+		tagsString          string
 		loadTestType        apisLoadTestV1.LoadTestType
 		requestFiles        map[string]string
 		expectedCode        int
@@ -172,18 +283,20 @@ func TestProxyCreate(t *testing.T) {
 		{
 			"Valid request, only test file",
 			10,
+			"team:kangal",
 			apisLoadTestV1.LoadTestTypeJMeter,
 			map[string]string{
 				"testFile": "testdata/valid/loadtest.jmx",
 			},
 			http.StatusCreated,
-			"{\"type\":\"JMeter\",\"distributedPods\":10,\"phase\":\"creating\",\"hasEnvVars\":false,\"hasTestData\":false}\n",
+			"{\"type\":\"JMeter\",\"distributedPods\":10,\"phase\":\"creating\",\"tags\":{\"team\":\"kangal\"},\"hasEnvVars\":false,\"hasTestData\":false}\n",
 			"application/json; charset=utf-8",
 			nil,
 		},
 		{
 			"Valid request, all files",
 			10,
+			"",
 			apisLoadTestV1.LoadTestTypeFake,
 			map[string]string{
 				"testFile": "testdata/valid/loadtest.jmx",
@@ -191,13 +304,14 @@ func TestProxyCreate(t *testing.T) {
 				"envVars":  "testdata/valid/envvars.csv",
 			},
 			http.StatusCreated,
-			"{\"type\":\"Fake\",\"distributedPods\":10,\"phase\":\"creating\",\"hasEnvVars\":true,\"hasTestData\":true}\n",
+			"{\"type\":\"Fake\",\"distributedPods\":10,\"phase\":\"creating\",\"tags\":{},\"hasEnvVars\":true,\"hasTestData\":true}\n",
 			"application/json; charset=utf-8",
 			nil,
 		},
 		{
 			"Error on creation",
 			10,
+			"",
 			apisLoadTestV1.LoadTestTypeFake,
 			map[string]string{
 				"testFile": "testdata/valid/loadtest.jmx",
@@ -223,6 +337,7 @@ func TestProxyCreate(t *testing.T) {
 
 			s := specData{
 				distributedPods: tt.distributedPods,
+				tags:            tt.tagsString,
 				ltType:          string(tt.loadTestType),
 				files:           tt.requestFiles,
 				err:             nil,
@@ -231,7 +346,7 @@ func TestProxyCreate(t *testing.T) {
 			testProxyHandler := NewProxy(1, c, s.fakeSpecCreator)
 			handler := testProxyHandler.Create
 
-			requestWrap, _ := createRequestWrapper(tt.requestFiles, strconv.Itoa(tt.distributedPods), string(tt.loadTestType))
+			requestWrap, _ := createRequestWrapper(tt.requestFiles, strconv.Itoa(tt.distributedPods), string(tt.loadTestType), tt.tagsString)
 
 			req := httptest.NewRequest("POST", "http://example.com/foo", requestWrap.body)
 			req.Header.Set("Content-Type", requestWrap.contentType)
@@ -326,7 +441,7 @@ func TestNewProxyRecreate(t *testing.T) {
 			})
 
 			requestWrap, _ := createRequestWrapper(map[string]string{
-				"testFile": "111.jmx"}, "2", "Fake")
+				"testFile": "111.jmx"}, "2", "Fake", "")
 
 			req := httptest.NewRequest("POST", "http://example.com/load-test", requestWrap.body)
 			req = req.WithContext(ctx)
@@ -422,7 +537,7 @@ func TestProxyCreateWithErrors(t *testing.T) {
 			handler := testProxyHandler.Create
 
 			requestWrap, _ := createRequestWrapper(map[string]string{
-				"testFile": "testfile.jmx"}, "2", "Fake")
+				"testFile": "testfile.jmx"}, "2", "Fake", "")
 
 			req := httptest.NewRequest("POST", "http://example.com/load-test", requestWrap.body)
 			req = req.WithContext(ctx)
@@ -456,13 +571,16 @@ func TestProxyGet(t *testing.T) {
 					Type:            "JMeter",
 					Overwrite:       false,
 					DistributedPods: &pods,
+					Tags: apisLoadTestV1.LoadTestTags{
+						"team": "kangal",
+					},
 				},
 				Status: apisLoadTestV1.LoadTestStatus{
 					Phase:     apisLoadTestV1.LoadTestRunning,
 					Namespace: "aaa",
 				}},
 			http.StatusOK,
-			"{\"type\":\"JMeter\",\"distributedPods\":1,\"loadtestName\":\"aaa\",\"phase\":\"running\",\"hasEnvVars\":false,\"hasTestData\":false}\n",
+			"{\"type\":\"JMeter\",\"distributedPods\":1,\"loadtestName\":\"aaa\",\"phase\":\"running\",\"tags\":{\"team\":\"kangal\"},\"hasEnvVars\":false,\"hasTestData\":false}\n",
 			nil,
 		},
 		{
@@ -571,8 +689,8 @@ func TestProxyDelete(t *testing.T) {
 	}
 }
 
-func buildMocFormReq(requestFiles map[string]string, distributedPods, ltType string) (*http.Request, error) {
-	request, err := createRequestWrapper(requestFiles, distributedPods, ltType)
+func buildMocFormReq(requestFiles map[string]string, distributedPods, ltType, tagsString string) (*http.Request, error) {
+	request, err := createRequestWrapper(requestFiles, distributedPods, ltType, tagsString)
 	if err != nil {
 		return nil, err
 	}
@@ -587,17 +705,26 @@ func buildMocFormReq(requestFiles map[string]string, distributedPods, ltType str
 
 type specData struct {
 	distributedPods int
+	tags            string
 	ltType          string
-	files           map[string]string
+	files           apisLoadTestV1.LoadTestTags
 	overwrite       bool
 	err             error
 }
 
 func (s *specData) fakeSpecCreator(*http.Request, *zap.Logger) (apisLoadTestV1.LoadTestSpec, error) {
 	lt := apisLoadTestV1.LoadTestSpec{}
+
 	distributedPods := int32(s.distributedPods)
+	tags, err := apisLoadTestV1.LoadTestTagsFromString(s.tags)
+
+	if err != nil {
+		return lt, err
+	}
+
 	lt.Type = apisLoadTestV1.LoadTestType(s.ltType)
 	lt.DistributedPods = &distributedPods
+	lt.Tags = tags
 	lt.TestFile = s.files["testFile"]
 	lt.TestData = s.files["testData"]
 	lt.EnvVars = s.files["envVars"]
