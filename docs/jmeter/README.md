@@ -4,6 +4,7 @@
 - [Installing JMeter for local test development](#installing-jmeter-for-local-test-development)
 - [Required JMeter plugins](#required-jmeter-plugins)
 - [Configuring JMeter resource requirements](#configuring-jmeter-resource-requirements)
+- [Configuring Master and Worker image](#configuring-master-and-worker-image)
 - [Writing tests](writing-tests.md)
 - [Reporting](reporting.md)
 
@@ -66,6 +67,15 @@ JMETER_WORKER_MEMORY_REQUESTS
 More information regarding resource limits and requests can be found in the following page(s):
 - https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
 - https://cloud.google.com/blog/products/gcp/kubernetes-best-practices-resource-requests-and-limits
+
+## Configuring Master and Worker image
+You can use the following environment variables to use a specific docker images used for the jmeter master and worker:
+```
+JMETER_MASTER_IMAGE
+JMETER_MASTER_IMAGE_TAG
+JMETER_WORKER_IMAGE
+JMETER_WORKER_IMAGE_TAG
+```
 
 ## Writing tests
 Read more at [docs/jmeter/writing-tests.md](writing-tests.md).
