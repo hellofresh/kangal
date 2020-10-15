@@ -69,31 +69,6 @@ func New(kubeClientSet kubernetes.Interface, kangalClientSet clientSetV.Interfac
 	}
 }
 
-// SetDefaults set default values for creating a JMeter loadtest
-func (c *JMeter) SetDefaults() error {
-	if c.loadTest.Status.Phase == "" {
-		c.loadTest.Status.Phase = loadTestV1.LoadTestCreating
-	}
-
-	if c.loadTest.Spec.MasterConfig.Image == "" {
-		c.loadTest.Spec.MasterConfig.Image = masterImage
-	}
-
-	if c.loadTest.Spec.MasterConfig.Tag == "" {
-		c.loadTest.Spec.MasterConfig.Tag = imageTag
-	}
-
-	if c.loadTest.Spec.WorkerConfig.Image == "" {
-		c.loadTest.Spec.WorkerConfig.Image = workerImage
-	}
-
-	if c.loadTest.Spec.WorkerConfig.Tag == "" {
-		c.loadTest.Spec.WorkerConfig.Tag = imageTag
-	}
-
-	return nil
-}
-
 // CheckOrCreateResources check if JMeter kubernetes resources have been create,
 // if they have not been create them
 func (c *JMeter) CheckOrCreateResources(ctx context.Context) error {

@@ -40,8 +40,8 @@ func TestBuildLoadTestSpec(t *testing.T) {
 			want: v1.LoadTestSpec{
 				Type:            "Locust",
 				Overwrite:       true,
-				MasterConfig:    v1.ImageDetails{},
-				WorkerConfig:    v1.ImageDetails{},
+				MasterConfig:    v1.ImageDetails{Image: defaultImage, Tag: defaultImageTag},
+				WorkerConfig:    v1.ImageDetails{Image: defaultImage, Tag: defaultImageTag},
 				DistributedPods: &distributedPods,
 				Tags:            v1.LoadTestTags{"team": "kangal"},
 				TestFile:        "something in the file",

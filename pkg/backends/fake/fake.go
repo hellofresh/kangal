@@ -33,23 +33,6 @@ func New(kubeClientSet kubernetes.Interface, lt *loadTestV1.LoadTest, logger *za
 	}
 }
 
-// SetDefaults set default values for creating a Fake LoadTest pods
-func (c *Fake) SetDefaults() error {
-	if c.loadTest.Status.Phase == "" {
-		c.loadTest.Status.Phase = loadTestV1.LoadTestCreating
-	}
-
-	if c.loadTest.Spec.MasterConfig.Image == "" {
-		c.loadTest.Spec.MasterConfig.Image = sleepImage
-	}
-
-	if c.loadTest.Spec.MasterConfig.Tag == "" {
-		c.loadTest.Spec.MasterConfig.Tag = imageTag
-	}
-
-	return nil
-}
-
 // CheckOrCreateResources check if Fake kubernetes resources have been create, if they have not been create them
 func (c *Fake) CheckOrCreateResources(ctx context.Context) error {
 	// Get the Namespace resource

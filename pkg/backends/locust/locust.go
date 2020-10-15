@@ -35,29 +35,6 @@ type Locust struct {
 	podAnnotations     map[string]string
 }
 
-// SetDefaults mutates the LoadTest object to add default values to empty fields
-func (c *Locust) SetDefaults() error {
-	if c.loadTest.Status.Phase == "" {
-		c.loadTest.Status.Phase = loadTestV1.LoadTestCreating
-	}
-
-	if c.loadTest.Spec.MasterConfig.Image == "" {
-		c.loadTest.Spec.MasterConfig.Image = c.image
-	}
-	if c.loadTest.Spec.MasterConfig.Tag == "" {
-		c.loadTest.Spec.MasterConfig.Tag = c.imageTag
-	}
-
-	if c.loadTest.Spec.WorkerConfig.Image == "" {
-		c.loadTest.Spec.WorkerConfig.Image = c.image
-	}
-	if c.loadTest.Spec.WorkerConfig.Tag == "" {
-		c.loadTest.Spec.WorkerConfig.Tag = c.imageTag
-	}
-
-	return nil
-}
-
 // CheckOrCreateResources check for resources or create the needed resources for the loadtest type
 func (c *Locust) CheckOrCreateResources(ctx context.Context) error {
 	workerJobs, err := c.kubeClientSet.

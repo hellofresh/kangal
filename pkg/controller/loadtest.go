@@ -312,12 +312,6 @@ func (c *Controller) syncHandler(key string) error {
 		return err
 	}
 
-	// mutates the LoadTest object to add default values to empty fields
-	err = backend.SetDefaults()
-	if err != nil {
-		return err
-	}
-
 	// check or create loadtest resources
 	err = backend.CheckOrCreateResources(ctx)
 	if err != nil {
