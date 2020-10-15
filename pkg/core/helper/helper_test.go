@@ -7,6 +7,17 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestBuildResourceRequirements(t *testing.T) {
+	req := helper.BuildResourceRequirements(helper.Resources{
+		CPULimits:      "500m",
+		CPURequests:    "250m",
+		MemoryLimits:   "128Mi",
+		MemoryRequests: "64Mi",
+	})
+	assert.Equal(t, int(2), len(req.Limits))
+	assert.Equal(t, int(2), len(req.Requests))
+}
+
 func TestReadSecret(t *testing.T) {
 	teststring := "aaa,1\nbbb,2\nccc,3\n"
 
