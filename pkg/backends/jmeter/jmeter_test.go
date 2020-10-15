@@ -158,7 +158,7 @@ func TestJMeter_CheckOrCreateResources(t *testing.T) {
 		},
 		logger,
 		namespaceLister,
-		"",
+		"http://kangal-proxy.local/load-test/loadtest-name/report",
 		map[string]string{"": ""},
 		map[string]string{"": ""},
 		Config{},
