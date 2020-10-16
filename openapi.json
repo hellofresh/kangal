@@ -227,6 +227,45 @@
 						}
 					}
 				}
+			},
+			"put": {
+				"tags": ["load-tests"],
+				"summary": "Persist report for a specific loadTest",
+				"operationId": "persistLoadTestReport",
+				"parameters": [{
+					"name": "loadTestName",
+					"in": "path",
+					"description": "The name of the load test to upload the report",
+					"required": true,
+					"style": "simple",
+					"explode": false,
+					"schema": {
+						"type": "string"
+					}
+				}],
+				"responses": {
+					"200": {
+						"description": "Report persisted",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "string",
+									"example": "Report persisted"
+								}
+							}
+						}
+					},
+					"default": {
+						"description": "unexpected error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								}
+							}
+						}
+					}
+				}
 			}
 		},
 		"/load-test/{loadTestName}/logs": {

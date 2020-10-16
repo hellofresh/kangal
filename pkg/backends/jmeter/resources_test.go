@@ -1,7 +1,6 @@
 package jmeter
 
 import (
-	"net/url"
 	"testing"
 
 	"github.com/hellofresh/kangal/pkg/core/helper"
@@ -115,7 +114,7 @@ func TestPodResourceConfiguration(t *testing.T) {
 		},
 	}
 
-	masterJob := c.NewJMeterMasterJob(&url.URL{}, map[string]string{"": ""})
+	masterJob := c.NewJMeterMasterJob("http://kangal-proxy.local/load-test/loadtest-name/report", map[string]string{"": ""})
 	assert.Equal(t, c.masterResources.CPULimits, masterJob.Spec.Template.Spec.Containers[0].Resources.Limits.Cpu().String())
 	assert.Equal(t, c.masterResources.CPURequests, masterJob.Spec.Template.Spec.Containers[0].Resources.Requests.Cpu().String())
 	assert.Equal(t, c.masterResources.MemoryLimits, masterJob.Spec.Template.Spec.Containers[0].Resources.Limits.Memory().String())

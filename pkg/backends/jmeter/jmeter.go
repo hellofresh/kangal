@@ -3,7 +3,6 @@ package jmeter
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"time"
 
 	"go.uber.org/zap"
@@ -31,27 +30,27 @@ var (
 
 // JMeter enables the controller to run a loadtest using JMeter
 type JMeter struct {
-	kubeClientSet      kubernetes.Interface
-	kangalClientSet    clientSetV.Interface
-	loadTest           *loadTestV1.LoadTest
-	logger             *zap.Logger
-	namespacesLister   coreListersV1.NamespaceLister
-	reportPreSignedURL *url.URL
-	masterResources    helper.Resources
-	workerResources    helper.Resources
+	kubeClientSet    kubernetes.Interface
+	kangalClientSet  clientSetV.Interface
+	loadTest         *loadTestV1.LoadTest
+	logger           *zap.Logger
+	namespacesLister coreListersV1.NamespaceLister
+	reportURL        string
+	masterResources  helper.Resources
+	workerResources  helper.Resources
 
 	podAnnotations, namespaceAnnotations map[string]string
 }
 
 //New initializes new JMeter provider handler to manage load test resources with Kangal Controller
-func New(kubeClientSet kubernetes.Interface, kangalClientSet clientSetV.Interface, lt *loadTestV1.LoadTest, logger *zap.Logger, namespacesLister coreListersV1.NamespaceLister, reportPreSignedURL *url.URL, podAnnotations, namespaceAnnotations map[string]string, config Config) *JMeter {
+func New(kubeClientSet kubernetes.Interface, kangalClientSet clientSetV.Interface, lt *loadTestV1.LoadTest, logger *zap.Logger, namespacesLister coreListersV1.NamespaceLister, reportURL string, podAnnotations, namespaceAnnotations map[string]string, config Config) *JMeter {
 	return &JMeter{
 		kubeClientSet:        kubeClientSet,
 		kangalClientSet:      kangalClientSet,
 		loadTest:             lt,
 		logger:               logger,
 		namespacesLister:     namespacesLister,
-		reportPreSignedURL:   reportPreSignedURL,
+		reportURL:            reportURL,
 		podAnnotations:       podAnnotations,
 		namespaceAnnotations: namespaceAnnotations,
 		masterResources: helper.Resources{
@@ -212,7 +211,7 @@ func (c *JMeter) CheckOrUpdateStatus(ctx context.Context) error {
 		if errors.IsNotFound(err) {
 			_, err = c.kubeClientSet.BatchV1().Jobs(namespace.GetName()).Create(
 				ctx,
-				c.NewJMeterMasterJob(c.reportPreSignedURL, c.podAnnotations),
+				c.NewJMeterMasterJob(c.reportURL, c.podAnnotations),
 				metaV1.CreateOptions{},
 			)
 			return err

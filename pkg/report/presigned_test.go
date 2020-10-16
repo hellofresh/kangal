@@ -17,8 +17,9 @@ func TestNewPreSignedPutURL(t *testing.T) {
 	assert.Nil(t, err)
 
 	loadTestName := "fake-loadtest"
-	url := NewPreSignedPutURL(loadTestName)
+	url, err := newPreSignedPutURL(loadTestName)
 
+	assert.NoError(t, err)
 	assert.NotNil(t, url)
 	assert.Contains(t, url.String(), loadTestName)
 }
@@ -26,6 +27,7 @@ func TestNewPreSignedPutURL(t *testing.T) {
 func TestNilClientNewPreSignedPutURL(t *testing.T) {
 	minioClient = nil
 	loadTestName := "fake-loadtest"
-	url := NewPreSignedPutURL(loadTestName)
+	url, err := newPreSignedPutURL(loadTestName)
+	assert.EqualError(t, err, ErrNoMinioClient.Error())
 	assert.Nil(t, url)
 }

@@ -111,9 +111,10 @@ make build
 5. Set the environment variables
 
 ``` bash
-export AWS_BUCKET_NAME=YOUR_BUCKET_NAME      # name of the bucket for saving reports
-export AWS_ENDPOINT_URL=YOUR_BUCKET_ENDPOINT # storage connection parameter
-export AWS_DEFAULT_REGION=YOUR_AWS_REGION    # storage connection parameter
+export AWS_BUCKET_NAME=YOUR_BUCKET_NAME       # name of the bucket for saving reports
+export AWS_ENDPOINT_URL=YOUR_BUCKET_ENDPOINT  # storage connection parameter
+export AWS_DEFAULT_REGION=YOUR_AWS_REGION     # storage connection parameter
+export KANGAL_PROXY_URL=http://localhost:8080 # used to persist reports
 ```
 
 6. Run both Kangal proxy and controller
