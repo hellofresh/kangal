@@ -106,6 +106,7 @@ func TestPersistHandler(t *testing.T) {
 	minioClient, _ = minio.NewWithRegion("localhost:80", "access-key", "secret-access-key", false, "us-east1")
 	bucketName = "bucket-name"
 	expires = time.Second
+	logger := zap.NewNop()
 
 	for _, scenario := range scenarios {
 		t.Run(scenario.name, func(t *testing.T) {
@@ -128,7 +129,7 @@ func TestPersistHandler(t *testing.T) {
 
 			rr := httptest.NewRecorder()
 			handler := chi.NewRouter()
-			handler.Put("/load-test/{id}/report", PersistHandler(kangalKubeClient))
+			handler.Put("/load-test/{id}/report", PersistHandler(kangalKubeClient, logger))
 			handler.ServeHTTP(rr, req)
 
 			assert.Equal(t, rr.Code, scenario.expectedStatusCode)
