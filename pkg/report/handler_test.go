@@ -8,17 +8,19 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-chi/chi"
-	kk8s "github.com/hellofresh/kangal/pkg/kubernetes"
-	loadtestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
-	"github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned/fake"
-	"github.com/minio/minio-go/v6"
-	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	k8sfake "k8s.io/client-go/kubernetes/fake"
 	k8stesting "k8s.io/client-go/testing"
+
+	kk8s "github.com/hellofresh/kangal/pkg/kubernetes"
+	loadtestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
+	"github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned/fake"
+
+	"github.com/go-chi/chi"
+	"github.com/minio/minio-go/v6"
+	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 )
 
 // fakeFS mocks http.FileSystem
