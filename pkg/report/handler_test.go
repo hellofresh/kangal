@@ -95,6 +95,14 @@ func TestPersistHandler(t *testing.T) {
 			},
 			expectedStatusCode: http.StatusUnauthorized,
 		},
+		{
+			name:                   "Request timed out",
+			fakeResponseStatusCode: http.StatusRequestTimeout,
+			getLoadTestsFn: func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+				return true, &loadtestV1.LoadTest{}, nil
+			},
+			expectedStatusCode: http.StatusRequestTimeout,
+		},
 	}
 
 	req, err := http.NewRequest("PUT", "/load-test/loadtest-name/report", nil)
