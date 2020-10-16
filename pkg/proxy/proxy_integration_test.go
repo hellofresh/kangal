@@ -411,10 +411,9 @@ func TestIntegrationGetLoadtest(t *testing.T) {
 		require.NoError(t, err, "Could not get load test information")
 
 		assert.Equal(t, currentNamespace, dat.Namespace)
-		assert.Equal(t, distributedPods, dat.DistributedPods)
 		assert.NotEmpty(t, dat.Phase)
 		assert.NotEqual(t, apisLoadTestV1.LoadTestErrored, dat.Phase)
-		assert.Equal(t, true, dat.HasTestData)
+		assert.Equal(t, false, dat.HasTestData)
 	})
 }
 
