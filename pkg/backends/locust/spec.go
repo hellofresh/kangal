@@ -17,7 +17,7 @@ var (
 )
 
 //BuildLoadTestSpec validates input and returns valid LoadTestSpec
-func BuildLoadTestSpec(overwrite bool, distributedPods int32, tags loadTestV1.LoadTestTags, testFileStr, envVarsStr, targetURL string, duration time.Duration, masterImageRef reference.NamedTagged) (loadTestV1.LoadTestSpec, error) {
+func BuildLoadTestSpec(overwrite bool, distributedPods int32, tags loadTestV1.LoadTestTags, testFileStr, envVarsStr, targetURL string, duration time.Duration, masterImageRef, workerImageRef reference.NamedTagged) (loadTestV1.LoadTestSpec, error) {
 	lt := loadTestV1.LoadTestSpec{}
 	if distributedPods <= int32(0) {
 		return lt, ErrRequireMinOneDistributedPod
@@ -33,5 +33,12 @@ func BuildLoadTestSpec(overwrite bool, distributedPods int32, tags loadTestV1.Lo
 			Tag:   masterImageRef.Tag(),
 		}
 	}
-	return loadTestV1.NewSpec(loadTestV1.LoadTestTypeLocust, overwrite, distributedPods, tags, testFileStr, "", envVarsStr, masterImage, loadTestV1.ImageDetails{}, targetURL, duration), nil
+	workerImage := loadTestV1.ImageDetails{Image: defaultImage, Tag: defaultImageTag}
+	if workerImageRef != nil {
+		workerImage = loadTestV1.ImageDetails{
+			Image: workerImageRef.Name(),
+			Tag:   workerImageRef.Tag(),
+		}
+	}
+	return loadTestV1.NewSpec(loadTestV1.LoadTestTypeLocust, overwrite, distributedPods, tags, testFileStr, "", envVarsStr, masterImage, workerImage, targetURL, duration), nil
 }
