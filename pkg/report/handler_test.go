@@ -64,11 +64,13 @@ func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
 
 func TestPersistHandler(t *testing.T) {
 	var scenarios = []struct {
+		name                   string
 		fakeResponseStatusCode int
 		getLoadTestsFn         func(action k8stesting.Action) (handled bool, ret runtime.Object, err error)
 		expectedStatusCode     int
 	}{
 		{
+			name:                   "All good",
 			fakeResponseStatusCode: http.StatusOK,
 			getLoadTestsFn: func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
 				return true, &loadtestV1.LoadTest{}, nil
@@ -76,6 +78,7 @@ func TestPersistHandler(t *testing.T) {
 			expectedStatusCode: http.StatusOK,
 		},
 		{
+			name:                   "LoadTest not found",
 			fakeResponseStatusCode: http.StatusOK,
 			getLoadTestsFn: func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
 				return true, nil, k8serrors.NewNotFound(loadtestV1.Resource("loadtests"), "loadtest-name")
@@ -83,6 +86,7 @@ func TestPersistHandler(t *testing.T) {
 			expectedStatusCode: http.StatusNotFound,
 		},
 		{
+			name:                   "S3 wrong credentials",
 			fakeResponseStatusCode: http.StatusUnauthorized,
 			getLoadTestsFn: func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
 				return true, &loadtestV1.LoadTest{}, nil
@@ -102,28 +106,30 @@ func TestPersistHandler(t *testing.T) {
 	expires = time.Second
 
 	for _, scenario := range scenarios {
-		httpClient = &http.Client{Transport: roundTripFunc(func(req *http.Request) *http.Response {
-			return &http.Response{
-				StatusCode: scenario.fakeResponseStatusCode,
-				// Must be set to non-nil value or it panics
-				Header: make(http.Header),
-			}
-		})}
+		t.Run(scenario.name, func(t *testing.T) {
+			httpClient = &http.Client{Transport: roundTripFunc(func(req *http.Request) *http.Response {
+				return &http.Response{
+					StatusCode: scenario.fakeResponseStatusCode,
+					// Must be set to non-nil value or it panics
+					Header: make(http.Header),
+				}
+			})}
 
-		kangalFakeClientSet := fake.NewSimpleClientset()
-		kangalFakeClientSet.PrependReactor("get", "loadtests", scenario.getLoadTestsFn)
+			kangalFakeClientSet := fake.NewSimpleClientset()
+			kangalFakeClientSet.PrependReactor("get", "loadtests", scenario.getLoadTestsFn)
 
-		kangalKubeClient := kk8s.NewClient(
-			kangalFakeClientSet.KangalV1().LoadTests(),
-			k8sfake.NewSimpleClientset(),
-			zap.NewNop(),
-		)
+			kangalKubeClient := kk8s.NewClient(
+				kangalFakeClientSet.KangalV1().LoadTests(),
+				k8sfake.NewSimpleClientset(),
+				zap.NewNop(),
+			)
 
-		rr := httptest.NewRecorder()
-		handler := chi.NewRouter()
-		handler.Put("/load-test/{id}/report", PersistHandler(kangalKubeClient))
-		handler.ServeHTTP(rr, req)
+			rr := httptest.NewRecorder()
+			handler := chi.NewRouter()
+			handler.Put("/load-test/{id}/report", PersistHandler(kangalKubeClient))
+			handler.ServeHTTP(rr, req)
 
-		assert.Equal(t, rr.Code, scenario.expectedStatusCode)
+			assert.Equal(t, rr.Code, scenario.expectedStatusCode)
+		})
 	}
 }
