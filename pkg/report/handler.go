@@ -70,7 +70,11 @@ func PersistHandler(kubeClient *kk8s.Client) func(w http.ResponseWriter, r *http
 			return
 		}
 
-		proxyResp, _ := httpClient.Do(proxyReq)
+		proxyResp, err := httpClient.Do(proxyReq)
+		if nil != err {
+			render.Render(w, r, khttp.ErrResponse(http.StatusInternalServerError, err.Error()))
+			return
+		}
 
 		body := "Report persisted"
 
