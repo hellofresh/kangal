@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/docker/distribution/reference"
 	"github.com/thedevsaddam/govalidator"
 	"go.uber.org/zap"
 
@@ -28,6 +29,8 @@ const (
 	targetURL       = "targetURL"
 	duration        = "duration"
 	loadTestID      = "id"
+	masterImage     = "masterImage"
+	workerImage     = "workerImage"
 )
 
 //httpValidator validates request body
@@ -140,7 +143,19 @@ func fromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger) (apisLoa
 		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %q from request: %w", duration, err)
 	}
 
-	return backends.BuildLoadTestSpecByBackend(ltType, o, dp, tagList, tf, td, ev, turl, dur)
+	masterImageRef, err := getMasterImageRef(r)
+	if err != nil {
+		logger.Debug("Bad value", zap.String("field", masterImage), zap.Error(err))
+		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %q from request: %w", masterImage, err)
+	}
+
+	workerImageRef, err := getWorkerImageRef(r)
+	if err != nil {
+		logger.Debug("Bad value", zap.String("field", workerImage), zap.Error(err))
+		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %q from request: %w", workerImage, err)
+	}
+
+	return backends.BuildLoadTestSpecByBackend(ltType, o, dp, tagList, tf, td, ev, turl, dur, masterImageRef, workerImageRef)
 }
 
 func getEnvVars(r *http.Request) (string, error) {
@@ -211,6 +226,30 @@ func getDuration(r *http.Request) (time.Duration, error) {
 	}
 
 	return time.ParseDuration(val)
+}
+
+func getMasterImageRef(r *http.Request) (reference.NamedTagged, error) {
+	val := r.FormValue(masterImage)
+	return parseImageRef(val)
+}
+
+func getWorkerImageRef(r *http.Request) (reference.NamedTagged, error) {
+	val := r.FormValue(workerImage)
+	return parseImageRef(val)
+}
+
+func parseImageRef(val string) (reference.NamedTagged, error) {
+	if val == "" {
+		return nil, nil
+	}
+
+	image, err := reference.ParseNormalizedNamed(val)
+	if err != nil {
+		return nil, err
+	}
+
+	ref := reference.TagNameOnly(image).(reference.NamedTagged)
+	return ref, nil
 }
 
 //fileToString converts file to string

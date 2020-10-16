@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/docker/distribution/reference"
+
 	v1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 
 	"github.com/stretchr/testify/assert"
@@ -11,6 +13,7 @@ import (
 
 func TestBuildLoadTestSpec(t *testing.T) {
 	var distributedPods int32 = 3
+	masterImageRef, _ := reference.ParseNormalizedNamed("alpine:3.2.1")
 
 	type args struct {
 		overwrite       bool
@@ -20,6 +23,7 @@ func TestBuildLoadTestSpec(t *testing.T) {
 		envVarsStr      string
 		targetURL       string
 		duration        time.Duration
+		masterImageRef  reference.NamedTagged
 	}
 	tests := []struct {
 		name    string
@@ -36,11 +40,15 @@ func TestBuildLoadTestSpec(t *testing.T) {
 				testFileStr:     "something in the file",
 				envVarsStr:      "my-key,my-value",
 				targetURL:       "http://my-app.my-domain.com",
+				masterImageRef:  masterImageRef.(reference.NamedTagged),
 			},
 			want: v1.LoadTestSpec{
-				Type:            "Locust",
-				Overwrite:       true,
-				MasterConfig:    v1.ImageDetails{},
+				Type:      "Locust",
+				Overwrite: true,
+				MasterConfig: v1.ImageDetails{
+					Image: "docker.io/library/alpine",
+					Tag:   "3.2.1",
+				},
 				WorkerConfig:    v1.ImageDetails{},
 				DistributedPods: &distributedPods,
 				Tags:            v1.LoadTestTags{"team": "kangal"},
@@ -71,7 +79,7 @@ func TestBuildLoadTestSpec(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := BuildLoadTestSpec(tt.args.overwrite, tt.args.distributedPods, tt.args.tags, tt.args.testFileStr, tt.args.envVarsStr, tt.args.targetURL, tt.args.duration)
+			got, err := BuildLoadTestSpec(tt.args.overwrite, tt.args.distributedPods, tt.args.tags, tt.args.testFileStr, tt.args.envVarsStr, tt.args.targetURL, tt.args.duration, tt.args.masterImageRef)
 
 			if tt.wantErr {
 				assert.Error(t, err)

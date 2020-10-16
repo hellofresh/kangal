@@ -23,9 +23,10 @@ var (
 	MaxWaitTimeForPods = time.Minute * 10
 	//loadTestWorkerLabelSelector is the selector used for selecting jmeter worker resources
 	loadTestWorkerLabelSelector = fmt.Sprintf("%s=%s", loadTestWorkerPodLabelKey, loadTestWorkerPodLabelValue)
-	masterImage                 = "hellofreshtech/kangal-jmeter-master"
-	workerImage                 = "hellofreshtech/kangal-jmeter-worker"
-	imageTag                    = "latest"
+	defaultMasterImageName      = "hellofreshtech/kangal-jmeter-master"
+	defaultWorkerImageName      = "hellofreshtech/kangal-jmeter-worker"
+	defaultMasterImageTag       = "latest"
+	defaultWorkerImageTag       = "latest"
 )
 
 // JMeter enables the controller to run a loadtest using JMeter

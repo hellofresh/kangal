@@ -4,6 +4,7 @@ go 1.15
 
 require (
 	contrib.go.opencensus.io/exporter/prometheus v0.2.0
+	github.com/docker/distribution v2.7.1+incompatible
 	github.com/felixge/httpsnoop v1.0.1
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/go-chi/render v1.0.1
@@ -13,6 +14,7 @@ require (
 	github.com/json-iterator/go v1.1.10 // indirect
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/minio/minio-go/v6 v6.0.57
+	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rs/cors v1.7.0
 	github.com/smartystreets/assertions v0.0.0-20190116191733-b6c0e53d7304 // indirect
