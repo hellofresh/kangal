@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	khttp "github.com/hellofresh/kangal/pkg/core/http"
 	kk8s "github.com/hellofresh/kangal/pkg/kubernetes"
@@ -14,7 +15,9 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 )
 
-var httpClient = &http.Client{}
+var httpClient = &http.Client{
+	Timeout: 30 * time.Second,
+}
 
 //ShowHandler method returns response from file bucket in defined object storage
 func ShowHandler() func(w http.ResponseWriter, r *http.Request) {
