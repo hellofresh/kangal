@@ -72,10 +72,6 @@ func New(kubeClientSet kubernetes.Interface, kangalClientSet clientSetV.Interfac
 // CheckOrCreateResources check if JMeter kubernetes resources have been create,
 // if they have not been create them
 func (c *JMeter) CheckOrCreateResources(ctx context.Context) error {
-	if c.loadTest.Status.Phase == "" {
-		c.loadTest.Status.Phase = loadTestV1.LoadTestCreating
-	}
-
 	JMeterServices, err := c.kubeClientSet.CoreV1().Services(c.loadTest.Status.Namespace).List(ctx, metaV1.ListOptions{})
 	if err != nil {
 		return err
@@ -140,6 +136,10 @@ func (c *JMeter) CheckOrUpdateStatus(ctx context.Context) error {
 			c.loadTest.Status.Phase = loadTestV1.LoadTestFinished
 			return nil
 		}
+	}
+
+	if c.loadTest.Status.Phase == "" {
+		c.loadTest.Status.Phase = loadTestV1.LoadTestCreating
 	}
 
 	if c.loadTest.Status.Phase == loadTestV1.LoadTestErrored {

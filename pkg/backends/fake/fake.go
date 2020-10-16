@@ -35,10 +35,6 @@ func New(kubeClientSet kubernetes.Interface, lt *loadTestV1.LoadTest, logger *za
 
 // CheckOrCreateResources check if Fake kubernetes resources have been create, if they have not been create them
 func (c *Fake) CheckOrCreateResources(ctx context.Context) error {
-	if c.loadTest.Status.Phase == "" {
-		c.loadTest.Status.Phase = loadTestV1.LoadTestCreating
-	}
-
 	// Get the Namespace resource
 	namespace, err := c.kubeClient.CoreV1().Namespaces().Get(ctx, c.loadTest.Status.Namespace, metaV1.GetOptions{})
 	// The LoadTest resource may no longer exist, in which case we stop
@@ -70,6 +66,10 @@ func (c *Fake) CheckOrUpdateStatus(ctx context.Context) error {
 	}
 	if err != nil {
 		return err
+	}
+
+	if c.loadTest.Status.Phase == "" {
+		c.loadTest.Status.Phase = loadTestV1.LoadTestCreating
 	}
 
 	if c.loadTest.Status.Phase == loadTestV1.LoadTestErrored {

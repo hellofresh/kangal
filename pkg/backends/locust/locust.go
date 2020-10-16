@@ -36,10 +36,6 @@ type Locust struct {
 
 // CheckOrCreateResources check for resources or create the needed resources for the loadtest type
 func (c *Locust) CheckOrCreateResources(ctx context.Context) error {
-	if c.loadTest.Status.Phase == "" {
-		c.loadTest.Status.Phase = loadTestV1.LoadTestCreating
-	}
-
 	workerJobs, err := c.kubeClientSet.
 		BatchV1().
 		Jobs(c.loadTest.Status.Namespace).
@@ -122,6 +118,10 @@ func (c *Locust) CheckOrCreateResources(ctx context.Context) error {
 
 // CheckOrUpdateStatus check current LoadTest progress
 func (c *Locust) CheckOrUpdateStatus(ctx context.Context) error {
+	if c.loadTest.Status.Phase == "" {
+		c.loadTest.Status.Phase = loadTestV1.LoadTestCreating
+	}
+
 	if c.loadTest.Status.Phase == loadTestV1.LoadTestErrored ||
 		c.loadTest.Status.Phase == loadTestV1.LoadTestFinished {
 		return nil
