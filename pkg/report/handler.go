@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
+	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/api/errors"
 )
 
@@ -38,7 +39,7 @@ func ShowHandler() func(w http.ResponseWriter, r *http.Request) {
 }
 
 //PersistHandler method streams request to storage presigned URL
-func PersistHandler(kubeClient *kk8s.Client) func(w http.ResponseWriter, r *http.Request) {
+func PersistHandler(kubeClient *kk8s.Client, logger *zap.Logger) func(w http.ResponseWriter, r *http.Request) {
 	if minioClient == nil {
 		panic("client was not initialized, please initialize object storage client")
 	}
@@ -72,6 +73,7 @@ func PersistHandler(kubeClient *kk8s.Client) func(w http.ResponseWriter, r *http
 
 		proxyResp, err := httpClient.Do(proxyReq)
 		if nil != err {
+			logger.Error("Failed to persist report", zap.Error(err), zap.String("loadtest", loadTestName))
 			render.Render(w, r, khttp.ErrResponse(http.StatusInternalServerError, err.Error()))
 			return
 		}

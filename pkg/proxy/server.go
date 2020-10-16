@@ -84,7 +84,7 @@ func RunServer(ctx context.Context, cfg Config, rr Runner) error {
 		http.Redirect(w, r, url, http.StatusMovedPermanently)
 	})
 	r.Get("/load-test/{id}/report/*", report.ShowHandler())
-	r.Put("/load-test/{id}/report", report.PersistHandler(rr.KubeClient))
+	r.Put("/load-test/{id}/report", report.PersistHandler(rr.KubeClient, rr.Logger))
 
 	address := fmt.Sprintf(":%d", cfg.HTTPPort)
 	rr.Logger.Info("Running HTTP server...", zap.String("address", address))
