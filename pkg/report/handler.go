@@ -5,10 +5,11 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/go-chi/chi"
-	"github.com/go-chi/render"
 	khttp "github.com/hellofresh/kangal/pkg/core/http"
 	kk8s "github.com/hellofresh/kangal/pkg/kubernetes"
+
+	"github.com/go-chi/chi"
+	"github.com/go-chi/render"
 	"k8s.io/apimachinery/pkg/api/errors"
 )
 
