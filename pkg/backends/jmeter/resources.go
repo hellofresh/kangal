@@ -178,8 +178,8 @@ func (c *JMeter) NewPod(i int, configMap *coreV1.ConfigMap, podAnnotations map[s
 
 	imageRef := fmt.Sprintf("%s:%s", loadtest.Spec.WorkerConfig.Image, loadtest.Spec.WorkerConfig.Tag)
 	if imageRef == "" {
+		imageRef = fmt.Sprintf("%s:%s", c.workerConfig.Image, c.workerConfig.Tag)
 		c.logger.Warn("Loadtest.Spec.WorkerConfig is empty; using default worker image", zap.String("imageRef", imageRef))
-		imageRef = fmt.Sprintf("%s:%s", defaultWorkerImageName, defaultWorkerImageTag)
 	}
 
 	return &coreV1.Pod{
@@ -244,7 +244,7 @@ func (c *JMeter) NewJMeterMasterJob(reportURL string, podAnnotations map[string]
 	imageRef := fmt.Sprintf("%s:%s", loadtest.Spec.MasterConfig.Image, loadtest.Spec.MasterConfig.Tag)
 	if imageRef == "" {
 		c.logger.Warn("Loadtest.Spec.MasterConfig is empty; using default master image", zap.String("imageRef", imageRef))
-		imageRef = fmt.Sprintf("%s:%s", defaultMasterImageName, defaultMasterImageTag)
+		imageRef = fmt.Sprintf("%s:%s", c.masterConfig.Image, c.masterConfig.Tag)
 	}
 
 	jMeterEnvVars := []coreV1.EnvVar{

@@ -65,15 +65,15 @@ func newMasterJobName(loadTest *loadtestV1.LoadTest) string {
 	return fmt.Sprintf("%s-master", loadTest.ObjectMeta.Name)
 }
 
-func newMasterJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.ConfigMap, envvarSecret *coreV1.Secret, reportURL string, masterResources helper.Resources, podAnnotations map[string]string, logger *zap.Logger) *batchV1.Job {
+func newMasterJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.ConfigMap, envvarSecret *coreV1.Secret, reportURL string, masterResources helper.Resources, podAnnotations map[string]string, imageName, imageTag string, logger *zap.Logger) *batchV1.Job {
 	name := newMasterJobName(loadTest)
 
 	ownerRef := metaV1.NewControllerRef(loadTest, loadtestV1.SchemeGroupVersion.WithKind("LoadTest"))
 
 	imageRef := fmt.Sprintf("%s:%s", loadTest.Spec.MasterConfig.Image, loadTest.Spec.MasterConfig.Tag)
 	if imageRef == "" {
+		imageRef = fmt.Sprintf("%s:%s", imageName, imageTag)
 		logger.Warn("Loadtest.Spec.MasterConfig is empty; using default image", zap.String("imageRef", imageRef))
-		imageRef = fmt.Sprintf("%s:%s", defaultImage, defaultImageTag)
 	}
 
 	envVars := []coreV1.EnvVar{
@@ -198,15 +198,15 @@ func newWorkerJobName(loadTest *loadtestV1.LoadTest) string {
 	return fmt.Sprintf("%s-worker", loadTest.ObjectMeta.Name)
 }
 
-func newWorkerJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.ConfigMap, envvarSecret *coreV1.Secret, masterService *coreV1.Service, workerResources helper.Resources, podAnnotations map[string]string, logger *zap.Logger) *batchV1.Job {
+func newWorkerJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.ConfigMap, envvarSecret *coreV1.Secret, masterService *coreV1.Service, workerResources helper.Resources, podAnnotations map[string]string, imageName, imageTag string, logger *zap.Logger) *batchV1.Job {
 	name := newWorkerJobName(loadTest)
 
 	ownerRef := metaV1.NewControllerRef(loadTest, loadtestV1.SchemeGroupVersion.WithKind("LoadTest"))
 
 	imageRef := fmt.Sprintf("%s:%s", loadTest.Spec.MasterConfig.Image, loadTest.Spec.MasterConfig.Tag)
 	if imageRef == "" {
+		imageRef = fmt.Sprintf("%s:%s", imageName, imageTag)
 		logger.Warn("Loadtest.Spec.MasterConfig is empty; using default image", zap.String("imageRef", imageRef))
-		imageRef = fmt.Sprintf("%s:%s", defaultImage, defaultImageTag)
 	}
 
 	envVars := []coreV1.EnvVar{
