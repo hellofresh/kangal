@@ -177,7 +177,7 @@ func (c *JMeter) NewPod(i int, configMap *coreV1.ConfigMap, podAnnotations map[s
 	optionalVolume := true
 
 	imageRef := fmt.Sprintf("%s:%s", loadtest.Spec.WorkerConfig.Image, loadtest.Spec.WorkerConfig.Tag)
-	if imageRef == "" {
+	if imageRef == ":" {
 		imageRef = fmt.Sprintf("%s:%s", c.workerConfig.Image, c.workerConfig.Tag)
 		c.logger.Warn("Loadtest.Spec.WorkerConfig is empty; using default worker image", zap.String("imageRef", imageRef))
 	}
@@ -242,7 +242,7 @@ func (c *JMeter) NewJMeterMasterJob(reportURL string, podAnnotations map[string]
 	var one int32 = 1
 
 	imageRef := fmt.Sprintf("%s:%s", loadtest.Spec.MasterConfig.Image, loadtest.Spec.MasterConfig.Tag)
-	if imageRef == "" {
+	if imageRef == ":" {
 		c.logger.Warn("Loadtest.Spec.MasterConfig is empty; using default master image", zap.String("imageRef", imageRef))
 		imageRef = fmt.Sprintf("%s:%s", c.masterConfig.Image, c.masterConfig.Tag)
 	}
