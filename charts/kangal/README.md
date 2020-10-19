@@ -69,15 +69,21 @@ To install Kangal to your infrastructure you need 3 deployments: Kangal-Proxy, K
 
 The following table lists the common configurable parameters for `Kangal` chart:
 
-| Parameter                         | Description                                                                                         | Default                      |
-|-----------------------------------|-----------------------------------------------------------------------------------------------------|------------------------------|
-| `fullnameOverride`                | String to fully override kangal.fullname template with a string                                     | `nil`                        |
-| `nameOverride`                    | String to partially override kangal.fullname template with a string (will prepend the release name) | `nil`                        |
-| `configmap.AWS_ACCESS_KEY_ID`     | AWS access key ID. If not defined report will not be stored                                         | ``                           |
-| `configmap.AWS_SECRET_ACCESS_KEY` | AWS secret access key                                                                               | ``                           |
-| `configmap.AWS_BUCKET_NAME`       | The name of the bucket for saving reports                                                           | `my-bucket`                  |
-| `configmap.AWS_ENDPOINT_URL`      | Storage connection parameter                                                                        | `s3.us-east-1.amazonaws.com` |
-| `configmap.AWS_DEFAULT_REGION`    | Storage connection parameter                                                                        | `us-east-1`                  |
+| Parameter                           | Description                                                                                         | Default                               |
+|-------------------------------------|-----------------------------------------------------------------------------------------------------|---------------------------------------|
+| `fullnameOverride`                  | String to fully override kangal.fullname template with a string                                     | `nil`                                 |
+| `nameOverride`                      | String to partially override kangal.fullname template with a string (will prepend the release name) | `nil`                                 |
+| `configmap.AWS_ACCESS_KEY_ID`       | AWS access key ID. If not defined report will not be stored                                         | ``                                    |
+| `configmap.AWS_SECRET_ACCESS_KEY`   | AWS secret access key                                                                               | ``                                    |
+| `configmap.AWS_BUCKET_NAME`         | The name of the bucket for saving reports                                                           | `my-bucket`                           |
+| `configmap.AWS_ENDPOINT_URL`        | Storage connection parameter                                                                        | `s3.us-east-1.amazonaws.com`          |
+| `configmap.AWS_DEFAULT_REGION`      | Storage connection parameter                                                                        | `us-east-1`                           |
+| `configmap.JMETER_MASTER_IMAGE_NAME | Default JMeter master image name/repository if none is provided when creating a new loadtest        | "hellofreshtech/kangal-jmeter-master" |
+| `configmap.JMETER_MASTER_IMAGE_TAG  | Tag of the JMeter master image above                                                                | "latest"                              |
+| `configmap.JMETER_WORKER_IMAGE_NAME | Default JMeter worker image name/repository if none is provided when creating a new loadtest        | "hellofreshtech/kangal-jmeter-worker" |
+| `configmap.JMETER_WORKER_IMAGE_TAG  | Tag of the JMeter worker image above                                                                | "latest"                              |
+| `configmap.LOCUST_IMAGE             | Default Locust image name/repository if none is provided when creating a new loadtest               | "locustio/locust"                     |
+| `configmap.LOCUST_IMAGE_TAG         | Tag of the Locust image above                                                                       | "1.3.0"                               |
 
 Deployment specific configurations:
 
@@ -147,11 +153,21 @@ Deployment specific configurations:
 | `controller.service.ports.http`       | Service port                               | `80`                         |
 | `controller.env.KANGAL_PROXY_URL`     | Kangal Proxy URL used to persist reports   | `https://kangal-proxy.local` |
 
+### Kangal Controller (JMeter specific)
+| Parameter                                      | Description                 | Default           |
+|------------------------------------------------|-----------------------------|-------------------|
+| `controller.env.JMETER_MASTER_CPU_LIMITS`      | Master container CPU limits | ``                |
+| `controller.env.JMETER_MASTER_CPU_REQUESTS`    | Master CPU requests         | ``                |
+| `controller.env.JMETER_MASTER_MEMORY_LIMITS`   | Master memory limits        | ``                |
+| `controller.env.JMETER_MASTER_MEMORY_REQUESTS` | Master memory requests      | ``                |
+| `controller.env.JMETER_WORKER_CPU_LIMITS`      | Master container CPU limits | ``                |
+| `controller.env.JMETER_WORKER_CPU_REQUESTS`    | Master CPU requests         | ``                |
+| `controller.env.JMETER_WORKER_MEMORY_LIMITS`   | Master memory limits        | ``                |
+| `controller.env.JMETER_WORKER_MEMORY_REQUESTS` | Master memory requests      | ``                |
+
 ### Kangal Controller (Locust specific)
 | Parameter                                      | Description                 | Default           |
 |------------------------------------------------|-----------------------------|-------------------|
-| `controller.env.LOCUST_IMAGE`                  | Locust image                | `locustio/locust` |
-| `controller.env.LOCUST_IMAGE_TAG`              | Locust image tag            | `1.3.0`           |
 | `controller.env.LOCUST_MASTER_CPU_LIMITS`      | Master container CPU limits | ``                |
 | `controller.env.LOCUST_MASTER_CPU_REQUESTS`    | Master CPU requests         | ``                |
 | `controller.env.LOCUST_MASTER_MEMORY_LIMITS`   | Master memory limits        | ``                |
