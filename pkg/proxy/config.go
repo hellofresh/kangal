@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"github.com/hellofresh/kangal/pkg/backends"
 	"github.com/hellofresh/kangal/pkg/core/observability"
 	"github.com/hellofresh/kangal/pkg/report"
 )
@@ -14,6 +15,7 @@ type Config struct {
 	Report          report.Config
 	MaxLoadTestsRun int
 	MasterURL       string
+	Backends        backends.Config
 }
 
 // OpenAPIConfig is the OpenAPI specification-specific parameters

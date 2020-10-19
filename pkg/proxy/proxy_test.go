@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hellofresh/kangal/pkg/backends"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
@@ -28,6 +30,7 @@ import (
 )
 
 const shortDuration = 1 * time.Millisecond // a reasonable duration to block in an example
+var defaultConfig = Config{MaxLoadTestsRun: 1}
 
 func TestHTTPValidator(t *testing.T) {
 	for _, tt := range []struct {
@@ -252,7 +255,7 @@ func TestProxy_List(t *testing.T) {
 			})
 			c := kube.NewClient(loadTestClientSet.KangalV1().LoadTests(), kubeClientSet, logger)
 
-			testProxyHandler := NewProxy(1, c, nil)
+			testProxyHandler := NewProxy(defaultConfig, c, nil)
 
 			req := httptest.NewRequest("POST", "http://example.com/foo?"+tc.urlParams, nil)
 			req = req.WithContext(ctx)
@@ -345,7 +348,7 @@ func TestProxyCreate(t *testing.T) {
 				err:             nil,
 			}
 
-			testProxyHandler := NewProxy(1, c, s.fakeSpecCreator)
+			testProxyHandler := NewProxy(defaultConfig, c, s.fakeSpecCreator)
 			handler := testProxyHandler.Create
 
 			requestWrap, _ := createRequestWrapper(tt.requestFiles, strconv.Itoa(tt.distributedPods), string(tt.loadTestType), tt.tagsString)
@@ -435,7 +438,7 @@ func TestNewProxyRecreate(t *testing.T) {
 				overwrite: tt.overwrite,
 			}
 
-			testProxyHandler := NewProxy(1, c, s.fakeSpecCreator)
+			testProxyHandler := NewProxy(defaultConfig, c, s.fakeSpecCreator)
 			handler := testProxyHandler.Create
 
 			loadtestClientSet.Fake.PrependReactor("list", "loadtests", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
@@ -535,7 +538,7 @@ func TestProxyCreateWithErrors(t *testing.T) {
 			c := kube.NewClient(loadtestClientSet.KangalV1().LoadTests(), kubeClientSet, logger)
 
 			s := specData{}
-			testProxyHandler := NewProxy(1, c, s.fakeSpecCreator)
+			testProxyHandler := NewProxy(defaultConfig, c, s.fakeSpecCreator)
 			handler := testProxyHandler.Create
 
 			requestWrap, _ := createRequestWrapper(map[string]string{
@@ -617,7 +620,7 @@ func TestProxyGet(t *testing.T) {
 				err:             nil,
 			}
 
-			testProxyHandler := NewProxy(1, c, s.fakeSpecCreator)
+			testProxyHandler := NewProxy(defaultConfig, c, s.fakeSpecCreator)
 			handler := testProxyHandler.Get
 
 			req := httptest.NewRequest("GET", "http://example.com/load-test/testname", nil)
@@ -671,7 +674,7 @@ func TestProxyDelete(t *testing.T) {
 
 			s := specData{}
 
-			testProxyHandler := NewProxy(1, c, s.fakeSpecCreator)
+			testProxyHandler := NewProxy(defaultConfig, c, s.fakeSpecCreator)
 			handler := testProxyHandler.Delete
 
 			req := httptest.NewRequest("DELETE", "http://example.com/load-test/some-test", nil)
@@ -762,7 +765,7 @@ func TestProxyGetLogs(t *testing.T) {
 
 			s := specData{}
 
-			testProxyHandler := NewProxy(1, c, s.fakeSpecCreator)
+			testProxyHandler := NewProxy(defaultConfig, c, s.fakeSpecCreator)
 			handler := testProxyHandler.GetLogs
 
 			req := httptest.NewRequest("GET", "http://example.com/load-test/some-test/logs", nil)
@@ -805,7 +808,7 @@ type specData struct {
 	err             error
 }
 
-func (s *specData) fakeSpecCreator(*http.Request, *zap.Logger) (apisLoadTestV1.LoadTestSpec, error) {
+func (s *specData) fakeSpecCreator(*http.Request, backends.Config, *zap.Logger) (apisLoadTestV1.LoadTestSpec, error) {
 	lt := apisLoadTestV1.LoadTestSpec{}
 
 	distributedPods := int32(s.distributedPods)

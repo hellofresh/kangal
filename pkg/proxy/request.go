@@ -87,7 +87,7 @@ func fromHTTPRequestToListOptions(r *http.Request) (*kubernetes.ListOptions, err
 }
 
 // fromHTTPRequestToLoadTestSpec creates a load test spec from HTTP request
-func fromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger) (apisLoadTestV1.LoadTestSpec, error) {
+func fromHTTPRequestToLoadTestSpec(r *http.Request, cfg backends.Config, logger *zap.Logger) (apisLoadTestV1.LoadTestSpec, error) {
 	ltType := getLoadTestType(r)
 
 	if e := httpValidator(r); len(e) > 0 {

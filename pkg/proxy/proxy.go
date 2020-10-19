@@ -8,6 +8,8 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/hellofresh/kangal/pkg/backends"
+
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 	"go.uber.org/zap"
@@ -30,19 +32,19 @@ var (
 	ErrFileToStringEmpty error = errors.New("file is empty")
 )
 
-type loadTestSpecCreator func(*http.Request, *zap.Logger) (apisLoadTestV1.LoadTestSpec, error)
+type loadTestSpecCreator func(*http.Request, backends.Config, *zap.Logger) (apisLoadTestV1.LoadTestSpec, error)
 
 // Proxy handler
 type Proxy struct {
-	maxLoadTestsRun     int
+	config              Config
 	kubeClient          *kube.Client
 	httpToSpecConverter loadTestSpecCreator
 }
 
 // NewProxy returns new Proxy handlers
-func NewProxy(maxLoadTestsRun int, kubeClient *kube.Client, specCreator loadTestSpecCreator) *Proxy {
+func NewProxy(cfg Config, kubeClient *kube.Client, specCreator loadTestSpecCreator) *Proxy {
 	return &Proxy{
-		maxLoadTestsRun:     maxLoadTestsRun,
+		config:              cfg,
 		kubeClient:          kubeClient,
 		httpToSpecConverter: specCreator,
 	}
@@ -126,7 +128,7 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	// Making valid LoadTestSpec based on HTTP request
-	ltSpec, err := p.httpToSpecConverter(r, logger)
+	ltSpec, err := p.httpToSpecConverter(r, p.config.Backends, logger)
 	if err != nil {
 		render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest, err.Error()))
 		return
@@ -176,8 +178,8 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if activeLoadTests >= p.maxLoadTestsRun {
-		logger.Warn("number of active load tests reached limit", zap.Int("current", activeLoadTests), zap.Int("limit", p.maxLoadTestsRun))
+	if activeLoadTests >= p.config.MaxLoadTestsRun {
+		logger.Warn("number of active load tests reached limit", zap.Int("current", activeLoadTests), zap.Int("limit", p.config.MaxLoadTestsRun))
 		render.Render(w, r, cHttp.ErrResponse(http.StatusTooManyRequests, "Number of active load tests reached limit"))
 		return
 	}

@@ -44,6 +44,7 @@ func CreateLoadtest(clientSet clientSetV.Clientset, pods int32, name, testFile, 
 
 	loadtestSpec, err := backends.BuildLoadTestSpecByBackend(
 		loadTestType,
+		backends.Config{},
 		false,
 		pods,
 		apisLoadTestV1.LoadTestTags{},
