@@ -46,7 +46,16 @@ type JMeter struct {
 }
 
 //New initializes new JMeter provider handler to manage load test resources with Kangal Controller
-func New(kubeClientSet kubernetes.Interface, kangalClientSet clientSetV.Interface, lt *loadTestV1.LoadTest, logger *zap.Logger, namespacesLister coreListersV1.NamespaceLister, reportURL string, podAnnotations, namespaceAnnotations map[string]string, config Config) *JMeter {
+func New(
+	kubeClientSet kubernetes.Interface,
+	kangalClientSet clientSetV.Interface,
+	lt *loadTestV1.LoadTest,
+	logger *zap.Logger,
+	namespacesLister coreListersV1.NamespaceLister,
+	reportURL string,
+	podAnnotations, namespaceAnnotations map[string]string,
+	config Config,
+) *JMeter {
 	masterImageName := defaultMasterImageName
 	if config.MasterImageName != "" {
 		masterImageName = config.MasterImageName
@@ -204,7 +213,12 @@ func (c *JMeter) CheckOrUpdateStatus(ctx context.Context) error {
 				if containerStatus.State.Waiting.Reason != "Pending" &&
 					containerStatus.State.Waiting.Reason != "ContainerCreating" &&
 					containerStatus.State.Waiting.Reason != "PodInitializing" {
-					c.logger.Info("One of containers is unhealthy, marking LoadTest as errored", zap.String("LoadTest", c.loadTest.GetName()), zap.String("pod", pod.Name), zap.String("namespace", namespace.GetName()))
+					c.logger.Info(
+						"One of containers is unhealthy, marking LoadTest as errored",
+						zap.String("LoadTest", c.loadTest.GetName()),
+						zap.String("pod", pod.Name),
+						zap.String("namespace", namespace.GetName()),
+					)
 					c.loadTest.Status.Phase = loadTestV1.LoadTestErrored
 					return nil
 				}
