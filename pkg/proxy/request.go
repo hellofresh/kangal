@@ -155,7 +155,7 @@ func fromHTTPRequestToLoadTestSpec(r *http.Request, cfg backends.Config, logger 
 		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %q from request: %w", workerImage, err)
 	}
 
-	return backends.BuildLoadTestSpecByBackend(ltType, o, dp, tagList, tf, td, ev, turl, dur, masterImageRef, workerImageRef)
+	return backends.BuildLoadTestSpecByBackend(ltType, cfg, o, dp, tagList, tf, td, ev, turl, dur, masterImageRef, workerImageRef)
 }
 
 func getEnvVars(r *http.Request) (string, error) {

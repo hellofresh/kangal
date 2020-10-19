@@ -16,6 +16,7 @@ func TestBuildJMeterLoadTestSpec(t *testing.T) {
 	workerImageRef, _ := reference.ParseNormalizedNamed("hellofreshtech/kangal-jmeter-worker:1.2.3")
 
 	type args struct {
+		config          Config
 		overwrite       bool
 		distributedPods int32
 		tags            v1.LoadTestTags
@@ -34,6 +35,7 @@ func TestBuildJMeterLoadTestSpec(t *testing.T) {
 		{
 			name: "Spec is valid",
 			args: args{
+				config:          Config{},
 				overwrite:       true,
 				distributedPods: 3,
 				tags:            v1.LoadTestTags{"team": "kangal"},
@@ -76,7 +78,7 @@ func TestBuildJMeterLoadTestSpec(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := BuildLoadTestSpec(tt.args.overwrite, tt.args.distributedPods, tt.args.tags, tt.args.testFileStr, tt.args.testDataStr, tt.args.envVarsStr, tt.args.masterImageRef, tt.args.workerImageRef)
+			got, err := BuildLoadTestSpec(tt.args.config, tt.args.overwrite, tt.args.distributedPods, tt.args.tags, tt.args.testFileStr, tt.args.testDataStr, tt.args.envVarsStr, tt.args.masterImageRef, tt.args.workerImageRef)
 
 			if tt.wantErr {
 				assert.Error(t, err)

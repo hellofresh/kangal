@@ -48,14 +48,14 @@ func NewLoadTest(loadTest *loadTestV1.LoadTest, kubeClientSet kubernetes.Interfa
 }
 
 // BuildLoadTestSpecByBackend returns a valid LoadTestSpec based on backend rules
-func BuildLoadTestSpecByBackend(loadTestType loadTestV1.LoadTestType, overwrite bool, distributedPods int32, tags loadTestV1.LoadTestTags, testFileStr, testDataStr, envVarsStr, targetURL string, duration time.Duration, masterImageRef, workerImageRef reference.NamedTagged) (loadTestV1.LoadTestSpec, error) {
+func BuildLoadTestSpecByBackend(loadTestType loadTestV1.LoadTestType, config Config, overwrite bool, distributedPods int32, tags loadTestV1.LoadTestTags, testFileStr, testDataStr, envVarsStr, targetURL string, duration time.Duration, masterImageRef, workerImageRef reference.NamedTagged) (loadTestV1.LoadTestSpec, error) {
 	switch loadTestType {
 	case loadTestV1.LoadTestTypeJMeter:
-		return jmeter.BuildLoadTestSpec(overwrite, distributedPods, tags, testFileStr, testDataStr, envVarsStr, masterImageRef, workerImageRef)
+		return jmeter.BuildLoadTestSpec(config.JMeter, overwrite, distributedPods, tags, testFileStr, testDataStr, envVarsStr, masterImageRef, workerImageRef)
 	case loadTestV1.LoadTestTypeFake:
 		return fake.BuildLoadTestSpec(tags, overwrite)
 	case loadTestV1.LoadTestTypeLocust:
-		return locust.BuildLoadTestSpec(overwrite, distributedPods, tags, testFileStr, envVarsStr, targetURL, duration, masterImageRef, workerImageRef)
+		return locust.BuildLoadTestSpec(config.Locust, overwrite, distributedPods, tags, testFileStr, envVarsStr, targetURL, duration, masterImageRef)
 	}
 	return loadTestV1.LoadTestSpec{}, fmt.Errorf("load test provider not found to build specs: %s", loadTestType)
 }

@@ -14,9 +14,9 @@ import (
 func TestBuildLoadTestSpec(t *testing.T) {
 	var distributedPods int32 = 3
 	masterImageRef, _ := reference.ParseNormalizedNamed("alpine:3.2.1")
-	workerImageRef, _ := reference.ParseNormalizedNamed("alpine:1.2.3")
 
 	type args struct {
+		config          Config
 		overwrite       bool
 		distributedPods int32
 		tags            v1.LoadTestTags
@@ -25,7 +25,6 @@ func TestBuildLoadTestSpec(t *testing.T) {
 		targetURL       string
 		duration        time.Duration
 		masterImageRef  reference.NamedTagged
-		workerImageRef  reference.NamedTagged
 	}
 	tests := []struct {
 		name    string
@@ -36,6 +35,7 @@ func TestBuildLoadTestSpec(t *testing.T) {
 		{
 			name: "Spec is valid",
 			args: args{
+				config:          Config{},
 				overwrite:       true,
 				distributedPods: 3,
 				tags:            v1.LoadTestTags{"team": "kangal"},
@@ -43,7 +43,6 @@ func TestBuildLoadTestSpec(t *testing.T) {
 				envVarsStr:      "my-key,my-value",
 				targetURL:       "http://my-app.my-domain.com",
 				masterImageRef:  masterImageRef.(reference.NamedTagged),
-				workerImageRef:  workerImageRef.(reference.NamedTagged),
 			},
 			want: v1.LoadTestSpec{
 				Type:      "Locust",
@@ -51,10 +50,6 @@ func TestBuildLoadTestSpec(t *testing.T) {
 				MasterConfig: v1.ImageDetails{
 					Image: "docker.io/library/alpine",
 					Tag:   "3.2.1",
-				},
-				WorkerConfig: v1.ImageDetails{
-					Image: "docker.io/library/alpine",
-					Tag:   "1.2.3",
 				},
 				DistributedPods: &distributedPods,
 				Tags:            v1.LoadTestTags{"team": "kangal"},
@@ -85,7 +80,7 @@ func TestBuildLoadTestSpec(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := BuildLoadTestSpec(tt.args.overwrite, tt.args.distributedPods, tt.args.tags, tt.args.testFileStr, tt.args.envVarsStr, tt.args.targetURL, tt.args.duration, tt.args.masterImageRef, tt.args.workerImageRef)
+			got, err := BuildLoadTestSpec(tt.args.config, tt.args.overwrite, tt.args.distributedPods, tt.args.tags, tt.args.testFileStr, tt.args.envVarsStr, tt.args.targetURL, tt.args.duration, tt.args.masterImageRef)
 
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -96,7 +91,7 @@ func TestBuildLoadTestSpec(t *testing.T) {
 			assert.Equal(t, tt.want.Type, got.Type)
 			assert.Equal(t, tt.want.Overwrite, got.Overwrite)
 			assert.Equal(t, tt.want.MasterConfig, got.MasterConfig)
-			assert.Equal(t, tt.want.WorkerConfig, got.WorkerConfig)
+			assert.Equal(t, tt.want.MasterConfig, got.WorkerConfig)
 			assert.Equal(t, &tt.want.DistributedPods, &got.DistributedPods)
 			assert.Equal(t, tt.want.Tags, got.Tags)
 			assert.Equal(t, tt.want.TestFile, got.TestFile)

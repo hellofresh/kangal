@@ -17,7 +17,7 @@ var (
 )
 
 //BuildLoadTestSpec validates input and returns valid LoadTestSpec for JMeter backend provider
-func BuildLoadTestSpec(overwrite bool, distributedPods int32, tags loadTestV1.LoadTestTags, testFileStr, testDataStr, envVarsStr string, masterImageRef, workerImageRef reference.NamedTagged) (loadTestV1.LoadTestSpec, error) {
+func BuildLoadTestSpec(config Config, overwrite bool, distributedPods int32, tags loadTestV1.LoadTestTags, testFileStr, testDataStr, envVarsStr string, masterImageRef, workerImageRef reference.NamedTagged) (loadTestV1.LoadTestSpec, error) {
 	lt := loadTestV1.LoadTestSpec{}
 	// JMeter backend provider needs full spec: from number of distributed pods to envVars
 	if distributedPods <= int32(0) {
@@ -26,21 +26,35 @@ func BuildLoadTestSpec(overwrite bool, distributedPods int32, tags loadTestV1.Lo
 	if testFileStr == "" {
 		return lt, ErrRequireTestFile
 	}
-	// Use defaults if unspecified
-	masterImage := loadTestV1.ImageDetails{Image: defaultMasterImageName, Tag: defaultMasterImageTag}
-	if masterImageRef != nil {
-		masterImage = loadTestV1.ImageDetails{
-			Image: masterImageRef.Name(),
-			Tag:   masterImageRef.Tag(),
-		}
+
+	masterImageName := defaultMasterImageName
+	masterImageTag := defaultMasterImageTag
+	workerImageName := defaultWorkerImageName
+	workerImageTag := defaultWorkerImageTag
+
+	// Use environment variable config if available
+	if config.MasterImageName != "" {
+		masterImageName = config.MasterImageName
 	}
-	workerImage := loadTestV1.ImageDetails{Image: defaultWorkerImageName, Tag: defaultWorkerImageTag}
-	if workerImageRef != nil {
-		workerImage = loadTestV1.ImageDetails{
-			Image: workerImageRef.Name(),
-			Tag:   workerImageRef.Tag(),
-		}
+	if config.MasterImageTag != "" {
+		masterImageTag = config.MasterImageTag
+	}
+	if config.WorkerImageName != "" {
+		workerImageName = config.WorkerImageName
+	}
+	if config.WorkerImageTag != "" {
+		workerImageTag = config.WorkerImageTag
 	}
 
-	return loadTestV1.NewSpec(loadTestV1.LoadTestTypeJMeter, overwrite, distributedPods, tags, testFileStr, testDataStr, envVarsStr, masterImage, workerImage, "", time.Duration(0)), nil
+	// Use loadtest data received from proxy if available
+	if masterImageRef != nil {
+		masterImageName = masterImageRef.Name()
+		masterImageTag = masterImageRef.Tag()
+	}
+	if workerImageRef != nil {
+		workerImageName = workerImageRef.Name()
+		workerImageTag = workerImageRef.Tag()
+	}
+
+	return loadTestV1.NewSpec(loadTestV1.LoadTestTypeJMeter, overwrite, distributedPods, tags, testFileStr, testDataStr, envVarsStr, loadTestV1.ImageDetails{Image: masterImageName, Tag: masterImageTag}, loadTestV1.ImageDetails{Image: workerImageName, Tag: workerImageTag}, "", time.Duration(0)), nil
 }
