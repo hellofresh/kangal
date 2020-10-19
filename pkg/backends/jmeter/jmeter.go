@@ -39,12 +39,34 @@ type JMeter struct {
 	reportURL        string
 	masterResources  helper.Resources
 	workerResources  helper.Resources
+	masterConfig     loadTestV1.ImageDetails
+	workerConfig     loadTestV1.ImageDetails
 
 	podAnnotations, namespaceAnnotations map[string]string
 }
 
 //New initializes new JMeter provider handler to manage load test resources with Kangal Controller
 func New(kubeClientSet kubernetes.Interface, kangalClientSet clientSetV.Interface, lt *loadTestV1.LoadTest, logger *zap.Logger, namespacesLister coreListersV1.NamespaceLister, reportURL string, podAnnotations, namespaceAnnotations map[string]string, config Config) *JMeter {
+	masterImageName := defaultMasterImageName
+	if config.MasterImageName != "" {
+		masterImageName = config.MasterImageName
+	}
+
+	masterImageTag := defaultMasterImageTag
+	if config.MasterImageTag != "" {
+		masterImageTag = config.MasterImageTag
+	}
+
+	workerImageName := defaultWorkerImageName
+	if config.WorkerImageName != "" {
+		workerImageName = config.WorkerImageName
+	}
+
+	workerImageTag := defaultWorkerImageTag
+	if config.WorkerImageTag != "" {
+		workerImageName = config.WorkerImageTag
+	}
+
 	return &JMeter{
 		kubeClientSet:        kubeClientSet,
 		kangalClientSet:      kangalClientSet,
@@ -65,6 +87,14 @@ func New(kubeClientSet kubernetes.Interface, kangalClientSet clientSetV.Interfac
 			CPURequests:    config.WorkerCPURequests,
 			MemoryLimits:   config.WorkerMemoryLimits,
 			MemoryRequests: config.WorkerMemoryRequests,
+		},
+		masterConfig: loadTestV1.ImageDetails{
+			Image: masterImageName,
+			Tag:   masterImageTag,
+		},
+		workerConfig: loadTestV1.ImageDetails{
+			Image: workerImageName,
+			Tag:   workerImageTag,
 		},
 	}
 }
