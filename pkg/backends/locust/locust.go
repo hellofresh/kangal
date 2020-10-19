@@ -86,7 +86,7 @@ func (c *Locust) CheckOrCreateResources(ctx context.Context) error {
 		}
 	}
 
-	masterJob := newMasterJob(c.loadTest, configMap, secret, c.reportURL, c.masterResources, c.podAnnotations)
+	masterJob := newMasterJob(c.loadTest, configMap, secret, c.reportURL, c.masterResources, c.podAnnotations, c.logger)
 	_, err = c.kubeClientSet.
 		BatchV1().
 		Jobs(c.loadTest.Status.Namespace).
@@ -103,7 +103,7 @@ func (c *Locust) CheckOrCreateResources(ctx context.Context) error {
 		return err
 	}
 
-	workerJob := newWorkerJob(c.loadTest, configMap, secret, masterService, c.workerResources, c.podAnnotations)
+	workerJob := newWorkerJob(c.loadTest, configMap, secret, masterService, c.workerResources, c.podAnnotations, c.logger)
 	_, err = c.kubeClientSet.
 		BatchV1().
 		Jobs(c.loadTest.Status.Namespace).
