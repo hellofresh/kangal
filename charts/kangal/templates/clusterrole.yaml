@@ -77,6 +77,7 @@ rules:
     resources:
       - configmaps
     verbs:
+      - get
       - create
 
   - apiGroups:
