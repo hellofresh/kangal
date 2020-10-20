@@ -2,6 +2,24 @@ apiVersion: v1
 entries:
   kangal:
   - apiVersion: v1
+    created: "2020-10-20T07:38:21.98675247Z"
+    description: Run JMeter performance tests in Kubernetes cluster with Kangal
+    digest: 3d14ae96f478cbdad6fb588844ec649ea5aecb543486c5f8aa248f073f7cfbde
+    home: https://github.com/hellofresh/kangal
+    icon: https://raw.githubusercontent.com/hellofresh/kangal/master/kangal_logo.svg
+    keywords:
+    - kubernetes
+    - jmeter
+    - performance tests
+    - tests runner
+    maintainers:
+    - email: kangal@hellofresh.com
+      name: Kangal
+    name: kangal
+    urls:
+    - https://github.com/hellofresh/kangal/releases/download/kangal-1.2.2/kangal-1.2.2.tgz
+    version: 1.2.2
+  - apiVersion: v1
     created: "2020-10-16T13:30:54.983942557Z"
     description: Run JMeter performance tests in Kubernetes cluster with Kangal
     digest: 5dafd617353618f3c42c5fe1dfa459a75d7ae369c361ee5d4502b684db433bc8
