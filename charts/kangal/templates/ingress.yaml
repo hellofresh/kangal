@@ -17,7 +17,7 @@ metadata:
     chart: {{ template "<CHARTNAME>.chart" $ }}
     release: {{ $.Release.Name }}
     heritage: {{ $.Release.Service }}
-{{- with $value.annotations }}
+{{- with $value.ingress.annotations }}
   annotations:
 {{ toYaml . | indent 4 }}
 {{- end }}
