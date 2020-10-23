@@ -7,6 +7,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/hellofresh/kangal/pkg/backends"
+
 	coreV1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
@@ -40,13 +42,25 @@ func CreateLoadtest(clientSet clientSetV.Clientset, pods int32, name, testFile, 
 		}
 	}
 
+	loadtestSpec, err := backends.BuildLoadTestSpecByBackend(
+		loadTestType,
+		backends.Config{},
+		false,
+		pods,
+		apisLoadTestV1.LoadTestTags{},
+		tf,
+		td,
+		ev,
+		"",
+		0,
+	)
+	if err != nil {
+		return err
+	}
+
 	ltObj := &apisLoadTestV1.LoadTest{}
 	ltObj.Name = name
-	ltObj.Spec.DistributedPods = &pods
-	ltObj.Spec.Type = loadTestType
-	ltObj.Spec.TestFile = tf
-	ltObj.Spec.EnvVars = ev
-	ltObj.Spec.TestData = td
+	ltObj.Spec = loadtestSpec
 
 	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
 	defer cancel()

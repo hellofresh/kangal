@@ -57,6 +57,7 @@ func NewLoadTest(
 // BuildLoadTestSpecByBackend returns a valid LoadTestSpec based on backend rules
 func BuildLoadTestSpecByBackend(
 	loadTestType loadTestV1.LoadTestType,
+	config Config,
 	overwrite bool,
 	distributedPods int32,
 	tags loadTestV1.LoadTestTags,
