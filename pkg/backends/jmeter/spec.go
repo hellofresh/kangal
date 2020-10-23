@@ -16,6 +16,7 @@ var (
 
 //BuildLoadTestSpec validates input and returns valid LoadTestSpec for JMeter backend provider
 func BuildLoadTestSpec(
+	config Config,
 	overwrite bool,
 	distributedPods int32,
 	tags loadTestV1.LoadTestTags,
@@ -29,6 +30,25 @@ func BuildLoadTestSpec(
 	if testFileStr == "" {
 		return lt, ErrRequireTestFile
 	}
+	masterImageName := defaultMasterImageName
+	masterImageTag := defaultMasterImageTag
+	workerImageName := defaultWorkerImageName
+	workerImageTag := defaultWorkerImageTag
+
+	// Use environment variable config if available
+	if config.MasterImageName != "" {
+		masterImageName = config.MasterImageName
+	}
+	if config.MasterImageTag != "" {
+		masterImageTag = config.MasterImageTag
+	}
+	if config.WorkerImageName != "" {
+		workerImageName = config.WorkerImageName
+	}
+	if config.WorkerImageTag != "" {
+		workerImageTag = config.WorkerImageTag
+	}
+
 	return loadTestV1.NewSpec(
 		loadTestV1.LoadTestTypeJMeter,
 		overwrite,
@@ -37,8 +57,8 @@ func BuildLoadTestSpec(
 		testFileStr,
 		testDataStr,
 		envVarsStr,
-		loadTestV1.ImageDetails{Image: masterImage, Tag: imageTag},
-		loadTestV1.ImageDetails{Image: workerImage, Tag: imageTag},
+		loadTestV1.ImageDetails{Image: masterImageName, Tag: masterImageTag},
+		loadTestV1.ImageDetails{Image: workerImageName, Tag: workerImageTag},
 		"",
 		time.Duration(0),
 	), nil

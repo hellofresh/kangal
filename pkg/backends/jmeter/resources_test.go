@@ -96,8 +96,14 @@ func TestPodResourceConfiguration(t *testing.T) {
 	c := &JMeter{
 		loadTest: &loadtestv1.LoadTest{
 			Spec: loadtestv1.LoadTestSpec{
-				MasterConfig: loadtestv1.ImageDetails{},
-				WorkerConfig: loadtestv1.ImageDetails{},
+				MasterConfig: loadtestv1.ImageDetails{
+					Image: defaultMasterImageName,
+					Tag:   defaultMasterImageTag,
+				},
+				WorkerConfig: loadtestv1.ImageDetails{
+					Image: defaultWorkerImageName,
+					Tag:   defaultWorkerImageTag,
+				},
 			},
 		},
 		masterResources: helper.Resources{

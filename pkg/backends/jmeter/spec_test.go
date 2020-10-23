@@ -12,6 +12,7 @@ func TestBuildJMeterLoadTestSpec(t *testing.T) {
 	var distributedPods int32 = 3
 
 	type args struct {
+		config          Config
 		overwrite       bool
 		distributedPods int32
 		tags            v1.LoadTestTags
@@ -28,6 +29,7 @@ func TestBuildJMeterLoadTestSpec(t *testing.T) {
 		{
 			name: "Spec is valid",
 			args: args{
+				config:          Config{},
 				overwrite:       true,
 				distributedPods: 3,
 				tags:            v1.LoadTestTags{"team": "kangal"},
@@ -37,8 +39,8 @@ func TestBuildJMeterLoadTestSpec(t *testing.T) {
 			want: v1.LoadTestSpec{
 				Type:            "JMeter",
 				Overwrite:       true,
-				MasterConfig:    v1.ImageDetails{Image: masterImage, Tag: imageTag},
-				WorkerConfig:    v1.ImageDetails{Image: workerImage, Tag: imageTag},
+				MasterConfig:    v1.ImageDetails{Image: defaultMasterImageName, Tag: defaultMasterImageTag},
+				WorkerConfig:    v1.ImageDetails{Image: defaultWorkerImageName, Tag: defaultWorkerImageTag},
 				DistributedPods: &distributedPods,
 				Tags:            v1.LoadTestTags{"team": "kangal"},
 				TestFile:        "something in the file",
@@ -68,7 +70,7 @@ func TestBuildJMeterLoadTestSpec(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := BuildLoadTestSpec(tt.args.overwrite, tt.args.distributedPods, tt.args.tags, tt.args.testFileStr, tt.args.testDataStr, tt.args.envVarsStr)
+			got, err := BuildLoadTestSpec(tt.args.config, tt.args.overwrite, tt.args.distributedPods, tt.args.tags, tt.args.testFileStr, tt.args.testDataStr, tt.args.envVarsStr)
 
 			if tt.wantErr {
 				assert.Error(t, err)

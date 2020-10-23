@@ -23,9 +23,10 @@ var (
 	MaxWaitTimeForPods = time.Minute * 10
 	//loadTestWorkerLabelSelector is the selector used for selecting jmeter worker resources
 	loadTestWorkerLabelSelector = fmt.Sprintf("%s=%s", loadTestWorkerPodLabelKey, loadTestWorkerPodLabelValue)
-	masterImage                 = "hellofreshtech/kangal-jmeter-master"
-	workerImage                 = "hellofreshtech/kangal-jmeter-worker"
-	imageTag                    = "latest"
+	defaultMasterImageName      = "hellofreshtech/kangal-jmeter-master"
+	defaultWorkerImageName      = "hellofreshtech/kangal-jmeter-worker"
+	defaultMasterImageTag       = "latest"
+	defaultWorkerImageTag       = "latest"
 )
 
 // JMeter enables the controller to run a loadtest using JMeter
@@ -38,6 +39,8 @@ type JMeter struct {
 	reportURL        string
 	masterResources  helper.Resources
 	workerResources  helper.Resources
+	masterConfig     loadTestV1.ImageDetails
+	workerConfig     loadTestV1.ImageDetails
 
 	podAnnotations, namespaceAnnotations map[string]string
 }
@@ -53,6 +56,26 @@ func New(
 	podAnnotations, namespaceAnnotations map[string]string,
 	config Config,
 ) *JMeter {
+	masterImageName := defaultMasterImageName
+	if config.MasterImageName != "" {
+		masterImageName = config.MasterImageName
+	}
+
+	masterImageTag := defaultMasterImageTag
+	if config.MasterImageTag != "" {
+		masterImageTag = config.MasterImageTag
+	}
+
+	workerImageName := defaultWorkerImageName
+	if config.WorkerImageName != "" {
+		workerImageName = config.WorkerImageName
+	}
+
+	workerImageTag := defaultWorkerImageTag
+	if config.WorkerImageTag != "" {
+		workerImageName = config.WorkerImageTag
+	}
+
 	return &JMeter{
 		kubeClientSet:        kubeClientSet,
 		kangalClientSet:      kangalClientSet,
@@ -73,6 +96,14 @@ func New(
 			CPURequests:    config.WorkerCPURequests,
 			MemoryLimits:   config.WorkerMemoryLimits,
 			MemoryRequests: config.WorkerMemoryRequests,
+		},
+		masterConfig: loadTestV1.ImageDetails{
+			Image: masterImageName,
+			Tag:   masterImageTag,
+		},
+		workerConfig: loadTestV1.ImageDetails{
+			Image: workerImageName,
+			Tag:   workerImageTag,
 		},
 	}
 }

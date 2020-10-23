@@ -138,6 +138,14 @@ func TestJMeter_CheckOrCreateResources(t *testing.T) {
 			},
 			Spec: loadtestV1.LoadTestSpec{
 				DistributedPods: &distributedPodsNum,
+				MasterConfig: loadtestV1.ImageDetails{
+					Image: defaultMasterImageName,
+					Tag:   defaultMasterImageTag,
+				},
+				WorkerConfig: loadtestV1.ImageDetails{
+					Image: defaultWorkerImageName,
+					Tag:   defaultWorkerImageTag,
+				},
 			},
 			Status: loadtestV1.LoadTestStatus{
 				Phase:     "",
