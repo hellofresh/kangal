@@ -70,7 +70,7 @@ func BuildLoadTestSpecByBackend(
 	case loadTestV1.LoadTestTypeFake:
 		return fake.BuildLoadTestSpec(tags, overwrite)
 	case loadTestV1.LoadTestTypeLocust:
-		return locust.BuildLoadTestSpec(overwrite, distributedPods, tags, testFileStr, envVarsStr, targetURL, duration)
+		return locust.BuildLoadTestSpec(config.Locust, overwrite, distributedPods, tags, testFileStr, envVarsStr, targetURL, duration)
 	}
 	return loadTestV1.LoadTestSpec{}, fmt.Errorf("load test provider not found to build specs: %s", loadTestType)
 }

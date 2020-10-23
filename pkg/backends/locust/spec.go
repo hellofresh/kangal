@@ -16,6 +16,7 @@ var (
 
 //BuildLoadTestSpec validates input and returns valid LoadTestSpec
 func BuildLoadTestSpec(
+	config Config,
 	overwrite bool,
 	distributedPods int32,
 	tags loadTestV1.LoadTestTags,
@@ -29,6 +30,17 @@ func BuildLoadTestSpec(
 	if testFileStr == "" {
 		return lt, ErrRequireTestFile
 	}
+
+	imageName := defaultImage
+	imageTag := defaultImageTag
+
+	// Use environment variable config if available
+	if config.Image != "" {
+		imageName = config.Image
+	}
+	if config.ImageTag != "" {
+		imageTag = config.ImageTag
+	}
 	return loadTestV1.NewSpec(
 		loadTestV1.LoadTestTypeLocust,
 		overwrite,
@@ -37,8 +49,8 @@ func BuildLoadTestSpec(
 		testFileStr,
 		"",
 		envVarsStr,
-		loadTestV1.ImageDetails{},
-		loadTestV1.ImageDetails{},
+		loadTestV1.ImageDetails{Image: imageName, Tag: imageTag},
+		loadTestV1.ImageDetails{Image: imageName, Tag: imageTag},
 		targetURL,
 		duration,
 	), nil
