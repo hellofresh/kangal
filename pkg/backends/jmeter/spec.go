@@ -4,6 +4,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/docker/distribution/reference"
+
 	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 )
 
@@ -21,6 +23,7 @@ func BuildLoadTestSpec(
 	distributedPods int32,
 	tags loadTestV1.LoadTestTags,
 	testFileStr, testDataStr, envVarsStr string,
+	masterImageRef, workerImageRef reference.NamedTagged,
 ) (loadTestV1.LoadTestSpec, error) {
 	lt := loadTestV1.LoadTestSpec{}
 	// JMeter backend provider needs full spec: from number of distributed pods to envVars
@@ -47,6 +50,16 @@ func BuildLoadTestSpec(
 	}
 	if config.WorkerImageTag != "" {
 		workerImageTag = config.WorkerImageTag
+	}
+
+	// Use loadtest data received from proxy if available
+	if masterImageRef != nil {
+		masterImageName = masterImageRef.Name()
+		masterImageTag = masterImageRef.Tag()
+	}
+	if workerImageRef != nil {
+		workerImageName = workerImageRef.Name()
+		workerImageTag = workerImageRef.Tag()
 	}
 
 	return loadTestV1.NewSpec(

@@ -69,7 +69,7 @@ func BuildLoadTestSpecByBackend(
 ) (loadTestV1.LoadTestSpec, error) {
 	switch loadTestType {
 	case loadTestV1.LoadTestTypeJMeter:
-		return jmeter.BuildLoadTestSpec(config.JMeter, overwrite, distributedPods, tags, testFileStr, testDataStr, envVarsStr)
+		return jmeter.BuildLoadTestSpec(config.JMeter, overwrite, distributedPods, tags, testFileStr, testDataStr, envVarsStr, masterImageRef, workerImageRef)
 	case loadTestV1.LoadTestTypeFake:
 		return fake.BuildLoadTestSpec(tags, overwrite)
 	case loadTestV1.LoadTestTypeLocust:
