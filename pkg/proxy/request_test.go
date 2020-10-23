@@ -463,3 +463,72 @@ func TestGetDuration(t *testing.T) {
 		assert.Equal(t, scenario.expected, actual)
 	}
 }
+
+func TestGetMasterImage(t *testing.T) {
+	scenarios := []struct {
+		masterImage  string
+		expectedName string
+		expectedTag  string
+		expectNil    bool
+		expectError  bool
+	}{
+		{
+			masterImage: "",
+			expectNil:   true,
+			expectError: false,
+		},
+		{
+			masterImage:  "alpine",
+			expectedName: "docker.io/library/alpine",
+			expectedTag:  "latest",
+			expectError:  false,
+		},
+		{
+			masterImage:  "alpine:3.2.1",
+			expectedName: "docker.io/library/alpine",
+			expectedTag:  "3.2.1",
+			expectError:  false,
+		},
+		{
+			masterImage: "al pine",
+			expectNil:   true,
+			expectError: true,
+		},
+		{
+			masterImage: ":latest",
+			expectNil:   true,
+			expectError: true,
+		},
+		{
+			masterImage: " ",
+			expectNil:   true,
+			expectError: true,
+		},
+	}
+
+	for _, scenario := range scenarios {
+		req, err := http.NewRequest("POST", "/load-test", new(bytes.Buffer))
+		if err != nil {
+			t.Error(err)
+			t.FailNow()
+		}
+
+		req.Form = url.Values{"masterImage": []string{scenario.masterImage}}
+		req.ParseForm()
+
+		actual, err := getMasterImageRef(req)
+
+		if scenario.expectError {
+			assert.Error(t, err)
+		} else {
+			assert.NoError(t, err)
+		}
+
+		if scenario.expectNil {
+			assert.Nil(t, actual)
+		} else {
+			assert.Equal(t, scenario.expectedName, actual.Name())
+			assert.Equal(t, scenario.expectedTag, actual.Tag())
+		}
+	}
+}

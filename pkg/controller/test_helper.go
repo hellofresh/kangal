@@ -53,6 +53,8 @@ func CreateLoadtest(clientSet clientSetV.Clientset, pods int32, name, testFile, 
 		ev,
 		"",
 		0,
+		nil,
+		nil,
 	)
 	if err != nil {
 		return err

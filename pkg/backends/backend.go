@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/docker/distribution/reference"
+
 	"go.uber.org/zap"
 	"k8s.io/client-go/kubernetes"
 	coreListersV1 "k8s.io/client-go/listers/core/v1"
@@ -63,6 +65,7 @@ func BuildLoadTestSpecByBackend(
 	tags loadTestV1.LoadTestTags,
 	testFileStr, testDataStr, envVarsStr, targetURL string,
 	duration time.Duration,
+	masterImageRef, workerImageRef reference.NamedTagged,
 ) (loadTestV1.LoadTestSpec, error) {
 	switch loadTestType {
 	case loadTestV1.LoadTestTypeJMeter:
