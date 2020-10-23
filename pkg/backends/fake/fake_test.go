@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	batchV1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,17 +29,6 @@ func (e *StatusError) Error() string {
 
 func (e *StatusError) Status() metav1.Status {
 	return metav1.Status{Reason: metav1.StatusReasonNotFound}
-}
-
-func TestSetLoadTestDefaults(t *testing.T) {
-	lt := createFake()
-
-	err := lt.SetDefaults()
-	require.NoError(t, err)
-	assert.Equal(t, loadtestV1.LoadTestCreating, lt.loadTest.Status.Phase)
-	assert.Equal(t, sleepImage, lt.loadTest.Spec.MasterConfig.Image)
-	assert.Equal(t, imageTag, lt.loadTest.Spec.MasterConfig.Tag)
-	assert.Equal(t, imageTag, lt.loadTest.Spec.MasterConfig.Tag)
 }
 
 func TestCheckOrCreateResources(t *testing.T) {

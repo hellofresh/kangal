@@ -19,9 +19,6 @@ import (
 // LoadTestType defines the methods that a loadtest type needs to implement
 // for the controller to be able to run it
 type LoadTestType interface {
-	// SetDefaults mutates the LoadTest object to add default values to empty fields
-	SetDefaults() error
-
 	// CheckOrCreateResources check for resources or create the needed resources for the loadtest type
 	CheckOrCreateResources(ctx context.Context) error
 

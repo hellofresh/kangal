@@ -67,16 +67,6 @@ func TestCheckForTimeout(t *testing.T) {
 	}
 }
 
-func TestSetLoadTestDefaults(t *testing.T) {
-	jm := &JMeter{
-		loadTest: &loadtestV1.LoadTest{},
-	}
-
-	err := jm.SetDefaults()
-	require.NoError(t, err)
-	assert.Equal(t, loadtestV1.LoadTestCreating, jm.loadTest.Status.Phase)
-}
-
 func TestGetLoadTestPhaseFromJob(t *testing.T) {
 	var testPhases = []struct {
 		ExpectedPhase loadtestV1.LoadTestPhase
