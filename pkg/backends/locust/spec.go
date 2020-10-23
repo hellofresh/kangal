@@ -4,6 +4,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/docker/distribution/reference"
+
 	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 )
 
@@ -22,6 +24,7 @@ func BuildLoadTestSpec(
 	tags loadTestV1.LoadTestTags,
 	testFileStr, envVarsStr, targetURL string,
 	duration time.Duration,
+	masterImageRef reference.NamedTagged,
 ) (loadTestV1.LoadTestSpec, error) {
 	lt := loadTestV1.LoadTestSpec{}
 	if distributedPods <= int32(0) {
@@ -41,6 +44,13 @@ func BuildLoadTestSpec(
 	if config.ImageTag != "" {
 		imageTag = config.ImageTag
 	}
+
+	// Use loadtest data received from proxy if available
+	if masterImageRef != nil {
+		imageName = masterImageRef.Name()
+		imageTag = masterImageRef.Tag()
+	}
+
 	return loadTestV1.NewSpec(
 		loadTestV1.LoadTestTypeLocust,
 		overwrite,
