@@ -3,6 +3,8 @@ package locust
 import (
 	"fmt"
 
+	"go.uber.org/zap"
+
 	batchV1 "k8s.io/api/batch/v1"
 	coreV1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -63,12 +65,25 @@ func newMasterJobName(loadTest *loadtestV1.LoadTest) string {
 	return fmt.Sprintf("%s-master", loadTest.ObjectMeta.Name)
 }
 
-func newMasterJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.ConfigMap, envvarSecret *coreV1.Secret, reportURL string, masterResources helper.Resources, podAnnotations map[string]string) *batchV1.Job {
+func newMasterJob(
+	loadTest *loadtestV1.LoadTest,
+	testfileConfigMap *coreV1.ConfigMap,
+	envvarSecret *coreV1.Secret,
+	reportURL string,
+	masterResources helper.Resources,
+	podAnnotations map[string]string,
+	imageName, imageTag string,
+	logger *zap.Logger,
+) *batchV1.Job {
 	name := newMasterJobName(loadTest)
 
 	ownerRef := metaV1.NewControllerRef(loadTest, loadtestV1.SchemeGroupVersion.WithKind("LoadTest"))
 
-	image := fmt.Sprintf("%s:%s", loadTest.Spec.MasterConfig.Image, loadTest.Spec.MasterConfig.Tag)
+	imageRef := fmt.Sprintf("%s:%s", loadTest.Spec.MasterConfig.Image, loadTest.Spec.MasterConfig.Tag)
+	if imageRef == ":" {
+		imageRef = fmt.Sprintf("%s:%s", imageName, imageTag)
+		logger.Warn("Loadtest.Spec.MasterConfig is empty; using default image", zap.String("imageRef", imageRef))
+	}
 
 	envVars := []coreV1.EnvVar{
 		{Name: "LOCUST_HEADLESS", Value: "true"},
@@ -126,7 +141,7 @@ func newMasterJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.Confi
 					Containers: []coreV1.Container{
 						{
 							Name:            "locust",
-							Image:           image,
+							Image:           imageRef,
 							ImagePullPolicy: "Always",
 							Env:             envVars,
 							VolumeMounts: []coreV1.VolumeMount{
@@ -192,12 +207,25 @@ func newWorkerJobName(loadTest *loadtestV1.LoadTest) string {
 	return fmt.Sprintf("%s-worker", loadTest.ObjectMeta.Name)
 }
 
-func newWorkerJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.ConfigMap, envvarSecret *coreV1.Secret, masterService *coreV1.Service, workerResources helper.Resources, podAnnotations map[string]string) *batchV1.Job {
+func newWorkerJob(
+	loadTest *loadtestV1.LoadTest,
+	testfileConfigMap *coreV1.ConfigMap,
+	envvarSecret *coreV1.Secret,
+	masterService *coreV1.Service,
+	workerResources helper.Resources,
+	podAnnotations map[string]string,
+	imageName, imageTag string,
+	logger *zap.Logger,
+) *batchV1.Job {
 	name := newWorkerJobName(loadTest)
 
 	ownerRef := metaV1.NewControllerRef(loadTest, loadtestV1.SchemeGroupVersion.WithKind("LoadTest"))
 
-	image := fmt.Sprintf("%s:%s", loadTest.Spec.MasterConfig.Image, loadTest.Spec.MasterConfig.Tag)
+	imageRef := fmt.Sprintf("%s:%s", loadTest.Spec.MasterConfig.Image, loadTest.Spec.MasterConfig.Tag)
+	if imageRef == ":" {
+		imageRef = fmt.Sprintf("%s:%s", imageName, imageTag)
+		logger.Warn("Loadtest.Spec.MasterConfig is empty; using default image", zap.String("imageRef", imageRef))
+	}
 
 	envVars := []coreV1.EnvVar{
 		{Name: "LOCUST_MODE_WORKER", Value: "true"},
@@ -245,7 +273,7 @@ func newWorkerJob(loadTest *loadtestV1.LoadTest, testfileConfigMap *coreV1.Confi
 					Containers: []coreV1.Container{
 						{
 							Name:            "locust",
-							Image:           image,
+							Image:           imageRef,
 							ImagePullPolicy: "Always",
 							Env:             envVars,
 							VolumeMounts: []coreV1.VolumeMount{

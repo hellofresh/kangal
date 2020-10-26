@@ -23,9 +23,10 @@ var (
 	MaxWaitTimeForPods = time.Minute * 10
 	//loadTestWorkerLabelSelector is the selector used for selecting jmeter worker resources
 	loadTestWorkerLabelSelector = fmt.Sprintf("%s=%s", loadTestWorkerPodLabelKey, loadTestWorkerPodLabelValue)
-	masterImage                 = "hellofreshtech/kangal-jmeter-master"
-	workerImage                 = "hellofreshtech/kangal-jmeter-worker"
-	imageTag                    = "latest"
+	defaultMasterImageName      = "hellofreshtech/kangal-jmeter-master"
+	defaultWorkerImageName      = "hellofreshtech/kangal-jmeter-worker"
+	defaultMasterImageTag       = "latest"
+	defaultWorkerImageTag       = "latest"
 )
 
 // JMeter enables the controller to run a loadtest using JMeter
@@ -38,12 +39,43 @@ type JMeter struct {
 	reportURL        string
 	masterResources  helper.Resources
 	workerResources  helper.Resources
+	masterConfig     loadTestV1.ImageDetails
+	workerConfig     loadTestV1.ImageDetails
 
 	podAnnotations, namespaceAnnotations map[string]string
 }
 
 //New initializes new JMeter provider handler to manage load test resources with Kangal Controller
-func New(kubeClientSet kubernetes.Interface, kangalClientSet clientSetV.Interface, lt *loadTestV1.LoadTest, logger *zap.Logger, namespacesLister coreListersV1.NamespaceLister, reportURL string, podAnnotations, namespaceAnnotations map[string]string, config Config) *JMeter {
+func New(
+	kubeClientSet kubernetes.Interface,
+	kangalClientSet clientSetV.Interface,
+	lt *loadTestV1.LoadTest,
+	logger *zap.Logger,
+	namespacesLister coreListersV1.NamespaceLister,
+	reportURL string,
+	podAnnotations, namespaceAnnotations map[string]string,
+	config Config,
+) *JMeter {
+	masterImageName := defaultMasterImageName
+	if config.MasterImageName != "" {
+		masterImageName = config.MasterImageName
+	}
+
+	masterImageTag := defaultMasterImageTag
+	if config.MasterImageTag != "" {
+		masterImageTag = config.MasterImageTag
+	}
+
+	workerImageName := defaultWorkerImageName
+	if config.WorkerImageName != "" {
+		workerImageName = config.WorkerImageName
+	}
+
+	workerImageTag := defaultWorkerImageTag
+	if config.WorkerImageTag != "" {
+		workerImageName = config.WorkerImageTag
+	}
+
 	return &JMeter{
 		kubeClientSet:        kubeClientSet,
 		kangalClientSet:      kangalClientSet,
@@ -65,32 +97,15 @@ func New(kubeClientSet kubernetes.Interface, kangalClientSet clientSetV.Interfac
 			MemoryLimits:   config.WorkerMemoryLimits,
 			MemoryRequests: config.WorkerMemoryRequests,
 		},
+		masterConfig: loadTestV1.ImageDetails{
+			Image: masterImageName,
+			Tag:   masterImageTag,
+		},
+		workerConfig: loadTestV1.ImageDetails{
+			Image: workerImageName,
+			Tag:   workerImageTag,
+		},
 	}
-}
-
-// SetDefaults set default values for creating a JMeter loadtest
-func (c *JMeter) SetDefaults() error {
-	if c.loadTest.Status.Phase == "" {
-		c.loadTest.Status.Phase = loadTestV1.LoadTestCreating
-	}
-
-	if c.loadTest.Spec.MasterConfig.Image == "" {
-		c.loadTest.Spec.MasterConfig.Image = masterImage
-	}
-
-	if c.loadTest.Spec.MasterConfig.Tag == "" {
-		c.loadTest.Spec.MasterConfig.Tag = imageTag
-	}
-
-	if c.loadTest.Spec.WorkerConfig.Image == "" {
-		c.loadTest.Spec.WorkerConfig.Image = workerImage
-	}
-
-	if c.loadTest.Spec.WorkerConfig.Tag == "" {
-		c.loadTest.Spec.WorkerConfig.Tag = imageTag
-	}
-
-	return nil
 }
 
 // CheckOrCreateResources check if JMeter kubernetes resources have been create,
@@ -142,7 +157,11 @@ func (c *JMeter) CheckOrCreateResources(ctx context.Context) error {
 			c.logger.Error("Error on creating new JMeter service", zap.Error(err))
 			return err
 		}
-		c.logger.Info("Created JMeter resources", zap.String("LoadTest", c.loadTest.GetName()), zap.String("namespace", c.loadTest.Status.Namespace))
+		c.logger.Info(
+			"Created JMeter resources",
+			zap.String("LoadTest", c.loadTest.GetName()),
+			zap.String("namespace", c.loadTest.Status.Namespace),
+		)
 
 	}
 	return nil
@@ -160,6 +179,10 @@ func (c *JMeter) CheckOrUpdateStatus(ctx context.Context) error {
 			c.loadTest.Status.Phase = loadTestV1.LoadTestFinished
 			return nil
 		}
+	}
+
+	if c.loadTest.Status.Phase == "" {
+		c.loadTest.Status.Phase = loadTestV1.LoadTestCreating
 	}
 
 	if c.loadTest.Status.Phase == loadTestV1.LoadTestErrored {
@@ -194,7 +217,12 @@ func (c *JMeter) CheckOrUpdateStatus(ctx context.Context) error {
 				if containerStatus.State.Waiting.Reason != "Pending" &&
 					containerStatus.State.Waiting.Reason != "ContainerCreating" &&
 					containerStatus.State.Waiting.Reason != "PodInitializing" {
-					c.logger.Info("One of containers is unhealthy, marking LoadTest as errored", zap.String("LoadTest", c.loadTest.GetName()), zap.String("pod", pod.Name), zap.String("namespace", namespace.GetName()))
+					c.logger.Info(
+						"One of containers is unhealthy, marking LoadTest as errored",
+						zap.String("LoadTest", c.loadTest.GetName()),
+						zap.String("pod", pod.Name),
+						zap.String("namespace", namespace.GetName()),
+					)
 					c.loadTest.Status.Phase = loadTestV1.LoadTestErrored
 					return nil
 				}

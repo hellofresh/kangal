@@ -175,7 +175,12 @@ func (c *JMeter) NewTestdataConfigMap() ([]*coreV1.ConfigMap, error) {
 func (c *JMeter) NewPod(i int, configMap *coreV1.ConfigMap, podAnnotations map[string]string) *coreV1.Pod {
 	loadtest := c.loadTest
 	optionalVolume := true
-	WorkerConfig := loadtest.Spec.WorkerConfig
+
+	imageRef := fmt.Sprintf("%s:%s", loadtest.Spec.WorkerConfig.Image, loadtest.Spec.WorkerConfig.Tag)
+	if imageRef == ":" {
+		imageRef = fmt.Sprintf("%s:%s", c.workerConfig.Image, c.workerConfig.Tag)
+		c.logger.Warn("Loadtest.Spec.WorkerConfig is empty; using default worker image", zap.String("imageRef", imageRef))
+	}
 
 	return &coreV1.Pod{
 		ObjectMeta: metaV1.ObjectMeta{
@@ -190,7 +195,7 @@ func (c *JMeter) NewPod(i int, configMap *coreV1.ConfigMap, podAnnotations map[s
 			Containers: []coreV1.Container{
 				{
 					Name:            loadTestWorkerName,
-					Image:           fmt.Sprintf("%s:%s", WorkerConfig.Image, WorkerConfig.Tag),
+					Image:           imageRef,
 					ImagePullPolicy: "Always",
 					Ports: []coreV1.ContainerPort{
 						{ContainerPort: 1099},
@@ -235,7 +240,12 @@ func (c *JMeter) NewPod(i int, configMap *coreV1.ConfigMap, podAnnotations map[s
 func (c *JMeter) NewJMeterMasterJob(reportURL string, podAnnotations map[string]string) *batchV1.Job {
 	loadtest := c.loadTest
 	var one int32 = 1
-	MasterConfig := loadtest.Spec.MasterConfig
+
+	imageRef := fmt.Sprintf("%s:%s", loadtest.Spec.MasterConfig.Image, loadtest.Spec.MasterConfig.Tag)
+	if imageRef == ":" {
+		c.logger.Warn("Loadtest.Spec.MasterConfig is empty; using default master image", zap.String("imageRef", imageRef))
+		imageRef = fmt.Sprintf("%s:%s", c.masterConfig.Image, c.masterConfig.Tag)
+	}
 
 	jMeterEnvVars := []coreV1.EnvVar{
 		{
@@ -281,7 +291,7 @@ func (c *JMeter) NewJMeterMasterJob(reportURL string, podAnnotations map[string]
 					Containers: []coreV1.Container{
 						{
 							Name:            loadTestJobName,
-							Image:           fmt.Sprintf("%s:%s", MasterConfig.Image, MasterConfig.Tag),
+							Image:           imageRef,
 							ImagePullPolicy: "Always",
 							Env:             jMeterEnvVars,
 							VolumeMounts: []coreV1.VolumeMount{

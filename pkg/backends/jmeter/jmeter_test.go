@@ -67,16 +67,6 @@ func TestCheckForTimeout(t *testing.T) {
 	}
 }
 
-func TestSetLoadTestDefaults(t *testing.T) {
-	jm := &JMeter{
-		loadTest: &loadtestV1.LoadTest{},
-	}
-
-	err := jm.SetDefaults()
-	require.NoError(t, err)
-	assert.Equal(t, loadtestV1.LoadTestCreating, jm.loadTest.Status.Phase)
-}
-
 func TestGetLoadTestPhaseFromJob(t *testing.T) {
 	var testPhases = []struct {
 		ExpectedPhase loadtestV1.LoadTestPhase
@@ -148,6 +138,14 @@ func TestJMeter_CheckOrCreateResources(t *testing.T) {
 			},
 			Spec: loadtestV1.LoadTestSpec{
 				DistributedPods: &distributedPodsNum,
+				MasterConfig: loadtestV1.ImageDetails{
+					Image: defaultMasterImageName,
+					Tag:   defaultMasterImageTag,
+				},
+				WorkerConfig: loadtestV1.ImageDetails{
+					Image: defaultWorkerImageName,
+					Tag:   defaultWorkerImageTag,
+				},
 			},
 			Status: loadtestV1.LoadTestStatus{
 				Phase:     "",

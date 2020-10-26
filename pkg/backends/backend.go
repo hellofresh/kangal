@@ -19,9 +19,6 @@ import (
 // LoadTestType defines the methods that a loadtest type needs to implement
 // for the controller to be able to run it
 type LoadTestType interface {
-	// SetDefaults mutates the LoadTest object to add default values to empty fields
-	SetDefaults() error
-
 	// CheckOrCreateResources check for resources or create the needed resources for the loadtest type
 	CheckOrCreateResources(ctx context.Context) error
 
@@ -36,7 +33,16 @@ type Config struct {
 }
 
 // NewLoadTest returns a new LoadTestType
-func NewLoadTest(loadTest *loadTestV1.LoadTest, kubeClientSet kubernetes.Interface, kangalClientSet clientSetV.Interface, logger *zap.Logger, namespacesLister coreListersV1.NamespaceLister, reportURL string, podAnnotations, namespaceAnnotations map[string]string, backendsConfig Config) (LoadTestType, error) {
+func NewLoadTest(
+	loadTest *loadTestV1.LoadTest,
+	kubeClientSet kubernetes.Interface,
+	kangalClientSet clientSetV.Interface,
+	logger *zap.Logger,
+	namespacesLister coreListersV1.NamespaceLister,
+	reportURL string,
+	podAnnotations, namespaceAnnotations map[string]string,
+	backendsConfig Config,
+) (LoadTestType, error) {
 	switch loadTest.Spec.Type {
 	case loadTestV1.LoadTestTypeJMeter:
 		return jmeter.New(kubeClientSet, kangalClientSet, loadTest, logger, namespacesLister, reportURL, podAnnotations, namespaceAnnotations, backendsConfig.JMeter), nil
@@ -49,14 +55,22 @@ func NewLoadTest(loadTest *loadTestV1.LoadTest, kubeClientSet kubernetes.Interfa
 }
 
 // BuildLoadTestSpecByBackend returns a valid LoadTestSpec based on backend rules
-func BuildLoadTestSpecByBackend(loadTestType loadTestV1.LoadTestType, overwrite bool, distributedPods int32, tags loadTestV1.LoadTestTags, testFileStr, testDataStr, envVarsStr, targetURL string, duration time.Duration) (loadTestV1.LoadTestSpec, error) {
+func BuildLoadTestSpecByBackend(
+	loadTestType loadTestV1.LoadTestType,
+	config Config,
+	overwrite bool,
+	distributedPods int32,
+	tags loadTestV1.LoadTestTags,
+	testFileStr, testDataStr, envVarsStr, targetURL string,
+	duration time.Duration,
+) (loadTestV1.LoadTestSpec, error) {
 	switch loadTestType {
 	case loadTestV1.LoadTestTypeJMeter:
-		return jmeter.BuildLoadTestSpec(overwrite, distributedPods, tags, testFileStr, testDataStr, envVarsStr)
+		return jmeter.BuildLoadTestSpec(config.JMeter, overwrite, distributedPods, tags, testFileStr, testDataStr, envVarsStr)
 	case loadTestV1.LoadTestTypeFake:
 		return fake.BuildLoadTestSpec(tags, overwrite)
 	case loadTestV1.LoadTestTypeLocust:
-		return locust.BuildLoadTestSpec(overwrite, distributedPods, tags, testFileStr, envVarsStr, targetURL, duration)
+		return locust.BuildLoadTestSpec(config.Locust, overwrite, distributedPods, tags, testFileStr, envVarsStr, targetURL, duration)
 	}
 	return loadTestV1.LoadTestSpec{}, fmt.Errorf("load test provider not found to build specs: %s", loadTestType)
 }
