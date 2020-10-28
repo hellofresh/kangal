@@ -75,8 +75,8 @@ func ShowHandler() func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func untar(prefix string, obj io.Reader, fs afero.Fs) error {
-	_, err := fs.Stat(prefix)
+func untar(prefix string, obj io.Reader, afs afero.Fs) error {
+	_, err := afs.Stat(prefix)
 	if nil == err {
 		// means its already exists locally
 		return nil
@@ -97,13 +97,13 @@ func untar(prefix string, obj io.Reader, fs afero.Fs) error {
 		target := fmt.Sprintf("%s/%s", prefix, strings.Trim(header.Name, "./"))
 		switch header.Typeflag {
 		case tar.TypeDir:
-			if _, err := fs.Stat(target); err != nil {
-				if err := fs.MkdirAll(target, 0755); err != nil {
+			if _, err := afs.Stat(target); err != nil {
+				if err := afs.MkdirAll(target, 0755); err != nil {
 					return err
 				}
 			}
 		case tar.TypeReg:
-			f, err := fs.OpenFile(target, os.O_CREATE|os.O_RDWR, os.FileMode(header.Mode))
+			f, err := afs.OpenFile(target, os.O_CREATE|os.O_RDWR, os.FileMode(header.Mode))
 			if err != nil {
 				return err
 			}
