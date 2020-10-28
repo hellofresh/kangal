@@ -81,10 +81,6 @@ func untar(prefix string, obj io.Reader, fs afero.Fs) error {
 		// means its already exists locally
 		return nil
 	}
-	err = fs.Mkdir(prefix, 0600)
-	if nil != err {
-		return err
-	}
 
 	reader := tar.NewReader(obj)
 	for {
