@@ -39,10 +39,8 @@ func (m *MinioFileSystem) Open(name string) (http.File, error) {
 	}
 	name = strings.Join(parts, "/")
 
-	loadTestFile := parts[0]
-
-	loadTestObj, err := getObject(m, loadTestFile)
-	if err == nil {
+	loadTestObj, err := getObject(m, name)
+	if err != nil {
 		return nil, os.ErrNotExist
 	}
 
