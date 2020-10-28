@@ -13,7 +13,6 @@ import (
 	khttp "github.com/hellofresh/kangal/pkg/core/http"
 	kk8s "github.com/hellofresh/kangal/pkg/kubernetes"
 	"github.com/minio/minio-go/v6"
-	"github.com/spf13/afero"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
@@ -34,9 +33,14 @@ func ShowHandler() func(w http.ResponseWriter, r *http.Request) {
 		panic("bucket name was not defined or empty")
 	}
 
-	tmpDir := strings.TrimRight(os.TempDir(), "/")
-	osFs := afero.NewOsFs()
-	osHttpFs := afero.NewHttpFs(osFs)
+	tmpDir := fmt.Sprintf("%s/kangal", strings.TrimRight(os.TempDir(), "/"))
+
+	go func() {
+		ticker := time.NewTicker(5 * time.Hour)
+		for range ticker.C {
+			os.RemoveAll(tmpDir)
+		}
+	}()
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		loadTestName := chi.URLParam(r, "id")
@@ -56,13 +60,13 @@ func ShowHandler() func(w http.ResponseWriter, r *http.Request) {
 		objStat, err := obj.Stat()
 		if nil == err && "application/x-tar" == objStat.ContentType {
 			prefix := fmt.Sprintf("%s/%s", tmpDir, loadTestName)
-			err = untar(prefix, obj, osFs)
+			err = untar(prefix, obj)
 			if nil != err {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			r.URL.Path = fmt.Sprintf("%s/%s", prefix, file)
-			http.FileServer(osHttpFs).ServeHTTP(w, r)
+			r.URL.Path = fmt.Sprintf("/%s", file)
+			http.FileServer(http.Dir(prefix)).ServeHTTP(w, r)
 			return
 		}
 
@@ -70,8 +74,8 @@ func ShowHandler() func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func untar(prefix string, obj *minio.Object, afs afero.Fs) error {
-	_, err := afs.Stat(prefix)
+func untar(prefix string, obj *minio.Object) error {
+	_, err := os.Stat(prefix)
 	if nil == err {
 		// means its already exists locally
 		return nil
@@ -91,13 +95,13 @@ func untar(prefix string, obj *minio.Object, afs afero.Fs) error {
 		target := fmt.Sprintf("%s/%s", prefix, strings.TrimLeft(tarHeader.Name, "./"))
 		switch tarHeader.Typeflag {
 		case tar.TypeDir:
-			if _, err := afs.Stat(target); err != nil {
-				if err := afs.MkdirAll(target, 0755); err != nil {
+			if _, err := os.Stat(target); err != nil {
+				if err := os.MkdirAll(target, 0755); err != nil {
 					return err
 				}
 			}
 		case tar.TypeReg:
-			f, err := afs.OpenFile(target, os.O_CREATE|os.O_RDWR, os.FileMode(tarHeader.Mode))
+			f, err := os.OpenFile(target, os.O_CREATE|os.O_RDWR, os.FileMode(tarHeader.Mode))
 			if err != nil {
 				return err
 			}
