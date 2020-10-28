@@ -1,7 +1,11 @@
 package report
 
 import (
+	"archive/tar"
+	"bytes"
 	"errors"
+	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -16,6 +20,7 @@ import (
 	kk8s "github.com/hellofresh/kangal/pkg/kubernetes"
 	loadtestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	"github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned/fake"
+	"github.com/spf13/afero"
 
 	"github.com/go-chi/chi"
 	"github.com/minio/minio-go/v6"
@@ -143,4 +148,36 @@ func TestPersistHandler(t *testing.T) {
 			assert.Equal(t, rr.Code, scenario.expectedStatusCode)
 		})
 	}
+}
+
+func TestUntar(t *testing.T) {
+	tarball := bytes.NewBuffer(nil)
+
+	writer := tar.NewWriter(tarball)
+	defer writer.Close()
+
+	for i := 0; i < 10; i++ {
+		str := fmt.Sprintf("my-file-%d", i)
+		file := bytes.NewReader([]byte(str))
+
+		header := &tar.Header{
+			Name:    str,
+			Size:    file.Size(),
+			Mode:    0644,
+			ModTime: time.Now(),
+		}
+
+		err := writer.WriteHeader(header)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, err = io.Copy(writer, file)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	err := untar("/my-load-test", tarball, afero.NewMemMapFs())
+	assert.NoError(t, err)
 }

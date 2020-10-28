@@ -12,10 +12,11 @@ import (
 
 	khttp "github.com/hellofresh/kangal/pkg/core/http"
 	kk8s "github.com/hellofresh/kangal/pkg/kubernetes"
-	"github.com/minio/minio-go/v6"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
+	"github.com/minio/minio-go/v6"
+	"github.com/spf13/afero"
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/api/errors"
 )
@@ -60,7 +61,7 @@ func ShowHandler() func(w http.ResponseWriter, r *http.Request) {
 		objStat, err := obj.Stat()
 		if nil == err && "application/x-tar" == objStat.ContentType {
 			prefix := fmt.Sprintf("%s/%s", tmpDir, loadTestName)
-			err = untar(prefix, obj)
+			err = untar(prefix, obj, afero.NewOsFs())
 			if nil != err {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -74,38 +75,43 @@ func ShowHandler() func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func untar(prefix string, obj *minio.Object) error {
-	_, err := os.Stat(prefix)
+func untar(prefix string, obj io.Reader, fs afero.Fs) error {
+	_, err := fs.Stat(prefix)
 	if nil == err {
 		// means its already exists locally
 		return nil
 	}
-	tarReader := tar.NewReader(obj)
+	err = fs.Mkdir(prefix, 0600)
+	if nil != err {
+		return err
+	}
+
+	reader := tar.NewReader(obj)
 	for {
-		tarHeader, err := tarReader.Next()
+		header, err := reader.Next()
 		if err == io.EOF {
 			return nil
 		}
 		if nil != err {
 			return err
 		}
-		if tarHeader == nil {
+		if header == nil {
 			continue
 		}
-		target := fmt.Sprintf("%s/%s", prefix, strings.TrimLeft(tarHeader.Name, "./"))
-		switch tarHeader.Typeflag {
+		target := fmt.Sprintf("%s/%s", prefix, strings.Trim(header.Name, "./"))
+		switch header.Typeflag {
 		case tar.TypeDir:
-			if _, err := os.Stat(target); err != nil {
-				if err := os.MkdirAll(target, 0755); err != nil {
+			if _, err := fs.Stat(target); err != nil {
+				if err := fs.MkdirAll(target, 0755); err != nil {
 					return err
 				}
 			}
 		case tar.TypeReg:
-			f, err := os.OpenFile(target, os.O_CREATE|os.O_RDWR, os.FileMode(tarHeader.Mode))
+			f, err := fs.OpenFile(target, os.O_CREATE|os.O_RDWR, os.FileMode(header.Mode))
 			if err != nil {
 				return err
 			}
-			if _, err := io.Copy(f, tarReader); err != nil {
+			if _, err := io.Copy(f, reader); err != nil {
 				return err
 			}
 			f.Close()

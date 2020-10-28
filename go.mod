@@ -16,6 +16,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rs/cors v1.7.0
 	github.com/smartystreets/assertions v0.0.0-20190116191733-b6c0e53d7304 // indirect
+	github.com/spf13/afero v1.4.1
 	github.com/spf13/cobra v1.0.0
 	github.com/stretchr/testify v1.6.1
 	github.com/technosophos/moniker v0.0.0-20180509230615-a5dbd03a2245
