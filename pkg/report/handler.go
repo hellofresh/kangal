@@ -1,13 +1,19 @@
 package report
 
 import (
+	"archive/tar"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"strings"
 	"time"
 
 	khttp "github.com/hellofresh/kangal/pkg/core/http"
 	kk8s "github.com/hellofresh/kangal/pkg/kubernetes"
+	"github.com/minio/minio-go/v6"
+	"github.com/spf13/afero"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
@@ -28,6 +34,10 @@ func ShowHandler() func(w http.ResponseWriter, r *http.Request) {
 		panic("bucket name was not defined or empty")
 	}
 
+	tmpDir := strings.TrimRight(os.TempDir(), "/")
+	osFs := afero.NewOsFs()
+	osHttpFs := afero.NewHttpFs(osFs)
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		loadTestName := chi.URLParam(r, "id")
 		file := chi.URLParam(r, "*")
@@ -37,7 +47,65 @@ func ShowHandler() func(w http.ResponseWriter, r *http.Request) {
 			r.URL.Path += fmt.Sprintf("/%s", file)
 		}
 
+		// first, try to handle uncompressed tar archive
+		obj, err := minioClient.GetObject(bucketName, loadTestName, minio.GetObjectOptions{})
+		if nil != err {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		objStat, err := obj.Stat()
+		if nil == err && "application/x-tar" == objStat.ContentType {
+			prefix := fmt.Sprintf("%s/%s", tmpDir, loadTestName)
+			err = untar(prefix, obj, osFs)
+			if nil != err {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			r.URL.Path = fmt.Sprintf("%s/%s", prefix, file)
+			http.FileServer(osHttpFs).ServeHTTP(w, r)
+			return
+		}
+
 		http.FileServer(fs).ServeHTTP(w, r)
+	}
+}
+
+func untar(prefix string, obj *minio.Object, afs afero.Fs) error {
+	_, err := afs.Stat(prefix)
+	if nil == err {
+		// means its already exists locally
+		return nil
+	}
+	tarReader := tar.NewReader(obj)
+	for {
+		tarHeader, err := tarReader.Next()
+		if err == io.EOF {
+			return nil
+		}
+		if nil != err {
+			return err
+		}
+		if tarHeader == nil {
+			continue
+		}
+		target := fmt.Sprintf("%s/%s", prefix, strings.TrimLeft(tarHeader.Name, "./"))
+		switch tarHeader.Typeflag {
+		case tar.TypeDir:
+			if _, err := afs.Stat(target); err != nil {
+				if err := afs.MkdirAll(target, 0755); err != nil {
+					return err
+				}
+			}
+		case tar.TypeReg:
+			f, err := afs.OpenFile(target, os.O_CREATE|os.O_RDWR, os.FileMode(tarHeader.Mode))
+			if err != nil {
+				return err
+			}
+			if _, err := io.Copy(f, tarReader); err != nil {
+				return err
+			}
+			f.Close()
+		}
 	}
 }
 

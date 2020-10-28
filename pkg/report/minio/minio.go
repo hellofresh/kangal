@@ -1,7 +1,6 @@
 package report
 
 import (
-	"archive/tar"
 	"net/http"
 	"os"
 	"strings"
@@ -43,60 +42,13 @@ func (m *MinioFileSystem) Open(name string) (http.File, error) {
 	loadTestFile := parts[0]
 
 	loadTestObj, err := getObject(m, loadTestFile)
-	if err == os.ErrNotExist {
-		return m.fallbackOpen(name)
-	}
-	if err != nil {
-		return nil, os.ErrNotExist
-	}
-
-	loadTestInfo, _ := loadTestObj.Stat()
-
-	if "application/x-tar" == loadTestInfo.ContentType {
-		tarName := strings.TrimPrefix(name, loadTestFile+"/")
-		tarReader := tar.NewReader(loadTestObj)
-
-		for {
-			tarHeader, err := tarReader.Next()
-			if nil != err {
-				break
-			}
-
-			headerName := strings.TrimLeft(tarHeader.Name, "./")
-			if tarName != headerName {
-				continue
-			}
-
-			return &memoryFile{
-				at:      0,
-				name:    tarName,
-				read:    tarReader,
-				size:    tarHeader.Size,
-				modTime: tarHeader.ModTime,
-			}, nil
-		}
-
+	if err == nil {
 		return nil, os.ErrNotExist
 	}
 
 	return &minioFile{
 		client: m.Client,
 		object: loadTestObj,
-		isDir:  false,
-		bucket: m.Bucket,
-		prefix: loadTestFile,
-	}, nil
-}
-
-func (m *MinioFileSystem) fallbackOpen(name string) (http.File, error) {
-	obj, err := getObject(m, name)
-	if err != nil {
-		return nil, os.ErrNotExist
-	}
-
-	return &minioFile{
-		client: m.Client,
-		object: obj,
 		isDir:  false,
 		bucket: m.Bucket,
 		prefix: name,
