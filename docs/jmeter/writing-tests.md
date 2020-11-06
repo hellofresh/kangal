@@ -28,7 +28,7 @@ Every element of the test can be modified, disabled or removed. You can also add
 Some test scenarios require unique request or at least some amount of varied data in requests. For this purposes JMeter allows you to use external data sets in a CSV format. Read more about [CSV DataSetConfig](https://jmeter.apache.org/usermanual/component_reference.html#CSV_Data_Set_Config) in official JMeter documentation.
 
 1. Prepare your test data in CSV file
-2. Configure test script accordingly. Find details here [How to write and understand a JMeter test: Test with CSV Data](How-to-write-tests.md#test-with-csv-data)
+2. Configure test script accordingly. Jump to section [Test with CSV Data](#test-with-csv-data)
 3. Add both files in POST request to Kangal API
 
 Kangal will split the test data equally between all the distributed pods you requested, so every pod will have a unique piece of your test data file and requests from different pods will not be duplicated. If you have only one distributed pod no data splitting will take place.
@@ -36,9 +36,9 @@ Kangal will split the test data equally between all the distributed pods you req
 ### Tests with environment variables
 Some tests may contain sensitive information like DB connection parameters, authorization tokens, etc. You can provide this information as environment variables which will be applied in load test environment before running test.
 
-Kangal allows you to use a file with env vars saved in CSV format. Please configure your test script accordingly to use env vars. Read more about using env vars in official [JMeter-plugin documentation](https://jmeter-plugins.org/wiki/Functions/#envsupfont-color-gray-size-1-since-1-2-0-font-sup) and [How to write and understand a JMeter test](How-to-write-tests.md).
+Kangal allows you to use a file with env vars saved in CSV format. Please configure your test script accordingly to use env vars. Read more about using env vars in official [JMeter-plugin documentation](https://jmeter-plugins.org/wiki/Functions/#envsupfont-color-gray-size-1-since-1-2-0-font-sup).
 1. Save your environment variables in CSV file
-2. Configure test script accordingly. Find details here [How to write and understand a JMeter test: Test with environment variables](How-to-write-tests.md#test-with-environment-variables)
+2. Configure test script accordingly. Jump to section [Test with environment variables](#test-with-environment-variables)
 3. Add both files in POST request to Kangal API
 
 ## Example Test 1: Linearly growing load
