@@ -168,8 +168,8 @@ func (c *Client) GetMasterPodLogs(ctx context.Context, namespace string) (*restC
 }
 
 // GetWorkerPodLogs is used for getting the logs from worker pod
-func (c *Client) GetWorkerPodLogs(ctx context.Context, namespace, workerPodId string) (*restClient.Request, error) {
-	return c.kubeClient.CoreV1().Pods(namespace).GetLogs(workerPodId, &coreV1.PodLogOptions{}), nil
+func (c *Client) GetWorkerPodLogs(ctx context.Context, namespace, workerPodID string) (*restClient.Request, error) {
+	return c.kubeClient.CoreV1().Pods(namespace).GetLogs(workerPodID, &coreV1.PodLogOptions{}), nil
 }
 
 func getMostRecentPod(pods *coreV1.PodList) string {

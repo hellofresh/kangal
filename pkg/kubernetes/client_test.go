@@ -377,6 +377,19 @@ func TestGetMasterPodLogs(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+func TestGetWorkerPodLogs(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), controller.KubeTimeout)
+	defer cancel()
+
+	var logger = zap.NewNop()
+	loadtestClientset := fakeClientset.NewSimpleClientset()
+	client := &fake.Clientset{}
+
+	c := NewClient(loadtestClientset.KangalV1().LoadTests(), client, logger)
+	_, err := c.GetWorkerPodLogs(ctx, "namespace", "worker-pod-0")
+	assert.Nil(t, err)
+}
+
 func TestGetMostRecentPod(t *testing.T) {
 	time2019 := metav1.NewTime(time.Date(2019, time.January, 14, 14, 14, 14, 14, time.UTC))
 	time2018 := metav1.NewTime(time.Date(2018, time.January, 14, 14, 14, 14, 14, time.UTC))
