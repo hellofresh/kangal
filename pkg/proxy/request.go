@@ -28,6 +28,7 @@ const (
 	targetURL       = "targetURL"
 	duration        = "duration"
 	loadTestID      = "id"
+	workerPodID     = "worker"
 )
 
 //httpValidator validates request body

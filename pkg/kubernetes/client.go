@@ -19,6 +19,7 @@ import (
 
 var (
 	loadTestMasterLabelSelector = "app=loadtest-master"
+	loadTestWorkerLabelSelector = "app=loadtest-worker-pod"
 	// GracePeriod is duration in seconds before the object should be deleted.
 	// The value zero indicates delete immediately.
 	gracePeriod = int64(0)
@@ -164,6 +165,11 @@ func (c *Client) GetMasterPodLogs(ctx context.Context, namespace string) (*restC
 	podID := getMostRecentPod(pods)
 
 	return c.kubeClient.CoreV1().Pods(namespace).GetLogs(podID, &coreV1.PodLogOptions{}), nil
+}
+
+// GetWorkerPodLogs is used for getting the logs from worker pod
+func (c *Client) GetWorkerPodLogs(ctx context.Context, namespace, workerPodId string) (*restClient.Request, error) {
+	return c.kubeClient.CoreV1().Pods(namespace).GetLogs(workerPodId, &coreV1.PodLogOptions{}), nil
 }
 
 func getMostRecentPod(pods *coreV1.PodList) string {
