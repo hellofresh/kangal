@@ -258,7 +258,7 @@ func (p *Proxy) Get(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-//GetLogs returns the loadtest master pod logs
+//GetLogs returns the loadtest logs from master or worker pods
 func (p *Proxy) GetLogs(w http.ResponseWriter, r *http.Request) {
 	logger := mPkg.GetLogger(r.Context())
 	ltID := chi.URLParam(r, loadTestID)

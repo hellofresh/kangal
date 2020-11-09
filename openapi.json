@@ -309,6 +309,62 @@
 				}
 			}
 		},
+		"/load-test/{loadTestName}/logs/{workerPodID}": {
+			"get": {
+				"tags": [
+					"load-tests"
+				],
+				"summary": "Logs for a specific worker pod of the loadTest",
+				"operationId": "showWorkerLogs",
+				"parameters": [
+					{
+						"name": "loadTestName",
+						"in": "path",
+						"description": "The name of the load test to retrieve",
+						"required": true,
+						"style": "simple",
+						"explode": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "workerPodID",
+						"in": "path",
+						"description": "ID of the worker pod you want to get logs from",
+						"required": true,
+						"style": "simple",
+						"explode": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Show logs of the worker pod of the loadtest",
+						"content": {
+							"text/plain": {
+								"schema": {
+									"type": "string",
+									"example": "Version 5.0 r1840935 MDC{}\njava.version=1.8.0_272 MDC{}\njava.vm.name=OpenJDK 64-Bit Server VM MDC{}\nos.name=Linux MDC{}\nos.arch=amd64 MDC{}\n..."
+								}
+							}
+						}
+					},
+					"default": {
+						"description": "unexpected error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
 		"/metrics": {
 			"get": {
 				"tags": ["metrics"],
