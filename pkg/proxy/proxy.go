@@ -287,7 +287,7 @@ func (p *Proxy) GetLogs(w http.ResponseWriter, r *http.Request) {
 	defer cancelJMeterLogs()
 	if workerID == "" {
 		logger.Info("Returning master pod logs")
-		logsRequest, err = p.kubeClient.GetMasterPodLogs(ctxJMeterLogs, namespace)
+		logsRequest, err = p.kubeClient.GetMasterPodRequest(ctxJMeterLogs, namespace)
 		if err != nil {
 			logger.Error("Could not get load test logs request:", zap.Error(err))
 			render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest, err.Error()))
@@ -295,12 +295,7 @@ func (p *Proxy) GetLogs(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		logger.Info("Returning worker pod logs")
-		logsRequest, err = p.kubeClient.GetWorkerPodLogs(ctxJMeterLogs, namespace, workerID)
-		if err != nil {
-			logger.Error("Could not get load test logs request:", zap.Error(err))
-			render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest, err.Error()))
-			return
-		}
+		logsRequest = p.kubeClient.GetWorkerPodRequest(ctxJMeterLogs, namespace, workerID)
 	}
 
 	logs, err := doRequest(logsRequest)

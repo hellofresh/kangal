@@ -150,10 +150,10 @@ func (c *Client) CountActiveLoadTests(ctx context.Context) (int, error) {
 	return counter, nil
 }
 
-// GetMasterPodLogs is making an assumptions that we only care about the logs
+// GetMasterPodRequest is making an assumptions that we only care about the logs
 // from the most recently created pod. It gets the pods associated with
 // the master job and returns the request that is used for getting the logs
-func (c *Client) GetMasterPodLogs(ctx context.Context, namespace string) (*restClient.Request, error) {
+func (c *Client) GetMasterPodRequest(ctx context.Context, namespace string) (*restClient.Request, error) {
 	pods, err := c.kubeClient.CoreV1().Pods(namespace).List(ctx, metaV1.ListOptions{
 		LabelSelector: loadTestMasterLabelSelector,
 	})
@@ -167,9 +167,9 @@ func (c *Client) GetMasterPodLogs(ctx context.Context, namespace string) (*restC
 	return c.kubeClient.CoreV1().Pods(namespace).GetLogs(podID, &coreV1.PodLogOptions{}), nil
 }
 
-// GetWorkerPodLogs is used for getting the logs from worker pod
-func (c *Client) GetWorkerPodLogs(ctx context.Context, namespace, workerPodID string) (*restClient.Request, error) {
-	return c.kubeClient.CoreV1().Pods(namespace).GetLogs(workerPodID, &coreV1.PodLogOptions{}), nil
+// GetWorkerPodRequest is used for getting the logs from worker pod
+func (c *Client) GetWorkerPodRequest(ctx context.Context, namespace, workerPodID string) *restClient.Request {
+	return c.kubeClient.CoreV1().Pods(namespace).GetLogs(workerPodID, &coreV1.PodLogOptions{})
 }
 
 func getMostRecentPod(pods *coreV1.PodList) string {

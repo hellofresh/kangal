@@ -12,6 +12,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/fake"
+	restClient "k8s.io/client-go/rest"
 	k8stesting "k8s.io/client-go/testing"
 
 	"github.com/hellofresh/kangal/pkg/controller"
@@ -360,7 +361,7 @@ func TestGetMasterPodLogs(t *testing.T) {
 	})
 
 	c := NewClient(loadtestClientset.KangalV1().LoadTests(), client, logger)
-	_, err := c.GetMasterPodLogs(ctx, "namespace")
+	_, err := c.GetMasterPodRequest(ctx, "namespace")
 	assert.Error(t, err)
 
 	client = &fake.Clientset{}
@@ -373,7 +374,7 @@ func TestGetMasterPodLogs(t *testing.T) {
 	// to easily mock this funciton like there is for "ListPods". To do this We would
 	// need to wright our own `FakePod` package, and that doesn't seem worth it.
 	c = NewClient(loadtestClientset.KangalV1().LoadTests(), client, logger)
-	_, err = c.GetMasterPodLogs(ctx, "namespace")
+	_, err = c.GetMasterPodRequest(ctx, "namespace")
 	assert.Nil(t, err)
 }
 
@@ -386,8 +387,8 @@ func TestGetWorkerPodLogs(t *testing.T) {
 	client := &fake.Clientset{}
 
 	c := NewClient(loadtestClientset.KangalV1().LoadTests(), client, logger)
-	_, err := c.GetWorkerPodLogs(ctx, "namespace", "worker-pod-0")
-	assert.Nil(t, err)
+	request := c.GetWorkerPodRequest(ctx, "namespace", "worker-pod-0")
+	assert.Equal(t, restClient.Request{}, *request)
 }
 
 func TestGetMostRecentPod(t *testing.T) {
