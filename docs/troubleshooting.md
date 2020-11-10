@@ -12,13 +12,13 @@ You can make basic troubleshooting using Kangal API endpoints or either explorin
 
 - Get status of the load test 
 ```bash
-curl --location --request GET 'http://${KANGAL_PROXY_ADDRESS}/load-test/loadtest-random-name/' 
+curl -X GET 'http://${KANGAL_PROXY_ADDRESS}/load-test/loadtest-random-name/' 
 ```
 - Get logs from the master pod
 ```bash
-curl --location --request GET 'http://${KANGAL_PROXY_ADDRESS}/load-test/loadtest-random-name/logs' 
+curl -X GET 'http://${KANGAL_PROXY_ADDRESS}/load-test/loadtest-random-name/logs' 
 ```
 - Get logs from the worker pod
 ```bash
-curl --location --request GET 'http://${KANGAL_PROXY_ADDRESS}/load-test/loadtest-random-name/logs/loadtest-worker-000' 
+curl -X GET 'http://${KANGAL_PROXY_ADDRESS}/load-test/loadtest-random-name/logs/loadtest-worker-000' 
 ```
