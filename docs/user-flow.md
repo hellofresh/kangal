@@ -64,10 +64,10 @@ For the logs of the main load generator process use the following command:
 curl -X GET http://${KANGAL_PROXY_ADDRESS}/load-test/loadtest-name/logs
 ```
 ### Advanced logs monitoring
-For the logs of the worker pod use the ID of the worker. 
-Worker IDs are `loadtest-worker-000`, `loadtest-worker-001`, etc, according to the number of workers you created.
+For the logs of the worker pod use the index number of the worker. 
+Index numbers are `0`, `1`, etc, according to the number of workers you created.
 ```bash
-curl -X GET http://${KANGAL_PROXY_ADDRESS}/load-test/loadtest-name/logs/loadtest-worker-000
+curl -X GET http://${KANGAL_PROXY_ADDRESS}/load-test/loadtest-name/logs/0
 ```
 
 You can also monitor the behavior of your service with your custom tools e.g. Graphite.

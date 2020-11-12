@@ -265,7 +265,7 @@ func newWorkerJob(
 			Template: coreV1.PodTemplateSpec{
 				ObjectMeta: metaV1.ObjectMeta{
 					Labels: map[string]string{
-						"app": name,
+						"app":                  name,
 						loadTestMasterLabelKey: loadTestWorkerLabelValue,
 					},
 					Annotations: podAnnotations,

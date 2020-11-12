@@ -20,5 +20,5 @@ curl -X GET 'http://${KANGAL_PROXY_ADDRESS}/load-test/loadtest-random-name/logs'
 ```
 - Get logs from the worker pod
 ```bash
-curl -X GET 'http://${KANGAL_PROXY_ADDRESS}/load-test/loadtest-random-name/logs/loadtest-worker-000' 
+curl -X GET 'http://${KANGAL_PROXY_ADDRESS}/load-test/loadtest-random-name/logs/0' 
 ```

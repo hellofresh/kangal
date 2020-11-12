@@ -309,7 +309,7 @@
 				}
 			}
 		},
-		"/load-test/{loadTestName}/logs/{workerPodID}": {
+		"/load-test/{loadTestName}/logs/{workerPodNr}": {
 			"get": {
 				"tags": [
 					"load-tests"
@@ -329,9 +329,9 @@
 						}
 					},
 					{
-						"name": "workerPodID",
+						"name": "workerPodNr",
 						"in": "path",
-						"description": "ID of the worker pod you want to get logs from",
+						"description": "Index number of the worker pod you want to get logs from",
 						"required": true,
 						"style": "simple",
 						"explode": false,
