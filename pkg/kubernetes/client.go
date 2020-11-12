@@ -2,7 +2,11 @@ package kubernetes
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"sort"
+	"strconv"
+
 	"strings"
 	"time"
 
@@ -168,8 +172,24 @@ func (c *Client) GetMasterPodRequest(ctx context.Context, namespace string) (*re
 }
 
 // GetWorkerPodRequest is used for getting the logs from worker pod
-func (c *Client) GetWorkerPodRequest(ctx context.Context, namespace, workerPodID string) *restClient.Request {
-	return c.kubeClient.CoreV1().Pods(namespace).GetLogs(workerPodID, &coreV1.PodLogOptions{})
+func (c *Client) GetWorkerPodRequest(ctx context.Context, namespace, workerPodNr string) (*restClient.Request, error) {
+	pods, err := c.kubeClient.CoreV1().Pods(namespace).List(ctx, metaV1.ListOptions{
+		LabelSelector: loadTestWorkerLabelSelector,
+	})
+	if err != nil {
+		c.logger.Error(err.Error())
+		return nil, err
+	}
+
+	nr, _ := strconv.Atoi(workerPodNr)
+	if nr >= len(pods.Items) {
+		c.logger.Error("pod index out of range", zap.String("index", workerPodNr))
+		return nil, errors.New("pod index is out of range")
+	}
+
+	sortWorkerPods(pods)
+
+	return c.kubeClient.CoreV1().Pods(namespace).GetLogs(pods.Items[nr].Name, &coreV1.PodLogOptions{}), nil
 }
 
 func getMostRecentPod(pods *coreV1.PodList) string {
@@ -189,4 +209,10 @@ func getMostRecentPod(pods *coreV1.PodList) string {
 	}
 
 	return podID
+}
+
+func sortWorkerPods(pods *coreV1.PodList) {
+	sort.Slice(pods.Items, func(i, j int) bool {
+		return strings.Compare(pods.Items[i].ObjectMeta.Name, pods.Items[j].ObjectMeta.Name) < 0
+	})
 }

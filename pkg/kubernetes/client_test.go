@@ -378,18 +378,18 @@ func TestGetMasterPodLogs(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestGetWorkerPodLogs(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), controller.KubeTimeout)
-	defer cancel()
-
-	var logger = zap.NewNop()
-	loadtestClientset := fakeClientset.NewSimpleClientset()
-	client := &fake.Clientset{}
-
-	c := NewClient(loadtestClientset.KangalV1().LoadTests(), client, logger)
-	request := c.GetWorkerPodRequest(ctx, "namespace", "worker-pod-0")
-	assert.Equal(t, restClient.Request{}, *request)
-}
+//func TestGetWorkerPodLogs(t *testing.T) {
+//	ctx, cancel := context.WithTimeout(context.Background(), controller.KubeTimeout)
+//	defer cancel()
+//
+//	var logger = zap.NewNop()
+//	loadtestClientset := fakeClientset.NewSimpleClientset()
+//	client := &fake.Clientset{}
+//
+//	c := NewClient(loadtestClientset.KangalV1().LoadTests(), client, logger)
+//	request, _ := c.GetWorkerPodRequest(ctx, "namespace", "worker-pod-0")
+//	assert.Equal(t, restClient.Request{}, *request)
+//}
 
 func TestGetMostRecentPod(t *testing.T) {
 	time2019 := metav1.NewTime(time.Date(2019, time.January, 14, 14, 14, 14, 14, time.UTC))
@@ -469,5 +469,149 @@ func TestGetMostRecentPod(t *testing.T) {
 	for _, test := range tests {
 		podID := getMostRecentPod(test.Pods)
 		assert.Equal(t, test.Result, podID)
+	}
+}
+
+func TestGetWorkerPodsRequest(t *testing.T) {
+	tests := []struct {
+		scenario      string
+		pods          corev1.PodList
+		result        *restClient.Request
+		expectedError bool
+		error         error
+		workerID      string
+	}{
+		{
+			scenario:      "Error on listing worker pods",
+			result:        nil,
+			expectedError: true,
+			error:         errors.New("list worker pods error"),
+		},
+		{
+			scenario: "Out of range error",
+			pods: corev1.PodList{
+				Items: []corev1.Pod{
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "pod-ed-eed12",
+							Namespace: "foo",
+							Labels: map[string]string{
+								"app": "loadtest-worker-pod",
+							},
+						},
+					},
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "pod-ed-rfh34",
+							Namespace: "foo",
+							Labels: map[string]string{
+								"app": "loadtest-worker-pod",
+							},
+						},
+					},
+				},
+			},
+			result:        nil,
+			expectedError: true,
+			error:         errors.New("pod index is out of range"),
+			workerID:      "4",
+		},
+		{
+			scenario: "Empty request result",
+			pods: corev1.PodList{
+				Items: []corev1.Pod{
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "pod-ed-eed12",
+							Namespace: "foo",
+							Labels: map[string]string{
+								"app": "loadtest-worker-pod",
+							},
+						},
+					},
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "pod-ed-rfh34",
+							Namespace: "foo",
+							Labels: map[string]string{
+								"app": "loadtest-worker-pod",
+							},
+						},
+					},
+				},
+			},
+			result:        &restClient.Request{},
+			expectedError: false,
+			error:         nil,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.scenario, func(t *testing.T) {
+			ctx := context.TODO()
+
+			var logger = zap.NewNop()
+			loadtestClientset := fakeClientset.NewSimpleClientset()
+			client := &fake.Clientset{}
+
+			client.Fake.PrependReactor("list", "pods", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+				return true, &test.pods, test.error
+			})
+			c := NewClient(loadtestClientset.KangalV1().LoadTests(), client, logger)
+
+			res, err := c.GetWorkerPodRequest(ctx, "foo", test.workerID)
+			if !test.expectedError {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, test.error.Error())
+			}
+			assert.Equal(t, test.result, res)
+		})
+	}
+}
+
+func TestSortWorkerPods(t *testing.T) {
+	tests := []struct {
+		Pods   *corev1.PodList
+		Result []string
+	}{
+		{
+			Pods: &corev1.PodList{
+				Items: []corev1.Pod{
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name: "pod-wd-eed12",
+						},
+					},
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name: "pod-ed-rfh34",
+						},
+					},
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name: "pod-rk-rah34",
+						},
+					},
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name: "pod-ad-rfh34",
+						},
+					},
+				},
+			},
+			Result: []string{
+				"pod-ad-rfh34",
+				"pod-ed-rfh34",
+				"pod-rk-rah34",
+				"pod-wd-eed12",
+			},
+		},
+	}
+	for _, test := range tests {
+
+		sortWorkerPods(test.Pods)
+		for i := range test.Result {
+			assert.Equal(t, test.Result[i], test.Pods.Items[i].Name)
+		}
 	}
 }

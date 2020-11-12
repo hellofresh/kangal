@@ -17,6 +17,7 @@ import (
 var (
 	loadTestMasterLabelKey   = "app"
 	loadTestMasterLabelValue = "loadtest-master"
+	loadTestWorkerLabelValue = "loadtest-worker-pod"
 )
 
 func newConfigMapName(loadTest *loadtestV1.LoadTest) string {
@@ -265,6 +266,7 @@ func newWorkerJob(
 				ObjectMeta: metaV1.ObjectMeta{
 					Labels: map[string]string{
 						"app": name,
+						loadTestMasterLabelKey: loadTestWorkerLabelValue,
 					},
 					Annotations: podAnnotations,
 				},
