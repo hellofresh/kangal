@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	loadTestMasterLabelKey   = "app"
+	loadTestLabelKey         = "app"
 	loadTestMasterLabelValue = "loadtest-master"
 	loadTestWorkerLabelValue = "loadtest-worker-pod"
 )
@@ -122,8 +122,8 @@ func newMasterJob(
 			Name:      name,
 			Namespace: loadTest.Status.Namespace,
 			Labels: map[string]string{
-				"name":                 name,
-				loadTestMasterLabelKey: loadTestMasterLabelValue,
+				"name":           name,
+				loadTestLabelKey: loadTestMasterLabelValue,
 			},
 			OwnerReferences: []metaV1.OwnerReference{*ownerRef},
 		},
@@ -132,8 +132,8 @@ func newMasterJob(
 			Template: coreV1.PodTemplateSpec{
 				ObjectMeta: metaV1.ObjectMeta{
 					Labels: map[string]string{
-						"name":                 name,
-						loadTestMasterLabelKey: loadTestMasterLabelValue,
+						"name":           name,
+						loadTestLabelKey: loadTestMasterLabelValue,
 					},
 					Annotations: podAnnotations,
 				},
@@ -265,8 +265,8 @@ func newWorkerJob(
 			Template: coreV1.PodTemplateSpec{
 				ObjectMeta: metaV1.ObjectMeta{
 					Labels: map[string]string{
-						"app":                  name,
-						loadTestMasterLabelKey: loadTestWorkerLabelValue,
+						"app":            name,
+						loadTestLabelKey: loadTestWorkerLabelValue,
 					},
 					Annotations: podAnnotations,
 				},
