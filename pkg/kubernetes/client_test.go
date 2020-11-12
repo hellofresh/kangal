@@ -374,8 +374,9 @@ func TestGetMasterPodLogs(t *testing.T) {
 	// to easily mock this funciton like there is for "ListPods". To do this We would
 	// need to wright our own `FakePod` package, and that doesn't seem worth it.
 	c = NewClient(loadtestClientset.KangalV1().LoadTests(), client, logger)
-	_, err = c.GetMasterPodRequest(ctx, "namespace")
+	res, err := c.GetMasterPodRequest(ctx, "namespace")
 	assert.Nil(t, err)
+	assert.Equal(t, &restClient.Request{}, res)
 }
 
 func TestGetMostRecentPod(t *testing.T) {
