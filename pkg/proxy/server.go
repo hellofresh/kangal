@@ -75,6 +75,7 @@ func RunServer(ctx context.Context, cfg Config, rr Runner) error {
 	r.Get("/openapi", OpenAPISpecHandler(cfg.OpenAPI))
 
 	r.Get("/load-test/{id}/logs", proxyHandler.GetLogs)
+	r.Get("/load-test/{id}/logs/{worker}", proxyHandler.GetLogs)
 
 	// ---------------------------------------------------------------------- //
 	// LoadTest reports

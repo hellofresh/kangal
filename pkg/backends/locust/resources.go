@@ -15,8 +15,9 @@ import (
 )
 
 var (
-	loadTestMasterLabelKey   = "app"
+	loadTestLabelKey         = "app"
 	loadTestMasterLabelValue = "loadtest-master"
+	loadTestWorkerLabelValue = "loadtest-worker-pod"
 )
 
 func newConfigMapName(loadTest *loadtestV1.LoadTest) string {
@@ -53,7 +54,7 @@ func newSecret(loadTest *loadtestV1.LoadTest, envs map[string]string) *coreV1.Se
 		ObjectMeta: metaV1.ObjectMeta{
 			Name: name,
 			Labels: map[string]string{
-				"app": name,
+				loadTestLabelKey: name,
 			},
 			OwnerReferences: []metaV1.OwnerReference{*ownerRef},
 		},
@@ -121,8 +122,8 @@ func newMasterJob(
 			Name:      name,
 			Namespace: loadTest.Status.Namespace,
 			Labels: map[string]string{
-				"name":                 name,
-				loadTestMasterLabelKey: loadTestMasterLabelValue,
+				"name":           name,
+				loadTestLabelKey: loadTestMasterLabelValue,
 			},
 			OwnerReferences: []metaV1.OwnerReference{*ownerRef},
 		},
@@ -131,8 +132,8 @@ func newMasterJob(
 			Template: coreV1.PodTemplateSpec{
 				ObjectMeta: metaV1.ObjectMeta{
 					Labels: map[string]string{
-						"name":                 name,
-						loadTestMasterLabelKey: loadTestMasterLabelValue,
+						"name":           name,
+						loadTestLabelKey: loadTestMasterLabelValue,
 					},
 					Annotations: podAnnotations,
 				},
@@ -183,7 +184,7 @@ func newMasterService(loadTest *loadtestV1.LoadTest, masterJob *batchV1.Job) *co
 			Name:      name,
 			Namespace: loadTest.Status.Namespace,
 			Labels: map[string]string{
-				"app": name,
+				loadTestLabelKey: name,
 			},
 			OwnerReferences: []metaV1.OwnerReference{*ownerRef},
 		},
@@ -253,7 +254,7 @@ func newWorkerJob(
 			Name:      name,
 			Namespace: loadTest.Status.Namespace,
 			Labels: map[string]string{
-				"app": name,
+				loadTestLabelKey: name,
 			},
 			OwnerReferences: []metaV1.OwnerReference{*ownerRef},
 		},
@@ -264,7 +265,7 @@ func newWorkerJob(
 			Template: coreV1.PodTemplateSpec{
 				ObjectMeta: metaV1.ObjectMeta{
 					Labels: map[string]string{
-						"app": name,
+						loadTestLabelKey: loadTestWorkerLabelValue,
 					},
 					Annotations: podAnnotations,
 				},

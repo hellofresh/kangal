@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-chi/chi"
+
 	"github.com/hellofresh/kangal/pkg/backends"
 
 	"github.com/stretchr/testify/assert"
@@ -704,6 +706,7 @@ func TestProxyGetLogs(t *testing.T) {
 		expectedResponse string
 		ltError          error
 		podError         error
+		ltID             string
 	}{
 		{
 			"No content",
@@ -716,6 +719,7 @@ func TestProxyGetLogs(t *testing.T) {
 			"{\"error\":\"no logs found in load test resources\"}\n",
 			nil,
 			nil,
+			"",
 		},
 		{
 			"Error on getting master pod",
@@ -728,6 +732,7 @@ func TestProxyGetLogs(t *testing.T) {
 			"{\"error\":\"error on listing pods\"}\n",
 			nil,
 			errors.New("error on listing pods"),
+			"",
 		},
 		{
 			"Can't get load test",
@@ -746,6 +751,7 @@ func TestProxyGetLogs(t *testing.T) {
 			"{\"error\":\"error on getting loadtest\"}\n",
 			errors.New("error on getting loadtest"),
 			nil,
+			"",
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
@@ -768,12 +774,15 @@ func TestProxyGetLogs(t *testing.T) {
 			testProxyHandler := NewProxy(defaultConfig, c, s.fakeSpecCreator)
 			handler := testProxyHandler.GetLogs
 
+			routeCtx := new(chi.Context)
+			routeCtx.URLParams.Add(loadTestID, tt.ltID)
+
+			ctx = context.WithValue(ctx, chi.RouteCtxKey, routeCtx)
+
 			req := httptest.NewRequest("GET", "http://example.com/load-test/some-test/logs", nil)
 
-			req = req.WithContext(ctx)
-
 			w := httptest.NewRecorder()
-			handler(w, req)
+			handler(w, req.WithContext(ctx))
 
 			resp := w.Result()
 			respBody, _ := ioutil.ReadAll(resp.Body)
