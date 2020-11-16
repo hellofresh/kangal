@@ -27,7 +27,7 @@ type Locust struct {
 	loadTest        *loadTestV1.LoadTest
 	logger          *zap.Logger
 	reportURL       string
-	image           string
+	imageName       string
 	imageTag        string
 	masterResources helper.Resources
 	workerResources helper.Resources
@@ -86,7 +86,7 @@ func (c *Locust) CheckOrCreateResources(ctx context.Context) error {
 		}
 	}
 
-	masterJob := newMasterJob(c.loadTest, configMap, secret, c.reportURL, c.masterResources, c.podAnnotations, c.image, c.imageTag, c.logger)
+	masterJob := newMasterJob(c.loadTest, configMap, secret, c.reportURL, c.masterResources, c.podAnnotations, c.imageName, c.imageTag, c.logger)
 	_, err = c.kubeClientSet.
 		BatchV1().
 		Jobs(c.loadTest.Status.Namespace).
@@ -103,7 +103,7 @@ func (c *Locust) CheckOrCreateResources(ctx context.Context) error {
 		return err
 	}
 
-	workerJob := newWorkerJob(c.loadTest, configMap, secret, masterService, c.workerResources, c.podAnnotations, c.image, c.imageTag, c.logger)
+	workerJob := newWorkerJob(c.loadTest, configMap, secret, masterService, c.workerResources, c.podAnnotations, c.imageName, c.imageTag, c.logger)
 	_, err = c.kubeClientSet.
 		BatchV1().
 		Jobs(c.loadTest.Status.Namespace).
@@ -170,9 +170,14 @@ func New(
 	config Config,
 	podAnnotations map[string]string,
 ) *Locust {
-	image := defaultImage
-	if config.Image != "" {
-		image = config.Image
+	// this is to keep backward compatibility
+	if config.Image != "" && config.ImageName == "" {
+		config.ImageName = config.Image
+	}
+
+	imageName := defaultImage
+	if config.ImageName != "" {
+		imageName = config.ImageName
 	}
 
 	imageTag := defaultImageTag
@@ -186,7 +191,7 @@ func New(
 		loadTest:        loadTest,
 		logger:          logger,
 		reportURL:       reportURL,
-		image:           image,
+		imageName:       imageName,
 		imageTag:        imageTag,
 		masterResources: helper.Resources{
 			CPULimits:      config.MasterCPULimits,
