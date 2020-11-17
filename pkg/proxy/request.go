@@ -197,7 +197,7 @@ func getOverwrite(r *http.Request) (bool, error) {
 
 func getDistributedPods(r *http.Request) (int32, error) {
 	nn := r.FormValue(distributedPods)
-	dn, err := strconv.Atoi(nn)
+	dn, err := strconv.ParseInt(nn, 10, 32)
 	if err != nil {
 		return 0, err
 	}
