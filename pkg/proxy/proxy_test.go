@@ -203,6 +203,42 @@ func TestProxy_List(t *testing.T) {
 			expectedResponse:    "{\"error\":\"missing tag label\"}\n",
 		},
 		{
+			scenario:            "invalid phase",
+			urlParams:           "phase=foo",
+			result:              &apisLoadTestV1.LoadTestList{},
+			expectedCode:        200,
+			expectedContentType: "application/json; charset=utf-8",
+			expectedResponse:    "{\"limit\":0,\"continue\":\"\",\"remain\":null,\"items\":[]}\n",
+		},
+		{
+			scenario:  "valid phase",
+			urlParams: "phase=running",
+			result: &apisLoadTestV1.LoadTestList{
+				ListMeta: metaV1.ListMeta{
+					Continue:           "continue",
+					RemainingItemCount: &remainCount,
+				},
+				Items: []apisLoadTestV1.LoadTest{
+					{
+						Spec: apisLoadTestV1.LoadTestSpec{
+							Type:            apisLoadTestV1.LoadTestTypeJMeter,
+							DistributedPods: &distributedPods,
+							Tags:            apisLoadTestV1.LoadTestTags{},
+							TestFile:        "file content\n",
+							TestData:        "test data\n",
+						},
+						Status: apisLoadTestV1.LoadTestStatus{
+							Phase:     apisLoadTestV1.LoadTestRunning,
+							Namespace: "random",
+						},
+					},
+				},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json; charset=utf-8",
+			expectedResponse:    "{\"limit\":0,\"continue\":\"\",\"remain\":null,\"items\":[{\"type\":\"JMeter\",\"distributedPods\":2,\"loadtestName\":\"random\",\"phase\":\"running\",\"tags\":{},\"hasEnvVars\":false,\"hasTestData\":true}]}\n",
+		},
+		{
 			scenario:  "success",
 			urlParams: "tags=department:platform,team:kangal&limit=10",
 			result: &apisLoadTestV1.LoadTestList{

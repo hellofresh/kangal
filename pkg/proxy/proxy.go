@@ -98,6 +98,16 @@ func (p *Proxy) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if opt.Phase != "" {
+		loadTests, err = p.kubeClient.ListLoadTestsByPhase(loadTests, opt.Phase)
+		if err != nil {
+			logger.Error("could not list load tests by phase", zap.Error(err))
+			render.Render(w, r, cHttp.ErrResponse(http.StatusInternalServerError, err.Error()))
+
+			return
+		}
+	}
+
 	items := make([]LoadTestStatus, len(loadTests.Items))
 
 	for i, lt := range loadTests.Items {

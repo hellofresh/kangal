@@ -29,6 +29,15 @@
 						"example": "department:platform,team:kangal"
 					},
 					{
+						"name": "phase",
+						"in": "query",
+						"description": "Filter the result by current phase.",
+						"schema": {
+							"type": "string"
+						},
+						"example": "phase:running"
+					},
+					{
 						"name": "limit",
 						"in": "query",
 						"description": "Limit the result when querying on a large cluster",
