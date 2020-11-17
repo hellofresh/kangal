@@ -294,6 +294,70 @@ func TestClient_ListLoadTest(t *testing.T) {
 	}
 }
 
+func TestClientListLoadTestsByPhase(t *testing.T) {
+	tests := []struct {
+		scenario    string
+		ltList      *apisLoadTestV1.LoadTestList
+		status      string
+		resultCount int
+	}{
+		{
+			scenario: "Filter by valid status",
+			ltList: &apisLoadTestV1.LoadTestList{
+				TypeMeta: metav1.TypeMeta{},
+				ListMeta: metav1.ListMeta{},
+				Items: []apisLoadTestV1.LoadTest{
+					{
+						Status: apisLoadTestV1.LoadTestStatus{
+							Phase: apisLoadTestV1.LoadTestRunning,
+						},
+					},
+					{
+						Status: apisLoadTestV1.LoadTestStatus{
+							Phase: apisLoadTestV1.LoadTestCreating,
+						},
+					},
+				},
+			},
+			status:      "running",
+			resultCount: 1,
+		},
+		{
+			scenario: "Filter by invalid status",
+			ltList: &apisLoadTestV1.LoadTestList{
+				TypeMeta: metav1.TypeMeta{},
+				ListMeta: metav1.ListMeta{},
+				Items: []apisLoadTestV1.LoadTest{
+					{
+						Status: apisLoadTestV1.LoadTestStatus{
+							Phase: apisLoadTestV1.LoadTestRunning,
+						},
+					},
+				},
+			},
+			status:      "foo",
+			resultCount: 0,
+		},
+		{
+			scenario:    "Empty input list",
+			ltList:      &apisLoadTestV1.LoadTestList{},
+			status:      "running",
+			resultCount: 0,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.scenario, func(t *testing.T) {
+			logger := zap.NewNop()
+			loadtestClientset := fakeClientset.NewSimpleClientset()
+			kubeClientSet := fake.NewSimpleClientset()
+
+			c := NewClient(loadtestClientset.KangalV1().LoadTests(), kubeClientSet, logger)
+			filteredList := c.ListLoadTestsByPhase(test.ltList, test.status)
+			assert.Equal(t, test.resultCount, len(filteredList.Items))
+		})
+	}
+}
+
 func TestCountActiveLoadTests(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), controller.KubeTimeout)
 	defer cancel()
