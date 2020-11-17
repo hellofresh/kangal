@@ -176,5 +176,5 @@ configMap:
   JMETER_MASTER_IMAGE_TAG: "latest"
   JMETER_WORKER_IMAGE_NAME: "hellofreshtech/kangal-jmeter-worker"
   JMETER_WORKER_IMAGE_TAG: "latest"
-  LOCUST_IMAGE: "locustio/locust"
+  LOCUST_IMAGE_NAME: "locustio/locust"
   LOCUST_IMAGE_TAG: "1.3.0"

@@ -82,7 +82,7 @@ The following table lists the common configurable parameters for `Kangal` chart:
 | `configmap.JMETER_MASTER_IMAGE_TAG`  | Tag of the JMeter master image above                                                                | `latest`                              |
 | `configmap.JMETER_WORKER_IMAGE_NAME` | Default JMeter worker image name/repository if none is provided when creating a new loadtest        | `hellofreshtech/kangal-jmeter-worker` |
 | `configmap.JMETER_WORKER_IMAGE_TAG`  | Tag of the JMeter worker image above                                                                | `latest`                              |
-| `configmap.LOCUST_IMAGE`             | Default Locust image name/repository if none is provided when creating a new loadtest               | `locustio/locust`                     |
+| `configmap.LOCUST_IMAGE_NAME`        | Default Locust image name/repository if none is provided when creating a new loadtest               | `locustio/locust`                     |
 | `configmap.LOCUST_IMAGE_TAG`         | Tag of the Locust image above                                                                       | `1.3.0`                               |
 
 Deployment specific configurations:
