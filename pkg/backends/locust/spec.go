@@ -34,13 +34,19 @@ func BuildLoadTestSpec(
 	imageName := defaultImage
 	imageTag := defaultImageTag
 
+	// this is to ensure backward compatibility
+	if config.Image != "" && config.ImageName == "" {
+		config.ImageName = config.Image
+	}
+
 	// Use environment variable config if available
-	if config.Image != "" {
-		imageName = config.Image
+	if config.ImageName != "" {
+		imageName = config.ImageName
 	}
 	if config.ImageTag != "" {
 		imageTag = config.ImageTag
 	}
+
 	return loadTestV1.NewSpec(
 		loadTestV1.LoadTestTypeLocust,
 		overwrite,
