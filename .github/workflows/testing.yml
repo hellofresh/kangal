@@ -19,7 +19,7 @@ jobs:
       - name: Run golangci linter
         uses: golangci/golangci-lint-action@v2
         with:
-          version: v2.3
+          version: v1.32
 
       - name: Lint GoReleaser
         uses: goreleaser/goreleaser-action@v2
