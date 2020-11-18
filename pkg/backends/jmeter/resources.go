@@ -14,6 +14,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"github.com/hellofresh/kangal/pkg/core/helper"
+	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	loadtestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 )
 
@@ -22,6 +23,9 @@ const (
 	LoadTestLabel = "loadtest"
 	// TestFileHash is a load test label name for keeping loadtest file hash
 	TestFileHash = "test-file-hash"
+)
+
+const (
 	// loadTestJobName is the name of the job that runs loadtests
 	loadTestJobName = LoadTestLabel + "-master"
 	// loadTestWorkerPodLabelKey key we are using for the worker pod label
@@ -56,7 +60,7 @@ var (
 )
 
 // NewJMeterSettingsConfigMap creates a new configmap which holds jmeter config
-func (c *JMeter) NewJMeterSettingsConfigMap() *coreV1.ConfigMap {
+func (b *JMeter) NewJMeterSettingsConfigMap(loadTest loadTestV1.LoadTest) *coreV1.ConfigMap {
 	data := map[string]string{
 		"jmeter.properties": `num_sample_threshold=5
 time_threshold=1000
@@ -94,9 +98,8 @@ jmeter.save.saveservice.timestamp_format = yyyy/MM/dd HH:mm:ss zzz`,
 }
 
 // NewConfigMap creates a new configMap containing loadtest script
-func (c *JMeter) NewConfigMap() *coreV1.ConfigMap {
-	loadtest := c.loadTest
-	testfile := loadtest.Spec.TestFile
+func (b *JMeter) NewConfigMap(loadTest loadTestV1.LoadTest) *coreV1.ConfigMap {
+	testfile := loadTest.Spec.TestFile
 
 	data := map[string]string{
 		"testfile.jmx": testfile,
@@ -111,13 +114,12 @@ func (c *JMeter) NewConfigMap() *coreV1.ConfigMap {
 }
 
 // NewSecret creates a secret from file envVars
-func (c *JMeter) NewSecret() (*coreV1.Secret, error) {
-	loadtest := c.loadTest
-	envVars := loadtest.Spec.EnvVars
+func (b *JMeter) NewSecret(loadTest loadTestV1.LoadTest) (*coreV1.Secret, error) {
+	envVars := loadTest.Spec.EnvVars
 
 	secretMap, err := helper.ReadEnvs(envVars)
 	if err != nil {
-		c.logger.Error("Error on creating secrets from envVars file", zap.Error(err))
+		b.logger.Error("Error on creating secrets from envVars file", zap.Error(err))
 		return nil, err
 	}
 
@@ -131,16 +133,15 @@ func (c *JMeter) NewSecret() (*coreV1.Secret, error) {
 }
 
 // NewTestdataConfigMap creates a new configMap containing testdata
-func (c *JMeter) NewTestdataConfigMap() ([]*coreV1.ConfigMap, error) {
-	loadtest := c.loadTest
-	testdata := loadtest.Spec.TestData
-	n := int(*loadtest.Spec.DistributedPods)
+func (b *JMeter) NewTestdataConfigMap(loadTest loadTestV1.LoadTest) ([]*coreV1.ConfigMap, error) {
+	testdata := loadTest.Spec.TestData
+	n := int(*loadTest.Spec.DistributedPods)
 
 	cMaps := make([]*coreV1.ConfigMap, n)
 
-	chunks, err := splitTestData(testdata, n, c.logger)
+	chunks, err := splitTestData(testdata, n, b.logger)
 	if err != nil {
-		c.logger.Error("Error on splitting csv test data", zap.Error(err))
+		b.logger.Error("Error on splitting csv test data", zap.Error(err))
 		return nil, err
 	}
 
@@ -150,7 +151,7 @@ func (c *JMeter) NewTestdataConfigMap() ([]*coreV1.ConfigMap, error) {
 		stringWriter.Reset()
 		csvWriter := csv.NewWriter(stringWriter)
 		if err := csvWriter.WriteAll(chunks[i]); err != nil {
-			c.logger.Error("Error on writing csv test data to chunks", zap.Error(err))
+			b.logger.Error("Error on writing csv test data to chunks", zap.Error(err))
 			return nil, err
 		}
 
@@ -172,14 +173,13 @@ func (c *JMeter) NewTestdataConfigMap() ([]*coreV1.ConfigMap, error) {
 }
 
 // NewPod creates a new pod which mounts a configmap that contains jmeter testdata
-func (c *JMeter) NewPod(i int, configMap *coreV1.ConfigMap, podAnnotations map[string]string) *coreV1.Pod {
-	loadtest := c.loadTest
+func (b *JMeter) NewPod(loadTest loadTestV1.LoadTest, i int, configMap *coreV1.ConfigMap, podAnnotations map[string]string) *coreV1.Pod {
 	optionalVolume := true
 
-	imageRef := fmt.Sprintf("%s:%s", loadtest.Spec.WorkerConfig.Image, loadtest.Spec.WorkerConfig.Tag)
-	if imageRef == ":" {
-		imageRef = fmt.Sprintf("%s:%s", c.workerConfig.Image, c.workerConfig.Tag)
-		c.logger.Warn("Loadtest.Spec.WorkerConfig is empty; using default worker image", zap.String("imageRef", imageRef))
+	imageRef := fmt.Sprintf("%s:%s", loadTest.Spec.WorkerConfig.Image, loadTest.Spec.WorkerConfig.Tag)
+	if "" == loadTest.Spec.WorkerConfig.Image || "" == loadTest.Spec.WorkerConfig.Tag {
+		imageRef = fmt.Sprintf("%s:%s", b.workerConfig.Image, b.workerConfig.Tag)
+		b.logger.Warn("Loadtest.Spec.WorkerConfig is empty; using default worker image", zap.String("imageRef", imageRef))
 	}
 
 	return &coreV1.Pod{
@@ -188,7 +188,7 @@ func (c *JMeter) NewPod(i int, configMap *coreV1.ConfigMap, podAnnotations map[s
 			Labels:      loadTestWorkerPodLabels,
 			Annotations: podAnnotations,
 			OwnerReferences: []metaV1.OwnerReference{
-				*metaV1.NewControllerRef(loadtest, loadtestV1.SchemeGroupVersion.WithKind("LoadTest")),
+				*metaV1.NewControllerRef(&loadTest, loadtestV1.SchemeGroupVersion.WithKind("LoadTest")),
 			},
 		},
 		Spec: coreV1.PodSpec{
@@ -207,7 +207,7 @@ func (c *JMeter) NewPod(i int, configMap *coreV1.ConfigMap, podAnnotations map[s
 							MountPath: "/testdata",
 						},
 					},
-					Resources: helper.BuildResourceRequirements(c.workerResources),
+					Resources: helper.BuildResourceRequirements(b.workerResources),
 					EnvFrom: []coreV1.EnvFromSource{
 						{
 							SecretRef: &coreV1.SecretEnvSource{
@@ -237,14 +237,13 @@ func (c *JMeter) NewPod(i int, configMap *coreV1.ConfigMap, podAnnotations map[s
 }
 
 // NewJMeterMasterJob creates a new job which runs the jmeter master pod
-func (c *JMeter) NewJMeterMasterJob(reportURL string, podAnnotations map[string]string) *batchV1.Job {
-	loadtest := c.loadTest
+func (b *JMeter) NewJMeterMasterJob(loadTest loadTestV1.LoadTest, reportURL string, podAnnotations map[string]string) *batchV1.Job {
 	var one int32 = 1
 
-	imageRef := fmt.Sprintf("%s:%s", loadtest.Spec.MasterConfig.Image, loadtest.Spec.MasterConfig.Tag)
-	if imageRef == ":" {
-		c.logger.Warn("Loadtest.Spec.MasterConfig is empty; using default master image", zap.String("imageRef", imageRef))
-		imageRef = fmt.Sprintf("%s:%s", c.masterConfig.Image, c.masterConfig.Tag)
+	imageRef := fmt.Sprintf("%s:%s", loadTest.Spec.MasterConfig.Image, loadTest.Spec.MasterConfig.Tag)
+	if "" == loadTest.Spec.MasterConfig.Image || "" == loadTest.Spec.MasterConfig.Tag {
+		imageRef = fmt.Sprintf("%s:%s", b.masterConfig.Image, b.masterConfig.Tag)
+		b.logger.Warn("Loadtest.Spec.MasterConfig is empty; using default master image", zap.String("imageRef", imageRef))
 	}
 
 	jMeterEnvVars := []coreV1.EnvVar{
@@ -272,7 +271,7 @@ func (c *JMeter) NewJMeterMasterJob(reportURL string, podAnnotations map[string]
 				loadTestMasterJobLabelKey: loadTestJobName,
 			},
 			OwnerReferences: []metaV1.OwnerReference{
-				*metaV1.NewControllerRef(loadtest, loadtestV1.SchemeGroupVersion.WithKind("LoadTest")),
+				*metaV1.NewControllerRef(&loadTest, loadtestV1.SchemeGroupVersion.WithKind("LoadTest")),
 			},
 			Annotations: podAnnotations,
 		},
@@ -305,7 +304,7 @@ func (c *JMeter) NewJMeterMasterJob(reportURL string, podAnnotations map[string]
 									SubPath:   "jmeter.properties",
 								},
 							},
-							Resources: helper.BuildResourceRequirements(c.masterResources),
+							Resources: helper.BuildResourceRequirements(b.masterResources),
 						},
 					},
 					Volumes: []coreV1.Volume{
@@ -337,7 +336,7 @@ func (c *JMeter) NewJMeterMasterJob(reportURL string, podAnnotations map[string]
 }
 
 // NewJMeterService creates a new services to talk to jmeter worker pods
-func (c *JMeter) NewJMeterService() *coreV1.Service {
+func (b *JMeter) NewJMeterService() *coreV1.Service {
 	return &coreV1.Service{
 		ObjectMeta: metaV1.ObjectMeta{
 			Name: loadTestWorkerServiceName,
