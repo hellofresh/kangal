@@ -1,4 +1,4 @@
-package backends
+package registry
 
 import (
 	"errors"
@@ -17,8 +17,8 @@ var (
 // defaultRegistry contains the list of available backends
 var defaultRegistry = map[loadTestV1.LoadTestType]Backend{}
 
-// register should be called to register your backend
-func register(b Backend) {
+// Register should be called to register your backend
+func Register(b Backend) {
 	if _, exists := defaultRegistry[b.Type()]; exists {
 		panic(ErrBackendRegistered)
 	}

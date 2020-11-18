@@ -1,4 +1,4 @@
-package backends
+package registry
 
 import (
 	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
