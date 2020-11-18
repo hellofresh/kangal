@@ -65,7 +65,8 @@ type Controller struct {
 
 	statsClient observability.StatsReporter
 
-	logger *zap.Logger
+	registry *backends.Registry
+	logger   *zap.Logger
 }
 
 // NewController returns a new sample controller
@@ -76,6 +77,7 @@ func NewController(
 	kubeInformerFactory informers.SharedInformerFactory,
 	kangalInformerFactory externalversions.SharedInformerFactory,
 	statsClient observability.StatsReporter,
+	registry *backends.Registry,
 	logger *zap.Logger) *Controller {
 
 	namespaceInformer := kubeInformerFactory.Core().V1().Namespaces()
@@ -114,7 +116,9 @@ func NewController(
 		workQueue:   workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "LoadTest"),
 		recorder:    recorder,
 		statsClient: statsClient,
-		logger:      logger,
+
+		registry: registry,
+		logger:   logger,
 	}
 
 	logger.Debug("Setting up event handlers")
@@ -301,14 +305,9 @@ func (c *Controller) syncHandler(key string) error {
 	loadTest := loadTestFromCache.DeepCopy()
 	defer c.updateLoadTestStatus(ctx, loadTest)
 
-	var reportURL string
-	if c.cfg.KangalProxyURL != "" {
-		reportURL = fmt.Sprintf("%s/load-test/%s/report", c.cfg.KangalProxyURL, loadTest.GetName())
-	}
-
-	backend, err := backends.NewLoadTest(loadTest, c.kubeClientSet, c.kangalClientSet, c.logger, c.namespacesLister, reportURL, c.cfg.PodAnnotations, c.cfg.NamespaceAnnotations, c.cfg.Backends)
+	resolved, err := c.registry.Resolve(loadTest.Spec.Type)
 	if err != nil {
-		return fmt.Errorf("failed to create new backend: %w", err)
+		return fmt.Errorf("failed to resolve backend: %w", err)
 	}
 
 	// check or create namespace
@@ -317,14 +316,18 @@ func (c *Controller) syncHandler(key string) error {
 		return err
 	}
 
-	// check or create loadtest resources
-	err = backend.CheckOrCreateResources(ctx)
+	var reportURL string
+	if c.cfg.KangalProxyURL != "" {
+		reportURL = fmt.Sprintf("%s/load-test/%s/report", c.cfg.KangalProxyURL, loadTest.GetName())
+	}
+
+	err = resolved.Sync(ctx, *loadTest, reportURL)
 	if err != nil {
 		return err
 	}
 
 	// check current LoadTest progress
-	err = backend.CheckOrUpdateStatus(ctx)
+	err = resolved.SyncStatus(ctx, *loadTest, &loadTest.Status)
 	if err != nil {
 		return err
 	}

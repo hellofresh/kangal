@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"contrib.go.opencensus.io/exporter/prometheus"
+	"github.com/hellofresh/kangal/pkg/backends"
 	"github.com/hellofresh/kangal/pkg/core/observability"
 	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
 	"github.com/hellofresh/kangal/pkg/kubernetes/generated/informers/externalversions"
@@ -26,9 +27,17 @@ type Runner struct {
 
 // Run runs an instance of kubernetes kubeController
 func Run(ctx context.Context, cfg Config, rr Runner) error {
+	registry := backends.New(
+		backends.WithLogger(rr.Logger),
+		backends.WithKubeClientSet(rr.KubeClient),
+		backends.WithKangalClientSet(rr.KangalClient),
+		backends.WithNamespaceLister(rr.KubeInformer.Core().V1().Namespaces().Lister()),
+		backends.WithPodAnnotations(cfg.PodAnnotations),
+	)
+
 	stopCh := make(chan struct{})
 
-	c := NewController(cfg, rr.KubeClient, rr.KangalClient, rr.KubeInformer, rr.KangalInformer, rr.StatsReporter, rr.Logger)
+	c := NewController(cfg, rr.KubeClient, rr.KangalClient, rr.KubeInformer, rr.KangalInformer, rr.StatsReporter, registry, rr.Logger)
 
 	// notice that there is no need to run Start methods in a separate goroutine. (i.e. go kubeInformerFactory.Start(stopCh)
 	// Start method is non-blocking and runs all registered informers in a dedicated goroutine.

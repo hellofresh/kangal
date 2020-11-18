@@ -7,8 +7,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/hellofresh/kangal/pkg/backends"
-
 	coreV1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
@@ -17,6 +15,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	watchtools "k8s.io/client-go/tools/watch"
 
+	"github.com/hellofresh/kangal/pkg/backends"
 	apisLoadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
 )
@@ -42,25 +41,37 @@ func CreateLoadtest(clientSet clientSetV.Clientset, pods int32, name, testFile, 
 		}
 	}
 
-	loadtestSpec, err := backends.BuildLoadTestSpecByBackend(
-		loadTestType,
-		backends.Config{},
-		false,
-		pods,
-		apisLoadTestV1.LoadTestTags{},
-		tf,
-		td,
-		ev,
-		"",
-		0,
-	)
+	backend := backends.New()
+
+	resolvedBackend, err := backend.Resolve(loadTestType)
+	if err != nil {
+		return err
+	}
+
+	loadTestSpec := apisLoadTestV1.LoadTestSpec{
+		Type:            loadTestType,
+		Overwrite:       false,
+		DistributedPods: &pods,
+		Tags:            apisLoadTestV1.LoadTestTags{},
+		TestFile:        tf,
+		TestData:        td,
+		EnvVars:         ev,
+		TargetURL:       "",
+		Duration:        0,
+	}
+
+	err = resolvedBackend.TransformLoadTestSpec(&loadTestSpec)
+	if err != nil {
+		return err
+	}
+
 	if err != nil {
 		return err
 	}
 
 	ltObj := &apisLoadTestV1.LoadTest{}
 	ltObj.Name = name
-	ltObj.Spec = loadtestSpec
+	ltObj.Spec = loadTestSpec
 
 	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
 	defer cancel()
