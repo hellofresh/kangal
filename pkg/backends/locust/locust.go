@@ -2,48 +2,137 @@ package locust
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	coreV1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/hellofresh/kangal/pkg/core/helper"
 	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
-	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
 	"go.uber.org/zap"
 )
 
 var (
-	defaultImage    = "locustio/locust"
-	defaultImageTag = "latest"
+	defaultImageName = "locustio/locust"
+	defaultImageTag  = "latest"
+)
+
+var (
+	// ErrRequireMinOneDistributedPod spec requires 1 or more DistributedPods
+	ErrRequireMinOneDistributedPod = errors.New("LoadTest must specify 1 or more DistributedPods")
+	// ErrRequireTestFile the TestFile filed is required to not be an empty string
+	ErrRequireTestFile = errors.New("LoadTest TestFile is required")
 )
 
 // Locust enables the controller to run a loadtest using locust.io
 type Locust struct {
-	kubeClientSet   kubernetes.Interface
-	kangalClientSet clientSetV.Interface
-	loadTest        *loadTestV1.LoadTest
 	logger          *zap.Logger
-	reportURL       string
-	imageName       string
-	imageTag        string
+	kubeClientSet   kubernetes.Interface
+	config          loadTestV1.ImageDetails
 	masterResources helper.Resources
 	workerResources helper.Resources
 	podAnnotations  map[string]string
+	envConfig       *Config
 }
 
-// CheckOrCreateResources check for resources or create the needed resources for the loadtest type
-func (c *Locust) CheckOrCreateResources(ctx context.Context) error {
-	workerJobs, err := c.kubeClientSet.
+// Type returns backend type name
+func (*Locust) Type() loadTestV1.LoadTestType {
+	return loadTestV1.LoadTestTypeLocust
+}
+
+// GetEnvConfig must return envConfig struct pointer
+func (b *Locust) GetEnvConfig() interface{} {
+	b.envConfig = &Config{}
+	return b.envConfig
+}
+
+// SetDefaults must set default values
+func (b *Locust) SetDefaults() {
+	// this ensure backward compatibility
+	if b.envConfig.ImageName == "" && b.envConfig.Image != "" {
+		b.envConfig.ImageName = b.envConfig.Image
+	}
+
+	if b.envConfig.ImageName == "" || b.envConfig.ImageTag == "" {
+		b.envConfig.ImageName = defaultImageName
+		b.envConfig.ImageTag = defaultImageTag
+	}
+
+	b.config = loadTestV1.ImageDetails{
+		Image: b.envConfig.ImageName,
+		Tag:   b.envConfig.ImageTag,
+	}
+
+	b.workerResources = helper.Resources{
+		CPULimits:      b.envConfig.WorkerCPULimits,
+		CPURequests:    b.envConfig.WorkerCPURequests,
+		MemoryLimits:   b.envConfig.WorkerMemoryLimits,
+		MemoryRequests: b.envConfig.WorkerMemoryRequests,
+	}
+
+	b.masterResources = helper.Resources{
+		CPULimits:      b.envConfig.MasterCPULimits,
+		CPURequests:    b.envConfig.MasterCPURequests,
+		MemoryLimits:   b.envConfig.MasterMemoryLimits,
+		MemoryRequests: b.envConfig.MasterMemoryRequests,
+	}
+}
+
+// SetLogger recieves a copy of logger
+func (b *Locust) SetLogger(logger *zap.Logger) {
+	b.logger = logger
+}
+
+// TransformLoadTestSpec use given spec to validate and return a new one or error
+func (b *Locust) TransformLoadTestSpec(spec *loadTestV1.LoadTestSpec) error {
+	if nil == spec.DistributedPods {
+		return ErrRequireMinOneDistributedPod
+	}
+
+	if *spec.DistributedPods <= int32(0) {
+		return ErrRequireMinOneDistributedPod
+	}
+
+	if spec.TestFile == "" {
+		return ErrRequireTestFile
+	}
+
+	if spec.MasterConfig.Image == "" || spec.MasterConfig.Tag == "" {
+		spec.MasterConfig.Image = b.config.Image
+		spec.MasterConfig.Tag = b.config.Tag
+	}
+
+	if spec.WorkerConfig.Image == "" || spec.WorkerConfig.Tag == "" {
+		spec.WorkerConfig.Image = b.config.Image
+		spec.WorkerConfig.Tag = b.config.Tag
+	}
+
+	return nil
+}
+
+// SetPodAnnotations recieves a copy of pod annotations
+func (b *Locust) SetPodAnnotations(podAnnotations map[string]string) {
+	b.podAnnotations = podAnnotations
+}
+
+// SetKubeClientSet recieves a copy of kubeClientSet
+func (b *Locust) SetKubeClientSet(kubeClientSet kubernetes.Interface) {
+	b.kubeClientSet = kubeClientSet
+}
+
+// Sync check for resources or create the needed resources for the loadtest type
+func (b *Locust) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, reportURL string) error {
+	workerJobs, err := b.kubeClientSet.
 		BatchV1().
-		Jobs(c.loadTest.Status.Namespace).
+		Jobs(loadTest.Status.Namespace).
 		List(ctx, metaV1.ListOptions{
-			FieldSelector: fmt.Sprintf("metadata.name=%s", newWorkerJobName(c.loadTest)),
+			FieldSelector: fmt.Sprintf("metadata.name=%s", b.newWorkerJobName(loadTest)),
 		})
 	if err != nil {
-		c.logger.Error("Error on listing jobs", zap.Error(err))
+		b.logger.Error("Error on listing jobs", zap.Error(err))
 		return err
 	}
 
@@ -51,160 +140,111 @@ func (c *Locust) CheckOrCreateResources(ctx context.Context) error {
 		return nil
 	}
 
-	configMap := newConfigMap(c.loadTest)
-	_, err = c.kubeClientSet.
+	configMap := b.newConfigMap(loadTest)
+	_, err = b.kubeClientSet.
 		CoreV1().
-		ConfigMaps(c.loadTest.Status.Namespace).
+		ConfigMaps(loadTest.Status.Namespace).
 		Create(ctx, configMap, metaV1.CreateOptions{})
-	if err != nil && !errors.IsAlreadyExists(err) {
-		c.logger.Error("Error on creating testfile configmap", zap.Error(err))
+	if err != nil && !kerrors.IsAlreadyExists(err) {
+		b.logger.Error("Error on creating testfile configmap", zap.Error(err))
 		return err
 	}
 
 	var secret *coreV1.Secret
 
-	if c.loadTest.Spec.EnvVars != "" {
-		envs, err := helper.ReadEnvs(c.loadTest.Spec.EnvVars)
+	if loadTest.Spec.EnvVars != "" {
+		envs, err := helper.ReadEnvs(loadTest.Spec.EnvVars)
 		if err != nil {
-			c.logger.Error("Error reading envVars", zap.Error(err))
+			b.logger.Error("Error reading envVars", zap.Error(err))
 			return err
 		}
 		if len(envs) > 0 {
-			secret = newSecret(c.loadTest, envs)
+			secret = b.newSecret(loadTest, envs)
 			if nil != err {
-				c.logger.Error("Error on creating secret", zap.Error(err))
+				b.logger.Error("Error on creating secret", zap.Error(err))
 				return err
 			}
-			_, err = c.kubeClientSet.
+			_, err = b.kubeClientSet.
 				CoreV1().
-				Secrets(c.loadTest.Status.Namespace).
+				Secrets(loadTest.Status.Namespace).
 				Create(ctx, secret, metaV1.CreateOptions{})
-			if err != nil && !errors.IsAlreadyExists(err) {
-				c.logger.Error("Error on creating testfile configmap", zap.Error(err))
+			if err != nil && !kerrors.IsAlreadyExists(err) {
+				b.logger.Error("Error on creating testfile configmap", zap.Error(err))
 				return err
 			}
 		}
 	}
 
-	masterJob := newMasterJob(c.loadTest, configMap, secret, c.reportURL, c.masterResources, c.podAnnotations, c.imageName, c.imageTag, c.logger)
-	_, err = c.kubeClientSet.
+	masterJob := b.newMasterJob(loadTest, configMap, secret, reportURL)
+	_, err = b.kubeClientSet.
 		BatchV1().
-		Jobs(c.loadTest.Status.Namespace).
+		Jobs(loadTest.Status.Namespace).
 		Create(ctx, masterJob, metaV1.CreateOptions{})
-	if err != nil && !errors.IsAlreadyExists(err) {
-		c.logger.Error("Error on creating master job", zap.Error(err))
+	if err != nil && !kerrors.IsAlreadyExists(err) {
+		b.logger.Error("Error on creating master job", zap.Error(err))
 		return err
 	}
 
-	masterService := newMasterService(c.loadTest, masterJob)
-	_, err = c.kubeClientSet.CoreV1().Services(c.loadTest.Status.Namespace).Create(ctx, masterService, metaV1.CreateOptions{})
-	if err != nil && !errors.IsAlreadyExists(err) {
-		c.logger.Error("Error on creating master service", zap.Error(err))
+	masterService := b.newMasterService(loadTest, masterJob)
+	_, err = b.kubeClientSet.CoreV1().Services(loadTest.Status.Namespace).Create(ctx, masterService, metaV1.CreateOptions{})
+	if err != nil && !kerrors.IsAlreadyExists(err) {
+		b.logger.Error("Error on creating master service", zap.Error(err))
 		return err
 	}
 
-	workerJob := newWorkerJob(c.loadTest, configMap, secret, masterService, c.workerResources, c.podAnnotations, c.imageName, c.imageTag, c.logger)
-	_, err = c.kubeClientSet.
+	workerJob := b.newWorkerJob(loadTest, configMap, secret, masterService)
+	_, err = b.kubeClientSet.
 		BatchV1().
-		Jobs(c.loadTest.Status.Namespace).
+		Jobs(loadTest.Status.Namespace).
 		Create(ctx, workerJob, metaV1.CreateOptions{})
-	if err != nil && !errors.IsAlreadyExists(err) {
-		c.logger.Error("Error on creating worker job", zap.Error(err))
+	if err != nil && !kerrors.IsAlreadyExists(err) {
+		b.logger.Error("Error on creating worker job", zap.Error(err))
 		return err
 	}
 
 	return nil
 }
 
-// CheckOrUpdateStatus check current LoadTest progress
-func (c *Locust) CheckOrUpdateStatus(ctx context.Context) error {
-	if c.loadTest.Status.Phase == "" {
-		c.loadTest.Status.Phase = loadTestV1.LoadTestCreating
+// SyncStatus check current LoadTest progress
+func (b *Locust) SyncStatus(ctx context.Context, loadTest loadTestV1.LoadTest, loadTestStatus *loadTestV1.LoadTestStatus) error {
+	if loadTestStatus.Phase == "" {
+		loadTestStatus.Phase = loadTestV1.LoadTestCreating
 	}
 
-	if c.loadTest.Status.Phase == loadTestV1.LoadTestErrored ||
-		c.loadTest.Status.Phase == loadTestV1.LoadTestFinished {
+	if loadTestStatus.Phase == loadTestV1.LoadTestErrored ||
+		loadTestStatus.Phase == loadTestV1.LoadTestFinished {
 		return nil
 	}
 
-	_, err := c.kubeClientSet.
+	_, err := b.kubeClientSet.
 		CoreV1().
-		ConfigMaps(c.loadTest.Status.Namespace).
-		Get(ctx, newConfigMapName(c.loadTest), metaV1.GetOptions{})
+		ConfigMaps(loadTestStatus.Namespace).
+		Get(ctx, b.newConfigMapName(loadTest), metaV1.GetOptions{})
 	if err != nil {
-		if errors.IsNotFound(err) {
-			c.loadTest.Status.Phase = loadTestV1.LoadTestFinished
+		if kerrors.IsNotFound(err) {
+			loadTestStatus.Phase = loadTestV1.LoadTestFinished
 			return nil
 		}
 		return err
 	}
 
-	workerJob, err := c.kubeClientSet.
+	workerJob, err := b.kubeClientSet.
 		BatchV1().
-		Jobs(c.loadTest.Status.Namespace).
-		Get(ctx, newWorkerJobName(c.loadTest), metaV1.GetOptions{})
+		Jobs(loadTestStatus.Namespace).
+		Get(ctx, b.newWorkerJobName(loadTest), metaV1.GetOptions{})
 	if err != nil {
 		return err
 	}
 
-	masterJob, err := c.kubeClientSet.
+	masterJob, err := b.kubeClientSet.
 		BatchV1().
-		Jobs(c.loadTest.Status.Namespace).
-		Get(ctx, newMasterJobName(c.loadTest), metaV1.GetOptions{})
+		Jobs(loadTestStatus.Namespace).
+		Get(ctx, b.newMasterJobName(loadTest), metaV1.GetOptions{})
 	if err != nil {
 		return err
 	}
 
-	c.loadTest.Status.Phase = getLoadTestStatusFromJobs(masterJob, workerJob)
+	loadTestStatus.Phase = b.getLoadTestStatusFromJobs(masterJob, workerJob)
 
 	return nil
-}
-
-// New creates a instance of Locust backend
-func New(
-	kubeClientSet kubernetes.Interface,
-	kangalClientSet clientSetV.Interface,
-	loadTest *loadTestV1.LoadTest,
-	logger *zap.Logger,
-	reportURL string,
-	config Config,
-	podAnnotations map[string]string,
-) *Locust {
-	// this is to keep backward compatibility
-	if config.Image != "" && config.ImageName == "" {
-		config.ImageName = config.Image
-	}
-
-	imageName := defaultImage
-	if config.ImageName != "" {
-		imageName = config.ImageName
-	}
-
-	imageTag := defaultImageTag
-	if config.ImageTag != "" {
-		imageTag = config.ImageTag
-	}
-
-	return &Locust{
-		kubeClientSet:   kubeClientSet,
-		kangalClientSet: kangalClientSet,
-		loadTest:        loadTest,
-		logger:          logger,
-		reportURL:       reportURL,
-		imageName:       imageName,
-		imageTag:        imageTag,
-		masterResources: helper.Resources{
-			CPULimits:      config.MasterCPULimits,
-			CPURequests:    config.MasterCPURequests,
-			MemoryLimits:   config.MasterMemoryLimits,
-			MemoryRequests: config.MasterMemoryRequests,
-		},
-		workerResources: helper.Resources{
-			CPULimits:      config.WorkerCPULimits,
-			CPURequests:    config.WorkerCPURequests,
-			MemoryLimits:   config.WorkerMemoryLimits,
-			MemoryRequests: config.WorkerMemoryRequests,
-		},
-		podAnnotations: podAnnotations,
-	}
 }

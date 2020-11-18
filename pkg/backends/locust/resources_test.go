@@ -101,8 +101,10 @@ func TestGetLoadTestStatusFromJobs(t *testing.T) {
 		},
 	}
 
+	c := &Locust{}
+
 	for _, scenario := range scenarios {
-		actual := getLoadTestStatusFromJobs(scenario.MasterJob, scenario.WorkerJob)
+		actual := c.getLoadTestStatusFromJobs(scenario.MasterJob, scenario.WorkerJob)
 		assert.Equal(t, scenario.Expected, actual)
 	}
 }

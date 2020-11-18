@@ -20,14 +20,14 @@ var (
 	loadTestWorkerLabelValue = "loadtest-worker-pod"
 )
 
-func newConfigMapName(loadTest *loadtestV1.LoadTest) string {
+func (b *Locust) newConfigMapName(loadTest loadtestV1.LoadTest) string {
 	return fmt.Sprintf("%s-testfile", loadTest.ObjectMeta.Name)
 }
 
-func newConfigMap(loadTest *loadtestV1.LoadTest) *coreV1.ConfigMap {
-	name := newConfigMapName(loadTest)
+func (b *Locust) newConfigMap(loadTest loadtestV1.LoadTest) *coreV1.ConfigMap {
+	name := b.newConfigMapName(loadTest)
 
-	ownerRef := metaV1.NewControllerRef(loadTest, loadtestV1.SchemeGroupVersion.WithKind("LoadTest"))
+	ownerRef := metaV1.NewControllerRef(&loadTest, loadtestV1.SchemeGroupVersion.WithKind("LoadTest"))
 
 	return &coreV1.ConfigMap{
 		ObjectMeta: metaV1.ObjectMeta{
@@ -41,14 +41,14 @@ func newConfigMap(loadTest *loadtestV1.LoadTest) *coreV1.ConfigMap {
 	}
 }
 
-func newSecretName(loadTest *loadtestV1.LoadTest) string {
+func (b *Locust) newSecretName(loadTest loadtestV1.LoadTest) string {
 	return fmt.Sprintf("%s-envvar", loadTest.ObjectMeta.Name)
 }
 
-func newSecret(loadTest *loadtestV1.LoadTest, envs map[string]string) *coreV1.Secret {
-	name := newSecretName(loadTest)
+func (b *Locust) newSecret(loadTest loadtestV1.LoadTest, envs map[string]string) *coreV1.Secret {
+	name := b.newSecretName(loadTest)
 
-	ownerRef := metaV1.NewControllerRef(loadTest, loadtestV1.SchemeGroupVersion.WithKind("LoadTest"))
+	ownerRef := metaV1.NewControllerRef(&loadTest, loadtestV1.SchemeGroupVersion.WithKind("LoadTest"))
 
 	return &coreV1.Secret{
 		ObjectMeta: metaV1.ObjectMeta{
@@ -62,28 +62,24 @@ func newSecret(loadTest *loadtestV1.LoadTest, envs map[string]string) *coreV1.Se
 	}
 }
 
-func newMasterJobName(loadTest *loadtestV1.LoadTest) string {
+func (b *Locust) newMasterJobName(loadTest loadtestV1.LoadTest) string {
 	return fmt.Sprintf("%s-master", loadTest.ObjectMeta.Name)
 }
 
-func newMasterJob(
-	loadTest *loadtestV1.LoadTest,
+func (b *Locust) newMasterJob(
+	loadTest loadtestV1.LoadTest,
 	testfileConfigMap *coreV1.ConfigMap,
 	envvarSecret *coreV1.Secret,
 	reportURL string,
-	masterResources helper.Resources,
-	podAnnotations map[string]string,
-	imageName, imageTag string,
-	logger *zap.Logger,
 ) *batchV1.Job {
-	name := newMasterJobName(loadTest)
+	name := b.newMasterJobName(loadTest)
 
-	ownerRef := metaV1.NewControllerRef(loadTest, loadtestV1.SchemeGroupVersion.WithKind("LoadTest"))
+	ownerRef := metaV1.NewControllerRef(&loadTest, loadtestV1.SchemeGroupVersion.WithKind("LoadTest"))
 
 	imageRef := fmt.Sprintf("%s:%s", loadTest.Spec.MasterConfig.Image, loadTest.Spec.MasterConfig.Tag)
-	if imageRef == ":" {
-		imageRef = fmt.Sprintf("%s:%s", imageName, imageTag)
-		logger.Warn("Loadtest.Spec.MasterConfig is empty; using default image", zap.String("imageRef", imageRef))
+	if "" == loadTest.Spec.MasterConfig.Image || "" == loadTest.Spec.MasterConfig.Tag {
+		imageRef = fmt.Sprintf("%s:%s", b.config.Image, b.config.Tag)
+		b.logger.Warn("Loadtest.Spec.MasterConfig is empty; using default master image", zap.String("imageRef", imageRef))
 	}
 
 	envVars := []coreV1.EnvVar{
@@ -108,7 +104,7 @@ func newMasterJob(
 		envFrom = append(envFrom, coreV1.EnvFromSource{
 			SecretRef: &coreV1.SecretEnvSource{
 				LocalObjectReference: coreV1.LocalObjectReference{
-					Name: newSecretName(loadTest),
+					Name: b.newSecretName(loadTest),
 				},
 			},
 		})
@@ -135,7 +131,7 @@ func newMasterJob(
 						"name":           name,
 						loadTestLabelKey: loadTestMasterLabelValue,
 					},
-					Annotations: podAnnotations,
+					Annotations: b.podAnnotations,
 				},
 				Spec: coreV1.PodSpec{
 					RestartPolicy: "Never",
@@ -152,7 +148,7 @@ func newMasterJob(
 									SubPath:   "locustfile.py",
 								},
 							},
-							Resources: helper.BuildResourceRequirements(masterResources),
+							Resources: helper.BuildResourceRequirements(b.masterResources),
 							EnvFrom:   envFrom,
 						},
 					},
@@ -174,10 +170,10 @@ func newMasterJob(
 	}
 }
 
-func newMasterService(loadTest *loadtestV1.LoadTest, masterJob *batchV1.Job) *coreV1.Service {
+func (b *Locust) newMasterService(loadTest loadtestV1.LoadTest, masterJob *batchV1.Job) *coreV1.Service {
 	name := fmt.Sprintf("%s-master", loadTest.ObjectMeta.Name)
 
-	ownerRef := metaV1.NewControllerRef(loadTest, loadtestV1.SchemeGroupVersion.WithKind("LoadTest"))
+	ownerRef := metaV1.NewControllerRef(&loadTest, loadtestV1.SchemeGroupVersion.WithKind("LoadTest"))
 
 	return &coreV1.Service{
 		ObjectMeta: metaV1.ObjectMeta{
@@ -204,28 +200,24 @@ func newMasterService(loadTest *loadtestV1.LoadTest, masterJob *batchV1.Job) *co
 	}
 }
 
-func newWorkerJobName(loadTest *loadtestV1.LoadTest) string {
+func (b *Locust) newWorkerJobName(loadTest loadtestV1.LoadTest) string {
 	return fmt.Sprintf("%s-worker", loadTest.ObjectMeta.Name)
 }
 
-func newWorkerJob(
-	loadTest *loadtestV1.LoadTest,
+func (b *Locust) newWorkerJob(
+	loadTest loadtestV1.LoadTest,
 	testfileConfigMap *coreV1.ConfigMap,
 	envvarSecret *coreV1.Secret,
 	masterService *coreV1.Service,
-	workerResources helper.Resources,
-	podAnnotations map[string]string,
-	imageName, imageTag string,
-	logger *zap.Logger,
 ) *batchV1.Job {
-	name := newWorkerJobName(loadTest)
+	name := b.newWorkerJobName(loadTest)
 
-	ownerRef := metaV1.NewControllerRef(loadTest, loadtestV1.SchemeGroupVersion.WithKind("LoadTest"))
+	ownerRef := metaV1.NewControllerRef(&loadTest, loadtestV1.SchemeGroupVersion.WithKind("LoadTest"))
 
-	imageRef := fmt.Sprintf("%s:%s", loadTest.Spec.MasterConfig.Image, loadTest.Spec.MasterConfig.Tag)
-	if imageRef == ":" {
-		imageRef = fmt.Sprintf("%s:%s", imageName, imageTag)
-		logger.Warn("Loadtest.Spec.MasterConfig is empty; using default image", zap.String("imageRef", imageRef))
+	imageRef := fmt.Sprintf("%s:%s", loadTest.Spec.WorkerConfig.Image, loadTest.Spec.WorkerConfig.Tag)
+	if "" == loadTest.Spec.WorkerConfig.Image || "" == loadTest.Spec.WorkerConfig.Tag {
+		imageRef = fmt.Sprintf("%s:%s", b.config.Image, b.config.Tag)
+		b.logger.Warn("Loadtest.Spec.WorkerConfig is empty; using default worker image", zap.String("imageRef", imageRef))
 	}
 
 	envVars := []coreV1.EnvVar{
@@ -240,7 +232,7 @@ func newWorkerJob(
 		envFrom = append(envFrom, coreV1.EnvFromSource{
 			SecretRef: &coreV1.SecretEnvSource{
 				LocalObjectReference: coreV1.LocalObjectReference{
-					Name: newSecretName(loadTest),
+					Name: b.newSecretName(loadTest),
 				},
 			},
 		})
@@ -267,7 +259,7 @@ func newWorkerJob(
 					Labels: map[string]string{
 						loadTestLabelKey: loadTestWorkerLabelValue,
 					},
-					Annotations: podAnnotations,
+					Annotations: b.podAnnotations,
 				},
 				Spec: coreV1.PodSpec{
 					RestartPolicy: "Never",
@@ -284,7 +276,7 @@ func newWorkerJob(
 									SubPath:   "locustfile.py",
 								},
 							},
-							Resources: helper.BuildResourceRequirements(workerResources),
+							Resources: helper.BuildResourceRequirements(b.workerResources),
 							EnvFrom:   envFrom,
 						},
 					},
@@ -306,7 +298,7 @@ func newWorkerJob(
 	}
 }
 
-func getLoadTestStatusFromJobs(masterJob *batchV1.Job, workerJob *batchV1.Job) loadtestV1.LoadTestPhase {
+func (b *Locust) getLoadTestStatusFromJobs(masterJob *batchV1.Job, workerJob *batchV1.Job) loadtestV1.LoadTestPhase {
 	if workerJob.Status.Failed > int32(0) || masterJob.Status.Failed > int32(0) {
 		return loadtestV1.LoadTestErrored
 	}
