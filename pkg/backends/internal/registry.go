@@ -1,4 +1,4 @@
-package registry
+package internal
 
 import (
 	"errors"
@@ -57,7 +57,7 @@ func New(opts ...Option) *Registry {
 	return b
 }
 
-// Resolve return the given backend name from the registry
+// Resolve return the given backend name from the internal
 func (b *Registry) Resolve(loadTestType loadTestV1.LoadTestType) (Backend, error) {
 	resolved, exists := b.registry[loadTestType]
 	if !exists {
