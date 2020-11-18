@@ -11,9 +11,11 @@ import (
 	"time"
 
 	"github.com/go-chi/chi"
-
 	"github.com/hellofresh/kangal/pkg/backends"
-
+	mPkg "github.com/hellofresh/kangal/pkg/core/middleware"
+	kube "github.com/hellofresh/kangal/pkg/kubernetes"
+	apisLoadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
+	fakeClientset "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned/fake"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
@@ -24,15 +26,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/fake"
 	k8stesting "k8s.io/client-go/testing"
-
-	mPkg "github.com/hellofresh/kangal/pkg/core/middleware"
-	kube "github.com/hellofresh/kangal/pkg/kubernetes"
-	apisLoadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
-	fakeClientset "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned/fake"
 )
 
 const shortDuration = 1 * time.Millisecond // a reasonable duration to block in an example
-var defaultConfig = Config{MaxLoadTestsRun: 1}
 
 func TestHTTPValidator(t *testing.T) {
 	for _, tt := range []struct {
@@ -257,7 +253,7 @@ func TestProxy_List(t *testing.T) {
 			})
 			c := kube.NewClient(loadTestClientSet.KangalV1().LoadTests(), kubeClientSet, logger)
 
-			testProxyHandler := NewProxy(defaultConfig, c, nil)
+			testProxyHandler := NewProxy(1, c, nil)
 
 			req := httptest.NewRequest("POST", "http://example.com/foo?"+tc.urlParams, nil)
 			req = req.WithContext(ctx)
@@ -342,18 +338,16 @@ func TestProxyCreate(t *testing.T) {
 			})
 			c := kube.NewClient(loadtestClientSet.KangalV1().LoadTests(), kubeClientSet, logger)
 
-			s := specData{
-				distributedPods: tt.distributedPods,
-				tags:            tt.tagsString,
-				ltType:          string(tt.loadTestType),
-				files:           tt.requestFiles,
-				err:             nil,
-			}
+			b := backends.New(
+				backends.WithLogger(logger),
+				backends.WithKubeClientSet(kubeClientSet),
+				backends.WithKangalClientSet(loadtestClientSet),
+			)
 
-			testProxyHandler := NewProxy(defaultConfig, c, s.fakeSpecCreator)
+			testProxyHandler := NewProxy(1, c, b)
 			handler := testProxyHandler.Create
 
-			requestWrap, _ := createRequestWrapper(tt.requestFiles, strconv.Itoa(tt.distributedPods), string(tt.loadTestType), tt.tagsString)
+			requestWrap, _ := createRequestWrapper(tt.requestFiles, strconv.Itoa(tt.distributedPods), string(tt.loadTestType), tt.tagsString, false)
 
 			req := httptest.NewRequest("POST", "http://example.com/foo", requestWrap.body)
 			req.Header.Set("Content-Type", requestWrap.contentType)
@@ -389,7 +383,7 @@ func TestNewProxyRecreate(t *testing.T) {
 					{
 						ObjectMeta: metaV1.ObjectMeta{
 							Labels: map[string]string{
-								"test-file-hash": "1eb2058ca019f1e95ecb5f2a5d9f691656d729f7",
+								"test-file-hash": "5a7919885ef46f2e0bd66602944128fde2dce928",
 							},
 						},
 						Status: apisLoadTestV1.LoadTestStatus{
@@ -410,7 +404,7 @@ func TestNewProxyRecreate(t *testing.T) {
 					{
 						ObjectMeta: metaV1.ObjectMeta{
 							Labels: map[string]string{
-								"test-file-hash": "1eb2058ca019f1e95ecb5f2a5d9f691656d729f7",
+								"test-file-hash": "5a7919885ef46f2e0bd66602944128fde2dce928",
 							},
 						},
 						Status: apisLoadTestV1.LoadTestStatus{
@@ -434,28 +428,29 @@ func TestNewProxyRecreate(t *testing.T) {
 			ctx := mPkg.SetLogger(context.Background(), logger)
 			c := kube.NewClient(loadtestClientSet.KangalV1().LoadTests(), kubeClientSet, logger)
 
-			s := specData{
-				files: map[string]string{
-					"testFile": "111.jmx"},
-				overwrite: tt.overwrite,
-			}
+			b := backends.New(
+				backends.WithLogger(logger),
+				backends.WithKubeClientSet(kubeClientSet),
+				backends.WithKangalClientSet(loadtestClientSet),
+			)
 
-			testProxyHandler := NewProxy(defaultConfig, c, s.fakeSpecCreator)
-			handler := testProxyHandler.Create
+			testProxyHandler := NewProxy(1, c, b)
 
 			loadtestClientSet.Fake.PrependReactor("list", "loadtests", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
 				return true, tt.testsList, tt.err
 			})
 
-			requestWrap, _ := createRequestWrapper(map[string]string{
-				"testFile": "111.jmx"}, "2", "Fake", "")
+			requestFiles := map[string]string{
+				"testFile": "testdata/valid/loadtest.jmx",
+			}
+			requestWrap, _ := createRequestWrapper(requestFiles, "2", "Fake", "", tt.overwrite)
 
 			req := httptest.NewRequest("POST", "http://example.com/load-test", requestWrap.body)
 			req = req.WithContext(ctx)
 			req.Header.Set("Content-Type", requestWrap.contentType)
 			w := httptest.NewRecorder()
 
-			handler(w, req)
+			testProxyHandler.Create(w, req)
 
 			resp := w.Result()
 			respBody, _ := ioutil.ReadAll(resp.Body)
@@ -539,12 +534,19 @@ func TestProxyCreateWithErrors(t *testing.T) {
 
 			c := kube.NewClient(loadtestClientSet.KangalV1().LoadTests(), kubeClientSet, logger)
 
-			s := specData{}
-			testProxyHandler := NewProxy(defaultConfig, c, s.fakeSpecCreator)
+			b := backends.New(
+				backends.WithLogger(logger),
+				backends.WithKubeClientSet(kubeClientSet),
+				backends.WithKangalClientSet(loadtestClientSet),
+			)
+
+			testProxyHandler := NewProxy(1, c, b)
 			handler := testProxyHandler.Create
 
-			requestWrap, _ := createRequestWrapper(map[string]string{
-				"testFile": "testfile.jmx"}, "2", "Fake", "")
+			requestFiles := map[string]string{
+				"testFile": "testdata/valid/loadtest.jmx",
+			}
+			requestWrap, _ := createRequestWrapper(requestFiles, "2", "Fake", "", false)
 
 			req := httptest.NewRequest("POST", "http://example.com/load-test", requestWrap.body)
 			req = req.WithContext(ctx)
@@ -616,13 +618,13 @@ func TestProxyGet(t *testing.T) {
 			})
 			c := kube.NewClient(loadtestClientSet.KangalV1().LoadTests(), kubeClientSet, logger)
 
-			s := specData{
-				distributedPods: 1,
-				ltType:          "JMeter",
-				err:             nil,
-			}
+			b := backends.New(
+				backends.WithLogger(logger),
+				backends.WithKubeClientSet(kubeClientSet),
+				backends.WithKangalClientSet(loadtestClientSet),
+			)
 
-			testProxyHandler := NewProxy(defaultConfig, c, s.fakeSpecCreator)
+			testProxyHandler := NewProxy(1, c, b)
 			handler := testProxyHandler.Get
 
 			req := httptest.NewRequest("GET", "http://example.com/load-test/testname", nil)
@@ -674,9 +676,13 @@ func TestProxyDelete(t *testing.T) {
 			})
 			c := kube.NewClient(loadtestClientSet.KangalV1().LoadTests(), kubeClientSet, logger)
 
-			s := specData{}
+			b := backends.New(
+				backends.WithLogger(logger),
+				backends.WithKubeClientSet(kubeClientSet),
+				backends.WithKangalClientSet(loadtestClientSet),
+			)
 
-			testProxyHandler := NewProxy(defaultConfig, c, s.fakeSpecCreator)
+			testProxyHandler := NewProxy(1, c, b)
 			handler := testProxyHandler.Delete
 
 			req := httptest.NewRequest("DELETE", "http://example.com/load-test/some-test", nil)
@@ -769,9 +775,11 @@ func TestProxyGetLogs(t *testing.T) {
 			})
 			c := kube.NewClient(loadtestClientSet.KangalV1().LoadTests(), kubeClientSet, logger)
 
-			s := specData{}
+			b := backends.New(
+				backends.WithLogger(zap.NewNop()),
+			)
 
-			testProxyHandler := NewProxy(defaultConfig, c, s.fakeSpecCreator)
+			testProxyHandler := NewProxy(1, c, b)
 			handler := testProxyHandler.GetLogs
 
 			routeCtx := new(chi.Context)
@@ -795,7 +803,7 @@ func TestProxyGetLogs(t *testing.T) {
 }
 
 func buildMocFormReq(requestFiles map[string]string, distributedPods, ltType, tagsString string) (*http.Request, error) {
-	request, err := createRequestWrapper(requestFiles, distributedPods, ltType, tagsString)
+	request, err := createRequestWrapper(requestFiles, distributedPods, ltType, tagsString, false)
 	if err != nil {
 		return nil, err
 	}
@@ -817,7 +825,7 @@ type specData struct {
 	err             error
 }
 
-func (s *specData) fakeSpecCreator(*http.Request, backends.Config, *zap.Logger) (apisLoadTestV1.LoadTestSpec, error) {
+func (s *specData) fakeSpecCreator(*http.Request, *zap.Logger) (apisLoadTestV1.LoadTestSpec, error) {
 	lt := apisLoadTestV1.LoadTestSpec{}
 
 	distributedPods := int32(s.distributedPods)

@@ -26,21 +26,27 @@ type Request struct {
 	contentType string
 }
 
-func createRequestWrapper(requestFiles map[string]string, distributedPods string, loadtestType string, tagsString string) (*Request, error) {
+func createRequestWrapper(requestFiles map[string]string, distributedPods string, loadtestType string, tagsString string, overwrite bool) (*Request, error) {
 	request := &Request{}
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
 
 	if err := writer.WriteField("distributedPods", distributedPods); err != nil {
-		return request, fmt.Errorf("error adding pod nr: %w", err)
+		return nil, fmt.Errorf("error adding pod nr: %w", err)
 	}
 
 	if err := writer.WriteField("tags", tagsString); err != nil {
-		return request, fmt.Errorf("error adding tags: %w", err)
+		return nil, fmt.Errorf("error adding tags: %w", err)
 	}
 
 	if err := writer.WriteField("type", loadtestType); err != nil {
-		return request, fmt.Errorf("error adding loadtest type: %w", err)
+		return nil, fmt.Errorf("error adding loadtest type: %w", err)
+	}
+
+	if overwrite {
+		if err := writer.WriteField("overwrite", "true"); err != nil {
+			return nil, fmt.Errorf("error adding loadtest overwrite: %w", err)
+		}
 	}
 
 	for key, val := range requestFiles {
@@ -60,7 +66,7 @@ func createRequestWrapper(requestFiles map[string]string, distributedPods string
 
 	err := writer.Close()
 	if err != nil {
-		return request, err
+		return nil, err
 	}
 
 	request.body = body

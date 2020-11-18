@@ -8,14 +8,13 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/hellofresh/kangal/pkg/backends"
-
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 	"go.uber.org/zap"
 	k8sAPIErrors "k8s.io/apimachinery/pkg/api/errors"
 	restClient "k8s.io/client-go/rest"
 
+	"github.com/hellofresh/kangal/pkg/backends"
 	loadtest "github.com/hellofresh/kangal/pkg/controller"
 	cHttp "github.com/hellofresh/kangal/pkg/core/http"
 	mPkg "github.com/hellofresh/kangal/pkg/core/middleware"
@@ -32,21 +31,19 @@ var (
 	ErrFileToStringEmpty error = errors.New("file is empty")
 )
 
-type loadTestSpecCreator func(*http.Request, backends.Config, *zap.Logger) (apisLoadTestV1.LoadTestSpec, error)
-
 // Proxy handler
 type Proxy struct {
-	config              Config
-	kubeClient          *kube.Client
-	httpToSpecConverter loadTestSpecCreator
+	maxLoadTestsRun int
+	kubeClient      *kube.Client
+	registry        *backends.Registry
 }
 
 // NewProxy returns new Proxy handlers
-func NewProxy(cfg Config, kubeClient *kube.Client, specCreator loadTestSpecCreator) *Proxy {
+func NewProxy(maxLoadTestsRun int, kubeClient *kube.Client, registry *backends.Registry) *Proxy {
 	return &Proxy{
-		config:              cfg,
-		kubeClient:          kubeClient,
-		httpToSpecConverter: specCreator,
+		maxLoadTestsRun: maxLoadTestsRun,
+		kubeClient:      kubeClient,
+		registry:        registry,
 	}
 }
 
@@ -128,7 +125,7 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	// Making valid LoadTestSpec based on HTTP request
-	ltSpec, err := p.httpToSpecConverter(r, p.config.Backends, logger)
+	ltSpec, err := fromHTTPRequestToLoadTestSpec(r, logger)
 	if err != nil {
 		render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest, err.Error()))
 		return
@@ -150,11 +147,9 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(labeledLoadTests.Items) > 0 {
-
 		// If users wants to overwrite
 		if loadTest.Spec.Overwrite == true {
 			for _, item := range labeledLoadTests.Items {
-
 				// Remove the old tests
 				err := p.kubeClient.DeleteLoadTest(ctx, item.Name)
 				if err != nil {
@@ -178,9 +173,21 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if activeLoadTests >= p.config.MaxLoadTestsRun {
-		logger.Warn("number of active load tests reached limit", zap.Int("current", activeLoadTests), zap.Int("limit", p.config.MaxLoadTestsRun))
+	if activeLoadTests >= p.maxLoadTestsRun {
+		logger.Warn("number of active load tests reached limit", zap.Int("current", activeLoadTests), zap.Int("limit", p.maxLoadTestsRun))
 		render.Render(w, r, cHttp.ErrResponse(http.StatusTooManyRequests, "Number of active load tests reached limit"))
+		return
+	}
+
+	resolvedBackend, err := p.registry.Resolve(getLoadTestType(r))
+	if err != nil {
+		render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest, err.Error()))
+		return
+	}
+
+	err = resolvedBackend.TransformLoadTestSpec(&ltSpec)
+	if err != nil {
+		render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest, err.Error()))
 		return
 	}
 

@@ -50,7 +50,7 @@ func TestIntegrationCreateLoadtestFormPostAllFiles(t *testing.T) {
 	var createdLoadTestName string
 
 	t.Run("Creates the loadtest", func(t *testing.T) {
-		request, err := createRequestWrapper(requestFiles, distributedPods, string(loadtestType), tagsString)
+		request, err := createRequestWrapper(requestFiles, distributedPods, string(loadtestType), tagsString, false)
 		require.NoError(t, err)
 
 		resp, err := http.Post(fmt.Sprintf("http://localhost:%d/load-test", HTTPPort), request.contentType, request.body)
@@ -75,7 +75,7 @@ func TestIntegrationCreateLoadtestFormPostAllFiles(t *testing.T) {
 		require.NoError(t, err)
 
 		expected := map[string]string{
-			"test-file-hash":      "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+			"test-file-hash":      "5a7919885ef46f2e0bd66602944128fde2dce928",
 			"test-tag-department": "platform",
 			"test-tag-team":       "kangal",
 		}
@@ -100,7 +100,7 @@ func TestIntegrationCreateLoadtestDuplicates(t *testing.T) {
 	var createdLoadTestName string
 
 	t.Run("Creates first loadtest, must succeed", func(t *testing.T) {
-		request, err := createRequestWrapper(requestFiles, distributedPods, string(loadtestType), "")
+		request, err := createRequestWrapper(requestFiles, distributedPods, string(loadtestType), "", false)
 		require.NoError(t, err)
 
 		resp, err := http.Post(fmt.Sprintf("http://localhost:%d/load-test", HTTPPort), request.contentType, request.body)
@@ -116,7 +116,7 @@ func TestIntegrationCreateLoadtestDuplicates(t *testing.T) {
 	})
 
 	t.Run("Creates second loadtest, must fail", func(t *testing.T) {
-		request, err := createRequestWrapper(requestFiles, distributedPods, string(loadtestType), "")
+		request, err := createRequestWrapper(requestFiles, distributedPods, string(loadtestType), "", false)
 		require.NoError(t, err)
 
 		resp, err := http.Post(fmt.Sprintf("http://localhost:%d/load-test", HTTPPort), request.contentType, request.body)
@@ -148,7 +148,7 @@ func TestIntegrationCreateLoadtestReachMaxLimit(t *testing.T) {
 	var createdLoadTestName string
 
 	t.Run("Creates first loadtest, must succeed", func(t *testing.T) {
-		request, err := createRequestWrapper(requestFiles, distributedPods, string(loadtestType), "")
+		request, err := createRequestWrapper(requestFiles, distributedPods, string(loadtestType), "", false)
 		require.NoError(t, err)
 
 		resp, err := http.Post(fmt.Sprintf("http://localhost:%d/load-test", HTTPPort), request.contentType, request.body)
@@ -167,14 +167,14 @@ func TestIntegrationCreateLoadtestReachMaxLimit(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("Creates second loadtest, must fail", func(t *testing.T) {
-		request, err := createRequestWrapper(requestFilesSecond, distributedPods, string(loadtestType), "")
+		request, err := createRequestWrapper(requestFilesSecond, distributedPods, string(loadtestType), "", false)
 		require.NoError(t, err)
 
 		resp, err := http.Post(fmt.Sprintf("http://localhost:%d/load-test", HTTPPort), request.contentType, request.body)
 		require.NoError(t, err, "Could not create POST request")
 		body, _ := ioutil.ReadAll(resp.Body)
 		t.Logf(string(body))
-		require.Equal(t, http.StatusBadRequest, resp.StatusCode)
+		require.Equal(t, http.StatusTooManyRequests, resp.StatusCode)
 	})
 }
 
@@ -193,7 +193,7 @@ func TestIntegrationCreateLoadtestFormPostOneFile(t *testing.T) {
 	var createdLoadTestName string
 
 	t.Run("Creates the loadtest", func(t *testing.T) {
-		request, err := createRequestWrapper(requestFiles, distributedPods, string(loadtestType), "")
+		request, err := createRequestWrapper(requestFiles, distributedPods, string(loadtestType), "", false)
 		require.NoError(t, err)
 
 		resp, err := http.Post(fmt.Sprintf("http://localhost:%d/load-test", HTTPPort), request.contentType, request.body)
@@ -241,7 +241,7 @@ func TestIntegrationCreateLoadtestEmptyTestFile(t *testing.T) {
 	var body io.ReadCloser
 
 	t.Run("Creates the loadtest with empty testFile", func(t *testing.T) {
-		request, err := createRequestWrapper(requestFiles, distributedPods, string(loadtestType), "")
+		request, err := createRequestWrapper(requestFiles, distributedPods, string(loadtestType), "", false)
 		require.NoError(t, err)
 
 		resp, err := http.Post(fmt.Sprintf("http://localhost:%d/load-test", HTTPPort), request.contentType, request.body)
@@ -285,7 +285,7 @@ func TestIntegrationCreateLoadtestEmptyTestDataFile(t *testing.T) {
 	var body io.ReadCloser
 
 	t.Run("Creates the loadtest", func(t *testing.T) {
-		request, err := createRequestWrapper(requestFiles, distributedPods, string(loadtestType), "")
+		request, err := createRequestWrapper(requestFiles, distributedPods, string(loadtestType), "", false)
 		require.NoError(t, err)
 
 		resp, err := http.Post(fmt.Sprintf("http://localhost:%d/load-test", HTTPPort), request.contentType, request.body)
@@ -413,7 +413,7 @@ func TestIntegrationGetLoadtest(t *testing.T) {
 		assert.Equal(t, currentNamespace, dat.Namespace)
 		assert.NotEmpty(t, dat.Phase)
 		assert.NotEqual(t, apisLoadTestV1.LoadTestErrored, dat.Phase)
-		assert.Equal(t, false, dat.HasTestData)
+		assert.Equal(t, true, dat.HasTestData)
 	})
 }
 
