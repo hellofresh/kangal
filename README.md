@@ -75,7 +75,7 @@ More info about the Custom Resources in [official Kubernetes documentation](http
 ### Kangal Proxy
 Provides the following HTTP methods for `/load-test` endpoint:
  - POST - allowing the user to create a new LoadTest
- - GET - allowing the user to see current LoadTest status / logs / report / metrics
+ - GET - allowing the user to see information (status/logs/report) for specific LoadTest and get an overview for all the currently existing loadtests
  - DELETE - allowing the user to stop and delete existing LoadTest
 
  The Kangal Proxy is documented using the [OpenAPI Spec](https://swagger.io/specification/).
