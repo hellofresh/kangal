@@ -1,0 +1,11 @@
+version: v1beta1
+build:
+  roots:
+    - googleapis
+    - proto
+lint:
+  ignore:
+    - google
+    - storage
+    - grafeas
+    - gapic
