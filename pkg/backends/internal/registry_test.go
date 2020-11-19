@@ -3,11 +3,13 @@ package internal
 import (
 	"testing"
 
-	"go.uber.org/zap"
+	kubeFake "k8s.io/client-go/kubernetes/fake"
 
 	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
+	kangalFake "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned/fake"
 
 	"github.com/golang/mock/gomock"
+	"go.uber.org/zap"
 )
 
 func TestNew(t *testing.T) {
@@ -15,9 +17,11 @@ func TestNew(t *testing.T) {
 	defer ctrl.Finish()
 
 	tests := []struct {
-		name           string
-		podAnnotations map[string]string
-		logger         *zap.Logger
+		name            string
+		podAnnotations  map[string]string
+		logger          *zap.Logger
+		kangalClientSet *kangalFake.Clientset
+		kubeClientSet   *kubeFake.Clientset
 	}{
 		{
 			name: "no-options",
@@ -31,6 +35,14 @@ func TestNew(t *testing.T) {
 		{
 			name:   "logger",
 			logger: zap.NewNop(),
+		},
+		{
+			name:            "kangal-client-set",
+			kangalClientSet: kangalFake.NewSimpleClientset(),
+		},
+		{
+			name:          "kube-client-set",
+			kubeClientSet: kubeFake.NewSimpleClientset(),
 		},
 	}
 	for _, tt := range tests {
@@ -55,6 +67,16 @@ func TestNew(t *testing.T) {
 			if nil != tt.logger {
 				opts = append(opts, WithLogger(tt.logger))
 				b.EXPECT().SetLogger(gomock.Eq(tt.logger))
+			}
+
+			if nil != tt.kangalClientSet {
+				opts = append(opts, WithKangalClientSet(tt.kangalClientSet))
+				b.EXPECT().SetKangalClientSet(gomock.Eq(tt.kangalClientSet))
+			}
+
+			if nil != tt.kubeClientSet {
+				opts = append(opts, WithKubeClientSet(tt.kubeClientSet))
+				b.EXPECT().SetKubeClientSet(gomock.Eq(tt.kubeClientSet))
 			}
 
 			New(opts...)
