@@ -78,6 +78,9 @@ func fromHTTPRequestToListOptions(r *http.Request) (*kubernetes.ListOptions, err
 		opt.Limit = limit
 	}
 
+	// Build phase filter.
+	opt.Phase = params.Get("phase")
+
 	// Build continue.
 	opt.Continue = params.Get("continue")
 

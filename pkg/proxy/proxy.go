@@ -98,6 +98,10 @@ func (p *Proxy) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if opt.Phase != "" {
+		loadTests = p.kubeClient.ListLoadTestsByPhase(loadTests, opt.Phase)
+	}
+
 	items := make([]LoadTestStatus, len(loadTests.Items))
 
 	for i, lt := range loadTests.Items {
