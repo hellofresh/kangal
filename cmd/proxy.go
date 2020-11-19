@@ -39,7 +39,7 @@ func NewProxyCmd(ctx context.Context) *cobra.Command {
 				return fmt.Errorf("could not load config from env: %w", err)
 			}
 
-			logger, err := observability.NewLogger(cfg.Logger)
+			logger, _, err := observability.NewLogger(cfg.Logger)
 			if err != nil {
 				return fmt.Errorf("could not build logger instance: %w", err)
 			}
