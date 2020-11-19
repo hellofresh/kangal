@@ -14,12 +14,56 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@master
+        uses: actions/checkout@v2
+
+      - name: Checkout Protobuf googleapis
+        uses: actions/checkout@v2
+        with:
+          repository: grpc-ecosystem/grpc-gateway
+          ref: v2.0.1 # same as the version used in go.mod!
+          path: proto_deps
+          clean: false
+
+      # buf requires googleapis in the project root, move it there
+      - name: Buf relative path workaround
+        run: |
+          mv proto_deps/third_party/googleapis ./
+          rm -rf proto_deps
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+        with:
+          version: '3.x'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install Protoc deps
+        env:
+          GOOGLEAPIS_DIR: "./googleapis"
+        run: |
+          go install \
+              github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway \
+              github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2 \
+              google.golang.org/protobuf/cmd/protoc-gen-go \
+              google.golang.org/grpc/cmd/protoc-gen-go-grpc
+          make protoc
+
+      # next three actions replace golangci/golangci-lint-action@v2 to make golangci work
+      # with deps already preinstalled, otherwise it fails with bunch of errors like
+      # "/bin/tar: ../../../go/pkg/mod/...: Cannot open: File exists"
+      # found solution at https://github.com/golangci/golangci-lint-action/issues/81
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: ${{ runner.os }}-go-
+
+      - name: Install golangci linter
+        run: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.32.2
 
       - name: Run golangci linter
-        uses: golangci/golangci-lint-action@v2
-        with:
-          version: v1.32
+        run: ./bin/golangci-lint run ./...
 
       - name: Lint GoReleaser
         uses: goreleaser/goreleaser-action@v2
@@ -47,17 +91,51 @@ jobs:
           files: |
             openapi.json
 
+      - name: Lint ProtoBuf
+        run: make buf-lint
+
   test:
     name: Test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@master
+        uses: actions/checkout@v2
 
       - name: Setup Golang
         uses: actions/setup-go@v2
         with:
           go-version: '^1.15'
+
+      - name: Checkout Protobuf googleapis
+        uses: actions/checkout@v2
+        with:
+          repository: grpc-ecosystem/grpc-gateway
+          ref: v2.0.1 # same as the version used in go.mod!
+          path: proto_deps
+          clean: false
+
+      # buf requires googleapis in the project root, move it there
+      - name: Buf relative path workaround
+        run: |
+          mv proto_deps/third_party/googleapis ./
+          rm -rf proto_deps
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+        with:
+          version: '3.x'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install Protoc deps
+        env:
+          GOOGLEAPIS_DIR: "./googleapis"
+        run: |
+          go install \
+              github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway \
+              github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2 \
+              google.golang.org/protobuf/cmd/protoc-gen-go \
+              google.golang.org/grpc/cmd/protoc-gen-go-grpc
+          make protoc
 
       - name: Run Unit tests
         run: |
