@@ -1,10 +1,11 @@
-package backends
+package internal
 
 import (
 	"errors"
 
-	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	"github.com/kelseyhightower/envconfig"
+
+	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 )
 
 var (
@@ -17,17 +18,10 @@ var (
 // defaultRegistry contains the list of available backends
 var defaultRegistry = map[loadTestV1.LoadTestType]Backend{}
 
-// register should be called to register your backend
-func register(b Backend) {
+// Register should be called to register your backend
+func Register(b Backend) {
 	if _, exists := defaultRegistry[b.Type()]; exists {
 		panic(ErrBackendRegistered)
-	}
-
-	if envConfig, ok := b.(BackendGetEnvConfig); ok {
-		err := envconfig.Process("", envConfig.GetEnvConfig())
-		if err != nil {
-			panic(err)
-		}
 	}
 
 	defaultRegistry[b.Type()] = b
@@ -48,9 +42,15 @@ func New(opts ...Option) *Registry {
 		opt(b)
 	}
 
-	for _, item := range b.registry {
-		if iface, ok := item.(BackendSetDefaults); ok {
-			iface.SetDefaults()
+	for _, reg := range b.registry {
+		if item, ok := reg.(BackendGetEnvConfig); ok {
+			err := envconfig.Process("", item.GetEnvConfig())
+			if err != nil {
+				panic(err)
+			}
+		}
+		if item, ok := reg.(BackendSetDefaults); ok {
+			item.SetDefaults()
 		}
 	}
 
