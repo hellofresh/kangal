@@ -57,7 +57,7 @@ func New(opts ...Option) *Registry {
 	return b
 }
 
-// Resolve return the given backend name from the internal
+// Resolve return the given backend name from the registry
 func (b *Registry) Resolve(loadTestType loadTestV1.LoadTestType) (Backend, error) {
 	resolved, exists := b.registry[loadTestType]
 	if !exists {
