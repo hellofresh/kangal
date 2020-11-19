@@ -22,14 +22,14 @@ func (w *stdLoggerWriter) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
-// NewLogger initializes and returns logger instance
-func NewLogger(cfg LoggerConfig) (*zap.Logger, error) {
+// NewLogger initializes and returns logger instance and flag if it is in debug mode
+func NewLogger(cfg LoggerConfig) (*zap.Logger, bool, error) {
 	var err error
 	logConfig := zap.NewProductionConfig()
 
 	logLevel := new(zap.AtomicLevel)
 	if err := logLevel.UnmarshalText([]byte(cfg.Level)); err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	logConfig.Level = *logLevel
@@ -41,11 +41,11 @@ func NewLogger(cfg LoggerConfig) (*zap.Logger, error) {
 
 	logger, err := logConfig.Build()
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	// override std logger to write into app logger
 	log.SetOutput(&stdLoggerWriter{logger})
 
-	return logger, nil
+	return logger, logConfig.Development, nil
 }

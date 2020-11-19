@@ -45,7 +45,7 @@ func NewControllerCmd(ctx context.Context) *cobra.Command {
 				return err
 			}
 
-			logger, err := observability.NewLogger(cfg.Logger)
+			logger, _, err := observability.NewLogger(cfg.Logger)
 			if err != nil {
 				return fmt.Errorf("could not build logger instance: %w", err)
 			}
