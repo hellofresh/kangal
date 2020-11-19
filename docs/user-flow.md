@@ -102,7 +102,7 @@ You can filter by `tags`
 curl 'http://${KANGAL_PROXY_ADDRESS}/load-test?tags=tag1:value1'
 ```
 
-You can filter by `phase`
+You can filter by `phase`, possible phases are: `creating, starting, running, finished, errored`
 
 ```bash
 curl 'http://${KANGAL_PROXY_ADDRESS}/load-test?phase=running'

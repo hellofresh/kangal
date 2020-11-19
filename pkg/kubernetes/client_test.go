@@ -319,7 +319,7 @@ func TestClientListLoadTestsByPhase(t *testing.T) {
 					},
 				},
 			},
-			status:      "running",
+			status:      "Running",
 			resultCount: 1,
 		},
 		{

@@ -142,6 +142,7 @@ func (c *Client) ListLoadTest(ctx context.Context, opt ListOptions) (*apisLoadTe
 // ListLoadTestsByPhase returns a list of loadtests filtered by phase
 func (c *Client) ListLoadTestsByPhase(list *apisLoadTestV1.LoadTestList, phase string) *apisLoadTestV1.LoadTestList {
 	filteredList := apisLoadTestV1.LoadTestList{}
+	phase = strings.ToLower(phase)
 	// CRD-s currently don't support custom field selectors, so we have to iterate via all load tests and check status phase
 	for _, loadTest := range list.Items {
 		if string(loadTest.Status.Phase) == phase {
