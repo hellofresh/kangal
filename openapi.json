@@ -438,7 +438,7 @@
 					},
 					"type": {
 						"type": "string",
-						"enum": ["jMeter", "Fake", "Locust"]
+						"enum": ["JMeter", "Fake", "Locust"]
 					},
 					"overwrite": {
 						"type": "boolean"
