@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -184,7 +185,7 @@ func TestProxy_List(t *testing.T) {
 			error:               errors.New("client error"),
 			expectedCode:        500,
 			expectedContentType: "application/json; charset=utf-8",
-			expectedResponse:    "{\"error\":\"client error\"}\n",
+			expectedResponse:    `{"error":"client error"}`,
 		},
 		{
 			scenario:            "invalid limit",
@@ -192,7 +193,7 @@ func TestProxy_List(t *testing.T) {
 			result:              &apisLoadTestV1.LoadTestList{},
 			expectedCode:        400,
 			expectedContentType: "application/json; charset=utf-8",
-			expectedResponse:    "{\"error\":\"strconv.ParseInt: parsing \\\"foobar\\\": invalid syntax\"}\n",
+			expectedResponse:    `{"error":"strconv.ParseInt: parsing \"foobar\": invalid syntax"}`,
 		},
 		{
 			scenario:            "invalid tags",
@@ -200,7 +201,43 @@ func TestProxy_List(t *testing.T) {
 			result:              &apisLoadTestV1.LoadTestList{},
 			expectedCode:        400,
 			expectedContentType: "application/json; charset=utf-8",
-			expectedResponse:    "{\"error\":\"missing tag label\"}\n",
+			expectedResponse:    `{"error":"missing tag label"}`,
+		},
+		{
+			scenario:            "invalid phase",
+			urlParams:           "phase=foo",
+			result:              &apisLoadTestV1.LoadTestList{},
+			expectedCode:        200,
+			expectedContentType: "application/json; charset=utf-8",
+			expectedResponse:    `{"limit":0,"continue":"","remain":null,"items":[]}`,
+		},
+		{
+			scenario:  "valid phase",
+			urlParams: "phase=running",
+			result: &apisLoadTestV1.LoadTestList{
+				ListMeta: metaV1.ListMeta{
+					Continue:           "continue",
+					RemainingItemCount: &remainCount,
+				},
+				Items: []apisLoadTestV1.LoadTest{
+					{
+						Spec: apisLoadTestV1.LoadTestSpec{
+							Type:            apisLoadTestV1.LoadTestTypeJMeter,
+							DistributedPods: &distributedPods,
+							Tags:            apisLoadTestV1.LoadTestTags{},
+							TestFile:        "file content\n",
+							TestData:        "test data\n",
+						},
+						Status: apisLoadTestV1.LoadTestStatus{
+							Phase:     apisLoadTestV1.LoadTestRunning,
+							Namespace: "random",
+						},
+					},
+				},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json; charset=utf-8",
+			expectedResponse:    `{"limit":0,"continue":"","remain":null,"items":[{"type":"JMeter","distributedPods":2,"loadtestName":"random","phase":"running","tags":{},"hasEnvVars":false,"hasTestData":true}]}`,
 		},
 		{
 			scenario:  "success",
@@ -237,7 +274,7 @@ func TestProxy_List(t *testing.T) {
 			},
 			expectedCode:        200,
 			expectedContentType: "application/json; charset=utf-8",
-			expectedResponse:    "{\"limit\":10,\"continue\":\"continue\",\"remain\":42,\"items\":[{\"type\":\"JMeter\",\"distributedPods\":2,\"loadtestName\":\"random\",\"phase\":\"running\",\"tags\":{\"department\":\"platform\",\"team\":\"kangal\"},\"hasEnvVars\":false,\"hasTestData\":true}]}\n",
+			expectedResponse:    `{"limit":10,"continue":"continue","remain":42,"items":[{"type":"JMeter","distributedPods":2,"loadtestName":"random","phase":"running","tags":{"department":"platform","team":"kangal"},"hasEnvVars":false,"hasTestData":true}]}`,
 		},
 	}
 
@@ -270,7 +307,7 @@ func TestProxy_List(t *testing.T) {
 
 			assert.Equal(t, tc.expectedCode, resp.StatusCode)
 			assert.Equal(t, resp.Header.Get("Content-Type"), tc.expectedContentType)
-			assert.Equal(t, tc.expectedResponse, string(respBody))
+			assert.Equal(t, tc.expectedResponse, strings.Trim(string(respBody), "\n"))
 		})
 	}
 }

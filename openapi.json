@@ -29,6 +29,16 @@
 						"example": "department:platform,team:kangal"
 					},
 					{
+						"name": "phase",
+						"in": "query",
+						"description": "Filter the result by current phase.",
+						"schema": {
+							"type": "string",
+							"enum": ["creating", "starting", "running", "finished", "errored"]
+						},
+						"example": "phase:running"
+					},
+					{
 						"name": "limit",
 						"in": "query",
 						"description": "Limit the result when querying on a large cluster",
