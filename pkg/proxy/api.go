@@ -81,7 +81,9 @@ func RunAPIServer(ctx context.Context, cfg Config, rr APIRunner) error {
 
 		mux := runtime.NewServeMux()
 
+		// TODO: one day we should start securing API
 		opts := []grpc.DialOption{grpc.WithInsecure()}
+
 		err := grpcProxyV2.RegisterLoadTestServiceHandlerFromEndpoint(ctx, mux, grpcAddress, opts)
 		if err != nil {
 			return fmt.Errorf("could not register service Ping: %w", err)
