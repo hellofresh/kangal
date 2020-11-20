@@ -213,6 +213,7 @@ func (b *Backend) SyncStatus(ctx context.Context, loadTest loadTestV1.LoadTest, 
 			loadTestStatus.Phase = loadTestV1.LoadTestFinished
 			return nil
 		}
+		return err
 	}
 
 	if loadTestStatus.Phase == "" {
