@@ -10,6 +10,7 @@ import (
 type Config struct {
 	Debug           bool `envconfig:"DEBUG"`
 	HTTPPort        int  `envconfig:"WEB_HTTP_PORT" default:"8080"`
+	GRPC            GRPCConfig
 	Logger          observability.LoggerConfig
 	OpenAPI         OpenAPIConfig
 	Report          report.Config
@@ -28,4 +29,11 @@ type OpenAPIConfig struct {
 
 	AccessControlAllowOrigin  []string `envconfig:"OPEN_API_CORS_ALLOW_ORIGIN" default:"*"`
 	AccessControlAllowHeaders []string `envconfig:"OPEN_API_CORS_ALLOW_HEADERS" default:"Content-Type,api_key,Authorization"`
+}
+
+// GRPCConfig is the gRPC-server configuration
+type GRPCConfig struct {
+	PortREST   int `envconfig:"GRPC_PORT_REST" required:"true" default:"8080"`
+	PortAPI    int `envconfig:"GRPC_PORT_API" required:"true" default:"8081"`
+	PortHealth int `envconfig:"GRPC_PORT_HEALTH" required:"true" default:"8082"`
 }
