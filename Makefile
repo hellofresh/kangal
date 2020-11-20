@@ -5,6 +5,10 @@ WARN_COLOR=\033[33;01m
 
 VERSION ?= "0.0.0-dev-$(shell git rev-parse --short HEAD)"
 
+# In order to transpile proto files googleapis are required to handle imports like "google/api/annotations.proto",
+# since we're using github.com/grpc-ecosystem/grpc-gateway it needs to be manually cloned and put somewhere
+# close to the project and this env var should point to "third_party/googleapis" subdir.
+# IMPORTANT - check currently used version of github.com/grpc-ecosystem/grpc-gateway to use exactly the same tag
 GOOGLEAPIS_DIR ?= "../googleapis"
 
 .PHONY: all clean test-unit build
