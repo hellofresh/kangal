@@ -29,7 +29,7 @@ func NewAPICmd(ctx context.Context) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "api",
-		Short: "Run EXPERIMENTAL proxy for accepting API requests",
+		Short: "Run EXPERIMENTAL gRPC/REST proxy for accepting API requests",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			flag.Parse()
 
