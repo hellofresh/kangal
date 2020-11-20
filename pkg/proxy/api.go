@@ -57,7 +57,7 @@ func RunAPIServer(ctx context.Context, cfg Config, rr APIRunner) error {
 	var g errgroup.Group
 
 	g.Go(func() error {
-		tcpListener, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.GRPC.PortAPI))
+		tcpListener, err := net.Listen("tcp", grpcAddress)
 		if err != nil {
 			return fmt.Errorf("could not create API TCP listener: %w", err)
 		}
