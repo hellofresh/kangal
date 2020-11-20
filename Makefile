@@ -64,30 +64,3 @@ dev-buf:
 	# docker run -it --rm -v $(pwd):/app -v /Users/vladimir.garvardt/Projects/googleapis:/app/googleapis -w /app --entrypoint /bin/sh bufbuild/buf:0.31.0
 	# run buf from the container
 	# buf check lint --config=/app/.github/buf.yaml
-
-# === Tools ===
-
-# This controls the version of buf to install and use.
-BUF_VERSION := 0.31.1
-
-UNAME_OS := $(shell uname -s)
-UNAME_ARCH := $(shell uname -m)
-# Buf will be cached to ~/.cache/buf-example.
-CACHE_BASE := $(HOME)/.cache/$(PROJECT)
-# This allows switching between i.e a Docker container and your local setup without overwriting.
-CACHE := $(CACHE_BASE)/$(UNAME_OS)/$(UNAME_ARCH)
-# The location where buf will be installed.
-CACHE_BIN := $(CACHE)/bin
-
-# BUF points to the marker file for the installed version.
-#
-# If BUF_VERSION is changed, the binary will be re-downloaded.
-BUF := $(CACHE_VERSIONS)/buf/$(BUF_VERSION)
-$(BUF):
-	curl -sSL \
-		"https://github.com/bufbuild/buf/releases/download/v$(BUF_VERSION)/buf-$(UNAME_OS)-$(UNAME_ARCH)" \
-		-o "$(CACHE_BIN)/buf"
-	chmod +x "$(CACHE_BIN)/buf"
-
-buf-lint: $(BUF)
-	buf check lint --config=./.github/buf.yaml

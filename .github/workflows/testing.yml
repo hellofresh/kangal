@@ -30,6 +30,16 @@ jobs:
           mv proto_deps/third_party/googleapis ./
           rm -rf proto_deps
 
+      - name: Setup buf
+        uses: wizhi/setup-buf@v1
+        env:
+          ACTIONS_ALLOW_UNSECURE_COMMANDS: "true"
+        with:
+          version: 0.31.1
+
+      - name: Lint ProtoBuf
+        run: buf check lint --config=./.github/buf.yaml
+
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
         with:
@@ -90,9 +100,6 @@ jobs:
         with:
           files: |
             openapi.json
-
-      - name: Lint ProtoBuf
-        run: make buf-lint
 
   test:
     name: Test
