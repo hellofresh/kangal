@@ -54,9 +54,15 @@ func RunAPIServer(ctx context.Context, cfg Config, rr APIRunner) error {
 	grpcAddress := fmt.Sprintf(":%d", cfg.GRPC.PortAPI)
 	restAddress := fmt.Sprintf(":%d", cfg.GRPC.PortREST)
 
-	var g errgroup.Group
+	g, ctx := errgroup.WithContext(ctx)
+
+	// completion of any of the servers should stop other service as well
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 
 	g.Go(func() error {
+		defer cancel()
+
 		tcpListener, err := net.Listen("tcp", grpcAddress)
 		if err != nil {
 			return fmt.Errorf("could not create API TCP listener: %w", err)
@@ -71,7 +77,6 @@ func RunAPIServer(ctx context.Context, cfg Config, rr APIRunner) error {
 	})
 
 	g.Go(func() error {
-		ctx, cancel := context.WithCancel(ctx)
 		defer cancel()
 
 		mux := runtime.NewServeMux()
@@ -83,7 +88,11 @@ func RunAPIServer(ctx context.Context, cfg Config, rr APIRunner) error {
 		}
 
 		rr.Logger.Info("Running gRPC REST server...", zap.String("addr", restAddress))
-		return http.ListenAndServe(restAddress, mux)
+		if err := http.ListenAndServe(restAddress, mux); err != nil {
+			return fmt.Errorf("could not serve REST API: %w", err)
+		}
+
+		return nil
 	})
 
 	err := g.Wait()
