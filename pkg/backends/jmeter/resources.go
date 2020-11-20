@@ -1,20 +1,20 @@
 package jmeter
 
 import (
+	"context"
 	"encoding/csv"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 
+	"github.com/hellofresh/kangal/pkg/core/helper"
+	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	"go.uber.org/zap"
 	batchV1 "k8s.io/api/batch/v1"
 	coreV1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-
-	"github.com/hellofresh/kangal/pkg/core/helper"
-	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 )
 
 const (
@@ -361,7 +361,26 @@ func (b *Backend) NewJMeterService() *coreV1.Service {
 	}
 }
 
-// SplitTestData splits provided csv test data and returns the array of file chunks
+// CreatePodsWithTestdata creates workers Pods
+func (b *Backend) CreatePodsWithTestdata(ctx context.Context, configMaps []*coreV1.ConfigMap, loadTest *loadTestV1.LoadTest, namespace string) error {
+	for i, cm := range configMaps {
+		configMap, err := b.kubeClientSet.CoreV1().ConfigMaps(namespace).Create(ctx, cm, metaV1.CreateOptions{})
+		if err != nil {
+			b.logger.Error("Error on creating testdata configMaps", zap.Error(err))
+			return err
+		}
+
+		_, err = b.kubeClientSet.CoreV1().Pods(namespace).Create(ctx, b.NewPod(*loadTest, i, configMap, b.podAnnotations), metaV1.CreateOptions{})
+		if err != nil {
+			b.logger.Error("Error on creating distributed pods", zap.Error(err))
+			return err
+		}
+	}
+	b.logger.Info("Created pods with test data", zap.String("LoadTest", loadTest.GetName()), zap.String("namespace", namespace))
+	return nil
+}
+
+// splitTestData splits provided csv test data and returns the array of file chunks
 func splitTestData(testdata string, n int, logger *zap.Logger) ([][][]string, error) {
 	reader := csv.NewReader(strings.NewReader(testdata))
 

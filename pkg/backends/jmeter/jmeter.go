@@ -5,15 +5,11 @@ import (
 	"fmt"
 	"time"
 
-	"go.uber.org/zap"
-	batchV1 "k8s.io/api/batch/v1"
-	coreV1 "k8s.io/api/core/v1"
-	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	coreListersV1 "k8s.io/client-go/listers/core/v1"
-
 	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
+	"go.uber.org/zap"
+	"k8s.io/client-go/kubernetes"
+	coreListersV1 "k8s.io/client-go/listers/core/v1"
 )
 
 var (
@@ -76,43 +72,4 @@ func (c *JMeter) CheckOrCreateResources(ctx context.Context) error {
 // status of the loadtest from them
 func (c *JMeter) CheckOrUpdateStatus(ctx context.Context) error {
 	return c.backend.SyncStatus(ctx, *c.loadTest, &c.loadTest.Status)
-}
-
-func (b *Backend) createPodsWithTestdata(ctx context.Context, configMaps []*coreV1.ConfigMap, loadTest *loadTestV1.LoadTest, namespace string) error {
-	for i, cm := range configMaps {
-		configMap, err := b.kubeClientSet.CoreV1().ConfigMaps(namespace).Create(ctx, cm, metaV1.CreateOptions{})
-		if err != nil {
-			b.logger.Error("Error on creating testdata configMaps", zap.Error(err))
-			return err
-		}
-
-		_, err = b.kubeClientSet.CoreV1().Pods(namespace).Create(ctx, b.NewPod(*loadTest, i, configMap, b.podAnnotations), metaV1.CreateOptions{})
-		if err != nil {
-			b.logger.Error("Error on creating distributed pods", zap.Error(err))
-			return err
-		}
-	}
-	b.logger.Info("Created pods with test data", zap.String("LoadTest", loadTest.GetName()), zap.String("namespace", namespace))
-	return nil
-}
-
-func workerPodHasTimeout(startTime *metaV1.Time, loadtestStatus loadTestV1.LoadTestStatus) bool {
-	if startTime == nil {
-		return false
-	}
-
-	return time.Since(startTime.Time) > MaxWaitTimeForPods &&
-		loadtestStatus.Phase == loadTestV1.LoadTestCreating
-}
-
-func getLoadTestPhaseFromJob(status batchV1.JobStatus) loadTestV1.LoadTestPhase {
-	if status.Active > 0 {
-		return loadTestV1.LoadTestRunning
-	}
-
-	if status.Succeeded == 0 && status.Failed == 0 {
-		return loadTestV1.LoadTestStarting
-	}
-
-	return loadTestV1.LoadTestFinished
 }

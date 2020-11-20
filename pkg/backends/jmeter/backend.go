@@ -2,18 +2,19 @@ package jmeter
 
 import (
 	"context"
-
-	kerrors "k8s.io/apimachinery/pkg/api/errors"
-	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	coreListersV1 "k8s.io/client-go/listers/core/v1"
+	"time"
 
 	"github.com/hellofresh/kangal/pkg/backends/internal"
 	"github.com/hellofresh/kangal/pkg/core/helper"
 	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
-
 	"go.uber.org/zap"
+	batchV1 "k8s.io/api/batch/v1"
+	coreV1 "k8s.io/api/core/v1"
+	kerrors "k8s.io/apimachinery/pkg/api/errors"
+	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	coreListersV1 "k8s.io/client-go/listers/core/v1"
 )
 
 func init() {
@@ -168,7 +169,7 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, report
 			return err
 		}
 
-		err = b.createPodsWithTestdata(ctx, configMaps, &loadTest, loadTest.Status.Namespace)
+		err = b.CreatePodsWithTestdata(ctx, configMaps, &loadTest, loadTest.Status.Namespace)
 		if err != nil {
 			return err
 		}
@@ -243,26 +244,15 @@ func (b *Backend) SyncStatus(ctx context.Context, loadTest loadTestV1.LoadTest, 
 				loadTestStatus.Phase = loadTestV1.LoadTestFinished
 				return nil
 			}
-
-			for _, containerStatus := range pod.Status.ContainerStatuses {
-				if containerStatus.State.Waiting == nil {
-					loadTestStatus.Phase = loadTestV1.LoadTestErrored
-					return nil
-				}
-				if containerStatus.State.Waiting.Reason != "Pending" &&
-					containerStatus.State.Waiting.Reason != "ContainerCreating" &&
-					containerStatus.State.Waiting.Reason != "PodInitializing" {
-					b.logger.Info(
-						"One of containers is unhealthy, marking LoadTest as errored",
-						zap.String("LoadTest", loadTest.GetName()),
-						zap.String("pod", pod.Name),
-						zap.String("namespace", namespace.GetName()),
-					)
-					loadTestStatus.Phase = loadTestV1.LoadTestErrored
-					return nil
-				}
+			loadTestStatus.Phase = getLoadTestStatusPhaseByPod(pod)
+			if loadTestV1.LoadTestErrored == loadTestStatus.Phase {
+				b.logger.Info(
+					"One of containers is unhealthy, marking LoadTest as errored",
+					zap.String("loadTest", loadTest.GetName()),
+					zap.String("pod", pod.Name),
+					zap.String("namespace", namespace.GetName()),
+				)
 			}
-
 			return nil
 		}
 	}
@@ -278,4 +268,39 @@ func (b *Backend) SyncStatus(ctx context.Context, loadTest loadTestV1.LoadTest, 
 	loadTestStatus.JobStatus = job.Status
 
 	return nil
+}
+
+func getLoadTestStatusPhaseByPod(pod coreV1.Pod) loadTestV1.LoadTestPhase {
+	for _, containerStatus := range pod.Status.ContainerStatuses {
+		if containerStatus.State.Waiting == nil {
+			return loadTestV1.LoadTestErrored
+		}
+		if containerStatus.State.Waiting.Reason != "Pending" &&
+			containerStatus.State.Waiting.Reason != "ContainerCreating" &&
+			containerStatus.State.Waiting.Reason != "PodInitializing" {
+			return loadTestV1.LoadTestErrored
+		}
+	}
+	return loadTestV1.LoadTestStarting
+}
+
+func workerPodHasTimeout(startTime *metaV1.Time, loadtestStatus loadTestV1.LoadTestStatus) bool {
+	if startTime == nil {
+		return false
+	}
+
+	return time.Since(startTime.Time) > MaxWaitTimeForPods &&
+		loadtestStatus.Phase == loadTestV1.LoadTestCreating
+}
+
+func getLoadTestPhaseFromJob(status batchV1.JobStatus) loadTestV1.LoadTestPhase {
+	if status.Active > 0 {
+		return loadTestV1.LoadTestRunning
+	}
+
+	if status.Succeeded == 0 && status.Failed == 0 {
+		return loadTestV1.LoadTestStarting
+	}
+
+	return loadTestV1.LoadTestFinished
 }
