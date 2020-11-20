@@ -21,7 +21,7 @@ import (
 	grpcProxyV2 "github.com/hellofresh/kangal/pkg/proxy/rpc/pb/grpc/proxy/v2"
 )
 
-// Runner encapsulates all Kangal EXPERIMENTAL Proxy API server dependencies
+// APIRunner encapsulates all Kangal EXPERIMENTAL Proxy API server dependencies
 type APIRunner struct {
 	Config     GRPCConfig
 	Exporter   *prometheus.Exporter
