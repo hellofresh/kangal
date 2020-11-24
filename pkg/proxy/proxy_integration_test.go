@@ -13,12 +13,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	coreV1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	k8sAPIErrors "k8s.io/apimachinery/pkg/api/errors"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	testhelper "github.com/hellofresh/kangal/pkg/controller"
 	apisLoadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
+	grpcProxyV2 "github.com/hellofresh/kangal/pkg/proxy/rpc/pb/grpc/proxy/v2"
 )
 
 var (
@@ -342,7 +343,7 @@ func TestIntegrationDeleteLoadtest(t *testing.T) {
 		// It means http.StatusNotFound is a good result for Cleanup
 		// If Cleanup returns some other error we should assert it
 		err := testhelper.DeleteLoadTest(clientSet, expectedLoadtestName, t.Name())
-		statusErr, ok := err.(*errors.StatusError)
+		statusErr, ok := err.(*k8sAPIErrors.StatusError)
 		if !ok || statusErr.ErrStatus.Code != http.StatusNotFound {
 			assert.NoError(t, err)
 			return
@@ -391,7 +392,10 @@ func TestIntegrationGetLoadtest(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	var respBody []byte
+	var (
+		httpBody []byte
+		restBody []byte
+	)
 
 	t.Run("Get loadtest details", func(t *testing.T) {
 		req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:%d/load-test/%s", httpPort, expectedLoadtestName), nil)
@@ -406,14 +410,14 @@ func TestIntegrationGetLoadtest(t *testing.T) {
 			assert.NoError(t, err)
 		}()
 
-		respBody, err = ioutil.ReadAll(res.Body)
+		httpBody, err = ioutil.ReadAll(res.Body)
 		require.NoError(t, err, "Could not get response body")
 	})
 
 	t.Run("Ensure loadtest GET response is correct", func(t *testing.T) {
 		var dat LoadTestStatus
 
-		unmarshalErr := json.Unmarshal(respBody, &dat)
+		unmarshalErr := json.Unmarshal(httpBody, &dat)
 		require.NoError(t, unmarshalErr, "Could not unmarshal response body")
 		assert.NotEmpty(t, dat.Namespace, "Could not get namespace from GET request")
 
@@ -424,6 +428,39 @@ func TestIntegrationGetLoadtest(t *testing.T) {
 		assert.NotEmpty(t, dat.Phase)
 		assert.NotEqual(t, apisLoadTestV1.LoadTestErrored, dat.Phase)
 		assert.Equal(t, false, dat.HasTestData)
+	})
+
+	t.Run("Get loadtest details from gRPC/REST gateway", func(t *testing.T) {
+		req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:%d/v2/load-test/%s", restPort, expectedLoadtestName), nil)
+		require.NoError(t, err, "Could not create GET request")
+
+		res, err := http.DefaultClient.Do(req)
+		require.NoError(t, err, "Could not send GET request")
+		require.Equal(t, http.StatusOK, res.StatusCode)
+
+		defer func() {
+			err := res.Body.Close()
+			assert.NoError(t, err)
+		}()
+
+		restBody, err = ioutil.ReadAll(res.Body)
+		require.NoError(t, err, "Could not get response body")
+	})
+
+	t.Run("Ensure loadtest gRPC/REST gateway GET response is correct", func(t *testing.T) {
+		var dat *grpcProxyV2.GetResponse
+
+		unmarshalErr := json.Unmarshal(restBody, &dat)
+		require.NoError(t, unmarshalErr, "Could not unmarshal response body")
+		assert.NotEmpty(t, dat.LoadTestStatus.GetLoadTestName(), "Could not get namespace from GET request")
+
+		currentNamespace, err := testhelper.GetLoadtestNamespace(clientSet, expectedLoadtestName)
+		require.NoError(t, err, "Could not get load test information")
+
+		assert.Equal(t, currentNamespace, dat.LoadTestStatus.GetLoadTestName())
+		assert.NotEmpty(t, dat.LoadTestStatus.GetPhase())
+		assert.NotEqual(t, grpcProxyV2.LoadTestPhase_LOAD_TEST_PHASE_ERRORED, dat.LoadTestStatus.GetPhase())
+		assert.Equal(t, false, dat.LoadTestStatus.GetHasTestData())
 	})
 }
 
