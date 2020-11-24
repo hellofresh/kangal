@@ -9,7 +9,7 @@ VERSION ?= "0.0.0-dev-$(shell git rev-parse --short HEAD)"
 # since we're using github.com/grpc-ecosystem/grpc-gateway it needs to be manually cloned and put somewhere
 # close to the project and this env var should point to "third_party/googleapis" subdir.
 # IMPORTANT - check currently used version of github.com/grpc-ecosystem/grpc-gateway to use exactly the same tag
-GOOGLEAPIS_DIR ?= "../googleapis"
+GOOGLEAPIS_DIR ?= "../grpc-gateway/third_party/googleapis"
 
 .PHONY: all clean test-unit build
 
@@ -50,6 +50,7 @@ protoc:
 		--go_opt=paths=source_relative \
 		--go_out=$(CURDIR)/pkg/proxy/rpc/pb \
 		--go-grpc_out=$(CURDIR)/pkg/proxy/rpc/pb \
+		--go-grpc_opt=require_unimplemented_servers=false \
 		--grpc-gateway_out=$(CURDIR)/pkg/proxy/rpc/pb \
 		--grpc-gateway_opt=logtostderr=true \
 		--grpc-gateway_opt=paths=source_relative \

@@ -12,12 +12,12 @@ import (
 	grpcRecovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	grpcCtxTags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	kube "github.com/hellofresh/kangal/pkg/kubernetes"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
+	kube "github.com/hellofresh/kangal/pkg/kubernetes"
 	grpcProxyV2 "github.com/hellofresh/kangal/pkg/proxy/rpc/pb/grpc/proxy/v2"
 )
 
@@ -42,7 +42,7 @@ func RunAPIServer(ctx context.Context, cfg Config, rr APIRunner) error {
 
 	serverAPI := grpc.NewServer(opts...)
 
-	loadTestServiceServer := NewLoadTestServiceServer()
+	loadTestServiceServer := NewLoadTestServiceServer(rr.KubeClient)
 
 	grpcProxyV2.RegisterLoadTestServiceServer(serverAPI, loadTestServiceServer)
 
