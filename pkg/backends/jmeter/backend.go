@@ -237,7 +237,7 @@ func (b *Backend) SyncStatus(ctx context.Context, loadTest loadTestV1.LoadTest, 
 	}
 
 	for _, pod := range pods.Items {
-		if pod.Status.Phase != "Running" {
+		if pod.Status.Phase != coreV1.PodRunning {
 			// If the pod is not yet in the running phase check to see if the
 			// pod start date is greater than the start time.
 			if workerPodHasTimeout(pod.Status.StartTime, *loadTestStatus) {
