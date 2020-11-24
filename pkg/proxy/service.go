@@ -48,7 +48,7 @@ func (s *implLoadTestServiceServer) Get(ctx context.Context, in *grpcProxyV2.Get
 
 	return &grpcProxyV2.GetResponse{
 		LoadTestStatus: &grpcProxyV2.LoadTestStatus{
-			LoadTestName:    result.Name,
+			LoadTestName:    in.GetName(),
 			DistributedPods: *result.Spec.DistributedPods,
 			Phase:           s.phaseToGRPC(result.Status.Phase),
 			Tags:            s.tagsToGRPC(result.Spec.Tags),
