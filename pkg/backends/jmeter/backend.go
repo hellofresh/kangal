@@ -250,7 +250,6 @@ func (b *Backend) SyncStatus(ctx context.Context, loadTest loadTestV1.LoadTest, 
 					"One of containers is unhealthy, marking LoadTest as errored",
 					zap.String("loadTest", loadTest.GetName()),
 					zap.String("pod", pod.Name),
-					zap.String("namespace", namespace.GetName()),
 				)
 			}
 			return nil
