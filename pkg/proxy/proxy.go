@@ -239,7 +239,7 @@ func (p *Proxy) Get(w http.ResponseWriter, r *http.Request) {
 
 	result, err := p.kubeClient.GetLoadTest(ctx, ltID)
 	if err != nil {
-		logger.Error("Could not get load test info with error:", zap.Error(err))
+		logger.Error("Could not get load test info with error", zap.Error(err))
 
 		if k8sAPIErrors.IsNotFound(err) {
 			render.Render(w, r, cHttp.ErrResponse(http.StatusNotFound, err.Error()))
