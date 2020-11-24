@@ -41,6 +41,16 @@ apply-crd:
 	@kubectl delete crd loadtests.kangal.hellofresh.com || true
 	@kubectl apply -f charts/kangal/crd.yaml
 
+# Install required protoc plugins
+protoc-plugins:
+	@printf "$(OK_COLOR)==> Installing required protoc plugins$(NO_COLOR)\n"
+	@go install \
+	   github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway \
+	   github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2 \
+	   google.golang.org/protobuf/cmd/protoc-gen-go \
+	   google.golang.org/grpc/cmd/protoc-gen-go-grpc
+
+# Transpile proto file(s) to source code
 protoc:
 	@printf "$(OK_COLOR)==> Compiling ProtoBuf$(NO_COLOR)\n"
 	@if [ -z ${GOOGLEAPIS_DIR} ] || [ ! -d ${GOOGLEAPIS_DIR} ]; then printf "$(ERROR_COLOR)==> GOOGLEAPIS_DIR is not set or does not exist$(NO_COLOR)\n"; exit 1; fi

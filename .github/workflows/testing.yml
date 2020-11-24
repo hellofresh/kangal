@@ -50,11 +50,7 @@ jobs:
         env:
           GOOGLEAPIS_DIR: "./googleapis"
         run: |
-          go install \
-              github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway \
-              github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2 \
-              google.golang.org/protobuf/cmd/protoc-gen-go \
-              google.golang.org/grpc/cmd/protoc-gen-go-grpc
+          make protoc-plugins
           make protoc
 
       # next three actions replace golangci/golangci-lint-action@v2 to make golangci work
@@ -146,11 +142,7 @@ jobs:
         env:
           GOOGLEAPIS_DIR: "./googleapis"
         run: |
-          go install \
-              github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway \
-              github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2 \
-              google.golang.org/protobuf/cmd/protoc-gen-go \
-              google.golang.org/grpc/cmd/protoc-gen-go-grpc
+          make protoc-plugins
           make protoc
 
       - name: Run Unit tests

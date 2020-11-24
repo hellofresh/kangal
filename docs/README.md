@@ -77,14 +77,14 @@ fi
 To start developing Kangal you need a local Kubernetes environment, e.g. [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/) or [docker desktop](https://www.docker.com/products/docker-desktop).
 > Note: Depending on load generator type, load test environments created by Kangal may require a lot of resources. Make sure you increased your limits for local Kubernetes cluster.
 
-1. Clone the repo locally
+### 1. Clone the repo locally
 
 ```bash
 git clone https://github.com/hellofresh/kangal.git
 cd kangal
 ```
 
-2. Create required Kubernetes resource LoadTest CRD in your cluster
+### 2. Create required Kubernetes resource LoadTest CRD in your cluster
 
 ```bash
 kubectl apply -f charts/kagal/crd.yaml
@@ -93,22 +93,68 @@ kubectl apply -f charts/kagal/crd.yaml
 or just use:
 
 ```bash
-make appply-crd
+make apply-crd
 ```
-    
-3. Download the dependencies
+
+### 3. Download the dependencies
+
+#### 3.1 Install Protocol Buffers compiler
+
+On Mac OS with [Homebrew](https://brew.sh/) preinstalled just run:
+
+```bash
+brew install protobuf
+```
+
+In other systems - please check installation instructions for your OS or get
+[`protoc` v3.x binary](https://github.com/protocolbuffers/protobuf/releases) from official repository and
+put ot to executable path.
+
+
+#### 3.2 Install required Protocol Buffers compiler plugins
+
+```bash
+make protoc-plugins
+```
+
+#### 3.3 Checkout required protobuf definitions
+
+In order to allow 3rd party API definitions you need to have them locally:
+
+```bash
+# go outside of the kangas source path
+cd ..
+# clone library with dependencies definitions
+git clone https://github.com/grpc-ecosystem/grpc-gateway.git
+# step into cloned deps dir
+cd grpc-gateway
+# use the same version as in the code dependencies, should be the same as github.com/grpc-ecosystem/grpc-gateway/v2 on go.mod in kangal
+git checkout v2.0.1
+# get back to kangal source code dir
+cd ../kangal
+``` 
+
+#### 3.4 Compile Protocol Buffers definitions into source code
+
+```bash
+make protoc
+```
+
+Remember to run this command every time you change something in any of the protobuf files
+
+#### 3.5 Get project dependencies
 
 ```bash
 go mod vendor
 ```
 
-4. Build Kangal binary
+### 4. Build Kangal binary
 
 ```bash
 make build
 ```
     
-5. Set the environment variables
+### 5. Set the environment variables
 
 ``` bash
 export AWS_BUCKET_NAME=YOUR_BUCKET_NAME       # name of the bucket for saving reports
@@ -117,7 +163,7 @@ export AWS_DEFAULT_REGION=YOUR_AWS_REGION     # storage connection parameter
 export KANGAL_PROXY_URL=http://localhost:8080 # used to persist reports
 ```
 
-6. Run both Kangal proxy and controller
+### 6. Run both Kangal proxy and controller
 
 ```bash
 WEB_HTTP_PORT=8888 ./kangal controller --kubeconfig=$KUBECONFIG
