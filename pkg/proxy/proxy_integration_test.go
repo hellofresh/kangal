@@ -12,6 +12,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/encoding/protojson"
 	coreV1 "k8s.io/api/core/v1"
 	k8sAPIErrors "k8s.io/apimachinery/pkg/api/errors"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -448,18 +449,20 @@ func TestIntegrationGetLoadtest(t *testing.T) {
 	})
 
 	t.Run("Ensure loadtest gRPC/REST gateway GET response is correct", func(t *testing.T) {
-		var dat *grpcProxyV2.GetResponse
+		t.Logf("gRPC/REST gateway response: %s", restBody)
 
-		unmarshalErr := json.Unmarshal(restBody, &dat)
+		dat := new(grpcProxyV2.GetResponse)
+
+		unmarshalErr := protojson.Unmarshal(restBody, dat)
 		require.NoError(t, unmarshalErr, "Could not unmarshal response body")
-		assert.NotEmpty(t, dat.LoadTestStatus.GetLoadTestName(), "Could not get namespace from GET request")
+		assert.NotEmpty(t, dat.LoadTestStatus.GetName(), "Could not get namespace from GET request")
 
 		currentNamespace, err := testhelper.GetLoadtestNamespace(clientSet, expectedLoadtestName)
 		require.NoError(t, err, "Could not get load test information")
 
-		assert.Equal(t, currentNamespace, dat.LoadTestStatus.GetLoadTestName())
+		assert.Equal(t, currentNamespace, dat.LoadTestStatus.GetName())
 		assert.NotEmpty(t, dat.LoadTestStatus.GetPhase())
-		assert.NotEqual(t, grpcProxyV2.LoadTestPhase_LOAD_TEST_PHASE_ERRORED, dat.LoadTestStatus.GetPhase())
+		assert.NotEqual(t, grpcProxyV2.LoadTestPhase_LOAD_TEST_PHASE_ERRORED.String(), dat.LoadTestStatus.GetPhase())
 		assert.Equal(t, false, dat.LoadTestStatus.GetHasTestData())
 	})
 }

@@ -47,7 +47,7 @@ func TestImplLoadTestServiceServer_Get(t *testing.T) {
 			nil,
 			&grpcProxyV2.GetResponse{
 				LoadTestStatus: &grpcProxyV2.LoadTestStatus{
-					LoadTestName:    "aaa",
+					Name:            "aaa",
 					DistributedPods: 1,
 					Phase:           grpcProxyV2.LoadTestPhase_LOAD_TEST_PHASE_RUNNING,
 					Tags:            []*grpcProxyV2.Tag{{Key: "team", Value: "kangal"}},

@@ -25,7 +25,8 @@ enum LoadTestPhase {
 }
 
 message LoadTestStatus {
-    string load_test_name = 1;
+    // Name is the load test name that always matches k8s namespace where it runs
+    string name = 1;
     int32 distributed_pods = 2;
     LoadTestPhase phase = 3;
     repeated Tag tags = 4;
