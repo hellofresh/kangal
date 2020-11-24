@@ -10,15 +10,15 @@ import (
 	"strings"
 	"time"
 
-	khttp "github.com/hellofresh/kangal/pkg/core/http"
-	kk8s "github.com/hellofresh/kangal/pkg/kubernetes"
-
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 	"github.com/minio/minio-go/v6"
 	"github.com/spf13/afero"
 	"go.uber.org/zap"
-	"k8s.io/apimachinery/pkg/api/errors"
+	k8sAPIErrors "k8s.io/apimachinery/pkg/api/errors"
+
+	khttp "github.com/hellofresh/kangal/pkg/core/http"
+	kk8s "github.com/hellofresh/kangal/pkg/kubernetes"
 )
 
 var httpClient = &http.Client{
@@ -125,7 +125,7 @@ func PersistHandler(kubeClient *kk8s.Client, logger *zap.Logger) func(w http.Res
 		loadTestName := chi.URLParam(r, "id")
 
 		_, err := kubeClient.GetLoadTest(r.Context(), loadTestName)
-		if errors.IsNotFound(err) {
+		if k8sAPIErrors.IsNotFound(err) {
 			render.Render(w, r, khttp.ErrResponse(http.StatusNotFound, err.Error()))
 			return
 		}

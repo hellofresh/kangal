@@ -8,14 +8,13 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/hellofresh/kangal/pkg/backends"
-
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 	"go.uber.org/zap"
 	k8sAPIErrors "k8s.io/apimachinery/pkg/api/errors"
 	restClient "k8s.io/client-go/rest"
 
+	"github.com/hellofresh/kangal/pkg/backends"
 	loadtest "github.com/hellofresh/kangal/pkg/controller"
 	cHttp "github.com/hellofresh/kangal/pkg/core/http"
 	mPkg "github.com/hellofresh/kangal/pkg/core/middleware"
@@ -162,7 +161,7 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 				// Remove the old tests
 				err := p.kubeClient.DeleteLoadTest(ctx, item.Name)
 				if err != nil {
-					logger.Error("Could not delete load test with error:", zap.Error(err))
+					logger.Error("Could not delete load test with error", zap.Error(err))
 					render.Render(w, r, cHttp.ErrResponse(http.StatusConflict, err.Error()))
 					return
 				}
@@ -220,7 +219,7 @@ func (p *Proxy) Delete(w http.ResponseWriter, r *http.Request) {
 
 	err := p.kubeClient.DeleteLoadTest(ctx, ltID)
 	if err != nil {
-		logger.Error("Could not delete load test with error:", zap.Error(err))
+		logger.Error("Could not delete load test with error", zap.Error(err))
 		render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest, err.Error()))
 		return
 	}
@@ -242,7 +241,7 @@ func (p *Proxy) Get(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.Error("Could not get load test info with error:", zap.Error(err))
 
-		if k8sErr, ok := err.(k8sAPIErrors.APIStatus); ok && k8sErr.Status().Code == http.StatusNotFound {
+		if k8sAPIErrors.IsNotFound(err) {
 			render.Render(w, r, cHttp.ErrResponse(http.StatusNotFound, err.Error()))
 			return
 		}
@@ -275,7 +274,7 @@ func (p *Proxy) GetLogs(w http.ResponseWriter, r *http.Request) {
 
 	loadTest, err := p.kubeClient.GetLoadTest(ctx, ltID)
 	if err != nil {
-		logger.Error("Could not get load test info with error:", zap.Error(err))
+		logger.Error("Could not get load test info with error", zap.Error(err))
 		render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest, err.Error()))
 		return
 	}
