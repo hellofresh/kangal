@@ -50,11 +50,11 @@ func (s *implLoadTestServiceServer) Get(ctx context.Context, in *grpcProxyV2.Get
 		LoadTestStatus: &grpcProxyV2.LoadTestStatus{
 			Name:            result.Status.Namespace,
 			DistributedPods: *result.Spec.DistributedPods,
-			Phase:           s.phaseToGRPC(result.Status.Phase),
-			Tags:            s.tagsToGRPC(result.Spec.Tags),
+			Phase:           phaseToGRPC(result.Status.Phase),
+			Tags:            tagsToGRPC(result.Spec.Tags),
 			HasEnvVars:      len(result.Spec.EnvVars) != 0,
 			HasTestData:     len(result.Spec.TestData) != 0,
-			Type:            s.typeToGRPC(result.Spec.Type),
+			Type:            typeToGRPC(result.Spec.Type),
 		},
 	}, nil
 }
@@ -64,7 +64,7 @@ func (s *implLoadTestServiceServer) List(context.Context, *grpcProxyV2.ListReque
 	return new(grpcProxyV2.ListResponse), nil
 }
 
-func (s *implLoadTestServiceServer) phaseToGRPC(p apisLoadTestV1.LoadTestPhase) grpcProxyV2.LoadTestPhase {
+func phaseToGRPC(p apisLoadTestV1.LoadTestPhase) grpcProxyV2.LoadTestPhase {
 	switch p {
 	case apisLoadTestV1.LoadTestCreating:
 		return grpcProxyV2.LoadTestPhase_LOAD_TEST_PHASE_CREATING
@@ -81,7 +81,7 @@ func (s *implLoadTestServiceServer) phaseToGRPC(p apisLoadTestV1.LoadTestPhase) 
 	return grpcProxyV2.LoadTestPhase_LOAD_TEST_PHASE_UNSPECIFIED
 }
 
-func (s *implLoadTestServiceServer) typeToGRPC(t apisLoadTestV1.LoadTestType) grpcProxyV2.LoadTestType {
+func typeToGRPC(t apisLoadTestV1.LoadTestType) grpcProxyV2.LoadTestType {
 	switch t {
 	case apisLoadTestV1.LoadTestTypeJMeter:
 		return grpcProxyV2.LoadTestType_LOAD_TEST_TYPE_JMETER
@@ -94,7 +94,7 @@ func (s *implLoadTestServiceServer) typeToGRPC(t apisLoadTestV1.LoadTestType) gr
 	return grpcProxyV2.LoadTestType_LOAD_TEST_TYPE_UNSPECIFIED
 }
 
-func (s *implLoadTestServiceServer) tagsToGRPC(tt apisLoadTestV1.LoadTestTags) []*grpcProxyV2.Tag {
+func tagsToGRPC(tt apisLoadTestV1.LoadTestTags) []*grpcProxyV2.Tag {
 	tags := make([]*grpcProxyV2.Tag, 0, len(tt))
 
 	for k, v := range tt {
