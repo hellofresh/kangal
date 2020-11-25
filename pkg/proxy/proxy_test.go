@@ -12,9 +12,6 @@ import (
 	"time"
 
 	"github.com/go-chi/chi"
-
-	"github.com/hellofresh/kangal/pkg/backends"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
@@ -24,8 +21,9 @@ import (
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/fake"
-	k8stesting "k8s.io/client-go/testing"
+	k8sTesting "k8s.io/client-go/testing"
 
+	"github.com/hellofresh/kangal/pkg/backends"
 	mPkg "github.com/hellofresh/kangal/pkg/core/middleware"
 	kube "github.com/hellofresh/kangal/pkg/kubernetes"
 	apisLoadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
@@ -289,7 +287,7 @@ func TestProxy_List(t *testing.T) {
 				logger            = zaptest.NewLogger(t)
 			)
 			ctx := mPkg.SetLogger(context.Background(), logger)
-			loadTestClientSet.Fake.PrependReactor("list", "loadtests", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+			loadTestClientSet.Fake.PrependReactor("list", "loadtests", func(action k8sTesting.Action) (handled bool, ret runtime.Object, err error) {
 				return true, tc.result, tc.error
 			})
 			c := kube.NewClient(loadTestClientSet.KangalV1().LoadTests(), kubeClientSet, logger)
@@ -374,7 +372,7 @@ func TestProxyCreate(t *testing.T) {
 				logger            = zaptest.NewLogger(t)
 			)
 			ctx := mPkg.SetLogger(context.Background(), logger)
-			loadtestClientSet.Fake.PrependReactor("create", "loadtests", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+			loadtestClientSet.Fake.PrependReactor("create", "loadtests", func(action k8sTesting.Action) (handled bool, ret runtime.Object, err error) {
 				return true, loadTest, tt.creationError
 			})
 			c := kube.NewClient(loadtestClientSet.KangalV1().LoadTests(), kubeClientSet, logger)
@@ -480,7 +478,7 @@ func TestNewProxyRecreate(t *testing.T) {
 			testProxyHandler := NewProxy(defaultConfig, c, s.fakeSpecCreator)
 			handler := testProxyHandler.Create
 
-			loadtestClientSet.Fake.PrependReactor("list", "loadtests", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+			loadtestClientSet.Fake.PrependReactor("list", "loadtests", func(action k8sTesting.Action) (handled bool, ret runtime.Object, err error) {
 				return true, tt.testsList, tt.err
 			})
 
@@ -559,7 +557,7 @@ func TestProxyCreateWithErrors(t *testing.T) {
 
 			// we should use PrependReactor to add a new mock in the beginning of the Action list
 			// because by default ReactionChain has '*'/'*' in the beginning of new list
-			loadtestClientSet.Fake.PrependReactor("list", "loadtests", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+			loadtestClientSet.Fake.PrependReactor("list", "loadtests", func(action k8sTesting.Action) (handled bool, ret runtime.Object, err error) {
 				listCalls++
 				// We have 2 calls of (c *loadTests) List in create method.
 				// The first in GetLoadTestsByLabel, the second in CountActiveLoadTests.
@@ -623,21 +621,21 @@ func TestProxyGet(t *testing.T) {
 					Namespace: "aaa",
 				}},
 			http.StatusOK,
-			"{\"type\":\"JMeter\",\"distributedPods\":1,\"loadtestName\":\"aaa\",\"phase\":\"running\",\"tags\":{\"team\":\"kangal\"},\"hasEnvVars\":false,\"hasTestData\":false}\n",
+			`{"type":"JMeter","distributedPods":1,"loadtestName":"aaa","phase":"running","tags":{"team":"kangal"},"hasEnvVars":false,"hasTestData":false}` + "\n",
 			nil,
 		},
 		{
 			"Error",
 			apisLoadTestV1.LoadTest{},
 			http.StatusInternalServerError,
-			"{\"error\":\"some test error\"}\n",
+			`{"error":"some test error"}` + "\n",
 			errors.New("some test error"),
 		},
 		{
 			"Not found",
 			apisLoadTestV1.LoadTest{},
 			http.StatusNotFound,
-			"{\"error\":\"loadtest.kangal.hellofresh.com \\\"name\\\" not found\"}\n",
+			`{"error":"loadtest.kangal.hellofresh.com \"name\" not found"}` + "\n",
 			k8sAPIErrors.NewNotFound(apisLoadTestV1.Resource("loadtest"), "name"),
 		},
 	} {
@@ -648,7 +646,7 @@ func TestProxyGet(t *testing.T) {
 				logger            = zaptest.NewLogger(t)
 			)
 			ctx := mPkg.SetLogger(context.Background(), logger)
-			loadtestClientSet.Fake.PrependReactor("get", "loadtests", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+			loadtestClientSet.Fake.PrependReactor("get", "loadtests", func(action k8sTesting.Action) (handled bool, ret runtime.Object, err error) {
 				return true, &tt.loadTest, tt.error
 			})
 			c := kube.NewClient(loadtestClientSet.KangalV1().LoadTests(), kubeClientSet, logger)
@@ -706,7 +704,7 @@ func TestProxyDelete(t *testing.T) {
 				logger            = zaptest.NewLogger(t)
 			)
 			ctx := mPkg.SetLogger(context.Background(), logger)
-			loadtestClientSet.Fake.PrependReactor("delete", "loadtests", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+			loadtestClientSet.Fake.PrependReactor("delete", "loadtests", func(action k8sTesting.Action) (handled bool, ret runtime.Object, err error) {
 				return true, loadTest, tt.error
 			})
 			c := kube.NewClient(loadtestClientSet.KangalV1().LoadTests(), kubeClientSet, logger)
@@ -798,10 +796,10 @@ func TestProxyGetLogs(t *testing.T) {
 				logger            = zaptest.NewLogger(t)
 			)
 			ctx := mPkg.SetLogger(context.Background(), logger)
-			loadtestClientSet.Fake.PrependReactor("get", "loadtests", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+			loadtestClientSet.Fake.PrependReactor("get", "loadtests", func(action k8sTesting.Action) (handled bool, ret runtime.Object, err error) {
 				return true, &tt.loadTest, tt.ltError
 			})
-			kubeClientSet.Fake.PrependReactor("list", "pods", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+			kubeClientSet.Fake.PrependReactor("list", "pods", func(action k8sTesting.Action) (handled bool, ret runtime.Object, err error) {
 				return true, &corev1.PodList{}, tt.podError
 			})
 			c := kube.NewClient(loadtestClientSet.KangalV1().LoadTests(), kubeClientSet, logger)

@@ -25,13 +25,22 @@ enum LoadTestPhase {
 }
 
 message LoadTestStatus {
-    string load_test_name = 1;
-    int64 distributed_pods = 2;
+    // Name is the load test name that always matches k8s namespace where it runs
+    string name = 1;
+    int32 distributed_pods = 2;
     LoadTestPhase phase = 3;
     repeated Tag tags = 4;
     bool has_env_vars = 5;
     bool has_test_data = 6;
     LoadTestType type = 7;
+}
+
+message GetRequest {
+    string name = 1;
+}
+
+message GetResponse {
+    LoadTestStatus load_test_status = 1;
 }
 
 message ListRequest {
@@ -47,25 +56,17 @@ message ListResponse {
     repeated LoadTestStatus load_test_statuses = 4;
 }
 
-message GetRequest {
-    string name = 1;
-}
-
-message GetResponse {
-    LoadTestStatus load_test_status = 1;
-}
-
 service LoadTestService {
-    // List searches and returns load tests by given filters
-    rpc List (ListRequest) returns (ListResponse) {
-        option (google.api.http) = {
-            get: "/v2/load-test"
-        };
-    }
     // Get returns load test by given name
     rpc Get (GetRequest) returns (GetResponse) {
         option (google.api.http) = {
             get: "/v2/load-test/{name}"
+        };
+    }
+    // List searches and returns load tests by given filters
+    rpc List (ListRequest) returns (ListResponse) {
+        option (google.api.http) = {
+            get: "/v2/load-test"
         };
     }
 }
