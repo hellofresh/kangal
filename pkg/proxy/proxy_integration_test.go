@@ -404,12 +404,13 @@ func TestIntegrationGetLoadtest(t *testing.T) {
 
 		res, err := http.DefaultClient.Do(req)
 		require.NoError(t, err, "Could not send GET request")
-		require.Equal(t, http.StatusOK, res.StatusCode)
 
 		defer func() {
 			err := res.Body.Close()
 			assert.NoError(t, err)
 		}()
+
+		require.Equal(t, http.StatusOK, res.StatusCode)
 
 		httpBody, err = ioutil.ReadAll(res.Body)
 		require.NoError(t, err, "Could not get response body")
@@ -437,12 +438,13 @@ func TestIntegrationGetLoadtest(t *testing.T) {
 
 		res, err := http.DefaultClient.Do(req)
 		require.NoError(t, err, "Could not send GET request")
-		require.Equal(t, http.StatusOK, res.StatusCode)
 
 		defer func() {
 			err := res.Body.Close()
 			assert.NoError(t, err)
 		}()
+
+		require.Equal(t, http.StatusOK, res.StatusCode)
 
 		restBody, err = ioutil.ReadAll(res.Body)
 		require.NoError(t, err, "Could not get response body")
