@@ -3,6 +3,8 @@ package grpc.proxy.v2;
 
 import "google/api/annotations.proto";
 
+option go_package = "grpc/proxy/v2";
+
 message Tag {
     string key = 1;
     string value = 2;
