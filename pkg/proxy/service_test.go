@@ -7,8 +7,9 @@ import (
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	k8sAPIErrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/fake"
@@ -63,14 +64,14 @@ func TestImplLoadTestServiceServer_Get(t *testing.T) {
 			apisLoadTestV1.LoadTest{},
 			errors.New("some test error"),
 			nil,
-			errors.New(`rpc error: code = Internal desc = some test error`),
+			status.Error(codes.Internal, "some test error"),
 		},
 		{
 			"Not found",
 			apisLoadTestV1.LoadTest{},
 			k8sAPIErrors.NewNotFound(apisLoadTestV1.Resource("loadtest"), "name"),
 			nil,
-			errors.New(`rpc error: code = NotFound desc = loadtest.kangal.hellofresh.com "name" not found`),
+			status.Error(codes.NotFound, `loadtest.kangal.hellofresh.com "name" not found`),
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
@@ -89,11 +90,7 @@ func TestImplLoadTestServiceServer_Get(t *testing.T) {
 
 			out, err := svc.Get(ctx, &grpcProxyV2.GetRequest{Name: "aaa"})
 			assert.Equal(t, tt.out, out)
-
-			if tt.outErr != nil {
-				require.Error(t, err)
-				assert.Equal(t, tt.outErr.Error(), err.Error())
-			}
+			assert.Equal(t, tt.outErr, err)
 		})
 	}
 }
