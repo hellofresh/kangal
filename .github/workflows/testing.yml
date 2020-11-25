@@ -16,20 +16,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Checkout Protobuf googleapis
-        uses: actions/checkout@v2
-        with:
-          repository: grpc-ecosystem/grpc-gateway
-          ref: v2.0.1 # same as the version used in go.mod!
-          path: proto_deps
-          clean: false
-
-      # buf requires googleapis in the project root, move it there
-      - name: Buf relative path workaround
-        run: |
-          mv proto_deps/third_party/googleapis ./
-          rm -rf proto_deps
-
       - name: Setup buf
         uses: wizhi/setup-buf@v1
         env:
@@ -37,21 +23,11 @@ jobs:
         with:
           version: 0.31.1
 
+      - name: Install Protoc deps
+        run: make protoc
+
       - name: Lint ProtoBuf
         run: buf check lint --config=./.github/buf.yaml
-
-      - name: Install Protoc
-        uses: arduino/setup-protoc@v1
-        with:
-          version: '3.x'
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Install Protoc deps
-        env:
-          GOOGLEAPIS_DIR: "./googleapis"
-        run: |
-          make protoc-plugins
-          make protoc
 
       # next three actions replace golangci/golangci-lint-action@v2 to make golangci work
       # with deps already preinstalled, otherwise it fails with bunch of errors like
@@ -66,7 +42,7 @@ jobs:
           restore-keys: ${{ runner.os }}-go-
 
       - name: Install golangci linter
-        run: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.32.2
+        run: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.33.0
 
       - name: Run golangci linter
         run: ./bin/golangci-lint run ./...
@@ -99,6 +75,8 @@ jobs:
 
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@master
+        with:
+          ignore: tools
 
       - name: Run OpenAPI Test
         uses: mbowman100/swagger-validator-action@master
@@ -117,33 +95,6 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: '^1.15'
-
-      - name: Checkout Protobuf googleapis
-        uses: actions/checkout@v2
-        with:
-          repository: grpc-ecosystem/grpc-gateway
-          ref: v2.0.1 # same as the version used in go.mod!
-          path: proto_deps
-          clean: false
-
-      # buf requires googleapis in the project root, move it there
-      - name: Buf relative path workaround
-        run: |
-          mv proto_deps/third_party/googleapis ./
-          rm -rf proto_deps
-
-      - name: Install Protoc
-        uses: arduino/setup-protoc@v1
-        with:
-          version: '3.x'
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Install Protoc deps
-        env:
-          GOOGLEAPIS_DIR: "./googleapis"
-        run: |
-          make protoc-plugins
-          make protoc
 
       - name: Run Unit tests
         run: |

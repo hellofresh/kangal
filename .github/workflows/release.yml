@@ -13,39 +13,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Checkout Protobuf googleapis
-        uses: actions/checkout@v2
-        with:
-          repository: grpc-ecosystem/grpc-gateway
-          ref: v2.0.1 # same as the version used in go.mod!
-          path: proto_deps
-          clean: false
-
-      # buf requires googleapis in the project root, move it there
-      - name: Buf relative path workaround
-        run: |
-          mv proto_deps/third_party/googleapis ./
-          rm -rf proto_deps
-
-      - name: Install Protoc
-        uses: arduino/setup-protoc@v1
-        with:
-          version: '3.x'
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Install Protoc deps
-        env:
-          GOOGLEAPIS_DIR: "./googleapis"
-        run: |
-          make protoc-plugins
-          make protoc
-
-      # action required as workaround for goreleaser error:
-      # ⨯ release failed after 0.03s error=git is currently in a dirty state, please check in your pipeline what can be changing the following files:
-      #    ?? googleapis/
-      # we do not need this dir after all the protobuf code was generated
-      - name: Clean up project source tree
-        run: rm -rf googleapis
+        run: make protoc
 
       - name: Docker Login
         if: success() && startsWith(github.ref, 'refs/tags/')
