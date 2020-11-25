@@ -45,6 +45,7 @@ Kangal can be easily extended by adding different load generators as backends.
  - [pkg/backends/backend.go](/pkg/backends/backend.go#L40)
  - [charts/kangal/crd.yaml](/charts/kangal/crd.yaml#L43)
  - [openapi.json](/openapi.json#L280)
+ - [proxy.proto](/proto/grpc/proxy/v2/proxy.proto#L11)
 
 ## Reporting
 Reporting is an important part of load testing process. It basically contains in two parts:
@@ -98,43 +99,7 @@ make apply-crd
 
 ### 3. Download the dependencies
 
-#### 3.1 Install Protocol Buffers compiler
-
-On Mac OS with [Homebrew](https://brew.sh/) preinstalled just run:
-
-```bash
-brew install protobuf
-```
-
-In other systems - please check installation instructions for your OS or get
-[`protoc` v3.x binary](https://github.com/protocolbuffers/protobuf/releases) from official repository and
-put ot to executable path.
-
-
-#### 3.2 Install required Protocol Buffers compiler plugins
-
-```bash
-make protoc-plugins
-```
-
-#### 3.3 Checkout required protobuf definitions
-
-In order to allow 3rd party API definitions you need to have them locally:
-
-```bash
-# go outside of the kangas source path
-cd ..
-# clone library with dependencies definitions
-git clone https://github.com/grpc-ecosystem/grpc-gateway.git
-# step into cloned deps dir
-cd grpc-gateway
-# use the same version as in the code dependencies, should be the same as github.com/grpc-ecosystem/grpc-gateway/v2 on go.mod in kangal
-git checkout v2.0.1
-# get back to kangal source code dir
-cd ../kangal
-``` 
-
-#### 3.4 Compile Protocol Buffers definitions into source code
+#### 3.1 Compile Protocol Buffers definitions into source code
 
 ```bash
 make protoc
@@ -142,7 +107,7 @@ make protoc
 
 Remember to run this command every time you change something in any of the protobuf files
 
-#### 3.5 Get project dependencies
+#### 3.2 Get project dependencies
 
 ```bash
 go mod vendor
@@ -153,7 +118,7 @@ go mod vendor
 ```bash
 make build
 ```
-    
+
 ### 5. Set the environment variables
 
 ``` bash
@@ -171,4 +136,5 @@ WEB_HTTP_PORT=8080 ./kangal proxy --kubeconfig=$KUBECONFIG
 ```
 
 ## Troubleshooting
+
 Read more at [docs/troubleshooting.md](troubleshooting.md).
