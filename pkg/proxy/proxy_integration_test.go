@@ -449,6 +449,7 @@ func TestIntegrationGetLoadtest(t *testing.T) {
 	})
 
 	t.Run("Ensure loadtest gRPC/REST gateway GET response is correct", func(t *testing.T) {
+		require.NotEmpty(t, restBody)
 		t.Logf("gRPC/REST gateway response: %s", restBody)
 
 		dat := new(grpcProxyV2.GetResponse)
