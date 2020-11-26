@@ -31,7 +31,7 @@ func BuildLoadTestSpec(
 		return lt, ErrRequireTestFile
 	}
 
-	imageName := defaultImage
+	imageName := defaultImageName
 	imageTag := defaultImageTag
 
 	// this is to ensure backward compatibility

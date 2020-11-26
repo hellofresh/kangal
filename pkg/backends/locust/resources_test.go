@@ -3,22 +3,22 @@ package locust
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	batchV1 "k8s.io/api/batch/v1"
 
-	loadtestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
-	"github.com/stretchr/testify/assert"
+	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 )
 
 func TestGetLoadTestStatusFromJobs(t *testing.T) {
 	var scenarios = []struct {
 		MasterJob *batchV1.Job
 		WorkerJob *batchV1.Job
-		Expected  loadtestV1.LoadTestPhase
+		Expected  loadTestV1.LoadTestPhase
 	}{
 		{ // Starting
 			MasterJob: &batchV1.Job{},
 			WorkerJob: &batchV1.Job{},
-			Expected:  loadtestV1.LoadTestStarting,
+			Expected:  loadTestV1.LoadTestStarting,
 		},
 		{ // One master, two workers, all running
 			MasterJob: &batchV1.Job{
@@ -31,7 +31,7 @@ func TestGetLoadTestStatusFromJobs(t *testing.T) {
 					Active: int32(2),
 				},
 			},
-			Expected: loadtestV1.LoadTestRunning,
+			Expected: loadTestV1.LoadTestRunning,
 		},
 		{ // One worker failed
 			MasterJob: &batchV1.Job{
@@ -45,7 +45,7 @@ func TestGetLoadTestStatusFromJobs(t *testing.T) {
 					Failed: int32(1),
 				},
 			},
-			Expected: loadtestV1.LoadTestErrored,
+			Expected: loadTestV1.LoadTestErrored,
 		},
 		{ // Master failed, workers running
 			MasterJob: &batchV1.Job{
@@ -58,7 +58,7 @@ func TestGetLoadTestStatusFromJobs(t *testing.T) {
 					Active: int32(2),
 				},
 			},
-			Expected: loadtestV1.LoadTestErrored,
+			Expected: loadTestV1.LoadTestErrored,
 		},
 		{ // Workers finished, master running
 			MasterJob: &batchV1.Job{
@@ -71,7 +71,7 @@ func TestGetLoadTestStatusFromJobs(t *testing.T) {
 					Succeeded: int32(2),
 				},
 			},
-			Expected: loadtestV1.LoadTestRunning,
+			Expected: loadTestV1.LoadTestRunning,
 		},
 		{ // Master finished, workers running, unexpected scenario
 			MasterJob: &batchV1.Job{
@@ -84,7 +84,7 @@ func TestGetLoadTestStatusFromJobs(t *testing.T) {
 					Active: int32(2),
 				},
 			},
-			Expected: loadtestV1.LoadTestRunning,
+			Expected: loadTestV1.LoadTestRunning,
 		},
 		{ // Both succeeded
 			MasterJob: &batchV1.Job{
@@ -97,7 +97,7 @@ func TestGetLoadTestStatusFromJobs(t *testing.T) {
 					Succeeded: int32(2),
 				},
 			},
-			Expected: loadtestV1.LoadTestFinished,
+			Expected: loadTestV1.LoadTestFinished,
 		},
 	}
 
