@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 	batchV1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -14,12 +15,6 @@ import (
 
 	loadtestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 )
-
-func createFake() *Fake {
-	return &Fake{
-		loadTest: &loadtestV1.LoadTest{},
-	}
-}
 
 type StatusError struct{}
 
@@ -32,8 +27,8 @@ func (e *StatusError) Status() metav1.Status {
 }
 
 func TestCheckOrCreateResources(t *testing.T) {
-	lt := createFake()
-	lt.loadTest.Status.Namespace = "test-namespace"
+	lt := &loadtestV1.LoadTest{}
+	lt.Status.Namespace = "test-namespace"
 
 	t.Run("namespace not found", func(t *testing.T) {
 		client := fake.NewSimpleClientset()
@@ -43,8 +38,8 @@ func TestCheckOrCreateResources(t *testing.T) {
 			return true, nil, &StatusError{}
 		})
 
-		lt.kubeClient = client
-		assert.NoError(t, lt.CheckOrCreateResources(context.TODO()))
+		backend := New(client, lt, zap.NewNop())
+		assert.NoError(t, backend.CheckOrCreateResources(context.TODO()))
 	})
 
 	t.Run("job exists", func(t *testing.T) {
@@ -62,8 +57,8 @@ func TestCheckOrCreateResources(t *testing.T) {
 			return true, &batchV1.Job{}, nil
 		})
 
-		lt.kubeClient = client
-		assert.NoError(t, lt.CheckOrCreateResources(context.TODO()))
+		backend := New(client, lt, zap.NewNop())
+		assert.NoError(t, backend.CheckOrCreateResources(context.TODO()))
 	})
 
 	t.Run("job doesn't exist, creating", func(t *testing.T) {
@@ -82,14 +77,14 @@ func TestCheckOrCreateResources(t *testing.T) {
 			return true, &batchV1.Job{}, nil
 		})
 
-		lt.kubeClient = client
-		assert.NoError(t, lt.CheckOrCreateResources(context.TODO()))
+		backend := New(client, lt, zap.NewNop())
+		assert.NoError(t, backend.CheckOrCreateResources(context.TODO()))
 	})
 }
 
 func TestCheckOrUpdateStatus(t *testing.T) {
-	lt := createFake()
-	lt.loadTest.Status.Namespace = "test-namespace"
+	lt := &loadtestV1.LoadTest{}
+	lt.Status.Namespace = "test-namespace"
 
 	t.Run("namespace and job already exists, load test is starting", func(t *testing.T) {
 		client := fake.NewSimpleClientset()
@@ -116,9 +111,9 @@ func TestCheckOrUpdateStatus(t *testing.T) {
 			}, nil
 		})
 
-		lt.kubeClient = client
-		assert.NoError(t, lt.CheckOrUpdateStatus(context.TODO()))
-		assert.Equal(t, lt.loadTest.Status.Phase, loadtestV1.LoadTestStarting)
+		backend := New(client, lt, zap.NewNop())
+		assert.NoError(t, backend.CheckOrUpdateStatus(context.TODO()))
+		assert.Equal(t, backend.loadTest.Status.Phase, loadtestV1.LoadTestStarting)
 	})
 
 	t.Run("namespace and job already exists, load test is running", func(t *testing.T) {
@@ -148,9 +143,9 @@ func TestCheckOrUpdateStatus(t *testing.T) {
 			}, nil
 		})
 
-		lt.kubeClient = client
-		assert.NoError(t, lt.CheckOrUpdateStatus(context.TODO()))
-		assert.Equal(t, lt.loadTest.Status.Phase, loadtestV1.LoadTestRunning)
+		backend := New(client, lt, zap.NewNop())
+		assert.NoError(t, backend.CheckOrUpdateStatus(context.TODO()))
+		assert.Equal(t, backend.loadTest.Status.Phase, loadtestV1.LoadTestRunning)
 
 	})
 
@@ -181,9 +176,9 @@ func TestCheckOrUpdateStatus(t *testing.T) {
 			}, nil
 		})
 
-		lt.kubeClient = client
-		assert.NoError(t, lt.CheckOrUpdateStatus(context.TODO()))
-		assert.Equal(t, lt.loadTest.Status.Phase, loadtestV1.LoadTestFinished)
+		backend := New(client, lt, zap.NewNop())
+		assert.NoError(t, backend.CheckOrUpdateStatus(context.TODO()))
+		assert.Equal(t, backend.loadTest.Status.Phase, loadtestV1.LoadTestFinished)
 
 	})
 
@@ -207,14 +202,15 @@ func TestCheckOrUpdateStatus(t *testing.T) {
 			}, nil
 		})
 
-		lt.kubeClient = client
-		assert.NoError(t, lt.CheckOrUpdateStatus(context.TODO()))
-		assert.Equal(t, lt.loadTest.Status.Phase, loadtestV1.LoadTestFinished)
+		backend := New(client, lt, zap.NewNop())
+		assert.NoError(t, backend.CheckOrUpdateStatus(context.TODO()))
+		assert.Equal(t, backend.loadTest.Status.Phase, loadtestV1.LoadTestFinished)
 	})
 
 	t.Run("loadtest in error state", func(t *testing.T) {
-		lt := createFake()
-		lt.loadTest.Status.Phase = loadtestV1.LoadTestErrored
+		lt := &loadtestV1.LoadTest{}
+		lt.Status.Phase = loadtestV1.LoadTestErrored
+
 		client := fake.NewSimpleClientset()
 		client.Fake.PrependReactor("get", "namespaces", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
 			return true, &v1.Namespace{
@@ -224,8 +220,8 @@ func TestCheckOrUpdateStatus(t *testing.T) {
 			}, nil
 		})
 
-		lt.kubeClient = client
-		assert.NoError(t, lt.CheckOrUpdateStatus(context.TODO()))
+		backend := New(client, lt, zap.NewNop())
+		assert.NoError(t, backend.CheckOrUpdateStatus(context.TODO()))
 	})
 
 	t.Run("job doesn't exist", func(t *testing.T) {
@@ -242,7 +238,7 @@ func TestCheckOrUpdateStatus(t *testing.T) {
 			return true, nil, &StatusError{}
 		})
 
-		lt.kubeClient = client
-		assert.Error(t, lt.CheckOrUpdateStatus(context.TODO()))
+		backend := New(client, lt, zap.NewNop())
+		assert.Error(t, backend.CheckOrUpdateStatus(context.TODO()))
 	})
 }

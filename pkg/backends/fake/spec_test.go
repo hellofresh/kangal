@@ -3,40 +3,40 @@ package fake
 import (
 	"testing"
 
-	loadtestv1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
-
 	"github.com/stretchr/testify/assert"
+
+	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 )
 
 func TestBuildFakeLoadTestSpec(t *testing.T) {
 	var distributedPods int32 = 1
 
 	type args struct {
-		tags      loadtestv1.LoadTestTags
+		tags      loadTestV1.LoadTestTags
 		overwrite bool
 	}
 	tests := []struct {
 		name    string
 		args    args
-		want    loadtestv1.LoadTestSpec
+		want    loadTestV1.LoadTestSpec
 		wantErr bool
 	}{
 		{
 			name: "Spec is valid",
 			args: args{
-				tags:      loadtestv1.LoadTestTags{"team": "kangal"},
+				tags:      loadTestV1.LoadTestTags{"team": "kangal"},
 				overwrite: true,
 			},
-			want: loadtestv1.LoadTestSpec{
+			want: loadTestV1.LoadTestSpec{
 				Type:      "Fake",
 				Overwrite: true,
-				MasterConfig: loadtestv1.ImageDetails{
-					Image: sleepImage,
+				MasterConfig: loadTestV1.ImageDetails{
+					Image: imageName,
 					Tag:   imageTag,
 				},
-				WorkerConfig:    loadtestv1.ImageDetails{},
+				WorkerConfig:    loadTestV1.ImageDetails{},
 				DistributedPods: &distributedPods,
-				Tags:            loadtestv1.LoadTestTags{"team": "kangal"},
+				Tags:            loadTestV1.LoadTestTags{"team": "kangal"},
 				TestFile:        "",
 				TestData:        "",
 				EnvVars:         "",
