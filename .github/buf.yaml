@@ -2,7 +2,7 @@ version: v1beta1
 build:
   roots:
     - googleapis
-    - proto
+    - tools/vendor/gateway/current/third_party/googleapis
 lint:
   ignore:
     - google

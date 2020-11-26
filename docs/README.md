@@ -45,6 +45,7 @@ Kangal can be easily extended by adding different load generators as backends.
  - [pkg/backends/backend.go](/pkg/backends/backend.go#L40)
  - [charts/kangal/crd.yaml](/charts/kangal/crd.yaml#L43)
  - [openapi.json](/openapi.json#L280)
+ - [proxy.proto](/proto/grpc/proxy/v2/proxy.proto#L11)
 
 ## Reporting
 Reporting is an important part of load testing process. It basically contains in two parts:
@@ -77,14 +78,14 @@ fi
 To start developing Kangal you need a local Kubernetes environment, e.g. [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/) or [docker desktop](https://www.docker.com/products/docker-desktop).
 > Note: Depending on load generator type, load test environments created by Kangal may require a lot of resources. Make sure you increased your limits for local Kubernetes cluster.
 
-1. Clone the repo locally
+### 1. Clone the repo locally
 
 ```bash
 git clone https://github.com/hellofresh/kangal.git
 cd kangal
 ```
 
-2. Create required Kubernetes resource LoadTest CRD in your cluster
+### 2. Create required Kubernetes resource LoadTest CRD in your cluster
 
 ```bash
 kubectl apply -f charts/kagal/crd.yaml
@@ -93,22 +94,32 @@ kubectl apply -f charts/kagal/crd.yaml
 or just use:
 
 ```bash
-make appply-crd
+make apply-crd
 ```
-    
-3. Download the dependencies
+
+### 3. Download the dependencies
+
+#### 3.1 Compile Protocol Buffers definitions into source code
+
+```bash
+make protoc
+```
+
+Remember to run this command every time you change something in any of the protobuf files
+
+#### 3.2 Get project dependencies
 
 ```bash
 go mod vendor
 ```
 
-4. Build Kangal binary
+### 4. Build Kangal binary
 
 ```bash
 make build
 ```
-    
-5. Set the environment variables
+
+### 5. Set the environment variables
 
 ``` bash
 export AWS_BUCKET_NAME=YOUR_BUCKET_NAME       # name of the bucket for saving reports
@@ -117,7 +128,7 @@ export AWS_DEFAULT_REGION=YOUR_AWS_REGION     # storage connection parameter
 export KANGAL_PROXY_URL=http://localhost:8080 # used to persist reports
 ```
 
-6. Run both Kangal proxy and controller
+### 6. Run both Kangal proxy and controller
 
 ```bash
 WEB_HTTP_PORT=8888 ./kangal controller --kubeconfig=$KUBECONFIG
@@ -125,4 +136,5 @@ WEB_HTTP_PORT=8080 ./kangal proxy --kubeconfig=$KUBECONFIG
 ```
 
 ## Troubleshooting
+
 Read more at [docs/troubleshooting.md](troubleshooting.md).

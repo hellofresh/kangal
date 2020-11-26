@@ -1,6 +1,8 @@
 # See https://golangci-lint.run/usage/configuration/#config-file for more information
 run:
   timeout: 5m
+  skip-dirs:
+    - tools
 linters:
   disable-all: true
   enable:
