@@ -47,7 +47,7 @@ apply-crd:
 	@kubectl apply -f charts/kangal/crd.yaml
 
 # Transpile proto file(s) to source code
-protoc: $(tools/protoc) $(tools/protobuf) $(tools/protoc-gen-go) $(tools/protoc-gen-go-grpc) $(tools/protoc-gen-grpc-gateway) $(tools/protoc-gen-openapiv2) $(tools/gateway)
+protoc: tools
 	@printf "$(OK_COLOR)==> Compiling ProtoBuf$(NO_COLOR)\n"
 	@$(tools/protoc) \
 		--plugin=$(tools/protoc-gen-go) \
