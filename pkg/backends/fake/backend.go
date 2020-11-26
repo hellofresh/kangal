@@ -7,7 +7,7 @@ import (
 	"go.uber.org/zap"
 	batchV1 "k8s.io/api/batch/v1"
 	coreV1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	k8sAPIErrors "k8s.io/apimachinery/pkg/api/errors"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
@@ -66,7 +66,7 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, _ stri
 	namespace, err := b.kubeClient.CoreV1().Namespaces().Get(ctx, loadTest.Status.Namespace, metaV1.GetOptions{})
 	// The LoadTest resource may no longer exist, in which case we stop
 	// processing.
-	if errors.IsNotFound(err) {
+	if k8sAPIErrors.IsNotFound(err) {
 		return nil
 	}
 	if err != nil {
@@ -74,7 +74,7 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, _ stri
 	}
 	// Check that we created master job
 	_, err = b.kubeClient.BatchV1().Jobs(namespace.GetName()).Get(ctx, "loadtest-master", metaV1.GetOptions{})
-	if errors.IsNotFound(err) {
+	if k8sAPIErrors.IsNotFound(err) {
 		_, err = b.kubeClient.BatchV1().Jobs(namespace.GetName()).Create(ctx, b.newMasterJob(loadTest), metaV1.CreateOptions{})
 		return err
 	}
@@ -87,7 +87,7 @@ func (b *Backend) SyncStatus(ctx context.Context, _ loadTestV1.LoadTest, loadTes
 	namespace, err := b.kubeClient.CoreV1().Namespaces().Get(ctx, loadTestStatus.Namespace, metaV1.GetOptions{})
 	// The LoadTest resource may no longer exist, in which case we stop
 	// processing.
-	if errors.IsNotFound(err) {
+	if k8sAPIErrors.IsNotFound(err) {
 		loadTestStatus.Phase = loadTestV1.LoadTestFinished
 		return nil
 	}
