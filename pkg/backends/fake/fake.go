@@ -17,10 +17,8 @@ var (
 
 // Fake enables the controller to run a LoadTest using Fake load provider which simulates load test
 type Fake struct {
-	backend    *Backend
-	kubeClient kubernetes.Interface
-	loadTest   *loadTestV1.LoadTest
-	logger     *zap.Logger
+	backend  *Backend
+	loadTest *loadTestV1.LoadTest
 }
 
 //New initializes new Fake provider handler to manage load test resources with Kangal Controller
@@ -33,10 +31,8 @@ func New(kubeClientSet kubernetes.Interface, lt *loadTestV1.LoadTest, logger *za
 	backend.SetDefaults()
 
 	return &Fake{
-		backend:    backend,
-		kubeClient: kubeClientSet,
-		loadTest:   lt,
-		logger:     logger,
+		backend:  backend,
+		loadTest: lt,
 	}
 }
 
