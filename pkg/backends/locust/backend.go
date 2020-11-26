@@ -6,7 +6,7 @@ import (
 
 	"go.uber.org/zap"
 	coreV1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	k8sAPIErrors "k8s.io/apimachinery/pkg/api/errors"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
@@ -139,7 +139,7 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, report
 		CoreV1().
 		ConfigMaps(loadTest.Status.Namespace).
 		Create(ctx, configMap, metaV1.CreateOptions{})
-	if err != nil && !errors.IsAlreadyExists(err) {
+	if err != nil && !k8sAPIErrors.IsAlreadyExists(err) {
 		b.logger.Error("Error on creating testfile configmap", zap.Error(err))
 		return err
 	}
@@ -158,7 +158,7 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, report
 				CoreV1().
 				Secrets(loadTest.Status.Namespace).
 				Create(ctx, secret, metaV1.CreateOptions{})
-			if err != nil && !errors.IsAlreadyExists(err) {
+			if err != nil && !k8sAPIErrors.IsAlreadyExists(err) {
 				b.logger.Error("Error on creating secret", zap.Error(err))
 				return err
 			}
@@ -170,14 +170,14 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, report
 		BatchV1().
 		Jobs(loadTest.Status.Namespace).
 		Create(ctx, masterJob, metaV1.CreateOptions{})
-	if err != nil && !errors.IsAlreadyExists(err) {
+	if err != nil && !k8sAPIErrors.IsAlreadyExists(err) {
 		b.logger.Error("Error on creating master job", zap.Error(err))
 		return err
 	}
 
 	masterService := newMasterService(loadTest, masterJob)
 	_, err = b.kubeClientSet.CoreV1().Services(loadTest.Status.Namespace).Create(ctx, masterService, metaV1.CreateOptions{})
-	if err != nil && !errors.IsAlreadyExists(err) {
+	if err != nil && !k8sAPIErrors.IsAlreadyExists(err) {
 		b.logger.Error("Error on creating master service", zap.Error(err))
 		return err
 	}
@@ -187,7 +187,7 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, report
 		BatchV1().
 		Jobs(loadTest.Status.Namespace).
 		Create(ctx, workerJob, metaV1.CreateOptions{})
-	if err != nil && !errors.IsAlreadyExists(err) {
+	if err != nil && !k8sAPIErrors.IsAlreadyExists(err) {
 		b.logger.Error("Error on creating worker job", zap.Error(err))
 		return err
 	}
@@ -211,7 +211,7 @@ func (b *Backend) SyncStatus(ctx context.Context, loadTest loadTestV1.LoadTest, 
 		ConfigMaps(loadTestStatus.Namespace).
 		Get(ctx, newConfigMapName(loadTest), metaV1.GetOptions{})
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if k8sAPIErrors.IsNotFound(err) {
 			loadTestStatus.Phase = loadTestV1.LoadTestFinished
 			return nil
 		}
