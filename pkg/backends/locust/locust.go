@@ -49,6 +49,8 @@ func New(
 		podAnnotations: podAnnotations,
 	}
 
+	backend.SetDefaults()
+
 	return &Locust{
 		backend:   backend,
 		loadTest:  loadTest,
