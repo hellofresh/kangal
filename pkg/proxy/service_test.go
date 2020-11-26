@@ -51,7 +51,7 @@ func TestImplLoadTestServiceServer_Get(t *testing.T) {
 					Name:            "aaa",
 					DistributedPods: 1,
 					Phase:           grpcProxyV2.LoadTestPhase_LOAD_TEST_PHASE_RUNNING,
-					Tags:            []*grpcProxyV2.Tag{{Key: "team", Value: "kangal"}},
+					Tags:            map[string]string{"team": "kangal"},
 					HasEnvVars:      false,
 					HasTestData:     false,
 					Type:            grpcProxyV2.LoadTestType_LOAD_TEST_TYPE_JMETER,

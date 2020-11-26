@@ -51,7 +51,7 @@ func (s *implLoadTestServiceServer) Get(ctx context.Context, in *grpcProxyV2.Get
 			Name:            result.Status.Namespace,
 			DistributedPods: *result.Spec.DistributedPods,
 			Phase:           phaseToGRPC(result.Status.Phase),
-			Tags:            tagsToGRPC(result.Spec.Tags),
+			Tags:            result.Spec.Tags,
 			HasEnvVars:      len(result.Spec.EnvVars) != 0,
 			HasTestData:     len(result.Spec.TestData) != 0,
 			Type:            typeToGRPC(result.Spec.Type),
@@ -92,17 +92,4 @@ func typeToGRPC(t apisLoadTestV1.LoadTestType) grpcProxyV2.LoadTestType {
 	}
 
 	return grpcProxyV2.LoadTestType_LOAD_TEST_TYPE_UNSPECIFIED
-}
-
-func tagsToGRPC(tt apisLoadTestV1.LoadTestTags) []*grpcProxyV2.Tag {
-	tags := make([]*grpcProxyV2.Tag, 0, len(tt))
-
-	for k, v := range tt {
-		tags = append(tags, &grpcProxyV2.Tag{
-			Key:   k,
-			Value: v,
-		})
-	}
-
-	return tags
 }
