@@ -7,13 +7,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 	batchV1 "k8s.io/api/batch/v1"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	coreV1 "k8s.io/api/core/v1"
+	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/fake"
 	k8stesting "k8s.io/client-go/testing"
 
-	loadtestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
+	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 )
 
 type StatusError struct{}
@@ -22,12 +22,12 @@ func (e *StatusError) Error() string {
 	return ""
 }
 
-func (e *StatusError) Status() metav1.Status {
-	return metav1.Status{Reason: metav1.StatusReasonNotFound}
+func (e *StatusError) Status() metaV1.Status {
+	return metaV1.Status{Reason: metaV1.StatusReasonNotFound}
 }
 
 func TestCheckOrCreateResources(t *testing.T) {
-	lt := &loadtestV1.LoadTest{}
+	lt := &loadTestV1.LoadTest{}
 	lt.Status.Namespace = "test-namespace"
 
 	t.Run("namespace not found", func(t *testing.T) {
@@ -45,8 +45,8 @@ func TestCheckOrCreateResources(t *testing.T) {
 	t.Run("job exists", func(t *testing.T) {
 		client := fake.NewSimpleClientset()
 		client.Fake.PrependReactor("get", "namespaces", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
-			return true, &v1.Namespace{
-				ObjectMeta: metav1.ObjectMeta{
+			return true, &coreV1.Namespace{
+				ObjectMeta: metaV1.ObjectMeta{
 					Name: "test-namespace",
 				},
 			}, nil
@@ -64,8 +64,8 @@ func TestCheckOrCreateResources(t *testing.T) {
 	t.Run("job doesn't exist, creating", func(t *testing.T) {
 		client := fake.NewSimpleClientset()
 		client.Fake.PrependReactor("get", "namespaces", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
-			return true, &v1.Namespace{
-				ObjectMeta: metav1.ObjectMeta{
+			return true, &coreV1.Namespace{
+				ObjectMeta: metaV1.ObjectMeta{
 					Name: "test-namespace",
 				},
 			}, nil
@@ -83,7 +83,7 @@ func TestCheckOrCreateResources(t *testing.T) {
 }
 
 func TestCheckOrUpdateStatus(t *testing.T) {
-	lt := &loadtestV1.LoadTest{}
+	lt := &loadTestV1.LoadTest{}
 	lt.Status.Namespace = "test-namespace"
 
 	t.Run("namespace and job already exists, load test is starting", func(t *testing.T) {
@@ -91,8 +91,8 @@ func TestCheckOrUpdateStatus(t *testing.T) {
 		client.Fake.PrependReactor("get", "namespaces", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
 			actionImpl := action.(k8stesting.GetActionImpl)
 			assert.Equal(t, "test-namespace", actionImpl.Name)
-			return true, &v1.Namespace{
-				ObjectMeta: metav1.ObjectMeta{
+			return true, &coreV1.Namespace{
+				ObjectMeta: metaV1.ObjectMeta{
 					Name:         "test-namespace",
 					GenerateName: "test-namespace",
 					Namespace:    "test-namespace",
@@ -104,8 +104,8 @@ func TestCheckOrUpdateStatus(t *testing.T) {
 			actionImpl := action.(k8stesting.GetActionImpl)
 			assert.Equal(t, "loadtest-master", actionImpl.Name)
 			return true, &batchV1.Job{
-				TypeMeta:   metav1.TypeMeta{},
-				ObjectMeta: metav1.ObjectMeta{},
+				TypeMeta:   metaV1.TypeMeta{},
+				ObjectMeta: metaV1.ObjectMeta{},
 				Spec:       batchV1.JobSpec{},
 				Status:     batchV1.JobStatus{},
 			}, nil
@@ -113,7 +113,7 @@ func TestCheckOrUpdateStatus(t *testing.T) {
 
 		backend := New(client, lt, zap.NewNop())
 		assert.NoError(t, backend.CheckOrUpdateStatus(context.TODO()))
-		assert.Equal(t, backend.loadTest.Status.Phase, loadtestV1.LoadTestStarting)
+		assert.Equal(t, backend.loadTest.Status.Phase, loadTestV1.LoadTestStarting)
 	})
 
 	t.Run("namespace and job already exists, load test is running", func(t *testing.T) {
@@ -121,8 +121,8 @@ func TestCheckOrUpdateStatus(t *testing.T) {
 		client.Fake.PrependReactor("get", "namespaces", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
 			actionImpl := action.(k8stesting.GetActionImpl)
 			assert.Equal(t, "test-namespace", actionImpl.Name)
-			return true, &v1.Namespace{
-				ObjectMeta: metav1.ObjectMeta{
+			return true, &coreV1.Namespace{
+				ObjectMeta: metaV1.ObjectMeta{
 					Name:         "test-namespace",
 					GenerateName: "test-namespace",
 					Namespace:    "test-namespace",
@@ -134,8 +134,8 @@ func TestCheckOrUpdateStatus(t *testing.T) {
 			actionImpl := action.(k8stesting.GetActionImpl)
 			assert.Equal(t, "loadtest-master", actionImpl.Name)
 			return true, &batchV1.Job{
-				TypeMeta:   metav1.TypeMeta{},
-				ObjectMeta: metav1.ObjectMeta{},
+				TypeMeta:   metaV1.TypeMeta{},
+				ObjectMeta: metaV1.ObjectMeta{},
 				Spec:       batchV1.JobSpec{},
 				Status: batchV1.JobStatus{
 					Active: 1,
@@ -145,7 +145,7 @@ func TestCheckOrUpdateStatus(t *testing.T) {
 
 		backend := New(client, lt, zap.NewNop())
 		assert.NoError(t, backend.CheckOrUpdateStatus(context.TODO()))
-		assert.Equal(t, backend.loadTest.Status.Phase, loadtestV1.LoadTestRunning)
+		assert.Equal(t, backend.loadTest.Status.Phase, loadTestV1.LoadTestRunning)
 
 	})
 
@@ -154,8 +154,8 @@ func TestCheckOrUpdateStatus(t *testing.T) {
 		client.Fake.PrependReactor("get", "namespaces", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
 			actionImpl := action.(k8stesting.GetActionImpl)
 			assert.Equal(t, "test-namespace", actionImpl.Name)
-			return true, &v1.Namespace{
-				ObjectMeta: metav1.ObjectMeta{
+			return true, &coreV1.Namespace{
+				ObjectMeta: metaV1.ObjectMeta{
 					Name:         "test-namespace",
 					GenerateName: "test-namespace",
 					Namespace:    "test-namespace",
@@ -167,8 +167,8 @@ func TestCheckOrUpdateStatus(t *testing.T) {
 			actionImpl := action.(k8stesting.GetActionImpl)
 			assert.Equal(t, "loadtest-master", actionImpl.Name)
 			return true, &batchV1.Job{
-				TypeMeta:   metav1.TypeMeta{},
-				ObjectMeta: metav1.ObjectMeta{},
+				TypeMeta:   metaV1.TypeMeta{},
+				ObjectMeta: metaV1.ObjectMeta{},
 				Spec:       batchV1.JobSpec{},
 				Status: batchV1.JobStatus{
 					Succeeded: 1,
@@ -178,7 +178,7 @@ func TestCheckOrUpdateStatus(t *testing.T) {
 
 		backend := New(client, lt, zap.NewNop())
 		assert.NoError(t, backend.CheckOrUpdateStatus(context.TODO()))
-		assert.Equal(t, backend.loadTest.Status.Phase, loadtestV1.LoadTestFinished)
+		assert.Equal(t, backend.loadTest.Status.Phase, loadTestV1.LoadTestFinished)
 
 	})
 
@@ -195,8 +195,8 @@ func TestCheckOrUpdateStatus(t *testing.T) {
 			actionImpl := action.(k8stesting.GetActionImpl)
 			assert.Equal(t, "loadtest-master", actionImpl.Name)
 			return true, &batchV1.Job{
-				TypeMeta:   metav1.TypeMeta{},
-				ObjectMeta: metav1.ObjectMeta{},
+				TypeMeta:   metaV1.TypeMeta{},
+				ObjectMeta: metaV1.ObjectMeta{},
 				Spec:       batchV1.JobSpec{},
 				Status:     batchV1.JobStatus{},
 			}, nil
@@ -204,17 +204,17 @@ func TestCheckOrUpdateStatus(t *testing.T) {
 
 		backend := New(client, lt, zap.NewNop())
 		assert.NoError(t, backend.CheckOrUpdateStatus(context.TODO()))
-		assert.Equal(t, backend.loadTest.Status.Phase, loadtestV1.LoadTestFinished)
+		assert.Equal(t, backend.loadTest.Status.Phase, loadTestV1.LoadTestFinished)
 	})
 
 	t.Run("loadtest in error state", func(t *testing.T) {
-		lt := &loadtestV1.LoadTest{}
-		lt.Status.Phase = loadtestV1.LoadTestErrored
+		lt := &loadTestV1.LoadTest{}
+		lt.Status.Phase = loadTestV1.LoadTestErrored
 
 		client := fake.NewSimpleClientset()
 		client.Fake.PrependReactor("get", "namespaces", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
-			return true, &v1.Namespace{
-				ObjectMeta: metav1.ObjectMeta{
+			return true, &coreV1.Namespace{
+				ObjectMeta: metaV1.ObjectMeta{
 					Name: "test-namespace",
 				},
 			}, nil
@@ -227,8 +227,8 @@ func TestCheckOrUpdateStatus(t *testing.T) {
 	t.Run("job doesn't exist", func(t *testing.T) {
 		client := fake.NewSimpleClientset()
 		client.Fake.PrependReactor("get", "namespaces", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
-			return true, &v1.Namespace{
-				ObjectMeta: metav1.ObjectMeta{
+			return true, &coreV1.Namespace{
+				ObjectMeta: metaV1.ObjectMeta{
 					Name: "test-namespace",
 				},
 			}, nil
