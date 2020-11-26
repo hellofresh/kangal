@@ -57,13 +57,11 @@ protoc: tools
 		--proto_path=$(tools/gateway)/third_party/googleapis \
 		--proto_path=$(tools/protobuf)/src \
 		--proto_path=$(CURDIR)/proto \
-		--go_opt=paths=source_relative \
 		--go_out=$(CURDIR)/pkg/proxy/rpc/pb \
 		--go-grpc_out=$(CURDIR)/pkg/proxy/rpc/pb \
 		--go-grpc_opt=require_unimplemented_servers=false \
 		--grpc-gateway_out=$(CURDIR)/pkg/proxy/rpc/pb \
 		--grpc-gateway_opt=logtostderr=true \
-		--grpc-gateway_opt=paths=source_relative \
 		--openapiv2_out=$(CURDIR)/pkg/proxy/rpc/pb \
 		--openapiv2_opt=logtostderr=true \
 		$(CURDIR)/proto/*/*/*/*.proto
