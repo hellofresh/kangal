@@ -47,7 +47,7 @@ func TestBuildLoadTestSpec(t *testing.T) {
 				TestFile:        "something in the file",
 				EnvVars:         "my-key,my-value",
 				TargetURL:       "http://my-app.my-domain.com",
-				MasterConfig:    v1.ImageDetails{Image: defaultImage, Tag: defaultImageTag},
+				MasterConfig:    v1.ImageDetails{Image: defaultImageName, Tag: defaultImageTag},
 			},
 			wantErr: false,
 		},

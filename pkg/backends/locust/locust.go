@@ -2,209 +2,56 @@ package locust
 
 import (
 	"context"
-	"fmt"
 
-	coreV1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
-	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"go.uber.org/zap"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/hellofresh/kangal/pkg/core/helper"
 	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
-	"go.uber.org/zap"
 )
 
 var (
-	defaultImage    = "locustio/locust"
-	defaultImageTag = "latest"
+	defaultImageName = "locustio/locust"
+	defaultImageTag  = "latest"
 )
 
 // Locust enables the controller to run a loadtest using locust.io
 type Locust struct {
-	kubeClientSet   kubernetes.Interface
-	kangalClientSet clientSetV.Interface
-	loadTest        *loadTestV1.LoadTest
-	logger          *zap.Logger
-	reportURL       string
-	imageName       string
-	imageTag        string
-	masterResources helper.Resources
-	workerResources helper.Resources
-	podAnnotations  map[string]string
+	backend   Backend
+	loadTest  *loadTestV1.LoadTest
+	reportURL string
 }
 
 // CheckOrCreateResources check for resources or create the needed resources for the loadtest type
 func (c *Locust) CheckOrCreateResources(ctx context.Context) error {
-	workerJobs, err := c.kubeClientSet.
-		BatchV1().
-		Jobs(c.loadTest.Status.Namespace).
-		List(ctx, metaV1.ListOptions{
-			FieldSelector: fmt.Sprintf("metadata.name=%s", newWorkerJobName(c.loadTest)),
-		})
-	if err != nil {
-		c.logger.Error("Error on listing jobs", zap.Error(err))
-		return err
-	}
-
-	if len(workerJobs.Items) > 0 {
-		return nil
-	}
-
-	configMap := newConfigMap(c.loadTest)
-	_, err = c.kubeClientSet.
-		CoreV1().
-		ConfigMaps(c.loadTest.Status.Namespace).
-		Create(ctx, configMap, metaV1.CreateOptions{})
-	if err != nil && !errors.IsAlreadyExists(err) {
-		c.logger.Error("Error on creating testfile configmap", zap.Error(err))
-		return err
-	}
-
-	var secret *coreV1.Secret
-
-	if c.loadTest.Spec.EnvVars != "" {
-		envs, err := helper.ReadEnvs(c.loadTest.Spec.EnvVars)
-		if err != nil {
-			c.logger.Error("Error reading envVars", zap.Error(err))
-			return err
-		}
-		if len(envs) > 0 {
-			secret = newSecret(c.loadTest, envs)
-			if nil != err {
-				c.logger.Error("Error on creating secret", zap.Error(err))
-				return err
-			}
-			_, err = c.kubeClientSet.
-				CoreV1().
-				Secrets(c.loadTest.Status.Namespace).
-				Create(ctx, secret, metaV1.CreateOptions{})
-			if err != nil && !errors.IsAlreadyExists(err) {
-				c.logger.Error("Error on creating testfile configmap", zap.Error(err))
-				return err
-			}
-		}
-	}
-
-	masterJob := newMasterJob(c.loadTest, configMap, secret, c.reportURL, c.masterResources, c.podAnnotations, c.imageName, c.imageTag, c.logger)
-	_, err = c.kubeClientSet.
-		BatchV1().
-		Jobs(c.loadTest.Status.Namespace).
-		Create(ctx, masterJob, metaV1.CreateOptions{})
-	if err != nil && !errors.IsAlreadyExists(err) {
-		c.logger.Error("Error on creating master job", zap.Error(err))
-		return err
-	}
-
-	masterService := newMasterService(c.loadTest, masterJob)
-	_, err = c.kubeClientSet.CoreV1().Services(c.loadTest.Status.Namespace).Create(ctx, masterService, metaV1.CreateOptions{})
-	if err != nil && !errors.IsAlreadyExists(err) {
-		c.logger.Error("Error on creating master service", zap.Error(err))
-		return err
-	}
-
-	workerJob := newWorkerJob(c.loadTest, configMap, secret, masterService, c.workerResources, c.podAnnotations, c.imageName, c.imageTag, c.logger)
-	_, err = c.kubeClientSet.
-		BatchV1().
-		Jobs(c.loadTest.Status.Namespace).
-		Create(ctx, workerJob, metaV1.CreateOptions{})
-	if err != nil && !errors.IsAlreadyExists(err) {
-		c.logger.Error("Error on creating worker job", zap.Error(err))
-		return err
-	}
-
-	return nil
+	return c.backend.Sync(ctx, *c.loadTest, c.reportURL)
 }
 
 // CheckOrUpdateStatus check current LoadTest progress
 func (c *Locust) CheckOrUpdateStatus(ctx context.Context) error {
-	if c.loadTest.Status.Phase == "" {
-		c.loadTest.Status.Phase = loadTestV1.LoadTestCreating
-	}
-
-	if c.loadTest.Status.Phase == loadTestV1.LoadTestErrored ||
-		c.loadTest.Status.Phase == loadTestV1.LoadTestFinished {
-		return nil
-	}
-
-	_, err := c.kubeClientSet.
-		CoreV1().
-		ConfigMaps(c.loadTest.Status.Namespace).
-		Get(ctx, newConfigMapName(c.loadTest), metaV1.GetOptions{})
-	if err != nil {
-		if errors.IsNotFound(err) {
-			c.loadTest.Status.Phase = loadTestV1.LoadTestFinished
-			return nil
-		}
-		return err
-	}
-
-	workerJob, err := c.kubeClientSet.
-		BatchV1().
-		Jobs(c.loadTest.Status.Namespace).
-		Get(ctx, newWorkerJobName(c.loadTest), metaV1.GetOptions{})
-	if err != nil {
-		return err
-	}
-
-	masterJob, err := c.kubeClientSet.
-		BatchV1().
-		Jobs(c.loadTest.Status.Namespace).
-		Get(ctx, newMasterJobName(c.loadTest), metaV1.GetOptions{})
-	if err != nil {
-		return err
-	}
-
-	c.loadTest.Status.Phase = getLoadTestStatusFromJobs(masterJob, workerJob)
-
-	return nil
+	return c.backend.SyncStatus(ctx, *c.loadTest, &c.loadTest.Status)
 }
 
 // New creates a instance of Locust backend
 func New(
 	kubeClientSet kubernetes.Interface,
-	kangalClientSet clientSetV.Interface,
+	_ clientSetV.Interface,
 	loadTest *loadTestV1.LoadTest,
 	logger *zap.Logger,
 	reportURL string,
 	config Config,
 	podAnnotations map[string]string,
 ) *Locust {
-	// this is to keep backward compatibility
-	if config.Image != "" && config.ImageName == "" {
-		config.ImageName = config.Image
-	}
-
-	imageName := defaultImage
-	if config.ImageName != "" {
-		imageName = config.ImageName
-	}
-
-	imageTag := defaultImageTag
-	if config.ImageTag != "" {
-		imageTag = config.ImageTag
+	backend := Backend{
+		logger:         logger,
+		kubeClientSet:  kubeClientSet,
+		config:         &config,
+		podAnnotations: podAnnotations,
 	}
 
 	return &Locust{
-		kubeClientSet:   kubeClientSet,
-		kangalClientSet: kangalClientSet,
-		loadTest:        loadTest,
-		logger:          logger,
-		reportURL:       reportURL,
-		imageName:       imageName,
-		imageTag:        imageTag,
-		masterResources: helper.Resources{
-			CPULimits:      config.MasterCPULimits,
-			CPURequests:    config.MasterCPURequests,
-			MemoryLimits:   config.MasterMemoryLimits,
-			MemoryRequests: config.MasterMemoryRequests,
-		},
-		workerResources: helper.Resources{
-			CPULimits:      config.WorkerCPULimits,
-			CPURequests:    config.WorkerCPURequests,
-			MemoryLimits:   config.WorkerMemoryLimits,
-			MemoryRequests: config.WorkerMemoryRequests,
-		},
-		podAnnotations: podAnnotations,
+		backend:   backend,
+		loadTest:  loadTest,
+		reportURL: reportURL,
 	}
 }
