@@ -17,7 +17,7 @@ func BuildLoadTestSpec(tags loadTestV1.LoadTestTags, overwrite bool) (loadTestV1
 		"",
 		"",
 		"",
-		loadTestV1.ImageDetails{Image: sleepImage, Tag: imageTag},
+		loadTestV1.ImageDetails{Image: imageName, Tag: imageTag},
 		loadTestV1.ImageDetails{},
 		"",
 		time.Duration(0),
