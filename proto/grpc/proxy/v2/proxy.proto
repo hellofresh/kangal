@@ -5,11 +5,6 @@ import "google/api/annotations.proto";
 
 option go_package = "grpc/proxy/v2";
 
-message Tag {
-    string key = 1;
-    string value = 2;
-}
-
 enum LoadTestType {
     LOAD_TEST_TYPE_UNSPECIFIED = 0;
     LOAD_TEST_TYPE_JMETER = 1;
@@ -31,7 +26,7 @@ message LoadTestStatus {
     string name = 1;
     int32 distributed_pods = 2;
     LoadTestPhase phase = 3;
-    repeated Tag tags = 4;
+    map<string, string> tags = 4;
     bool has_env_vars = 5;
     bool has_test_data = 6;
     LoadTestType type = 7;
@@ -46,7 +41,7 @@ message GetResponse {
 }
 
 message ListRequest {
-    repeated Tag tags = 1;
+    map<string, string> tags = 1;
     int64 limit = 2;
     string continue = 3;
 }
