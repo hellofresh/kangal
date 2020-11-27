@@ -416,25 +416,16 @@
 						"type": "integer"
 					},
 					"envVars": {
-						"type": "array",
-						"items": {
-							"type": "string",
-							"format": "file"
-						}
+						"type": "string",
+						"format": "file"
 					},
 					"testData": {
-						"type": "array",
-						"items": {
-							"type": "string",
-							"format": "file"
-						}
+						"type": "string",
+						"format": "file"
 					},
 					"testFile": {
-						"type": "array",
-						"items": {
-							"type": "string",
-							"format": "file"
-						}
+						"type": "string",
+						"format": "file"
 					},
 					"type": {
 						"type": "string",

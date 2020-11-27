@@ -28,7 +28,7 @@ const (
 
 var (
 	// ErrFileToStringEmpty is the error returned when the defined users file is empty
-	ErrFileToStringEmpty error = errors.New("file is empty")
+	ErrFileToStringEmpty = errors.New("file is empty")
 )
 
 type loadTestSpecCreator func(*http.Request, backends.Config, *zap.Logger) (apisLoadTestV1.LoadTestSpec, error)
