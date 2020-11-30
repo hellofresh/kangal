@@ -59,6 +59,11 @@ func (s *implLoadTestServiceServer) Get(ctx context.Context, in *grpcProxyV2.Get
 	}, nil
 }
 
+// Create creates new load test
+func (s *implLoadTestServiceServer) Create(context.Context, *grpcProxyV2.CreateRequest) (*grpcProxyV2.CreateResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "Not implemented yet")
+}
+
 // List searches and returns load tests by given filters
 func (s *implLoadTestServiceServer) List(context.Context, *grpcProxyV2.ListRequest) (*grpcProxyV2.ListResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "")

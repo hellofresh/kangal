@@ -1,6 +1,7 @@
 syntax = "proto3";
 package grpc.proxy.v2;
 
+import "google/protobuf/duration.proto";
 import "google/api/annotations.proto";
 
 option go_package = "grpc/proxy/v2";
@@ -40,6 +41,28 @@ message GetResponse {
     LoadTestStatus load_test_status = 1;
 }
 
+message CreateRequest {
+    bytes env_vars = 1;
+    bytes test_data = 2;
+    bytes test_file = 3;
+
+    int32 distributed_pods = 4;
+    LoadTestType type = 5;
+    bool overwrite = 6;
+    string target_url = 7;
+    // Tags allows to tag tests for further filtering.
+    // When used via gRPC REST gateway this field works as simple "type": "string" and
+    // MUST be in the "tag1:value1,tag2:value2,..." format.
+    map<string, string> tags = 8;
+    // Duration allows to <WHAT?>.
+    // When used via gRPC REST gateway this value must be compatible with https://golang.org/pkg/time/#ParseDuration
+    google.protobuf.Duration duration = 9;
+}
+
+message CreateResponse {
+    LoadTestStatus load_test_status = 1;
+}
+
 message ListRequest {
     map<string, string> tags = 1;
     int64 limit = 2;
@@ -58,6 +81,15 @@ service LoadTestService {
     rpc Get (GetRequest) returns (GetResponse) {
         option (google.api.http) = {
             get: "/v2/load-test/{name}"
+        };
+    }
+    // Create creates new load test. This method MUST use "Content-Type: multipart/form-data" when is used
+    // via gRPC REST gateway as this is the only possible way to upload files. In this case "tags" field
+    // MUST be in the "tag1:value1,tag2:value2,..." format.
+    rpc Create (CreateRequest) returns (CreateResponse) {
+        option (google.api.http) = {
+            post: "/v2/load-test"
+            body: "*"
         };
     }
     // List searches and returns load tests by given filters

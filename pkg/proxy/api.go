@@ -90,7 +90,7 @@ func RunAPIServer(ctx context.Context, cfg Config, rr APIRunner) error {
 		}
 
 		rr.Logger.Info("Running gRPC REST gateway...", zap.String("addr", restAddress))
-		if err := http.ListenAndServe(restAddress, mux); err != nil {
+		if err := http.ListenAndServe(restAddress, multipartFormWrapper(mux)); err != nil {
 			return fmt.Errorf("could not serve REST gateway: %w", err)
 		}
 
