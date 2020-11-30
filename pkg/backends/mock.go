@@ -2,18 +2,19 @@
 // Source: github.com/hellofresh/kangal/pkg/backends/internal (interfaces: Backend,BackendGetEnvConfig,BackendSetDefaults,BackendSetLogger,BackendSetPodAnnotations,BackendSetKubeClientSet,BackendSetKangalClientSet,BackendSetNamespaceLister)
 
 // Package internal is a generated GoMock package.
-package internal
+package backends
 
 import (
 	context "context"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	v1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
-	versioned "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
 	zap "go.uber.org/zap"
 	kubernetes "k8s.io/client-go/kubernetes"
 	v10 "k8s.io/client-go/listers/core/v1"
+
+	v1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
+	versioned "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
 )
 
 // MockBackend is a mock of Backend interface

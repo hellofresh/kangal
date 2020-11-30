@@ -1,4 +1,4 @@
-package internal
+package backends
 
 import (
 	"errors"
@@ -27,14 +27,19 @@ func Register(b Backend) {
 	defaultRegistry[b.Type()] = b
 }
 
-// Registry you can use this to add information to backends and to resolve to then
-type Registry struct {
+// Registry is the interface for backends registering/retrieving
+type Registry interface {
+	GetBackend(loadTestType loadTestV1.LoadTestType) (Backend, error)
+}
+
+// registry you can use this to add information to backends and to resolve to then
+type registry struct {
 	registry map[loadTestV1.LoadTestType]Backend
 }
 
-// New creates a new Backend instance
-func New(opts ...Option) *Registry {
-	b := &Registry{
+// New creates a new backend registry instance
+func New(opts ...Option) Registry {
+	b := &registry{
 		registry: defaultRegistry,
 	}
 
@@ -57,8 +62,8 @@ func New(opts ...Option) *Registry {
 	return b
 }
 
-// Resolve return the given backend name from the registry
-func (b *Registry) Resolve(loadTestType loadTestV1.LoadTestType) (Backend, error) {
+// GetBackend return the given backend name from the registry
+func (b *registry) GetBackend(loadTestType loadTestV1.LoadTestType) (Backend, error) {
 	resolved, exists := b.registry[loadTestType]
 	if !exists {
 		return nil, ErrNoBackendRegistered
