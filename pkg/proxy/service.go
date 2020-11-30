@@ -61,35 +61,53 @@ func (s *implLoadTestServiceServer) Get(ctx context.Context, in *grpcProxyV2.Get
 
 // List searches and returns load tests by given filters
 func (s *implLoadTestServiceServer) List(context.Context, *grpcProxyV2.ListRequest) (*grpcProxyV2.ListResponse, error) {
-	return new(grpcProxyV2.ListResponse), nil
+	return nil, status.Error(codes.Unimplemented, "")
 }
 
 func phaseToGRPC(p apisLoadTestV1.LoadTestPhase) grpcProxyV2.LoadTestPhase {
-	switch p {
-	case apisLoadTestV1.LoadTestCreating:
-		return grpcProxyV2.LoadTestPhase_LOAD_TEST_PHASE_CREATING
-	case apisLoadTestV1.LoadTestStarting:
-		return grpcProxyV2.LoadTestPhase_LOAD_TEST_PHASE_STARTING
-	case apisLoadTestV1.LoadTestRunning:
-		return grpcProxyV2.LoadTestPhase_LOAD_TEST_PHASE_RUNNING
-	case apisLoadTestV1.LoadTestFinished:
-		return grpcProxyV2.LoadTestPhase_LOAD_TEST_PHASE_FINISHED
-	case apisLoadTestV1.LoadTestErrored:
-		return grpcProxyV2.LoadTestPhase_LOAD_TEST_PHASE_ERRORED
+	if grpcVal, found := phaseToGRPCMap[p]; found {
+		return grpcVal
 	}
 
 	return grpcProxyV2.LoadTestPhase_LOAD_TEST_PHASE_UNSPECIFIED
 }
 
 func typeToGRPC(t apisLoadTestV1.LoadTestType) grpcProxyV2.LoadTestType {
-	switch t {
-	case apisLoadTestV1.LoadTestTypeJMeter:
-		return grpcProxyV2.LoadTestType_LOAD_TEST_TYPE_JMETER
-	case apisLoadTestV1.LoadTestTypeFake:
-		return grpcProxyV2.LoadTestType_LOAD_TEST_TYPE_FAKE
-	case apisLoadTestV1.LoadTestTypeLocust:
-		return grpcProxyV2.LoadTestType_LOAD_TEST_TYPE_LOCUST
+	if grpcVal, found := typeToGRPCMap[t]; found {
+		return grpcVal
 	}
 
 	return grpcProxyV2.LoadTestType_LOAD_TEST_TYPE_UNSPECIFIED
+}
+
+var (
+	phaseToGRPCMap = map[apisLoadTestV1.LoadTestPhase]grpcProxyV2.LoadTestPhase{
+		"":                              grpcProxyV2.LoadTestPhase_LOAD_TEST_PHASE_UNSPECIFIED,
+		apisLoadTestV1.LoadTestCreating: grpcProxyV2.LoadTestPhase_LOAD_TEST_PHASE_CREATING,
+		apisLoadTestV1.LoadTestStarting: grpcProxyV2.LoadTestPhase_LOAD_TEST_PHASE_STARTING,
+		apisLoadTestV1.LoadTestRunning:  grpcProxyV2.LoadTestPhase_LOAD_TEST_PHASE_RUNNING,
+		apisLoadTestV1.LoadTestFinished: grpcProxyV2.LoadTestPhase_LOAD_TEST_PHASE_FINISHED,
+		apisLoadTestV1.LoadTestErrored:  grpcProxyV2.LoadTestPhase_LOAD_TEST_PHASE_ERRORED,
+	}
+	// get populated in init() by inverting map above
+	grpcToPhaseMap = map[grpcProxyV2.LoadTestPhase]apisLoadTestV1.LoadTestPhase{}
+
+	typeToGRPCMap = map[apisLoadTestV1.LoadTestType]grpcProxyV2.LoadTestType{
+		"":                                grpcProxyV2.LoadTestType_LOAD_TEST_TYPE_UNSPECIFIED,
+		apisLoadTestV1.LoadTestTypeJMeter: grpcProxyV2.LoadTestType_LOAD_TEST_TYPE_JMETER,
+		apisLoadTestV1.LoadTestTypeFake:   grpcProxyV2.LoadTestType_LOAD_TEST_TYPE_FAKE,
+		apisLoadTestV1.LoadTestTypeLocust: grpcProxyV2.LoadTestType_LOAD_TEST_TYPE_LOCUST,
+	}
+	// get populated in init() by inverting map above
+	grpcToTypeMap = map[grpcProxyV2.LoadTestType]apisLoadTestV1.LoadTestType{}
+)
+
+func init() {
+	for k, v := range phaseToGRPCMap {
+		grpcToPhaseMap[v] = k
+	}
+
+	for k, v := range typeToGRPCMap {
+		grpcToTypeMap[v] = k
+	}
 }
