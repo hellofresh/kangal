@@ -7,8 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hellofresh/kangal/pkg/backends"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
@@ -24,7 +22,7 @@ func TestNewFakeFromHTTPLoadTest(t *testing.T) {
 		t.FailNow()
 	}
 
-	loadTest, err := fromHTTPRequestToLoadTestSpec(r, backends.Config{}, zap.NewNop())
+	loadTest, err := fromHTTPRequestToLoadTestSpec(r, zap.NewNop())
 	require.Error(t, err)
 	assert.Equal(t, apisLoadTestV1.LoadTestSpec{}, loadTest)
 }
@@ -383,7 +381,7 @@ func TestInit(t *testing.T) {
 				t.FailNow()
 			}
 
-			_, err = fromHTTPRequestToLoadTestSpec(request, backends.Config{}, zap.NewNop())
+			_, err = fromHTTPRequestToLoadTestSpec(request, zap.NewNop())
 
 			if ti.expectError {
 				assert.Error(t, err)
@@ -410,7 +408,7 @@ func TestCheckLoadTestSpec(t *testing.T) {
 		t.FailNow()
 	}
 
-	spec, err := fromHTTPRequestToLoadTestSpec(request, backends.Config{}, zap.NewNop())
+	spec, err := fromHTTPRequestToLoadTestSpec(request, zap.NewNop())
 	require.NoError(t, err)
 
 	lt, err := apisLoadTestV1.BuildLoadTestObject(spec)

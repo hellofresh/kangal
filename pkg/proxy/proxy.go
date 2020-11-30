@@ -31,21 +31,19 @@ var (
 	ErrFileToStringEmpty error = errors.New("file is empty")
 )
 
-type loadTestSpecCreator func(*http.Request, backends.Config, *zap.Logger) (apisLoadTestV1.LoadTestSpec, error)
-
 // Proxy handler
 type Proxy struct {
-	config              Config
-	kubeClient          *kube.Client
-	httpToSpecConverter loadTestSpecCreator
+	maxLoadTestsRun int
+	registry        backends.Registry
+	kubeClient      *kube.Client
 }
 
 // NewProxy returns new Proxy handlers
-func NewProxy(cfg Config, kubeClient *kube.Client, specCreator loadTestSpecCreator) *Proxy {
+func NewProxy(maxLoadTestsRun int, registry backends.Registry, kubeClient *kube.Client) *Proxy {
 	return &Proxy{
-		config:              cfg,
-		kubeClient:          kubeClient,
-		httpToSpecConverter: specCreator,
+		maxLoadTestsRun: maxLoadTestsRun,
+		registry:        registry,
+		kubeClient:      kubeClient,
 	}
 }
 
@@ -131,7 +129,7 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	// Making valid LoadTestSpec based on HTTP request
-	ltSpec, err := p.httpToSpecConverter(r, p.config.Backends, logger)
+	ltSpec, err := fromHTTPRequestToLoadTestSpec(r, logger)
 	if err != nil {
 		render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest, err.Error()))
 		return
@@ -153,11 +151,9 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(labeledLoadTests.Items) > 0 {
-
 		// If users wants to overwrite
 		if loadTest.Spec.Overwrite == true {
 			for _, item := range labeledLoadTests.Items {
-
 				// Remove the old tests
 				err := p.kubeClient.DeleteLoadTest(ctx, item.Name)
 				if err != nil {
@@ -181,9 +177,21 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if activeLoadTests >= p.config.MaxLoadTestsRun {
-		logger.Warn("number of active load tests reached limit", zap.Int("current", activeLoadTests), zap.Int("limit", p.config.MaxLoadTestsRun))
+	if activeLoadTests >= p.maxLoadTestsRun {
+		logger.Warn("number of active load tests reached limit", zap.Int("current", activeLoadTests), zap.Int("limit", p.maxLoadTestsRun))
 		render.Render(w, r, cHttp.ErrResponse(http.StatusTooManyRequests, "Number of active load tests reached limit"))
+		return
+	}
+
+	backend, err := p.registry.GetBackend(getLoadTestType(r))
+	if err != nil {
+		render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest, err.Error()))
+		return
+	}
+
+	err = backend.TransformLoadTestSpec(&ltSpec)
+	if err != nil {
+		render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest, err.Error()))
 		return
 	}
 

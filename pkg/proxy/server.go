@@ -12,6 +12,7 @@ import (
 	"go.opencensus.io/plugin/ochttp"
 	"go.uber.org/zap"
 
+	"github.com/hellofresh/kangal/pkg/backends"
 	cHttp "github.com/hellofresh/kangal/pkg/core/http"
 	mPkg "github.com/hellofresh/kangal/pkg/core/middleware"
 	kube "github.com/hellofresh/kangal/pkg/kubernetes"
@@ -27,10 +28,15 @@ type Runner struct {
 
 // RunServer runs Kangal proxy API
 func RunServer(ctx context.Context, cfg Config, rr Runner) error {
+	registry := backends.New(
+		backends.WithLogger(rr.Logger),
+	)
 
-	proxyHandler := NewProxy(cfg, rr.KubeClient, fromHTTPRequestToLoadTestSpec)
+	proxyHandler := NewProxy(cfg.MaxLoadTestsRun, registry, rr.KubeClient)
+
 	// Start instrumented server
 	r := chi.NewRouter()
+
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(mPkg.NewLogger(rr.Logger).Handler)
