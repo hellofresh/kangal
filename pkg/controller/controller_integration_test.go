@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"testing"
 
-	loadtestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	coreV1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	_ "github.com/hellofresh/kangal/pkg/backends/fake"
+	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 )
 
 func TestIntegrationKangalController(t *testing.T) {
@@ -24,7 +26,7 @@ func TestIntegrationKangalController(t *testing.T) {
 
 	// TODO: those attributes should gone once we do improvements on proxy side and move kube_client to own kube package
 	distributedPods := int32(1)
-	loadtestType := loadtestV1.LoadTestTypeFake
+	loadtestType := loadTestV1.LoadTestTypeFake
 	testFile := "testdata/valid/loadtest.jmx"
 	envVars := "testdata/valid/envvars.csv"
 	testData := "testdata/valid/testdata.csv"
@@ -77,8 +79,8 @@ func TestIntegrationKangalController(t *testing.T) {
 		watchEvent, err := WaitResource(watchObj, (WaitCondition{}).LoadtestRunning)
 		require.NoError(t, err)
 
-		loadtest := watchEvent.Object.(*loadtestV1.LoadTest)
-		assert.Equal(t, loadtestV1.LoadTestRunning, loadtest.Status.Phase)
+		loadtest := watchEvent.Object.(*loadTestV1.LoadTest)
+		assert.Equal(t, loadTestV1.LoadTestRunning, loadtest.Status.Phase)
 	})
 
 	t.Run("Checking loadtest is in Finished state", func(t *testing.T) {
@@ -90,7 +92,7 @@ func TestIntegrationKangalController(t *testing.T) {
 		watchEvent, err := WaitResource(watchObj, (WaitCondition{}).LoadtestFinished)
 		require.NoError(t, err)
 
-		loadtest := watchEvent.Object.(*loadtestV1.LoadTest)
-		assert.Equal(t, loadtestV1.LoadTestFinished, loadtest.Status.Phase)
+		loadtest := watchEvent.Object.(*loadTestV1.LoadTest)
+		assert.Equal(t, loadTestV1.LoadTestFinished, loadtest.Status.Phase)
 	})
 }

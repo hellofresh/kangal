@@ -7,8 +7,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/hellofresh/kangal/pkg/backends"
-
 	coreV1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
@@ -17,6 +15,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	watchtools "k8s.io/client-go/tools/watch"
 
+	"github.com/hellofresh/kangal/pkg/backends"
 	apisLoadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
 )
@@ -42,25 +41,33 @@ func CreateLoadtest(clientSet clientSetV.Clientset, pods int32, name, testFile, 
 		}
 	}
 
-	loadtestSpec, err := backends.BuildLoadTestSpecByBackend(
-		loadTestType,
-		backends.Config{},
-		false,
-		pods,
-		apisLoadTestV1.LoadTestTags{},
-		tf,
-		td,
-		ev,
-		"",
-		0,
-	)
+	reg := backends.New()
+
+	backend, err := reg.GetBackend(loadTestType)
+	if err != nil {
+		return err
+	}
+
+	loadTestSpec := apisLoadTestV1.LoadTestSpec{
+		Type:            loadTestType,
+		Overwrite:       false,
+		DistributedPods: &pods,
+		Tags:            apisLoadTestV1.LoadTestTags{},
+		TestFile:        tf,
+		TestData:        td,
+		EnvVars:         ev,
+		TargetURL:       "",
+		Duration:        0,
+	}
+
+	err = backend.TransformLoadTestSpec(&loadTestSpec)
 	if err != nil {
 		return err
 	}
 
 	ltObj := &apisLoadTestV1.LoadTest{}
 	ltObj.Name = name
-	ltObj.Spec = loadtestSpec
+	ltObj.Spec = loadTestSpec
 
 	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
 	defer cancel()
@@ -143,23 +150,6 @@ func GetLoadtestLabels(clientSet clientSetV.Clientset, loadtestName string) (map
 	return result.Labels, nil
 }
 
-// GetLoadtests returns a list of load tests
-func GetLoadtests(clientSet clientSetV.Clientset) ([]string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
-	defer cancel()
-
-	result, err := clientSet.KangalV1().LoadTests().List(ctx, metaV1.ListOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	lts := make([]string, len(result.Items))
-	for i := range result.Items {
-		lts = append(lts, result.Items[i].Name)
-	}
-	return lts, nil
-}
-
 // GetLoadtestEnvVars returns a load test name
 func GetLoadtestEnvVars(clientSet clientSetV.Clientset, loadtestName string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
@@ -209,21 +199,6 @@ func GetDistributedPods(clientSet typeV1.CoreV1Interface, namespace string) (cor
 		return coreV1.PodList{}, err
 	}
 	return *pods, nil
-}
-
-// GetMasterPod returns a master pod in load test namespace
-func GetMasterPod(clientSet typeV1.CoreV1Interface, namespace string) (coreV1.PodList, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
-	defer cancel()
-
-	opts := metaV1.ListOptions{
-		LabelSelector: "app=loadtest-master",
-	}
-	master, err := clientSet.Pods(namespace).List(ctx, opts)
-	if err != nil {
-		return coreV1.PodList{}, err
-	}
-	return *master, nil
 }
 
 // GetSecret returns a list of created secrets according to the given label
