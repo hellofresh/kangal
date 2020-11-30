@@ -185,12 +185,14 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 
 	backend, err := p.registry.GetBackend(getLoadTestType(r))
 	if err != nil {
+		logger.Error("could not get backend", zap.Error(err))
 		render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest, err.Error()))
 		return
 	}
 
 	err = backend.TransformLoadTestSpec(&ltSpec)
 	if err != nil {
+		logger.Error("could not transform LoadTest spec", zap.Error(err))
 		render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest, err.Error()))
 		return
 	}
