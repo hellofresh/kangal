@@ -4,10 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/hellofresh/kangal/pkg/backends/internal"
-	"github.com/hellofresh/kangal/pkg/core/helper"
-	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
-	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
 	"go.uber.org/zap"
 	batchV1 "k8s.io/api/batch/v1"
 	coreV1 "k8s.io/api/core/v1"
@@ -15,10 +11,15 @@ import (
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	coreListersV1 "k8s.io/client-go/listers/core/v1"
+
+	"github.com/hellofresh/kangal/pkg/backends"
+	"github.com/hellofresh/kangal/pkg/core/helper"
+	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
+	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
 )
 
 func init() {
-	internal.Register(&Backend{})
+	backends.Register(&Backend{})
 }
 
 // Backend is the Fake implementation of backend interface
