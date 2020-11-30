@@ -68,9 +68,9 @@ func RunAPIServer(ctx context.Context, cfg Config, rr APIRunner) error {
 			return fmt.Errorf("could not create API TCP listener: %w", err)
 		}
 
-		rr.Logger.Info("Running gRPC API server...", zap.String("addr", grpcAddress))
+		rr.Logger.Info("Running gRPC server...", zap.String("addr", grpcAddress))
 		if err := serverAPI.Serve(tcpListener); err != nil {
-			return fmt.Errorf("could not serve gRPC API: %w", err)
+			return fmt.Errorf("could not serve gRPC: %w", err)
 		}
 
 		return nil
@@ -89,9 +89,9 @@ func RunAPIServer(ctx context.Context, cfg Config, rr APIRunner) error {
 			return fmt.Errorf("could not register service Ping: %w", err)
 		}
 
-		rr.Logger.Info("Running gRPC REST server...", zap.String("addr", restAddress))
+		rr.Logger.Info("Running gRPC REST gateway...", zap.String("addr", restAddress))
 		if err := http.ListenAndServe(restAddress, mux); err != nil {
-			return fmt.Errorf("could not serve REST API: %w", err)
+			return fmt.Errorf("could not serve REST gateway: %w", err)
 		}
 
 		return nil
