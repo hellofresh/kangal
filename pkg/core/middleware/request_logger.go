@@ -9,8 +9,6 @@ import (
 	"go.uber.org/zap"
 )
 
-var static = [...]string{".css", ".js", ".png", ".jpg", ".jpeg", ".ico"}
-
 // RequestLogger is a struct for logging request
 type RequestLogger struct{}
 
@@ -39,7 +37,7 @@ func (m *RequestLogger) Handler(next http.Handler) http.Handler {
 			zap.String("duration-fmt", m.Duration.String()),
 		)
 
-		if IsStaticRequest(r) {
+		if IsStatusRequest(r) {
 			logEntry.Debug("Finished serving request")
 			return
 		}
@@ -48,12 +46,10 @@ func (m *RequestLogger) Handler(next http.Handler) http.Handler {
 	})
 }
 
-// IsStaticRequest checks extension suffix
-func IsStaticRequest(r *http.Request) bool {
-	for _, ext := range static {
-		if strings.HasSuffix(r.URL.Path, ext) {
-			return true
-		}
+// IsStatusRequest checks if the request is a health check request
+func IsStatusRequest(r *http.Request) bool {
+	if strings.HasSuffix(r.URL.Path, "status") {
+		return true
 	}
 
 	return false
