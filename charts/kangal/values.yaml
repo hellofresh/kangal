@@ -63,7 +63,7 @@ proxy:
   # Health check
   livenessProbe:
     httpGet:
-      path: /
+      path: /status
       port: http
     initialDelaySeconds: 15
     periodSeconds: 10

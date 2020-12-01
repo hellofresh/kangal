@@ -255,7 +255,7 @@ func (c *Controller) processNextWorkItem() bool {
 		// Finally, if no error occurs we Forget this item so it does not
 		// get queued again until another change happens.
 		c.workQueue.Forget(obj)
-		c.logger.Info("Successfully synced", zap.String("loadTest", key))
+		c.logger.Debug("Successfully synced", zap.String("loadTest", key))
 		return nil
 	}(obj)
 
@@ -390,7 +390,7 @@ func (c *Controller) handleObject(obj interface{}) {
 		c.logger.Debug("Processing object", zap.String("loadtest", object.GetName()))
 		foo, err := c.loadtestsLister.Get(ownerRef.Name)
 		if err != nil {
-			c.logger.Info("ignoring orphaned object", zap.String("loadtest", object.GetSelfLink()),
+			c.logger.Debug("ignoring orphaned object", zap.String("loadtest", object.GetSelfLink()),
 				zap.String("object_owner", ownerRef.Name))
 			return
 		}
