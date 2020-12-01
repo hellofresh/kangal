@@ -12,7 +12,6 @@ import (
 	"github.com/thedevsaddam/govalidator"
 	"go.uber.org/zap"
 
-	"github.com/hellofresh/kangal/pkg/backends"
 	"github.com/hellofresh/kangal/pkg/kubernetes"
 	apisLoadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 )
@@ -88,9 +87,7 @@ func fromHTTPRequestToListOptions(r *http.Request) (*kubernetes.ListOptions, err
 }
 
 // fromHTTPRequestToLoadTestSpec creates a load test spec from HTTP request
-func fromHTTPRequestToLoadTestSpec(r *http.Request, cfg backends.Config, logger *zap.Logger) (apisLoadTestV1.LoadTestSpec, error) {
-	ltType := getLoadTestType(r)
-
+func fromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger) (apisLoadTestV1.LoadTestSpec, error) {
 	if e := httpValidator(r); len(e) > 0 {
 		logger.Debug("User request validation failed", zap.Any("errors", e))
 		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf(e.Encode())
@@ -144,7 +141,17 @@ func fromHTTPRequestToLoadTestSpec(r *http.Request, cfg backends.Config, logger 
 		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %q from request: %w", duration, err)
 	}
 
-	return backends.BuildLoadTestSpecByBackend(ltType, cfg, o, dp, tagList, tf, td, ev, turl, dur)
+	return apisLoadTestV1.LoadTestSpec{
+		Type:            getLoadTestType(r),
+		Overwrite:       o,
+		DistributedPods: &dp,
+		Tags:            tagList,
+		TestFile:        tf,
+		TestData:        td,
+		EnvVars:         ev,
+		TargetURL:       turl,
+		Duration:        dur,
+	}, nil
 }
 
 func getEnvVars(r *http.Request) (string, error) {

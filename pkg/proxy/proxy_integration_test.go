@@ -17,6 +17,7 @@ import (
 	k8sAPIErrors "k8s.io/apimachinery/pkg/api/errors"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	_ "github.com/hellofresh/kangal/pkg/backends/fake"
 	testhelper "github.com/hellofresh/kangal/pkg/controller"
 	apisLoadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
@@ -53,7 +54,7 @@ func TestIntegrationCreateLoadtestFormPostAllFiles(t *testing.T) {
 	var createdLoadTestName string
 
 	t.Run("Creates the loadtest", func(t *testing.T) {
-		request, err := createRequestWrapper(requestFiles, distributedPods, string(loadtestType), tagsString)
+		request, err := createRequestWrapper(requestFiles, distributedPods, string(loadtestType), tagsString, false)
 		require.NoError(t, err)
 
 		resp, err := http.Post(fmt.Sprintf("http://localhost:%d/load-test", httpPort), request.contentType, request.body)
@@ -78,7 +79,7 @@ func TestIntegrationCreateLoadtestFormPostAllFiles(t *testing.T) {
 		require.NoError(t, err)
 
 		expected := map[string]string{
-			"test-file-hash":      "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+			"test-file-hash":      "5a7919885ef46f2e0bd66602944128fde2dce928",
 			"test-tag-department": "platform",
 			"test-tag-team":       "kangal",
 		}
@@ -103,7 +104,7 @@ func TestIntegrationCreateLoadtestDuplicates(t *testing.T) {
 	var createdLoadTestName string
 
 	t.Run("Creates first loadtest, must succeed", func(t *testing.T) {
-		request, err := createRequestWrapper(requestFiles, distributedPods, string(loadtestType), "")
+		request, err := createRequestWrapper(requestFiles, distributedPods, string(loadtestType), "", false)
 		require.NoError(t, err)
 
 		resp, err := http.Post(fmt.Sprintf("http://localhost:%d/load-test", httpPort), request.contentType, request.body)
@@ -119,7 +120,7 @@ func TestIntegrationCreateLoadtestDuplicates(t *testing.T) {
 	})
 
 	t.Run("Creates second loadtest, must fail", func(t *testing.T) {
-		request, err := createRequestWrapper(requestFiles, distributedPods, string(loadtestType), "")
+		request, err := createRequestWrapper(requestFiles, distributedPods, string(loadtestType), "", false)
 		require.NoError(t, err)
 
 		resp, err := http.Post(fmt.Sprintf("http://localhost:%d/load-test", httpPort), request.contentType, request.body)
@@ -151,7 +152,7 @@ func TestIntegrationCreateLoadtestReachMaxLimit(t *testing.T) {
 	var createdLoadTestName string
 
 	t.Run("Creates first loadtest, must succeed", func(t *testing.T) {
-		request, err := createRequestWrapper(requestFiles, distributedPods, string(loadtestType), "")
+		request, err := createRequestWrapper(requestFiles, distributedPods, string(loadtestType), "", false)
 		require.NoError(t, err)
 
 		resp, err := http.Post(fmt.Sprintf("http://localhost:%d/load-test", httpPort), request.contentType, request.body)
@@ -170,14 +171,14 @@ func TestIntegrationCreateLoadtestReachMaxLimit(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("Creates second loadtest, must fail", func(t *testing.T) {
-		request, err := createRequestWrapper(requestFilesSecond, distributedPods, string(loadtestType), "")
+		request, err := createRequestWrapper(requestFilesSecond, distributedPods, string(loadtestType), "", false)
 		require.NoError(t, err)
 
 		resp, err := http.Post(fmt.Sprintf("http://localhost:%d/load-test", httpPort), request.contentType, request.body)
 		require.NoError(t, err, "Could not create POST request")
 		body, _ := ioutil.ReadAll(resp.Body)
 		t.Logf(string(body))
-		require.Equal(t, http.StatusBadRequest, resp.StatusCode)
+		require.Equal(t, http.StatusTooManyRequests, resp.StatusCode)
 	})
 }
 
@@ -196,7 +197,7 @@ func TestIntegrationCreateLoadtestFormPostOneFile(t *testing.T) {
 	var createdLoadTestName string
 
 	t.Run("Creates the loadtest", func(t *testing.T) {
-		request, err := createRequestWrapper(requestFiles, distributedPods, string(loadtestType), "")
+		request, err := createRequestWrapper(requestFiles, distributedPods, string(loadtestType), "", false)
 		require.NoError(t, err)
 
 		resp, err := http.Post(fmt.Sprintf("http://localhost:%d/load-test", httpPort), request.contentType, request.body)
@@ -244,7 +245,7 @@ func TestIntegrationCreateLoadtestEmptyTestFile(t *testing.T) {
 	var body io.ReadCloser
 
 	t.Run("Creates the loadtest with empty testFile", func(t *testing.T) {
-		request, err := createRequestWrapper(requestFiles, distributedPods, string(loadtestType), "")
+		request, err := createRequestWrapper(requestFiles, distributedPods, string(loadtestType), "", false)
 		require.NoError(t, err)
 
 		resp, err := http.Post(fmt.Sprintf("http://localhost:%d/load-test", httpPort), request.contentType, request.body)
@@ -291,7 +292,7 @@ func TestIntegrationCreateLoadtestEmptyTestDataFile(t *testing.T) {
 	var body io.ReadCloser
 
 	t.Run("Creates the loadtest", func(t *testing.T) {
-		request, err := createRequestWrapper(requestFiles, distributedPods, string(loadtestType), "")
+		request, err := createRequestWrapper(requestFiles, distributedPods, string(loadtestType), "", false)
 		require.NoError(t, err)
 
 		resp, err := http.Post(fmt.Sprintf("http://localhost:%d/load-test", httpPort), request.contentType, request.body)
@@ -429,7 +430,7 @@ func TestIntegrationGetLoadtest(t *testing.T) {
 		assert.Equal(t, currentNamespace, dat.Namespace)
 		assert.NotEmpty(t, dat.Phase)
 		assert.NotEqual(t, apisLoadTestV1.LoadTestErrored, dat.Phase)
-		assert.Equal(t, false, dat.HasTestData)
+		assert.Equal(t, true, dat.HasTestData)
 	})
 
 	t.Run("Get loadtest details from gRPC/REST gateway", func(t *testing.T) {
@@ -466,7 +467,7 @@ func TestIntegrationGetLoadtest(t *testing.T) {
 		assert.Equal(t, currentNamespace, dat.LoadTestStatus.GetName())
 		assert.NotEmpty(t, dat.LoadTestStatus.GetPhase())
 		assert.NotEqual(t, grpcProxyV2.LoadTestPhase_LOAD_TEST_PHASE_ERRORED.String(), dat.LoadTestStatus.GetPhase())
-		assert.Equal(t, false, dat.LoadTestStatus.GetHasTestData())
+		assert.Equal(t, true, dat.LoadTestStatus.GetHasTestData())
 	})
 }
 

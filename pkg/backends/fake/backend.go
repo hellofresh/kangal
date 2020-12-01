@@ -11,12 +11,12 @@ import (
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/hellofresh/kangal/pkg/backends/internal"
+	"github.com/hellofresh/kangal/pkg/backends"
 	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 )
 
 func init() {
-	internal.Register(&Backend{})
+	backends.Register(&Backend{})
 }
 
 // Backend is the Fake implementation of backend interface

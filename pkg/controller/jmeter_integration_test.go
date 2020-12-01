@@ -14,7 +14,8 @@ import (
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
-	loadtestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
+	_ "github.com/hellofresh/kangal/pkg/backends/jmeter"
+	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
 )
 
@@ -41,7 +42,7 @@ func TestIntegrationJMeter(t *testing.T) {
 	t.Log()
 
 	distributedPods := int32(2)
-	loadtestType := loadtestV1.LoadTestTypeJMeter
+	loadtestType := loadTestV1.LoadTestTypeJMeter
 	expectedLoadtestName := "loadtest-jmeter-integration"
 	testFile := "testdata/valid/loadtest.jmx"
 	envVars := "testdata/valid/envvars.csv"
@@ -154,7 +155,7 @@ func TestIntegrationJMeter(t *testing.T) {
 		var phase string
 		phase, err = GetLoadtestPhase(clientSet, expectedLoadtestName)
 		require.NoError(t, err)
-		assert.Equal(t, string(loadtestV1.LoadTestRunning), phase)
+		assert.Equal(t, string(loadTestV1.LoadTestRunning), phase)
 	})
 }
 
