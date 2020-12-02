@@ -2,6 +2,8 @@ package jmeter
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"time"
 
 	"go.uber.org/zap"
@@ -18,11 +20,29 @@ import (
 	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
 )
 
+var (
+	// MaxWaitTimeForPods is the time we should wait for worker pods to get to a "Running" state
+	MaxWaitTimeForPods = time.Minute * 10
+	// LoadTestWorkerLabelSelector is the selector used for selecting jmeter worker resources
+	LoadTestWorkerLabelSelector = fmt.Sprintf("%s=%s", loadTestWorkerPodLabelKey, loadTestWorkerPodLabelValue)
+	// ErrRequireMinOneDistributedPod Backend spec requires 1 or more DistributedPods
+	ErrRequireMinOneDistributedPod = errors.New("LoadTest must specify 1 or more DistributedPods")
+	// ErrRequireTestFile the TestFile filed is required to not be an empty string
+	ErrRequireTestFile = errors.New("LoadTest TestFile is required")
+)
+
+const (
+	defaultMasterImageName = "hellofreshtech/kangal-jmeter-master"
+	defaultWorkerImageName = "hellofreshtech/kangal-jmeter-worker"
+	defaultMasterImageTag  = "latest"
+	defaultWorkerImageTag  = "latest"
+)
+
 func init() {
 	backends.Register(&Backend{})
 }
 
-// Backend is the Fake implementation of backend interface
+// Backend is the JMeter implementation of backend interface
 type Backend struct {
 	kubeClientSet   kubernetes.Interface
 	kangalClientSet clientSetV.Interface
@@ -134,7 +154,7 @@ func (b *Backend) TransformLoadTestSpec(spec *loadTestV1.LoadTestSpec) error {
 	return nil
 }
 
-// Sync check if Backend kubernetes resources have been create, if they have not been create them
+// Sync check if JMeter kubernetes resources have been create, if they have not been create them
 func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, reportURL string) error {
 	JMeterServices, err := b.kubeClientSet.CoreV1().Services(loadTest.Status.Namespace).List(ctx, metaV1.ListOptions{})
 	if err != nil {
@@ -204,7 +224,7 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, report
 	return nil
 }
 
-// SyncStatus check the Backend resources and calculate the current status of the LoadTest from them
+// SyncStatus check the JMeter resources and calculate the current status of the LoadTest from them
 func (b *Backend) SyncStatus(ctx context.Context, loadTest loadTestV1.LoadTest, loadTestStatus *loadTestV1.LoadTestStatus) error {
 	// Get the Namespace resource
 	namespace, err := b.namespaceLister.Get(loadTestStatus.Namespace)
