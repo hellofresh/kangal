@@ -151,21 +151,21 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(labeledLoadTests.Items) > 0 {
-		// If users wants to overwrite
-		if loadTest.Spec.Overwrite == true {
-			for _, item := range labeledLoadTests.Items {
-				// Remove the old tests
-				err := p.kubeClient.DeleteLoadTest(ctx, item.Name)
-				if err != nil {
-					logger.Error("Could not delete load test with error", zap.Error(err))
-					render.Render(w, r, cHttp.ErrResponse(http.StatusConflict, err.Error()))
-					return
-				}
-			}
-		} else {
+		if !loadTest.Spec.Overwrite {
 			render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest,
 				"Load test with given testfile already exists, aborting. Please delete existing load test and try again."))
 			return
+		}
+
+		// If users wants to overwrite
+		for _, item := range labeledLoadTests.Items {
+			// Remove the old tests
+			err := p.kubeClient.DeleteLoadTest(ctx, item.Name)
+			if err != nil {
+				logger.Error("Could not delete load test with error", zap.Error(err))
+				render.Render(w, r, cHttp.ErrResponse(http.StatusConflict, err.Error()))
+				return
+			}
 		}
 	}
 
@@ -183,7 +183,7 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	backend, err := p.registry.GetBackend(getLoadTestType(r))
+	backend, err := p.registry.GetBackend(ltSpec.Type)
 	if err != nil {
 		logger.Error("could not get backend", zap.Error(err))
 		render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest, err.Error()))
