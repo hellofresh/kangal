@@ -38,7 +38,7 @@ func TestSync(t *testing.T) {
 			return true, nil, &StatusError{}
 		})
 
-		backend := &Fake{
+		backend := &Backend{
 			kubeClient: client,
 			logger:     zap.NewNop(),
 		}
@@ -60,7 +60,7 @@ func TestSync(t *testing.T) {
 			return true, &batchV1.Job{}, nil
 		})
 
-		backend := &Fake{
+		backend := &Backend{
 			kubeClient: client,
 			logger:     zap.NewNop(),
 		}
@@ -83,7 +83,7 @@ func TestSync(t *testing.T) {
 			return true, &batchV1.Job{}, nil
 		})
 
-		backend := &Fake{
+		backend := &Backend{
 			kubeClient: client,
 			logger:     zap.NewNop(),
 		}
@@ -120,7 +120,7 @@ func TestSyncStatus(t *testing.T) {
 			}, nil
 		})
 
-		backend := &Fake{
+		backend := &Backend{
 			kubeClient: client,
 			logger:     zap.NewNop(),
 		}
@@ -155,7 +155,7 @@ func TestSyncStatus(t *testing.T) {
 			}, nil
 		})
 
-		backend := &Fake{
+		backend := &Backend{
 			kubeClient: client,
 			logger:     zap.NewNop(),
 		}
@@ -190,7 +190,7 @@ func TestSyncStatus(t *testing.T) {
 			}, nil
 		})
 
-		backend := &Fake{
+		backend := &Backend{
 			kubeClient: client,
 			logger:     zap.NewNop(),
 		}
@@ -218,7 +218,7 @@ func TestSyncStatus(t *testing.T) {
 			}, nil
 		})
 
-		backend := &Fake{
+		backend := &Backend{
 			kubeClient: client,
 			logger:     zap.NewNop(),
 		}
@@ -239,7 +239,7 @@ func TestSyncStatus(t *testing.T) {
 			}, nil
 		})
 
-		backend := &Fake{
+		backend := &Backend{
 			kubeClient: client,
 			logger:     zap.NewNop(),
 		}
@@ -260,7 +260,7 @@ func TestSyncStatus(t *testing.T) {
 			return true, nil, &StatusError{}
 		})
 
-		backend := &Fake{
+		backend := &Backend{
 			kubeClient: client,
 			logger:     zap.NewNop(),
 		}
@@ -278,7 +278,7 @@ func TestTransformLoadTestSpec(t *testing.T) {
 		Tags:            loadTestV1.LoadTestTags{"team": "kangal"},
 	}
 
-	b := Fake{}
+	b := Backend{}
 	err := b.TransformLoadTestSpec(&spec)
 
 	assert.NoError(t, err)

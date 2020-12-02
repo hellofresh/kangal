@@ -21,23 +21,23 @@ var (
 )
 
 func init() {
-	backends.Register(&Fake{})
+	backends.Register(&Backend{})
 }
 
-// Fake is the Fake implementation of backend interface
-type Fake struct {
+// Backend is the Fake implementation of backend interface
+type Backend struct {
 	kubeClient kubernetes.Interface
 	logger     *zap.Logger
 	config     loadTestV1.ImageDetails
 }
 
 // Type returns backend type name
-func (*Fake) Type() loadTestV1.LoadTestType {
+func (*Backend) Type() loadTestV1.LoadTestType {
 	return loadTestV1.LoadTestTypeFake
 }
 
 // SetDefaults must set default values
-func (b *Fake) SetDefaults() {
+func (b *Backend) SetDefaults() {
 	b.config = loadTestV1.ImageDetails{
 		Image: imageName,
 		Tag:   imageTag,
@@ -45,12 +45,12 @@ func (b *Fake) SetDefaults() {
 }
 
 // SetLogger receives a copy of logger
-func (b *Fake) SetLogger(logger *zap.Logger) {
+func (b *Backend) SetLogger(logger *zap.Logger) {
 	b.logger = logger
 }
 
 // TransformLoadTestSpec use given spec to validate and return a new one or error
-func (*Fake) TransformLoadTestSpec(spec *loadTestV1.LoadTestSpec) error {
+func (*Backend) TransformLoadTestSpec(spec *loadTestV1.LoadTestSpec) error {
 	spec.MasterConfig.Image = imageName
 	spec.MasterConfig.Tag = imageTag
 
@@ -61,12 +61,12 @@ func (*Fake) TransformLoadTestSpec(spec *loadTestV1.LoadTestSpec) error {
 }
 
 // SetKubeClientSet receives a copy of kubeClientSet
-func (b *Fake) SetKubeClientSet(kubeClientSet kubernetes.Interface) {
+func (b *Backend) SetKubeClientSet(kubeClientSet kubernetes.Interface) {
 	b.kubeClient = kubeClientSet
 }
 
 // Sync check if Fake kubernetes resources have been create, if they have not been create them
-func (b *Fake) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, _ string) error {
+func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, _ string) error {
 	// Get the Namespace resource
 	namespace, err := b.kubeClient.CoreV1().Namespaces().Get(ctx, loadTest.Status.Namespace, metaV1.GetOptions{})
 	// The LoadTest resource may no longer exist, in which case we stop
@@ -87,7 +87,7 @@ func (b *Fake) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, _ string)
 }
 
 // SyncStatus check the Fake resources and calculate the current status of the LoadTest from them
-func (b *Fake) SyncStatus(ctx context.Context, _ loadTestV1.LoadTest, loadTestStatus *loadTestV1.LoadTestStatus) error {
+func (b *Backend) SyncStatus(ctx context.Context, _ loadTestV1.LoadTest, loadTestStatus *loadTestV1.LoadTestStatus) error {
 	// Get the Namespace resource
 	namespace, err := b.kubeClient.CoreV1().Namespaces().Get(ctx, loadTestStatus.Namespace, metaV1.GetOptions{})
 	// The LoadTest resource may no longer exist, in which case we stop
@@ -122,7 +122,7 @@ func (b *Fake) SyncStatus(ctx context.Context, _ loadTestV1.LoadTest, loadTestSt
 }
 
 // newMasterJob creates a new job which runs the Fake master pod
-func (b *Fake) newMasterJob(loadTest loadTestV1.LoadTest) *batchV1.Job {
+func (b *Backend) newMasterJob(loadTest loadTestV1.LoadTest) *batchV1.Job {
 	imageRef := fmt.Sprintf("%s:%s", loadTest.Spec.MasterConfig.Image, loadTest.Spec.MasterConfig.Tag)
 	if "" == loadTest.Spec.MasterConfig.Image || "" == loadTest.Spec.MasterConfig.Tag {
 		imageRef = fmt.Sprintf("%s:%s", b.config.Image, b.config.Tag)
