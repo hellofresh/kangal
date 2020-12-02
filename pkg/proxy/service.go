@@ -96,7 +96,7 @@ func (s *implLoadTestServiceServer) Create(ctx context.Context, in *grpcProxyV2.
 	// when the REST call must encode byte array representing files content with base64
 	if md, ok := metadata.FromIncomingContext(ctx); ok && len(md.Get(mdFromRESTGw)) > 0 {
 		var err error
-		envVars, testData, testFile, err = decodeFileContents(envVars, testData, testFile)
+		envVars, testData, testFile, err = decodeFileContents(in.GetEnvVars(), in.GetTestData(), in.GetTestFile())
 		if err != nil {
 			return nil, status.Errorf(codes.InvalidArgument, "could not base64-decode files contents: %s", err.Error())
 		}
@@ -194,12 +194,17 @@ func (s *implLoadTestServiceServer) List(context.Context, *grpcProxyV2.ListReque
 }
 
 func decodeFileContents(envVars, testData, testFile []byte) (envVarsDecoded []byte, testDataDecoded []byte, testFileDecoded []byte, err error) {
+	envVarsDecoded = make([]byte, base64.StdEncoding.DecodedLen(len(envVars)))
 	if _, err = base64.StdEncoding.Decode(envVarsDecoded, envVars); err != nil {
 		return
 	}
+
+	testDataDecoded = make([]byte, base64.StdEncoding.DecodedLen(len(testData)))
 	if _, err = base64.StdEncoding.Decode(testDataDecoded, testData); err != nil {
 		return
 	}
+
+	testFileDecoded = make([]byte, base64.StdEncoding.DecodedLen(len(testFile)))
 	if _, err = base64.StdEncoding.Decode(testFileDecoded, testFile); err != nil {
 		return
 	}
@@ -209,13 +214,6 @@ func decodeFileContents(envVars, testData, testFile []byte) (envVarsDecoded []by
 
 func validateCreateRequest(in *grpcProxyV2.CreateRequest) error {
 	var buf []string
-	if len(in.GetEnvVars()) == 0 {
-		buf = append(buf, fmt.Sprintf("env_vars: must not be empty"))
-	}
-
-	if len(in.GetTestData()) == 0 {
-		buf = append(buf, fmt.Sprintf("test_data: must not be empty"))
-	}
 
 	if len(in.GetTestFile()) == 0 {
 		buf = append(buf, fmt.Sprintf("test_file: must not be empty"))
