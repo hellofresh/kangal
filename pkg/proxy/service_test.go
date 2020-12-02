@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
+	"github.com/hellofresh/kangal/pkg/backends"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap/zaptest"
 	"google.golang.org/grpc/codes"
@@ -86,7 +87,11 @@ func TestImplLoadTestServiceServer_Get(t *testing.T) {
 			})
 			c := kube.NewClient(loadtestClientSet.KangalV1().LoadTests(), kubeClientSet, logger)
 
-			svc := NewLoadTestServiceServer(c)
+			registry := backends.New(
+				backends.WithLogger(logger),
+			)
+
+			svc := NewLoadTestServiceServer(c, registry, 1)
 
 			out, err := svc.Get(ctx, &grpcProxyV2.GetRequest{Name: "aaa"})
 			assert.Equal(t, tt.out, out)

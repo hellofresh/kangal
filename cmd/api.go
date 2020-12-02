@@ -75,11 +75,12 @@ func NewAPICmd(ctx context.Context) *cobra.Command {
 			cfg.MasterURL = opts.masterURL
 
 			return proxy.RunAPIServer(ctx, cfg, proxy.APIRunner{
-				Config:     cfg.GRPC,
-				Exporter:   pe,
-				KubeClient: kubeClient,
-				Logger:     logger,
-				Debug:      isDebug,
+				GRPCConfig:      cfg.GRPC,
+				MaxLoadTestsRun: cfg.MaxLoadTestsRun,
+				Exporter:        pe,
+				KubeClient:      kubeClient,
+				Logger:          logger,
+				Debug:           isDebug,
 			})
 		},
 	}

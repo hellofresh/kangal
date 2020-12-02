@@ -2,27 +2,48 @@ package proxy
 
 import (
 	"context"
+	"encoding/base64"
+	"errors"
+	"fmt"
+	"regexp"
+	"strings"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
+	"github.com/thedevsaddam/govalidator"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	k8sAPIErrors "k8s.io/apimachinery/pkg/api/errors"
 
+	"github.com/hellofresh/kangal/pkg/backends"
 	loadtest "github.com/hellofresh/kangal/pkg/controller"
 	kube "github.com/hellofresh/kangal/pkg/kubernetes"
 	apisLoadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	grpcProxyV2 "github.com/hellofresh/kangal/pkg/proxy/rpc/pb/grpc/proxy/v2"
 )
 
+const (
+	mdFromRESTGw = "x-from-rest-gw"
+)
+
+var (
+	// not sure this is the best way to validate if the string is URL, but we already use this validator in the project
+	regexURL = regexp.MustCompile(govalidator.URL)
+)
+
 type implLoadTestServiceServer struct {
-	kubeClient *kube.Client
+	kubeClient      *kube.Client
+	registry        backends.Registry
+	maxLoadTestsRun int
 }
 
 // NewLoadTestServiceServer instantiates new LoadTestServiceServer implementation
-func NewLoadTestServiceServer(kubeClient *kube.Client) grpcProxyV2.LoadTestServiceServer {
+func NewLoadTestServiceServer(kubeClient *kube.Client, registry backends.Registry, maxLoadTestsRun int) grpcProxyV2.LoadTestServiceServer {
 	return &implLoadTestServiceServer{
-		kubeClient: kubeClient,
+		kubeClient:      kubeClient,
+		registry:        registry,
+		maxLoadTestsRun: maxLoadTestsRun,
 	}
 }
 
@@ -60,13 +81,164 @@ func (s *implLoadTestServiceServer) Get(ctx context.Context, in *grpcProxyV2.Get
 }
 
 // Create creates new load test
-func (s *implLoadTestServiceServer) Create(context.Context, *grpcProxyV2.CreateRequest) (*grpcProxyV2.CreateResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "Not implemented yet")
+func (s *implLoadTestServiceServer) Create(ctx context.Context, in *grpcProxyV2.CreateRequest) (*grpcProxyV2.CreateResponse, error) {
+	logger := ctxzap.Extract(ctx)
+
+	if err := validateCreateRequest(in); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	envVars := in.GetEnvVars()
+	testData := in.GetTestData()
+	testFile := in.GetTestFile()
+
+	// there are two ways of getting here - either by direct gRPC call or via gRPC REST gateway,
+	// when the REST call must encode byte array representing files content with base64
+	if md, ok := metadata.FromIncomingContext(ctx); ok && len(md.Get(mdFromRESTGw)) > 0 {
+		var err error
+		envVars, testData, testFile, err = decodeFileContents(envVars, testData, testFile)
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "could not base64-decode files contents: %s", err.Error())
+		}
+	}
+
+	ltSpec := apisLoadTestV1.LoadTestSpec{
+		Type:            grpcToTypeMap[in.GetType()],
+		Overwrite:       in.GetOverwrite(),
+		DistributedPods: &in.DistributedPods,
+		Tags:            in.GetTags(),
+		TestFile:        string(testFile),
+		TestData:        string(testData),
+		EnvVars:         string(envVars),
+		TargetURL:       in.GetTargetUrl(),
+		Duration:        in.GetDuration().AsDuration(),
+	}
+
+	// Building LoadTest based on specs
+	loadTest, err := apisLoadTestV1.BuildLoadTestObject(ltSpec)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "could not build Load Test object from spec: %s", err.Error())
+	}
+
+	// Find the old load test with the same data
+	labeledLoadTests, err := s.kubeClient.GetLoadTestsByLabel(ctx, loadTest)
+	if err != nil {
+		logger.Error("Could not count active load tests with given hash", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, "could not count active load tests with given hash: %s", err.Error())
+	}
+
+	if len(labeledLoadTests.Items) > 0 {
+		if !loadTest.Spec.Overwrite {
+			return nil, status.Error(codes.AlreadyExists, "Load test with given testfile already exists, aborting. Please delete existing load test and try again.")
+		}
+
+		// If users wants to overwrite
+		for _, item := range labeledLoadTests.Items {
+
+			// Remove the old tests
+			err := s.kubeClient.DeleteLoadTest(ctx, item.Name)
+			if err != nil {
+				logger.Error("Could not delete load test with error", zap.Error(err))
+				return nil, status.Errorf(codes.Internal, "could not delete existing load test %q: %s", item.Name, err.Error())
+			}
+		}
+	}
+
+	// check the number of active loadtests currently running on the cluster
+	activeLoadTests, err := s.kubeClient.CountActiveLoadTests(ctx)
+	if err != nil {
+		logger.Error("Could not count active load tests", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, "could not count active load tests: %s", err.Error())
+	}
+
+	if activeLoadTests >= s.maxLoadTestsRun {
+		logger.Warn("Number of active load tests reached limit", zap.Int("current", activeLoadTests), zap.Int("limit", s.maxLoadTestsRun))
+		return nil, status.Error(codes.ResourceExhausted, "number of active load tests reached limit")
+	}
+
+	backend, err := s.registry.GetBackend(ltSpec.Type)
+	if err != nil {
+		logger.Error("Could not get backend", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, "could not get backend: %s", err.Error())
+	}
+
+	err = backend.TransformLoadTestSpec(&ltSpec)
+	if err != nil {
+		logger.Error("Could not transform Load Test spec", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, "could not transform Load Test spec: %s", err.Error())
+	}
+
+	// Pushing LoadTest to Kubernetes
+	loadTestName, err := s.kubeClient.CreateLoadTest(ctx, loadTest)
+	if err != nil {
+		logger.Error("Could not create load test", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, "could not create load test: %s", err.Error())
+	}
+
+	return &grpcProxyV2.CreateResponse{
+		LoadTestStatus: &grpcProxyV2.LoadTestStatus{
+			Name:            loadTestName,
+			DistributedPods: in.GetDistributedPods(),
+			Phase:           grpcProxyV2.LoadTestPhase_LOAD_TEST_PHASE_CREATING,
+			Tags:            in.GetTags(),
+			HasEnvVars:      len(loadTest.Spec.EnvVars) != 0,
+			HasTestData:     loadTest.Spec.TestData != "",
+			Type:            in.GetType(),
+		},
+	}, nil
 }
 
 // List searches and returns load tests by given filters
 func (s *implLoadTestServiceServer) List(context.Context, *grpcProxyV2.ListRequest) (*grpcProxyV2.ListResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "")
+}
+
+func decodeFileContents(envVars, testData, testFile []byte) (envVarsDecoded []byte, testDataDecoded []byte, testFileDecoded []byte, err error) {
+	if _, err = base64.StdEncoding.Decode(envVarsDecoded, envVars); err != nil {
+		return
+	}
+	if _, err = base64.StdEncoding.Decode(testDataDecoded, testData); err != nil {
+		return
+	}
+	if _, err = base64.StdEncoding.Decode(testFileDecoded, testFile); err != nil {
+		return
+	}
+
+	return
+}
+
+func validateCreateRequest(in *grpcProxyV2.CreateRequest) error {
+	var buf []string
+	if len(in.GetEnvVars()) == 0 {
+		buf = append(buf, fmt.Sprintf("env_vars: must not be empty"))
+	}
+
+	if len(in.GetTestData()) == 0 {
+		buf = append(buf, fmt.Sprintf("test_data: must not be empty"))
+	}
+
+	if len(in.GetTestFile()) == 0 {
+		buf = append(buf, fmt.Sprintf("test_file: must not be empty"))
+	}
+
+	if in.Type == grpcProxyV2.LoadTestType_LOAD_TEST_TYPE_UNSPECIFIED {
+		buf = append(buf, fmt.Sprintf("type: one of the available must be specified"))
+	}
+
+	if in.GetDistributedPods() < 1 {
+		buf = append(buf, fmt.Sprintf("distributed_pods: must be at least 1"))
+	}
+
+	targetURL := in.GetTargetUrl()
+	if targetURL == "" || !regexURL.MatchString(targetURL) {
+		buf = append(buf, fmt.Sprintf("target_url: must be valid URL"))
+	}
+
+	if len(buf) > 0 {
+		return errors.New(strings.Join(buf, "; "))
+	}
+
+	return nil
 }
 
 func phaseToGRPC(p apisLoadTestV1.LoadTestPhase) grpcProxyV2.LoadTestPhase {

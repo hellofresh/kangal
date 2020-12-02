@@ -42,17 +42,21 @@ message GetResponse {
 }
 
 message CreateRequest {
+    // EnvVars <WHAT?>.
+    // When used via REST gateway must be base64-encoded to avoid issues with JSON.
     bytes env_vars = 1;
+    // TestData <WHAT?>.
+    // When used via REST gateway must be base64-encoded to avoid issues with JSON.
     bytes test_data = 2;
+    // TestFile <WHAT?>.
+    // When used via REST gateway must be base64-encoded to avoid issues with JSON.
     bytes test_file = 3;
 
     int32 distributed_pods = 4;
     LoadTestType type = 5;
     bool overwrite = 6;
     string target_url = 7;
-    // Tags allows to tag tests for further filtering.
-    // When used via gRPC REST gateway this field works as simple "type": "string" and
-    // MUST be in the "tag1:value1,tag2:value2,..." format.
+    // Tags is a simple set of key:value that allows to tag tests for further filtering.
     map<string, string> tags = 8;
     // Duration allows to <WHAT?>.
     // When used via gRPC REST gateway this value must be compatible with https://golang.org/pkg/time/#ParseDuration
@@ -83,9 +87,8 @@ service LoadTestService {
             get: "/v2/load-test/{name}"
         };
     }
-    // Create creates new load test. This method MUST use "Content-Type: multipart/form-data" when is used
-    // via gRPC REST gateway as this is the only possible way to upload files. In this case "tags" field
-    // MUST be in the "tag1:value1,tag2:value2,..." format.
+    // Create creates new load test
+    // TODO: move curl example to README: curl -XPOST -d '{"envVars": "'"$( base64 /path/to/file)"'", "testData": "'"$( base64 /path/to/file)"'", "testFile": "'"$( base64 /path/to/file)"'", "distributedPods": 3, "type": "LOAD_TEST_TYPE_FAKE", "overwrite": true, "targetUrl": "http://example.com", "tags": {"foo": "bar", "baz": "qux"}, "duration": "123s"}' "http://localhost:8090/v2/load-test"
     rpc Create (CreateRequest) returns (CreateResponse) {
         option (google.api.http) = {
             post: "/v2/load-test"
