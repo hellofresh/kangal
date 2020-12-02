@@ -14,7 +14,6 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
 	corev1 "k8s.io/api/core/v1"
 	k8sAPIErrors "k8s.io/apimachinery/pkg/api/errors"
@@ -106,11 +105,8 @@ func TestHTTPValidator(t *testing.T) {
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			request, err := buildMocFormReq(tt.requestFiles, tt.distributedPods, tt.loadTestType, "")
-			if err != nil {
-				t.Error(err)
-				t.FailNow()
-			}
+			request := buildMocFormReq(t, tt.requestFiles, tt.distributedPods, tt.loadTestType, "")
+
 			result := httpValidator(request)
 			assert.Equal(t, tt.expectedResponse, result.Get(tt.failingLine))
 		})
@@ -138,12 +134,7 @@ func TestCreateWithTimeout(t *testing.T) {
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			request, err := buildMocFormReq(tt.requestFiles, tt.distributedPods, tt.loadTestType, "")
-
-			if err != nil {
-				t.Error(err)
-				t.FailNow()
-			}
+			request := buildMocFormReq(t, tt.requestFiles, tt.distributedPods, tt.loadTestType, "")
 
 			// Pass a context with a timeout to tell a blocking function that it
 			// should abandon its work after the timeout elapses.
@@ -331,7 +322,7 @@ func TestProxyCreate(t *testing.T) {
 				"testFile": "testdata/valid/loadtest.jmx",
 			},
 			http.StatusCreated,
-			"{\"type\":\"JMeter\",\"distributedPods\":10,\"phase\":\"creating\",\"tags\":{\"team\":\"kangal\"},\"hasEnvVars\":false,\"hasTestData\":false}\n",
+			`{"type":"JMeter","distributedPods":10,"phase":"creating","tags":{"team":"kangal"},"hasEnvVars":false,"hasTestData":false}` + "\n",
 			"application/json; charset=utf-8",
 			nil,
 		},
@@ -346,7 +337,7 @@ func TestProxyCreate(t *testing.T) {
 				"envVars":  "testdata/valid/envvars.csv",
 			},
 			http.StatusCreated,
-			"{\"type\":\"Fake\",\"distributedPods\":10,\"phase\":\"creating\",\"tags\":{},\"hasEnvVars\":true,\"hasTestData\":true}\n",
+			`{"type":"Fake","distributedPods":10,"phase":"creating","tags":{},"hasEnvVars":true,"hasTestData":true}` + "\n",
 			"application/json; charset=utf-8",
 			nil,
 		},
@@ -359,7 +350,7 @@ func TestProxyCreate(t *testing.T) {
 				"testFile": "testdata/valid/loadtest.jmx",
 			},
 			http.StatusConflict,
-			"{\"error\":\"test creation error\"}\n",
+			`{"error":"test creation error"}` + "\n",
 			"application/json; charset=utf-8",
 			errors.New("test creation error"),
 		},
@@ -431,7 +422,7 @@ func TestNewProxyRecreate(t *testing.T) {
 					},
 				},
 			},
-			"{\"error\":\"Load test with given testfile already exists, aborting. Please delete existing load test and try again.\"}\n",
+			`{"error":"Load test with given testfile already exists, aborting. Please delete existing load test and try again."}` + "\n",
 			http.StatusBadRequest,
 			false,
 			nil,
@@ -452,7 +443,7 @@ func TestNewProxyRecreate(t *testing.T) {
 					},
 				},
 			},
-			"{\"error\":\"loadtests.kangal.hellofresh.com \\\"\\\" not found\"}\n",
+			`{"error":"loadtests.kangal.hellofresh.com \"\" not found"}` + "\n",
 			http.StatusConflict,
 			true,
 			nil,
@@ -510,7 +501,7 @@ func TestProxyCreateWithErrors(t *testing.T) {
 	}{
 		{
 			"Limit exceeded",
-			"{\"error\":\"Number of active load tests reached limit\"}\n",
+			`{"error":"Number of active load tests reached limit"}` + "\n",
 			http.StatusTooManyRequests,
 			&apisLoadTestV1.LoadTestList{
 				Items: []apisLoadTestV1.LoadTest{
@@ -526,7 +517,7 @@ func TestProxyCreateWithErrors(t *testing.T) {
 		},
 		{
 			"Can't count tests",
-			"{\"error\":\"Could not count active load tests\"}\n",
+			`{"error":"Could not count active load tests"}` + "\n",
 			http.StatusInternalServerError,
 			&apisLoadTestV1.LoadTestList{
 				Items: []apisLoadTestV1.LoadTest{},
@@ -536,7 +527,7 @@ func TestProxyCreateWithErrors(t *testing.T) {
 		},
 		{
 			"Can't count labeled tests",
-			"{\"error\":\"Could not count active load tests with given hash\"}\n",
+			`{"error":"Could not count active load tests with given hash"}` + "\n",
 			http.StatusInternalServerError,
 			&apisLoadTestV1.LoadTestList{},
 			nil,
@@ -581,10 +572,7 @@ func TestProxyCreateWithErrors(t *testing.T) {
 				"testFile": "testdata/valid/loadtest.jmx",
 			}
 			requestWrap, err := createRequestWrapper(requestFiles, "2", "Fake", "", false)
-			if nil != err {
-				t.Error(err)
-				t.FailNow()
-			}
+			require.NoError(t, err)
 
 			req := httptest.NewRequest("POST", "http://example.com/load-test", requestWrap.body)
 			req = req.WithContext(ctx)
@@ -657,7 +645,7 @@ func TestProxyGet(t *testing.T) {
 			})
 			c := kube.NewClient(loadtestClientSet.KangalV1().LoadTests(), kubeClientSet, logger)
 			b := backends.New(
-				backends.WithLogger(zap.NewNop()),
+				backends.WithLogger(logger),
 			)
 
 			req := httptest.NewRequest("GET", "http://example.com/load-test/testname", nil)
@@ -693,7 +681,7 @@ func TestProxyDelete(t *testing.T) {
 		{
 			"Error on deleting test",
 			http.StatusBadRequest,
-			"{\"error\":\"some error\"}\n",
+			`{"error":"some error"}` + "\n",
 			errors.New("some error"),
 		},
 	} {
@@ -748,7 +736,7 @@ func TestProxyGetLogs(t *testing.T) {
 					Namespace: "",
 				}},
 			http.StatusNoContent,
-			"{\"error\":\"no logs found in load test resources\"}\n",
+			`{"error":"no logs found in load test resources"}` + "\n",
 			nil,
 			nil,
 			"",
@@ -761,7 +749,7 @@ func TestProxyGetLogs(t *testing.T) {
 					Namespace: "aaa",
 				}},
 			http.StatusBadRequest,
-			"{\"error\":\"error on listing pods\"}\n",
+			`{"error":"error on listing pods"}` + "\n",
 			nil,
 			errors.New("error on listing pods"),
 			"",
@@ -780,7 +768,7 @@ func TestProxyGetLogs(t *testing.T) {
 				},
 			},
 			http.StatusBadRequest,
-			"{\"error\":\"error on getting loadtest\"}\n",
+			`{"error":"error on getting loadtest"}` + "\n",
 			errors.New("error on getting loadtest"),
 			nil,
 			"",
@@ -828,16 +816,15 @@ func TestProxyGetLogs(t *testing.T) {
 
 }
 
-func buildMocFormReq(requestFiles map[string]string, distributedPods, ltType, tagsString string) (*http.Request, error) {
+func buildMocFormReq(t *testing.T, requestFiles map[string]string, distributedPods, ltType, tagsString string) *http.Request {
+	t.Helper()
+
 	request, err := createRequestWrapper(requestFiles, distributedPods, ltType, tagsString, false)
-	if err != nil {
-		return nil, err
-	}
+	require.NoError(t, err)
 
 	req, err := http.NewRequest("POST", "/load-test", request.body)
-	if err != nil {
-		return nil, err
-	}
+	require.NoError(t, err)
+
 	req.Header.Set("Content-Type", request.contentType)
-	return req, nil
+	return req
 }
