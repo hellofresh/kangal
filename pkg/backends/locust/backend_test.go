@@ -7,7 +7,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
 	batchV1 "k8s.io/api/batch/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -67,7 +66,7 @@ func TestSyncStatus(t *testing.T) {
 
 	// Fake clients
 	kubeClient := k8sfake.NewSimpleClientset()
-	logger, _ := zap.NewDevelopment()
+	logger := zaptest.NewLogger(t)
 
 	namespace := "test"
 	distributedPods := int32(1)
