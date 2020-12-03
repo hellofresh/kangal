@@ -2,6 +2,7 @@ package locust
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"go.uber.org/zap"
@@ -15,11 +16,23 @@ import (
 	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 )
 
+var (
+	defaultImageName = "locustio/locust"
+	defaultImageTag  = "latest"
+)
+
+var (
+	// ErrRequireMinOneDistributedPod spec requires 1 or more DistributedPods
+	ErrRequireMinOneDistributedPod = errors.New("LoadTest must specify 1 or more DistributedPods")
+	// ErrRequireTestFile the TestFile filed is required to not be an empty string
+	ErrRequireTestFile = errors.New("LoadTest TestFile is required")
+)
+
 func init() {
 	backends.Register(&Backend{})
 }
 
-// Backend is the Fake implementation of backend interface
+// Backend is the Locust implementation of backend interface
 type Backend struct {
 	logger         *zap.Logger
 	kubeClientSet  kubernetes.Interface
