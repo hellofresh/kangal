@@ -9,20 +9,16 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/zap"
+	"go.uber.org/zap/zaptest"
 
 	apisLoadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 )
 
 func TestNewFakeFromHTTPLoadTest(t *testing.T) {
 	ltType := apisLoadTestV1.LoadTestTypeFake
-	r, err := buildMocFormReq(map[string]string{}, "", string(ltType), "")
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
+	r := buildMocFormReq(t, map[string]string{}, "", string(ltType), "")
 
-	loadTest, err := fromHTTPRequestToLoadTestSpec(r, zap.NewNop())
+	loadTest, err := fromHTTPRequestToLoadTestSpec(r, zaptest.NewLogger(t))
 	require.Error(t, err)
 	assert.Equal(t, apisLoadTestV1.LoadTestSpec{}, loadTest)
 }
@@ -48,11 +44,7 @@ func TestDistributedPods(t *testing.T) {
 		},
 	} {
 		t.Run(ti.tag, func(t *testing.T) {
-			request, err := buildMocFormReq(map[string]string{}, ti.distributedPods, string(apisLoadTestV1.LoadTestTypeJMeter), "")
-			if err != nil {
-				t.Error(err)
-				t.FailNow()
-			}
+			request := buildMocFormReq(t, map[string]string{}, ti.distributedPods, string(apisLoadTestV1.LoadTestTypeJMeter), "")
 
 			n, err := getDistributedPods(request)
 			assert.Equal(t, n, ti.expectedResponse)
@@ -97,11 +89,7 @@ func TestTestFile(t *testing.T) {
 		},
 	} {
 		t.Run(ti.tag, func(t *testing.T) {
-			request, err := buildMocFormReq(ti.requestFile, "1", string(apisLoadTestV1.LoadTestTypeJMeter), "")
-			if err != nil {
-				t.Error(err)
-				t.FailNow()
-			}
+			request := buildMocFormReq(t, ti.requestFile, "1", string(apisLoadTestV1.LoadTestTypeJMeter), "")
 
 			n, err := getTestFile(request)
 			assert.Equal(t, ti.expectedResponse, n)
@@ -146,11 +134,7 @@ func TestDataFile(t *testing.T) {
 		},
 	} {
 		t.Run(ti.tag, func(t *testing.T) {
-			request, err := buildMocFormReq(ti.requestFile, "1", string(apisLoadTestV1.LoadTestTypeJMeter), "")
-			if err != nil {
-				t.Error(err)
-				t.FailNow()
-			}
+			request := buildMocFormReq(t, ti.requestFile, "1", string(apisLoadTestV1.LoadTestTypeJMeter), "")
 
 			n, err := getTestData(request)
 			assert.Equal(t, ti.expectedResponse, n)
@@ -195,11 +179,7 @@ func TestEnvVarFile(t *testing.T) {
 		},
 	} {
 		t.Run(ti.tag, func(t *testing.T) {
-			request, err := buildMocFormReq(ti.requestFile, "1", string(apisLoadTestV1.LoadTestTypeJMeter), "")
-			if err != nil {
-				t.Error(err)
-				t.FailNow()
-			}
+			request := buildMocFormReq(t, ti.requestFile, "1", string(apisLoadTestV1.LoadTestTypeJMeter), "")
 
 			n, err := getEnvVars(request)
 			assert.Equal(t, ti.expectedResponse, n)
@@ -260,11 +240,7 @@ func TestTags(t *testing.T) {
 		t.Run(tc.scenario, func(t *testing.T) {
 			t.Parallel()
 
-			req, err := buildMocFormReq(nil, "1", string(apisLoadTestV1.LoadTestTypeJMeter), tc.input)
-			if err != nil {
-				t.Error(err)
-				t.FailNow()
-			}
+			req := buildMocFormReq(t, nil, "1", string(apisLoadTestV1.LoadTestTypeJMeter), tc.input)
 
 			result, err := getTags(req)
 
@@ -375,13 +351,9 @@ func TestInit(t *testing.T) {
 	} {
 
 		t.Run(ti.tag, func(t *testing.T) {
-			request, err := buildMocFormReq(ti.requestFile, ti.distributedPods, string(ltType), ti.tags)
-			if err != nil {
-				t.Error(err)
-				t.FailNow()
-			}
+			request := buildMocFormReq(t, ti.requestFile, ti.distributedPods, string(ltType), ti.tags)
 
-			_, err = fromHTTPRequestToLoadTestSpec(request, zap.NewNop())
+			_, err := fromHTTPRequestToLoadTestSpec(request, zaptest.NewLogger(t))
 
 			if ti.expectError {
 				assert.Error(t, err)
@@ -402,13 +374,9 @@ func TestCheckLoadTestSpec(t *testing.T) {
 	}
 	distributedPods := "2"
 
-	request, err := buildMocFormReq(requestFiles, distributedPods, string(ltType), "label:value")
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
+	request := buildMocFormReq(t, requestFiles, distributedPods, string(ltType), "label:value")
 
-	spec, err := fromHTTPRequestToLoadTestSpec(request, zap.NewNop())
+	spec, err := fromHTTPRequestToLoadTestSpec(request, zaptest.NewLogger(t))
 	require.NoError(t, err)
 
 	lt, err := apisLoadTestV1.BuildLoadTestObject(spec)
