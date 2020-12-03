@@ -8,7 +8,7 @@ keywords:
 name: kangal
 version: 1.4.5
 home: https://github.com/hellofresh/kangal
-icon: https://raw.githubusercontent.com/hellofresh/kangal/master/kangal_logo.svg
+icon: https://raw.githubusercontent.com/hellofresh/kangal/master/logo.svg
 maintainers:
   - name: Kangal
     email: kangal@hellofresh.com
