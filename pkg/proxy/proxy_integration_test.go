@@ -12,21 +12,21 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/encoding/protojson"
 	coreV1 "k8s.io/api/core/v1"
 	k8sAPIErrors "k8s.io/apimachinery/pkg/api/errors"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	_ "github.com/hellofresh/kangal/pkg/backends/fake"
-	testhelper "github.com/hellofresh/kangal/pkg/controller"
+	testHelper "github.com/hellofresh/kangal/pkg/controller"
 	apisLoadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
-	grpcProxyV2 "github.com/hellofresh/kangal/pkg/proxy/rpc/pb/grpc/proxy/v2"
+)
+
+const (
+	httpPort = 8080
 )
 
 var (
-	httpPort  = 8080
-	restPort  = 8090
 	clientSet clientSetV.Clientset
 )
 
@@ -64,17 +64,17 @@ func TestIntegrationCreateLoadtestFormPostAllFiles(t *testing.T) {
 	})
 
 	t.Cleanup(func() {
-		err := testhelper.DeleteLoadTest(clientSet, createdLoadTestName, t.Name())
+		err := testHelper.DeleteLoadTest(clientSet, createdLoadTestName, t.Name())
 		assert.NoError(t, err)
 	})
 
 	t.Run("Checking the loadtest is created", func(t *testing.T) {
-		err := testhelper.WaitLoadtest(clientSet, createdLoadTestName)
+		err := testHelper.WaitLoadtest(clientSet, createdLoadTestName)
 		require.NoError(t, err)
 	})
 
 	t.Run("Checking if the loadtest labels are correct", func(t *testing.T) {
-		labels, err := testhelper.GetLoadtestLabels(clientSet, createdLoadTestName)
+		labels, err := testHelper.GetLoadtestLabels(clientSet, createdLoadTestName)
 		require.NoError(t, err)
 
 		expected := map[string]string{
@@ -113,7 +113,7 @@ func TestIntegrationCreateLoadtestDuplicates(t *testing.T) {
 	})
 
 	t.Cleanup(func() {
-		err := testhelper.DeleteLoadTest(clientSet, createdLoadTestName, t.Name())
+		err := testHelper.DeleteLoadTest(clientSet, createdLoadTestName, t.Name())
 		assert.NoError(t, err)
 	})
 
@@ -159,11 +159,11 @@ func TestIntegrationCreateLoadtestReachMaxLimit(t *testing.T) {
 	})
 
 	t.Cleanup(func() {
-		err := testhelper.DeleteLoadTest(clientSet, createdLoadTestName, t.Name())
+		err := testHelper.DeleteLoadTest(clientSet, createdLoadTestName, t.Name())
 		assert.NoError(t, err)
 	})
 
-	err := testhelper.WaitLoadtest(clientSet, createdLoadTestName)
+	err := testHelper.WaitLoadtest(clientSet, createdLoadTestName)
 	require.NoError(t, err)
 
 	t.Run("Creates second loadtest, must fail", func(t *testing.T) {
@@ -202,23 +202,23 @@ func TestIntegrationCreateLoadtestFormPostOneFile(t *testing.T) {
 	})
 
 	t.Cleanup(func() {
-		err := testhelper.DeleteLoadTest(clientSet, createdLoadTestName, t.Name())
+		err := testHelper.DeleteLoadTest(clientSet, createdLoadTestName, t.Name())
 		assert.NoError(t, err)
 	})
 
 	t.Run("Checking the loadtest is created", func(t *testing.T) {
-		err := testhelper.WaitLoadtest(clientSet, createdLoadTestName)
+		err := testHelper.WaitLoadtest(clientSet, createdLoadTestName)
 		require.NoError(t, err)
 	})
 
 	t.Run("Checking if the loadtest testData is correct", func(t *testing.T) {
-		data, err := testhelper.GetLoadtestTestdata(clientSet, createdLoadTestName)
+		data, err := testHelper.GetLoadtestTestdata(clientSet, createdLoadTestName)
 		require.NoError(t, err)
 		assert.Equal(t, "", data)
 	})
 
 	t.Run("Checking if the loadtest envVars is correct", func(t *testing.T) {
-		envVars, err := testhelper.GetLoadtestEnvVars(clientSet, createdLoadTestName)
+		envVars, err := testHelper.GetLoadtestEnvVars(clientSet, createdLoadTestName)
 		require.NoError(t, err)
 		assert.Equal(t, "", envVars)
 	})
@@ -328,7 +328,7 @@ func TestIntegrationDeleteLoadtest(t *testing.T) {
 	expectedLoadtestName := "loadtest-for-deletetest"
 
 	t.Run("Creates the loadtest", func(t *testing.T) {
-		err := testhelper.CreateLoadtest(clientSet, distributedPods, expectedLoadtestName, testFile, "", "", loadtestType)
+		err := testHelper.CreateLoadtest(clientSet, distributedPods, expectedLoadtestName, testFile, "", "", loadtestType)
 		require.NoError(t, err)
 	})
 
@@ -336,7 +336,7 @@ func TestIntegrationDeleteLoadtest(t *testing.T) {
 		// by default TestDeleteLoadtest will delete a created loadtest so Cleanup has nothing to delete.
 		// It means http.StatusNotFound is a good result for Cleanup
 		// If Cleanup returns some other error we should assert it
-		err := testhelper.DeleteLoadTest(clientSet, expectedLoadtestName, t.Name())
+		err := testHelper.DeleteLoadTest(clientSet, expectedLoadtestName, t.Name())
 		statusErr, ok := err.(*k8sAPIErrors.StatusError)
 		if !ok || statusErr.ErrStatus.Code != http.StatusNotFound {
 			assert.NoError(t, err)
@@ -351,7 +351,7 @@ func TestIntegrationDeleteLoadtest(t *testing.T) {
 		res, _ := http.DefaultClient.Do(req)
 		assert.Equal(t, http.StatusNoContent, res.StatusCode)
 
-		if _, err := testhelper.GetLoadtest(clientSet, expectedLoadtestName); err != nil {
+		if _, err := testHelper.GetLoadtest(clientSet, expectedLoadtestName); err != nil {
 			notFoundMessage := `loadtests.kangal.hellofresh.com "loadtest-for-deletetest" not found`
 			assert.Equal(t, notFoundMessage, err.Error())
 		}
@@ -372,24 +372,21 @@ func TestIntegrationGetLoadtest(t *testing.T) {
 	expectedLoadtestName := "loadtest-for-gettest"
 
 	t.Run("Creates the loadtest", func(t *testing.T) {
-		err := testhelper.CreateLoadtest(clientSet, distributedPods, expectedLoadtestName, testFile, testData, "", loadtestType)
+		err := testHelper.CreateLoadtest(clientSet, distributedPods, expectedLoadtestName, testFile, testData, "", loadtestType)
 		require.NoError(t, err)
 	})
 
 	t.Cleanup(func() {
-		err := testhelper.DeleteLoadTest(clientSet, expectedLoadtestName, t.Name())
+		err := testHelper.DeleteLoadTest(clientSet, expectedLoadtestName, t.Name())
 		assert.NoError(t, err)
 	})
 
 	t.Run("Checking the loadtest is created", func(t *testing.T) {
-		err := testhelper.WaitLoadtest(clientSet, expectedLoadtestName)
+		err := testHelper.WaitLoadtest(clientSet, expectedLoadtestName)
 		require.NoError(t, err)
 	})
 
-	var (
-		httpBody []byte
-		restBody []byte
-	)
+	var httpBody []byte
 
 	t.Run("Get loadtest details", func(t *testing.T) {
 		req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:%d/load-test/%s", httpPort, expectedLoadtestName), nil)
@@ -416,50 +413,13 @@ func TestIntegrationGetLoadtest(t *testing.T) {
 		require.NoError(t, unmarshalErr, "Could not unmarshal response body")
 		assert.NotEmpty(t, dat.Namespace, "Could not get namespace from GET request")
 
-		currentNamespace, err := testhelper.GetLoadtestNamespace(clientSet, expectedLoadtestName)
+		currentNamespace, err := testHelper.GetLoadtestNamespace(clientSet, expectedLoadtestName)
 		require.NoError(t, err, "Could not get load test information")
 
 		assert.Equal(t, currentNamespace, dat.Namespace)
 		assert.NotEmpty(t, dat.Phase)
 		assert.NotEqual(t, apisLoadTestV1.LoadTestErrored, dat.Phase)
 		assert.Equal(t, true, dat.HasTestData)
-	})
-
-	t.Run("Get loadtest details from gRPC/REST gateway", func(t *testing.T) {
-		req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:%d/v2/load-test/%s", restPort, expectedLoadtestName), nil)
-		require.NoError(t, err, "Could not create GET request")
-
-		res, err := http.DefaultClient.Do(req)
-		require.NoError(t, err, "Could not send GET request")
-
-		defer func() {
-			err := res.Body.Close()
-			assert.NoError(t, err)
-		}()
-
-		require.Equal(t, http.StatusOK, res.StatusCode)
-
-		restBody, err = ioutil.ReadAll(res.Body)
-		require.NoError(t, err, "Could not get response body")
-	})
-
-	t.Run("Ensure loadtest gRPC/REST gateway GET response is correct", func(t *testing.T) {
-		require.NotEmpty(t, restBody)
-		t.Logf("gRPC/REST gateway response: %s", restBody)
-
-		dat := new(grpcProxyV2.GetResponse)
-
-		unmarshalErr := protojson.Unmarshal(restBody, dat)
-		require.NoError(t, unmarshalErr, "Could not unmarshal response body")
-		assert.NotEmpty(t, dat.LoadTestStatus.GetName(), "Could not get namespace from GET request")
-
-		currentNamespace, err := testhelper.GetLoadtestNamespace(clientSet, expectedLoadtestName)
-		require.NoError(t, err, "Could not get load test information")
-
-		assert.Equal(t, currentNamespace, dat.LoadTestStatus.GetName())
-		assert.NotEmpty(t, dat.LoadTestStatus.GetPhase())
-		assert.NotEqual(t, grpcProxyV2.LoadTestPhase_LOAD_TEST_PHASE_ERRORED.String(), dat.LoadTestStatus.GetPhase())
-		assert.Equal(t, true, dat.LoadTestStatus.GetHasTestData())
 	})
 }
 
@@ -478,17 +438,17 @@ func TestIntegrationGetLoadtestLogs(t *testing.T) {
 	client := kubeClient(t)
 
 	t.Run("Creates the loadtest", func(t *testing.T) {
-		err := testhelper.CreateLoadtest(clientSet, distributedPods, expectedLoadtestName, testFile, "", "", loadtestType)
+		err := testHelper.CreateLoadtest(clientSet, distributedPods, expectedLoadtestName, testFile, "", "", loadtestType)
 		require.NoError(t, err)
 	})
 
 	t.Cleanup(func() {
-		err := testhelper.DeleteLoadTest(clientSet, expectedLoadtestName, t.Name())
+		err := testHelper.DeleteLoadTest(clientSet, expectedLoadtestName, t.Name())
 		assert.NoError(t, err)
 	})
 
 	t.Run("Checking the loadtest is created", func(t *testing.T) {
-		err := testhelper.WaitLoadtest(clientSet, expectedLoadtestName)
+		err := testHelper.WaitLoadtest(clientSet, expectedLoadtestName)
 		require.NoError(t, err)
 	})
 
@@ -497,7 +457,7 @@ func TestIntegrationGetLoadtestLogs(t *testing.T) {
 			LabelSelector: "app=loadtest-master",
 		})
 
-		watchEvent, err := testhelper.WaitResource(watchObj, (testhelper.WaitCondition{}).PodRunning)
+		watchEvent, err := testHelper.WaitResource(watchObj, (testHelper.WaitCondition{}).PodRunning)
 		require.NoError(t, err)
 
 		pod := watchEvent.Object.(*coreV1.Pod)
