@@ -164,7 +164,7 @@ func TestSync(t *testing.T) {
 
 	services, err := kubeClient.CoreV1().Services(namespace).List(ctx, metaV1.ListOptions{})
 	require.NoError(t, err, "Error when listing services")
-	assert.NotZero(t, len(services.Items), "Expected non-zero service amount after CheckOrCreateResources but found zero services")
+	assert.NotEmpty(t, services.Items, "Expected non-zero service amount after CheckOrCreateResources but found zero services")
 }
 
 func TestTransformLoadTestSpec(t *testing.T) {
