@@ -280,8 +280,11 @@ func TestTransformLoadTestSpec(t *testing.T) {
 
 	b := Backend{}
 	err := b.TransformLoadTestSpec(&spec)
+	if nil != err {
+		t.Error(err)
+		t.FailNow()
+	}
 
-	assert.NoError(t, err)
 	assert.Equal(t, spec.MasterConfig.Image, imageName)
 	assert.Equal(t, spec.MasterConfig.Tag, imageTag)
 }
