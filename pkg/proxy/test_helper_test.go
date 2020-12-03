@@ -3,7 +3,6 @@ package proxy
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -13,6 +12,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"k8s.io/client-go/kubernetes"
 
@@ -97,19 +97,21 @@ func kubeClient(t *testing.T) *kubernetes.Clientset {
 	return cSet
 }
 
-func parseBody(res *http.Response) (createdLoadTestName string) {
+func parseBody(t *testing.T, res *http.Response) (createdLoadTestName string) {
+	t.Helper()
+
 	var dat LoadTestStatus
 
-	defer res.Body.Close()
-	respbody, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		log.Fatal("Unable to read the response body:", err)
-	}
+	defer func() {
+		err := res.Body.Close()
+		assert.NoError(t, err)
+	}()
 
-	unmarshalErr := json.Unmarshal(respbody, &dat)
-	if unmarshalErr != nil {
-		log.Fatal(fmt.Sprintf("The response body was unable to be unmarshaled: %s", string(respbody)), err)
-	}
+	respBody, err := ioutil.ReadAll(res.Body)
+	require.NoError(t, err)
+
+	err = json.Unmarshal(respBody, &dat)
+	require.NoError(t, err)
 
 	return dat.Namespace
 }

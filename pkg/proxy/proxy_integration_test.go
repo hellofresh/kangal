@@ -60,7 +60,7 @@ func TestIntegrationCreateLoadtestFormPostAllFiles(t *testing.T) {
 		require.NoError(t, err, "Could not create POST request")
 		require.Equal(t, http.StatusCreated, resp.StatusCode)
 
-		createdLoadTestName = parseBody(resp)
+		createdLoadTestName = parseBody(t, resp)
 	})
 
 	t.Cleanup(func() {
@@ -109,7 +109,7 @@ func TestIntegrationCreateLoadtestDuplicates(t *testing.T) {
 		require.NoError(t, err, "Could not create POST request")
 		require.Equal(t, http.StatusCreated, resp.StatusCode)
 
-		createdLoadTestName = parseBody(resp)
+		createdLoadTestName = parseBody(t, resp)
 	})
 
 	t.Cleanup(func() {
@@ -155,7 +155,7 @@ func TestIntegrationCreateLoadtestReachMaxLimit(t *testing.T) {
 		require.NoError(t, err, "Could not create POST request")
 		require.Equal(t, http.StatusCreated, resp.StatusCode)
 
-		createdLoadTestName = parseBody(resp)
+		createdLoadTestName = parseBody(t, resp)
 	})
 
 	t.Cleanup(func() {
@@ -198,7 +198,7 @@ func TestIntegrationCreateLoadtestFormPostOneFile(t *testing.T) {
 		require.NoError(t, err, "Could not create POST request")
 		require.Equal(t, http.StatusCreated, resp.StatusCode)
 
-		createdLoadTestName = parseBody(resp)
+		createdLoadTestName = parseBody(t, resp)
 	})
 
 	t.Cleanup(func() {
