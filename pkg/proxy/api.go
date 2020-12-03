@@ -15,23 +15,30 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection"
 
+	"github.com/hellofresh/kangal/pkg/backends"
 	kube "github.com/hellofresh/kangal/pkg/kubernetes"
 	grpcProxyV2 "github.com/hellofresh/kangal/pkg/proxy/rpc/pb/grpc/proxy/v2"
 )
 
 // APIRunner encapsulates all Kangal EXPERIMENTAL Proxy API server dependencies
 type APIRunner struct {
-	Config     GRPCConfig
-	Exporter   *prometheus.Exporter
-	KubeClient *kube.Client
-	Logger     *zap.Logger
-	Debug      bool
+	GRPCConfig      GRPCConfig
+	MaxLoadTestsRun int
+	Exporter        *prometheus.Exporter
+	KubeClient      *kube.Client
+	Logger          *zap.Logger
+	Debug           bool
 }
 
 // RunAPIServer runs Kangal EXPERIMENTAL proxy API
 func RunAPIServer(ctx context.Context, cfg Config, rr APIRunner) error {
+	registry := backends.New(
+		backends.WithLogger(rr.Logger),
+	)
+
 	opts := []grpc.ServerOption{
 		grpcMiddleware.WithUnaryServerChain(
 			grpcCtxTags.UnaryServerInterceptor(grpcCtxTags.WithFieldExtractor(grpcCtxTags.CodeGenRequestFieldExtractor)),
@@ -42,7 +49,7 @@ func RunAPIServer(ctx context.Context, cfg Config, rr APIRunner) error {
 
 	serverAPI := grpc.NewServer(opts...)
 
-	loadTestServiceServer := NewLoadTestServiceServer(rr.KubeClient)
+	loadTestServiceServer := NewLoadTestServiceServer(rr.KubeClient, registry, rr.MaxLoadTestsRun)
 
 	grpcProxyV2.RegisterLoadTestServiceServer(serverAPI, loadTestServiceServer)
 
@@ -79,7 +86,9 @@ func RunAPIServer(ctx context.Context, cfg Config, rr APIRunner) error {
 	g.Go(func() error {
 		defer cancel()
 
-		mux := runtime.NewServeMux()
+		mux := runtime.NewServeMux(runtime.WithMetadata(func(context.Context, *http.Request) metadata.MD {
+			return metadata.New(map[string]string{mdFromRESTGw: "true"})
+		}))
 
 		// TODO: one day we should start securing API
 		opts := []grpc.DialOption{grpc.WithInsecure()}
