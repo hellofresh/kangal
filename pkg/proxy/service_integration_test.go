@@ -16,6 +16,10 @@ import (
 	grpcProxyV2 "github.com/hellofresh/kangal/pkg/proxy/rpc/pb/grpc/proxy/v2"
 )
 
+const (
+	restPort = 8090
+)
+
 func TestImplLoadTestServiceServer_Create_PostAllFiles(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test in short mode")
@@ -31,28 +35,9 @@ func TestImplLoadTestServiceServer_Create_PostAllFiles(t *testing.T) {
 		EnvVars:         readFileContents(t, "testdata/valid/testdata.csv", true),
 	}
 
-	rqJSON, err := protojson.Marshal(&rq)
-	require.NoError(t, err)
+	createdLoadTestName := createLoadtest(t, &rq)
 
-	resp, err := http.Post(fmt.Sprintf("http://localhost:%d/v2/load-test", restPort), mimeJSON, bytes.NewReader(rqJSON))
-	require.NoError(t, err)
-	require.Equal(t, http.StatusOK, resp.StatusCode)
-
-	respBytes, err := ioutil.ReadAll(resp.Body)
-	require.NoError(t, err)
-
-	var rs grpcProxyV2.CreateResponse
-	err = protojson.Unmarshal(respBytes, &rs)
-	require.NoError(t, err)
-
-	createdLoadTestName := rs.GetLoadTestStatus().GetName()
-
-	t.Cleanup(func() {
-		err := testHelper.DeleteLoadTest(clientSet, createdLoadTestName, t.Name())
-		assert.NoError(t, err)
-	})
-
-	err = testHelper.WaitLoadtest(clientSet, createdLoadTestName)
+	err := testHelper.WaitLoadtest(clientSet, createdLoadTestName)
 	require.NoError(t, err)
 
 	labels, err := testHelper.GetLoadtestLabels(clientSet, createdLoadTestName)
@@ -80,31 +65,15 @@ func TestImplLoadTestServiceServer_Create_Duplicates(t *testing.T) {
 		EnvVars:         readFileContents(t, "testdata/valid/testdata.csv", true),
 	}
 
+	createLoadtest(t, &rq)
+
 	rqJSON, err := protojson.Marshal(&rq)
 	require.NoError(t, err)
 
+	// Creates second loadtest, must fail
 	resp, err := http.Post(fmt.Sprintf("http://localhost:%d/v2/load-test", restPort), mimeJSON, bytes.NewReader(rqJSON))
 	require.NoError(t, err)
-	require.Equal(t, http.StatusOK, resp.StatusCode)
-
-	respBytes, err := ioutil.ReadAll(resp.Body)
-	require.NoError(t, err)
-
-	var rs grpcProxyV2.CreateResponse
-	err = protojson.Unmarshal(respBytes, &rs)
-	require.NoError(t, err)
-
-	createdLoadTestName := rs.GetLoadTestStatus().GetName()
-
-	t.Cleanup(func() {
-		err := testHelper.DeleteLoadTest(clientSet, createdLoadTestName, t.Name())
-		assert.NoError(t, err)
-	})
-
-	// Creates second loadtest, must fail
-	resp2, err := http.Post(fmt.Sprintf("http://localhost:%d/v2/load-test", restPort), mimeJSON, bytes.NewReader(rqJSON))
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusConflict, resp2.StatusCode)
+	assert.Equal(t, http.StatusConflict, resp.StatusCode)
 }
 
 func TestImplLoadTestServiceServer_Create_ReachMaxLimit(t *testing.T) {
@@ -130,28 +99,9 @@ func TestImplLoadTestServiceServer_Create_ReachMaxLimit(t *testing.T) {
 		EnvVars:         readFileContents(t, "testdata/valid/testdata.csv", true),
 	}
 
-	rqJSON, err := protojson.Marshal(&rq)
-	require.NoError(t, err)
+	createdLoadTestName := createLoadtest(t, &rq)
 
-	resp, err := http.Post(fmt.Sprintf("http://localhost:%d/v2/load-test", restPort), mimeJSON, bytes.NewReader(rqJSON))
-	require.NoError(t, err)
-	require.Equal(t, http.StatusOK, resp.StatusCode)
-
-	respBytes, err := ioutil.ReadAll(resp.Body)
-	require.NoError(t, err)
-
-	var rs grpcProxyV2.CreateResponse
-	err = protojson.Unmarshal(respBytes, &rs)
-	require.NoError(t, err)
-
-	createdLoadTestName := rs.GetLoadTestStatus().GetName()
-
-	t.Cleanup(func() {
-		err := testHelper.DeleteLoadTest(clientSet, createdLoadTestName, t.Name())
-		assert.NoError(t, err)
-	})
-
-	err = testHelper.WaitLoadtest(clientSet, createdLoadTestName)
+	err := testHelper.WaitLoadtest(clientSet, createdLoadTestName)
 	require.NoError(t, err)
 
 	rqJSON2, err := protojson.Marshal(&rq2)
@@ -174,28 +124,9 @@ func TestImplLoadTestServiceServer_Create_PostOneFile(t *testing.T) {
 		TestFile:        readFileContents(t, "testdata/valid/loadtest2.jmx", true),
 	}
 
-	rqJSON, err := protojson.Marshal(&rq)
-	require.NoError(t, err)
+	createdLoadTestName := createLoadtest(t, &rq)
 
-	resp, err := http.Post(fmt.Sprintf("http://localhost:%d/v2/load-test", restPort), mimeJSON, bytes.NewReader(rqJSON))
-	require.NoError(t, err)
-	require.Equal(t, http.StatusOK, resp.StatusCode)
-
-	respBytes, err := ioutil.ReadAll(resp.Body)
-	require.NoError(t, err)
-
-	var rs grpcProxyV2.CreateResponse
-	err = protojson.Unmarshal(respBytes, &rs)
-	require.NoError(t, err)
-
-	createdLoadTestName := rs.GetLoadTestStatus().GetName()
-
-	t.Cleanup(func() {
-		err := testHelper.DeleteLoadTest(clientSet, createdLoadTestName, t.Name())
-		assert.NoError(t, err)
-	})
-
-	err = testHelper.WaitLoadtest(clientSet, createdLoadTestName)
+	err := testHelper.WaitLoadtest(clientSet, createdLoadTestName)
 	require.NoError(t, err)
 
 	data, err := testHelper.GetLoadtestTestdata(clientSet, createdLoadTestName)
@@ -226,6 +157,11 @@ func TestImplLoadTestServiceServer_Create_EmptyTestFile(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, http.StatusBadRequest, resp.StatusCode)
 
+	defer func() {
+		err := resp.Body.Close()
+		assert.NoError(t, err)
+	}()
+
 	respBytes, err := ioutil.ReadAll(resp.Body)
 	require.NoError(t, err)
 
@@ -235,4 +171,80 @@ func TestImplLoadTestServiceServer_Create_EmptyTestFile(t *testing.T) {
 
 	expectedMessage := `test_file: must not be empty`
 	assert.Equal(t, expectedMessage, rs.Message)
+}
+
+func TestImplLoadTestServiceServer_Get_Simple(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode")
+	}
+
+	rq := grpcProxyV2.CreateRequest{
+		DistributedPods: 2,
+		Type:            grpcProxyV2.LoadTestType_LOAD_TEST_TYPE_FAKE,
+		TargetUrl:       "http://example.com/foo",
+		Tags:            map[string]string{"department": "platform", "team": "kangal"},
+		TestFile:        readFileContents(t, "testdata/valid/loadtest.jmx", true),
+		TestData:        readFileContents(t, "testdata/valid/envvars.csv", true),
+	}
+
+	createdLoadTestName := createLoadtest(t, &rq)
+
+	err := testHelper.WaitLoadtest(clientSet, createdLoadTestName)
+	require.NoError(t, err)
+
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:%d/v2/load-test/%s", restPort, createdLoadTestName), nil)
+	require.NoError(t, err, "Could not create GET request")
+
+	resp, err := http.DefaultClient.Do(req)
+	require.NoError(t, err, "Could not send GET request")
+
+	defer func() {
+		err := resp.Body.Close()
+		assert.NoError(t, err)
+	}()
+
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+
+	restBody, err := ioutil.ReadAll(resp.Body)
+	require.NoError(t, err, "Could not get response body")
+	require.NotEmpty(t, restBody)
+	t.Logf("gRPC/REST gateway response: %s", restBody)
+
+	dat := new(grpcProxyV2.GetResponse)
+
+	unmarshalErr := protojson.Unmarshal(restBody, dat)
+	require.NoError(t, unmarshalErr, "Could not unmarshal response body")
+	assert.NotEmpty(t, dat.LoadTestStatus.GetName(), "Could not get namespace from GET request")
+
+	assert.Equal(t, createdLoadTestName, dat.LoadTestStatus.GetName())
+	assert.NotEmpty(t, dat.LoadTestStatus.GetPhase())
+	assert.NotEqual(t, grpcProxyV2.LoadTestPhase_LOAD_TEST_PHASE_ERRORED.String(), dat.LoadTestStatus.GetPhase())
+	assert.Equal(t, true, dat.LoadTestStatus.GetHasTestData())
+}
+
+func createLoadtest(t *testing.T, rq *grpcProxyV2.CreateRequest) string {
+	t.Helper()
+
+	rqJSON, err := protojson.Marshal(rq)
+	require.NoError(t, err)
+
+	resp, err := http.Post(fmt.Sprintf("http://localhost:%d/v2/load-test", restPort), mimeJSON, bytes.NewReader(rqJSON))
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+
+	respBytes, err := ioutil.ReadAll(resp.Body)
+	require.NoError(t, err)
+
+	var rs grpcProxyV2.CreateResponse
+	err = protojson.Unmarshal(respBytes, &rs)
+	require.NoError(t, err)
+
+	createdLoadTestName := rs.GetLoadTestStatus().GetName()
+
+	t.Cleanup(func() {
+		err := testHelper.DeleteLoadTest(clientSet, createdLoadTestName, t.Name())
+		assert.NoError(t, err)
+	})
+
+	return createdLoadTestName
 }
