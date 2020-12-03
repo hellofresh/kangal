@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/zap"
+	"go.uber.org/zap/zaptest"
 	batchV1 "k8s.io/api/batch/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/informers"
@@ -124,7 +124,7 @@ func TestSync(t *testing.T) {
 	reportURL := "http://kangal-proxy.local/load-test/loadtest-name/report"
 
 	// Fake clients
-	logger, _ := zap.NewDevelopment()
+	logger := zaptest.NewLogger(t)
 	kubeClient := k8sfake.NewSimpleClientset()
 	client := fake.NewSimpleClientset()
 	namespaceLister := informers.NewSharedInformerFactory(kubeClient, 0).Core().V1().Namespaces().Lister()
