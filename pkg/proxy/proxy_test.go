@@ -377,7 +377,7 @@ func TestProxyCreate(t *testing.T) {
 			testProxyHandler := NewProxy(1, b, c)
 			handler := testProxyHandler.Create
 
-			requestWrap, _ := createRequestWrapper(tt.requestFiles, strconv.Itoa(tt.distributedPods), string(tt.loadTestType), tt.tagsString, false)
+			requestWrap := createRequestWrapper(t, tt.requestFiles, strconv.Itoa(tt.distributedPods), string(tt.loadTestType), tt.tagsString, false)
 
 			req := httptest.NewRequest("POST", "http://example.com/foo", requestWrap.body)
 			req.Header.Set("Content-Type", requestWrap.contentType)
@@ -470,7 +470,7 @@ func TestNewProxyRecreate(t *testing.T) {
 			requestFiles := map[string]string{
 				"testFile": "testdata/valid/loadtest.jmx",
 			}
-			requestWrap, _ := createRequestWrapper(requestFiles, "2", "Fake", "", tt.overwrite)
+			requestWrap := createRequestWrapper(t, requestFiles, "2", "Fake", "", tt.overwrite)
 
 			req := httptest.NewRequest("POST", "http://example.com/load-test", requestWrap.body)
 			req = req.WithContext(ctx)
@@ -571,8 +571,7 @@ func TestProxyCreateWithErrors(t *testing.T) {
 			requestFiles := map[string]string{
 				"testFile": "testdata/valid/loadtest.jmx",
 			}
-			requestWrap, err := createRequestWrapper(requestFiles, "2", "Fake", "", false)
-			require.NoError(t, err)
+			requestWrap := createRequestWrapper(t, requestFiles, "2", "Fake", "", false)
 
 			req := httptest.NewRequest("POST", "http://example.com/load-test", requestWrap.body)
 			req = req.WithContext(ctx)
@@ -819,8 +818,7 @@ func TestProxyGetLogs(t *testing.T) {
 func buildMocFormReq(t *testing.T, requestFiles map[string]string, distributedPods, ltType, tagsString string) *http.Request {
 	t.Helper()
 
-	request, err := createRequestWrapper(requestFiles, distributedPods, ltType, tagsString, false)
-	require.NoError(t, err)
+	request := createRequestWrapper(t, requestFiles, distributedPods, ltType, tagsString, false)
 
 	req, err := http.NewRequest("POST", "/load-test", request.body)
 	require.NoError(t, err)

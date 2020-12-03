@@ -71,7 +71,7 @@ tools: $(tools/protoc) $(tools/protobuf) $(tools/protoc-gen-go) $(tools/protoc-g
 .PHONY: tools
 
 dev-lint: protoc
-	@printf "$(OK_COLOR)==> Linting ProtoBuf$(NO_COLOR)\n"
+	@printf "$(OK_COLOR)==> Linting code$(NO_COLOR)\n"
 	@docker run --rm -v $(CURDIR):/app -w /app golangci/golangci-lint:v1.33.0 golangci-lint run -v
 
 dev-buf: protoc

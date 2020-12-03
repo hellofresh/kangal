@@ -26,53 +26,48 @@ type Request struct {
 	contentType string
 }
 
-func createRequestWrapper(requestFiles map[string]string, distributedPods string, loadtestType string, tagsString string, overwrite bool) (*Request, error) {
+func createRequestWrapper(t *testing.T, requestFiles map[string]string, distributedPods string, loadtestType string, tagsString string, overwrite bool) *Request {
+	t.Helper()
+
 	request := &Request{}
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
 
-	if err := writer.WriteField("distributedPods", distributedPods); err != nil {
-		return nil, fmt.Errorf("error adding pod nr: %w", err)
-	}
+	err := writer.WriteField("distributedPods", distributedPods)
+	require.NoError(t, err)
 
-	if err := writer.WriteField("tags", tagsString); err != nil {
-		return nil, fmt.Errorf("error adding tags: %w", err)
-	}
+	err = writer.WriteField("tags", tagsString)
+	require.NoError(t, err)
 
-	if err := writer.WriteField("type", loadtestType); err != nil {
-		return nil, fmt.Errorf("error adding loadtest type: %w", err)
-	}
+	err = writer.WriteField("type", loadtestType)
+	require.NoError(t, err)
 
 	if overwrite {
-		if err := writer.WriteField("overwrite", "true"); err != nil {
-			return nil, fmt.Errorf("error adding loadtest overwrite: %w", err)
-		}
+		err = writer.WriteField("overwrite", "true")
+		require.NoError(t, err)
 	}
 
 	for key, val := range requestFiles {
 		file, err := os.Open(val)
-		if err != nil {
-			return nil, err
-		}
+		require.NoError(t, err)
 
 		part, err := writer.CreateFormFile(key, filepath.Base(val))
-		if err != nil {
-			return nil, err
-		}
+		require.NoError(t, err)
 
-		_, _ = io.Copy(part, file)
-		_ = file.Close()
+		_, err = io.Copy(part, file)
+		require.NoError(t, err)
+
+		err = file.Close()
+		require.NoError(t, err)
 	}
 
-	err := writer.Close()
-	if err != nil {
-		return nil, err
-	}
+	err = writer.Close()
+	require.NoError(t, err)
 
 	request.body = body
 	request.contentType = writer.FormDataContentType()
 
-	return request, nil
+	return request
 }
 
 func kubeTestClient() clientSetV.Clientset {
