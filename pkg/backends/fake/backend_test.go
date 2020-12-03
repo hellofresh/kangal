@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap"
+	"go.uber.org/zap/zaptest"
 	batchV1 "k8s.io/api/batch/v1"
 	coreV1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -40,7 +40,7 @@ func TestSync(t *testing.T) {
 
 		backend := &Backend{
 			kubeClient: client,
-			logger:     zap.NewNop(),
+			logger:     zaptest.NewLogger(t),
 		}
 		assert.NoError(t, backend.Sync(context.TODO(), lt, ""))
 	})
@@ -62,7 +62,7 @@ func TestSync(t *testing.T) {
 
 		backend := &Backend{
 			kubeClient: client,
-			logger:     zap.NewNop(),
+			logger:     zaptest.NewLogger(t),
 		}
 		assert.NoError(t, backend.Sync(context.TODO(), lt, ""))
 	})
@@ -85,7 +85,7 @@ func TestSync(t *testing.T) {
 
 		backend := &Backend{
 			kubeClient: client,
-			logger:     zap.NewNop(),
+			logger:     zaptest.NewLogger(t),
 		}
 		assert.NoError(t, backend.Sync(context.TODO(), lt, ""))
 	})
@@ -122,7 +122,7 @@ func TestSyncStatus(t *testing.T) {
 
 		backend := &Backend{
 			kubeClient: client,
-			logger:     zap.NewNop(),
+			logger:     zaptest.NewLogger(t),
 		}
 		assert.NoError(t, backend.SyncStatus(context.TODO(), lt, &lt.Status))
 		assert.Equal(t, lt.Status.Phase, loadTestV1.LoadTestStarting)
@@ -157,7 +157,7 @@ func TestSyncStatus(t *testing.T) {
 
 		backend := &Backend{
 			kubeClient: client,
-			logger:     zap.NewNop(),
+			logger:     zaptest.NewLogger(t),
 		}
 		assert.NoError(t, backend.SyncStatus(context.TODO(), lt, &lt.Status))
 		assert.Equal(t, lt.Status.Phase, loadTestV1.LoadTestRunning)
@@ -192,7 +192,7 @@ func TestSyncStatus(t *testing.T) {
 
 		backend := &Backend{
 			kubeClient: client,
-			logger:     zap.NewNop(),
+			logger:     zaptest.NewLogger(t),
 		}
 		assert.NoError(t, backend.SyncStatus(context.TODO(), lt, &lt.Status))
 		assert.Equal(t, lt.Status.Phase, loadTestV1.LoadTestFinished)
@@ -220,7 +220,7 @@ func TestSyncStatus(t *testing.T) {
 
 		backend := &Backend{
 			kubeClient: client,
-			logger:     zap.NewNop(),
+			logger:     zaptest.NewLogger(t),
 		}
 		assert.NoError(t, backend.SyncStatus(context.TODO(), lt, &lt.Status))
 		assert.Equal(t, lt.Status.Phase, loadTestV1.LoadTestFinished)
@@ -241,7 +241,7 @@ func TestSyncStatus(t *testing.T) {
 
 		backend := &Backend{
 			kubeClient: client,
-			logger:     zap.NewNop(),
+			logger:     zaptest.NewLogger(t),
 		}
 		assert.NoError(t, backend.SyncStatus(context.TODO(), lt, &lt.Status))
 	})
@@ -262,7 +262,7 @@ func TestSyncStatus(t *testing.T) {
 
 		backend := &Backend{
 			kubeClient: client,
-			logger:     zap.NewNop(),
+			logger:     zaptest.NewLogger(t),
 		}
 		assert.Error(t, backend.SyncStatus(context.TODO(), lt, &lt.Status))
 	})
