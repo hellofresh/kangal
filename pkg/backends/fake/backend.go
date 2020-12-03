@@ -15,6 +15,11 @@ import (
 	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 )
 
+var (
+	imageName = "alpine"
+	imageTag  = "3.12.0"
+)
+
 func init() {
 	backends.Register(&Backend{})
 }
@@ -60,7 +65,7 @@ func (b *Backend) SetKubeClientSet(kubeClientSet kubernetes.Interface) {
 	b.kubeClient = kubeClientSet
 }
 
-// Sync check if Backend kubernetes resources have been create, if they have not been create them
+// Sync check if Fake kubernetes resources have been create, if they have not been create them
 func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, _ string) error {
 	// Get the Namespace resource
 	namespace, err := b.kubeClient.CoreV1().Namespaces().Get(ctx, loadTest.Status.Namespace, metaV1.GetOptions{})
@@ -81,7 +86,7 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, _ stri
 	return err
 }
 
-// SyncStatus check the Backend resources and calculate the current status of the LoadTest from them
+// SyncStatus check the Fake resources and calculate the current status of the LoadTest from them
 func (b *Backend) SyncStatus(ctx context.Context, _ loadTestV1.LoadTest, loadTestStatus *loadTestV1.LoadTestStatus) error {
 	// Get the Namespace resource
 	namespace, err := b.kubeClient.CoreV1().Namespaces().Get(ctx, loadTestStatus.Namespace, metaV1.GetOptions{})
@@ -108,7 +113,7 @@ func (b *Backend) SyncStatus(ctx context.Context, _ loadTestV1.LoadTest, loadTes
 		return err
 	}
 
-	// Get Backend job in namespace and update the LoadTest status with
+	// Get Fake job in namespace and update the LoadTest status with
 	// the Job status
 	loadTestStatus.Phase = getLoadTestPhaseFromJob(job.Status)
 	loadTestStatus.JobStatus = job.Status
@@ -158,4 +163,16 @@ func (b *Backend) newMasterJob(loadTest loadTestV1.LoadTest) *batchV1.Job {
 			},
 		},
 	}
+}
+
+func getLoadTestPhaseFromJob(status batchV1.JobStatus) loadTestV1.LoadTestPhase {
+	if status.Active > 0 {
+		return loadTestV1.LoadTestRunning
+	}
+
+	if status.Succeeded == 0 && status.Failed == 0 {
+		return loadTestV1.LoadTestStarting
+	}
+
+	return loadTestV1.LoadTestFinished
 }

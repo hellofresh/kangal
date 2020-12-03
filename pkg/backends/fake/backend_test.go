@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap"
+	"go.uber.org/zap/zaptest"
 	batchV1 "k8s.io/api/batch/v1"
 	coreV1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -26,8 +26,8 @@ func (e *StatusError) Status() metaV1.Status {
 	return metaV1.Status{Reason: metaV1.StatusReasonNotFound}
 }
 
-func TestCheckOrCreateResources(t *testing.T) {
-	lt := &loadTestV1.LoadTest{}
+func TestSync(t *testing.T) {
+	lt := loadTestV1.LoadTest{}
 	lt.Status.Namespace = "test-namespace"
 
 	t.Run("namespace not found", func(t *testing.T) {
@@ -38,8 +38,11 @@ func TestCheckOrCreateResources(t *testing.T) {
 			return true, nil, &StatusError{}
 		})
 
-		backend := New(client, lt, zap.NewNop())
-		assert.NoError(t, backend.CheckOrCreateResources(context.TODO()))
+		backend := &Backend{
+			kubeClient: client,
+			logger:     zaptest.NewLogger(t),
+		}
+		assert.NoError(t, backend.Sync(context.TODO(), lt, ""))
 	})
 
 	t.Run("job exists", func(t *testing.T) {
@@ -57,8 +60,11 @@ func TestCheckOrCreateResources(t *testing.T) {
 			return true, &batchV1.Job{}, nil
 		})
 
-		backend := New(client, lt, zap.NewNop())
-		assert.NoError(t, backend.CheckOrCreateResources(context.TODO()))
+		backend := &Backend{
+			kubeClient: client,
+			logger:     zaptest.NewLogger(t),
+		}
+		assert.NoError(t, backend.Sync(context.TODO(), lt, ""))
 	})
 
 	t.Run("job doesn't exist, creating", func(t *testing.T) {
@@ -77,13 +83,16 @@ func TestCheckOrCreateResources(t *testing.T) {
 			return true, &batchV1.Job{}, nil
 		})
 
-		backend := New(client, lt, zap.NewNop())
-		assert.NoError(t, backend.CheckOrCreateResources(context.TODO()))
+		backend := &Backend{
+			kubeClient: client,
+			logger:     zaptest.NewLogger(t),
+		}
+		assert.NoError(t, backend.Sync(context.TODO(), lt, ""))
 	})
 }
 
-func TestCheckOrUpdateStatus(t *testing.T) {
-	lt := &loadTestV1.LoadTest{}
+func TestSyncStatus(t *testing.T) {
+	lt := loadTestV1.LoadTest{}
 	lt.Status.Namespace = "test-namespace"
 
 	t.Run("namespace and job already exists, load test is starting", func(t *testing.T) {
@@ -111,9 +120,12 @@ func TestCheckOrUpdateStatus(t *testing.T) {
 			}, nil
 		})
 
-		backend := New(client, lt, zap.NewNop())
-		assert.NoError(t, backend.CheckOrUpdateStatus(context.TODO()))
-		assert.Equal(t, backend.loadTest.Status.Phase, loadTestV1.LoadTestStarting)
+		backend := &Backend{
+			kubeClient: client,
+			logger:     zaptest.NewLogger(t),
+		}
+		assert.NoError(t, backend.SyncStatus(context.TODO(), lt, &lt.Status))
+		assert.Equal(t, lt.Status.Phase, loadTestV1.LoadTestStarting)
 	})
 
 	t.Run("namespace and job already exists, load test is running", func(t *testing.T) {
@@ -143,10 +155,12 @@ func TestCheckOrUpdateStatus(t *testing.T) {
 			}, nil
 		})
 
-		backend := New(client, lt, zap.NewNop())
-		assert.NoError(t, backend.CheckOrUpdateStatus(context.TODO()))
-		assert.Equal(t, backend.loadTest.Status.Phase, loadTestV1.LoadTestRunning)
-
+		backend := &Backend{
+			kubeClient: client,
+			logger:     zaptest.NewLogger(t),
+		}
+		assert.NoError(t, backend.SyncStatus(context.TODO(), lt, &lt.Status))
+		assert.Equal(t, lt.Status.Phase, loadTestV1.LoadTestRunning)
 	})
 
 	t.Run("namespace and job already exists, load test is finished", func(t *testing.T) {
@@ -176,10 +190,12 @@ func TestCheckOrUpdateStatus(t *testing.T) {
 			}, nil
 		})
 
-		backend := New(client, lt, zap.NewNop())
-		assert.NoError(t, backend.CheckOrUpdateStatus(context.TODO()))
-		assert.Equal(t, backend.loadTest.Status.Phase, loadTestV1.LoadTestFinished)
-
+		backend := &Backend{
+			kubeClient: client,
+			logger:     zaptest.NewLogger(t),
+		}
+		assert.NoError(t, backend.SyncStatus(context.TODO(), lt, &lt.Status))
+		assert.Equal(t, lt.Status.Phase, loadTestV1.LoadTestFinished)
 	})
 
 	t.Run("namespace doesn't exist - finished status", func(t *testing.T) {
@@ -202,13 +218,16 @@ func TestCheckOrUpdateStatus(t *testing.T) {
 			}, nil
 		})
 
-		backend := New(client, lt, zap.NewNop())
-		assert.NoError(t, backend.CheckOrUpdateStatus(context.TODO()))
-		assert.Equal(t, backend.loadTest.Status.Phase, loadTestV1.LoadTestFinished)
+		backend := &Backend{
+			kubeClient: client,
+			logger:     zaptest.NewLogger(t),
+		}
+		assert.NoError(t, backend.SyncStatus(context.TODO(), lt, &lt.Status))
+		assert.Equal(t, lt.Status.Phase, loadTestV1.LoadTestFinished)
 	})
 
 	t.Run("loadtest in error state", func(t *testing.T) {
-		lt := &loadTestV1.LoadTest{}
+		lt := loadTestV1.LoadTest{}
 		lt.Status.Phase = loadTestV1.LoadTestErrored
 
 		client := fake.NewSimpleClientset()
@@ -220,8 +239,11 @@ func TestCheckOrUpdateStatus(t *testing.T) {
 			}, nil
 		})
 
-		backend := New(client, lt, zap.NewNop())
-		assert.NoError(t, backend.CheckOrUpdateStatus(context.TODO()))
+		backend := &Backend{
+			kubeClient: client,
+			logger:     zaptest.NewLogger(t),
+		}
+		assert.NoError(t, backend.SyncStatus(context.TODO(), lt, &lt.Status))
 	})
 
 	t.Run("job doesn't exist", func(t *testing.T) {
@@ -238,7 +260,31 @@ func TestCheckOrUpdateStatus(t *testing.T) {
 			return true, nil, &StatusError{}
 		})
 
-		backend := New(client, lt, zap.NewNop())
-		assert.Error(t, backend.CheckOrUpdateStatus(context.TODO()))
+		backend := &Backend{
+			kubeClient: client,
+			logger:     zaptest.NewLogger(t),
+		}
+		assert.Error(t, backend.SyncStatus(context.TODO(), lt, &lt.Status))
 	})
+}
+
+func TestTransformLoadTestSpec(t *testing.T) {
+	var distributedPods int32 = 1
+
+	spec := loadTestV1.LoadTestSpec{
+		Type:            "Fake",
+		Overwrite:       true,
+		DistributedPods: &distributedPods,
+		Tags:            loadTestV1.LoadTestTags{"team": "kangal"},
+	}
+
+	b := Backend{}
+	err := b.TransformLoadTestSpec(&spec)
+	if nil != err {
+		t.Error(err)
+		t.FailNow()
+	}
+
+	assert.Equal(t, spec.MasterConfig.Image, imageName)
+	assert.Equal(t, spec.MasterConfig.Tag, imageTag)
 }
