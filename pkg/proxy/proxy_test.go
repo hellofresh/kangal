@@ -226,7 +226,7 @@ func TestProxy_List(t *testing.T) {
 			},
 			expectedCode:        200,
 			expectedContentType: "application/json; charset=utf-8",
-			expectedResponse:    `{"limit":0,"continue":"","remain":null,"items":[{"type":"JMeter","distributedPods":2,"loadtestName":"random","phase":"running","tags":{},"hasEnvVars":false,"hasTestData":true}]}`,
+			expectedResponse:    `{"limit":0,"continue":"continue","remain":42,"items":[{"type":"JMeter","distributedPods":2,"loadtestName":"random","phase":"running","tags":{},"hasEnvVars":false,"hasTestData":true}]}`,
 		},
 		{
 			scenario:  "success",

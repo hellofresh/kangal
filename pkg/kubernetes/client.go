@@ -143,7 +143,10 @@ func (c *Client) filterLoadTestsByPhase(list *apisLoadTestV1.LoadTestList, phase
 		return list
 	}
 
-	filteredList := apisLoadTestV1.LoadTestList{}
+	filteredList := apisLoadTestV1.LoadTestList{
+		TypeMeta: list.TypeMeta,
+		ListMeta: list.ListMeta,
+	}
 	// CRD-s currently don't support custom field selectors, so we have to iterate via all load tests and check status phase
 	for _, loadTest := range list.Items {
 		if loadTest.Status.Phase == phase {
