@@ -134,11 +134,11 @@ func (c *Client) ListLoadTest(ctx context.Context, opt ListOptions) (*apisLoadTe
 		return nil, err
 	}
 
-	return loadTests, nil
+	return c.filterLoadTestsByPhase(loadTests, opt.Phase), nil
 }
 
-// ListLoadTestsByPhase returns a list of loadtests filtered by phase
-func (c *Client) ListLoadTestsByPhase(list *apisLoadTestV1.LoadTestList, phase apisLoadTestV1.LoadTestPhase) *apisLoadTestV1.LoadTestList {
+// filterLoadTestsByPhase returns a list of loadtests filtered by phase
+func (c *Client) filterLoadTestsByPhase(list *apisLoadTestV1.LoadTestList, phase apisLoadTestV1.LoadTestPhase) *apisLoadTestV1.LoadTestList {
 	if phase == "" {
 		return list
 	}

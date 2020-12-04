@@ -294,7 +294,7 @@ func TestClient_ListLoadTest(t *testing.T) {
 	}
 }
 
-func TestClientListLoadTestsByPhase(t *testing.T) {
+func TestClient_filterLoadTestsByPhase(t *testing.T) {
 	tests := []struct {
 		scenario    string
 		ltList      *apisLoadTestV1.LoadTestList
@@ -357,7 +357,7 @@ func TestClientListLoadTestsByPhase(t *testing.T) {
 			kubeClientSet := fake.NewSimpleClientset()
 
 			c := NewClient(loadtestClientset.KangalV1().LoadTests(), kubeClientSet, logger)
-			filteredList := c.ListLoadTestsByPhase(test.ltList, test.phase)
+			filteredList := c.filterLoadTestsByPhase(test.ltList, test.phase)
 			assert.Equal(t, test.resultCount, len(filteredList.Items))
 		})
 	}
