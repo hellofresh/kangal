@@ -196,9 +196,9 @@ func TestProxy_List(t *testing.T) {
 			scenario:            "invalid phase",
 			urlParams:           "phase=foo",
 			result:              &apisLoadTestV1.LoadTestList{},
-			expectedCode:        200,
+			expectedCode:        400,
 			expectedContentType: "application/json; charset=utf-8",
-			expectedResponse:    `{"limit":0,"continue":"","remain":null,"items":[]}`,
+			expectedResponse:    `{"error":"unknown Load Test phase"}`,
 		},
 		{
 			scenario:  "valid phase",

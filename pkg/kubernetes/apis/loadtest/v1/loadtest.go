@@ -94,7 +94,7 @@ func LoadTestTagsFromString(tagsStr string) (LoadTestTags, error) {
 // Empty phase is valid value and does not cause error, so caller should take care of checking if the phase is set
 // to one of the pre-defined values or empty.
 func LoadTestPhaseFromString(phase string) (LoadTestPhase, error) {
-	switch LoadTestPhase(phase) {
+	switch LoadTestPhase(strings.ToLower(phase)) {
 	case "":
 		return "", nil
 	case LoadTestCreating:
