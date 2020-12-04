@@ -39,7 +39,7 @@ type ListOptions struct {
 	// List of tags.
 	Tags map[string]string
 	// Phase of loadTest
-	Phase string
+	Phase apisLoadTestV1.LoadTestPhase
 	// Limit.
 	Limit int64
 	// Continue.
@@ -134,16 +134,22 @@ func (c *Client) ListLoadTest(ctx context.Context, opt ListOptions) (*apisLoadTe
 		return nil, err
 	}
 
-	return loadTests, nil
+	return c.filterLoadTestsByPhase(loadTests, opt.Phase), nil
 }
 
-// ListLoadTestsByPhase returns a list of loadtests filtered by phase
-func (c *Client) ListLoadTestsByPhase(list *apisLoadTestV1.LoadTestList, phase string) *apisLoadTestV1.LoadTestList {
-	filteredList := apisLoadTestV1.LoadTestList{}
-	phase = strings.ToLower(phase)
+// filterLoadTestsByPhase returns a list of loadtests filtered by phase
+func (c *Client) filterLoadTestsByPhase(list *apisLoadTestV1.LoadTestList, phase apisLoadTestV1.LoadTestPhase) *apisLoadTestV1.LoadTestList {
+	if phase == "" {
+		return list
+	}
+
+	filteredList := apisLoadTestV1.LoadTestList{
+		TypeMeta: list.TypeMeta,
+		ListMeta: list.ListMeta,
+	}
 	// CRD-s currently don't support custom field selectors, so we have to iterate via all load tests and check status phase
 	for _, loadTest := range list.Items {
-		if string(loadTest.Status.Phase) == phase {
+		if loadTest.Status.Phase == phase {
 			filteredList.Items = append(filteredList.Items, loadTest)
 		}
 	}

@@ -107,3 +107,67 @@ func TestLoadTestTagsFromString(t *testing.T) {
 		})
 	}
 }
+
+func TestLoadTestPhaseFromString(t *testing.T) {
+	for _, tt := range []struct {
+		name string
+		in   string
+		out  LoadTestPhase
+		err  error
+	}{
+		{
+			name: "empty",
+			in:   "",
+			out:  "",
+			err:  nil,
+		},
+		{
+			name: "creating",
+			in:   "creating",
+			out:  LoadTestCreating,
+			err:  nil,
+		},
+		{
+			name: "random case creating",
+			in:   "CreatING",
+			out:  LoadTestCreating,
+			err:  nil,
+		},
+		{
+			name: "starting",
+			in:   "starting",
+			out:  LoadTestStarting,
+			err:  nil,
+		},
+		{
+			name: "running",
+			in:   "running",
+			out:  LoadTestRunning,
+			err:  nil,
+		},
+		{
+			name: "finished",
+			in:   "finished",
+			out:  LoadTestFinished,
+			err:  nil,
+		},
+		{
+			name: "errored",
+			in:   "errored",
+			out:  LoadTestErrored,
+			err:  nil,
+		},
+		{
+			name: "invalid",
+			in:   "foobar",
+			out:  "",
+			err:  ErrUnknownLoadTestPhase,
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			out, err := LoadTestPhaseFromString(tt.in)
+			assert.Equal(t, tt.out, out)
+			assert.Equal(t, tt.err, err)
+		})
+	}
+}

@@ -294,15 +294,15 @@ func TestClient_ListLoadTest(t *testing.T) {
 	}
 }
 
-func TestClientListLoadTestsByPhase(t *testing.T) {
+func TestClient_filterLoadTestsByPhase(t *testing.T) {
 	tests := []struct {
 		scenario    string
 		ltList      *apisLoadTestV1.LoadTestList
-		status      string
+		phase       apisLoadTestV1.LoadTestPhase
 		resultCount int
 	}{
 		{
-			scenario: "Filter by valid status",
+			scenario: "Filter by valid phase",
 			ltList: &apisLoadTestV1.LoadTestList{
 				TypeMeta: metav1.TypeMeta{},
 				ListMeta: metav1.ListMeta{},
@@ -319,11 +319,17 @@ func TestClientListLoadTestsByPhase(t *testing.T) {
 					},
 				},
 			},
-			status:      "Running",
+			phase:       apisLoadTestV1.LoadTestRunning,
 			resultCount: 1,
 		},
 		{
-			scenario: "Filter by invalid status",
+			scenario:    "Empty input list",
+			ltList:      &apisLoadTestV1.LoadTestList{},
+			phase:       apisLoadTestV1.LoadTestRunning,
+			resultCount: 0,
+		},
+		{
+			scenario: "Empty phase should skip filtering and return all",
 			ltList: &apisLoadTestV1.LoadTestList{
 				TypeMeta: metav1.TypeMeta{},
 				ListMeta: metav1.ListMeta{},
@@ -333,16 +339,15 @@ func TestClientListLoadTestsByPhase(t *testing.T) {
 							Phase: apisLoadTestV1.LoadTestRunning,
 						},
 					},
+					{
+						Status: apisLoadTestV1.LoadTestStatus{
+							Phase: apisLoadTestV1.LoadTestCreating,
+						},
+					},
 				},
 			},
-			status:      "foo",
-			resultCount: 0,
-		},
-		{
-			scenario:    "Empty input list",
-			ltList:      &apisLoadTestV1.LoadTestList{},
-			status:      "running",
-			resultCount: 0,
+			phase:       "",
+			resultCount: 2,
 		},
 	}
 	for _, test := range tests {
@@ -352,7 +357,7 @@ func TestClientListLoadTestsByPhase(t *testing.T) {
 			kubeClientSet := fake.NewSimpleClientset()
 
 			c := NewClient(loadtestClientset.KangalV1().LoadTests(), kubeClientSet, logger)
-			filteredList := c.ListLoadTestsByPhase(test.ltList, test.status)
+			filteredList := c.filterLoadTestsByPhase(test.ltList, test.phase)
 			assert.Equal(t, test.resultCount, len(filteredList.Items))
 		})
 	}

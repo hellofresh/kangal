@@ -3,6 +3,7 @@ package v1
 import (
 	"crypto/sha1"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -12,6 +13,11 @@ import (
 
 const (
 	maxTagLength = 63 // K8s limit.
+)
+
+// Possible load test errors
+var (
+	ErrUnknownLoadTestPhase = errors.New("unknown Load Test phase")
 )
 
 //BuildLoadTestObject initialize new LoadTest custom resource
@@ -82,6 +88,28 @@ func LoadTestTagsFromString(tagsStr string) (LoadTestTags, error) {
 	}
 
 	return tags, nil
+}
+
+// LoadTestPhaseFromString tries to get LoadTestPhase from string value.
+// Empty phase is a valid value and does not cause error, so caller should take care of checking if the phase is set
+// to one of the pre-defined values or empty.
+func LoadTestPhaseFromString(phase string) (LoadTestPhase, error) {
+	switch LoadTestPhase(strings.ToLower(phase)) {
+	case "":
+		return "", nil
+	case LoadTestCreating:
+		return LoadTestCreating, nil
+	case LoadTestStarting:
+		return LoadTestStarting, nil
+	case LoadTestRunning:
+		return LoadTestRunning, nil
+	case LoadTestFinished:
+		return LoadTestFinished, nil
+	case LoadTestErrored:
+		return LoadTestErrored, nil
+	}
+
+	return "", ErrUnknownLoadTestPhase
 }
 
 func getHashFromString(str string) string {

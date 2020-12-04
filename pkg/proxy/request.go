@@ -78,7 +78,11 @@ func fromHTTPRequestToListOptions(r *http.Request) (*kubernetes.ListOptions, err
 	}
 
 	// Build phase filter.
-	opt.Phase = params.Get("phase")
+	phase, err := apisLoadTestV1.LoadTestPhaseFromString(params.Get("phase"))
+	if err != nil {
+		return nil, err
+	}
+	opt.Phase = phase
 
 	// Build continue.
 	opt.Continue = params.Get("continue")
