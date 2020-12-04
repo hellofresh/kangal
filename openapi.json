@@ -33,8 +33,7 @@
 						"in": "query",
 						"description": "Filter the result by current phase.",
 						"schema": {
-							"type": "string",
-							"enum": ["creating", "starting", "running", "finished", "errored"]
+							"$ref": "#/components/schemas/LoadTestPhase"
 						},
 						"example": "phase:running"
 					},
@@ -407,6 +406,14 @@
 	},
 	"components": {
 		"schemas": {
+			"LoadTestType": {
+				"type": "string",
+				"enum": ["jMeter", "Fake", "Locust"]
+			},
+			"LoadTestPhase": {
+				"type": "string",
+				"enum": ["creating", "starting", "running", "finished", "errored"]
+			},
 			"LoadTest": {
 				"required": ["distributedPods", "testFile", "type"],
 				"type": "object",
@@ -428,8 +435,7 @@
 						"format": "file"
 					},
 					"type": {
-						"type": "string",
-						"enum": ["JMeter", "Fake", "Locust"]
+						"$ref": "#/components/schemas/LoadTestType"
 					},
 					"overwrite": {
 						"type": "boolean"
@@ -474,8 +480,7 @@
 						"type": "string"
 					},
 					"phase": {
-						"type": "string",
-						"enum": ["creating", "starting", "running", "finished", "errored"]
+						"$ref": "#/components/schemas/LoadTestPhase"
 					},
 					"tags": {
 						"type": "object",
@@ -490,8 +495,7 @@
 						"type": "boolean"
 					},
 					"type": {
-						"type": "string",
-						"enum": ["jMeter", "Fake", "Locust"]
+						"$ref": "#/components/schemas/LoadTestType"
 					}
 				}
 			},
