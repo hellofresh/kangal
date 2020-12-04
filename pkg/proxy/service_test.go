@@ -15,6 +15,7 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	k8sAPIErrors "k8s.io/apimachinery/pkg/api/errors"
+	k8sAPIsMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/fake"
 	k8sTesting "k8s.io/client-go/testing"
@@ -246,6 +247,154 @@ func TestImplLoadTestServiceServer_Create(t *testing.T) {
 			svc := NewLoadTestServiceServer(c, b, 1)
 
 			out, err := svc.Create(ctx, &rq)
+			assert.Equal(t, tt.out, out)
+			assert.Equal(t, tt.outErr, err)
+		})
+	}
+}
+
+func TestImplLoadTestServiceServer_List(t *testing.T) {
+	distributedPods := int32(2)
+	remainCount := int64(42)
+
+	for _, tt := range []struct {
+		name   string
+		in     *grpcProxyV2.ListRequest
+		result *apisLoadTestV1.LoadTestList
+		err    error
+		out    *grpcProxyV2.ListResponse
+		outErr error
+	}{
+		{
+			name:   "error in client",
+			in:     &grpcProxyV2.ListRequest{},
+			result: &apisLoadTestV1.LoadTestList{},
+			err:    errors.New("client error"),
+			out:    nil,
+			outErr: status.Error(codes.Internal, `could not list load tests: client error`),
+		},
+		{
+			name: "valid phase",
+			in: &grpcProxyV2.ListRequest{
+				Phase: grpcProxyV2.LoadTestPhase_LOAD_TEST_PHASE_RUNNING,
+			},
+			result: &apisLoadTestV1.LoadTestList{
+				ListMeta: k8sAPIsMetaV1.ListMeta{
+					Continue:           "continue",
+					RemainingItemCount: &remainCount,
+				},
+				Items: []apisLoadTestV1.LoadTest{
+					{
+						Spec: apisLoadTestV1.LoadTestSpec{
+							Type:            apisLoadTestV1.LoadTestTypeJMeter,
+							DistributedPods: &distributedPods,
+							Tags:            apisLoadTestV1.LoadTestTags{},
+							TestFile:        "file content\n",
+							TestData:        "test data\n",
+						},
+						Status: apisLoadTestV1.LoadTestStatus{
+							Phase:     apisLoadTestV1.LoadTestRunning,
+							Namespace: "random",
+						},
+					},
+				},
+			},
+			err: nil,
+			out: &grpcProxyV2.ListResponse{
+				PageSize:      0,
+				NextPageToken: "continue",
+				Remain:        remainCount,
+				LoadTestStatuses: []*grpcProxyV2.LoadTestStatus{
+					{
+						Name:            "random",
+						DistributedPods: distributedPods,
+						Phase:           grpcProxyV2.LoadTestPhase_LOAD_TEST_PHASE_RUNNING,
+						Tags:            map[string]string{},
+						HasEnvVars:      false,
+						HasTestData:     true,
+						Type:            grpcProxyV2.LoadTestType_LOAD_TEST_TYPE_JMETER,
+					},
+				},
+			},
+			outErr: nil,
+		},
+		{
+			name: "success",
+			in: &grpcProxyV2.ListRequest{
+				PageSize: 10,
+				Tags:     map[string]string{"department": "platform", "team": "kangal"},
+			},
+			result: &apisLoadTestV1.LoadTestList{
+				ListMeta: k8sAPIsMetaV1.ListMeta{
+					Continue:           "continue",
+					RemainingItemCount: &remainCount,
+				},
+				Items: []apisLoadTestV1.LoadTest{
+					{
+						ObjectMeta: k8sAPIsMetaV1.ObjectMeta{
+							Labels: map[string]string{
+								"test-tag-department": "platform",
+								"test-tag-team":       "kangal",
+							},
+						},
+						Spec: apisLoadTestV1.LoadTestSpec{
+							Type:            apisLoadTestV1.LoadTestTypeJMeter,
+							Overwrite:       false,
+							MasterConfig:    apisLoadTestV1.ImageDetails{},
+							WorkerConfig:    apisLoadTestV1.ImageDetails{},
+							DistributedPods: &distributedPods,
+							Tags:            apisLoadTestV1.LoadTestTags{"department": "platform", "team": "kangal"},
+							TestFile:        "file content\n",
+							TestData:        "test data\n",
+						},
+						Status: apisLoadTestV1.LoadTestStatus{
+							Phase:     apisLoadTestV1.LoadTestRunning,
+							Namespace: "random",
+						},
+					},
+				},
+			},
+			err: nil,
+			out: &grpcProxyV2.ListResponse{
+				PageSize:      10,
+				NextPageToken: "continue",
+				Remain:        remainCount,
+				LoadTestStatuses: []*grpcProxyV2.LoadTestStatus{
+					{
+						Name:            "random",
+						DistributedPods: distributedPods,
+						Phase:           grpcProxyV2.LoadTestPhase_LOAD_TEST_PHASE_RUNNING,
+						Tags:            map[string]string{"department": "platform", "team": "kangal"},
+						HasEnvVars:      false,
+						HasTestData:     true,
+						Type:            grpcProxyV2.LoadTestType_LOAD_TEST_TYPE_JMETER,
+					},
+				},
+			},
+			outErr: nil,
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				kubeClientSet     = fake.NewSimpleClientset()
+				loadTestClientSet = fakeClientset.NewSimpleClientset()
+				logger            = zaptest.NewLogger(t)
+			)
+			ctx := ctxzap.ToContext(context.Background(), logger)
+			loadTestClientSet.Fake.PrependReactor("list", "loadtests", func(action k8sTesting.Action) (handled bool, ret runtime.Object, err error) {
+				return true, tt.result, tt.err
+			})
+			c := kube.NewClient(loadTestClientSet.KangalV1().LoadTests(), kubeClientSet, logger)
+
+			b := backends.New(
+				backends.WithLogger(logger),
+				backends.WithKubeClientSet(kubeClientSet),
+				backends.WithKangalClientSet(loadTestClientSet),
+			)
+
+			svc := NewLoadTestServiceServer(c, b, 1)
+
+			out, err := svc.List(ctx, tt.in)
 			assert.Equal(t, tt.out, out)
 			assert.Equal(t, tt.outErr, err)
 		})
