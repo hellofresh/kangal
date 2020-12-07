@@ -381,9 +381,13 @@ func (b *Backend) CreatePodsWithTestdata(ctx context.Context, configMaps []*core
 
 		// JMeter requires all workers to be running before master starts
 		// So, wait to pod be running before continue
-		watchObj, _ := b.kubeClientSet.CoreV1().Pods(namespace).Watch(ctx, metaV1.ListOptions{
+		watchObj, err := b.kubeClientSet.CoreV1().Pods(namespace).Watch(ctx, metaV1.ListOptions{
 			FieldSelector: fmt.Sprintf("metadata.name=%s", pod.ObjectMeta.Name),
 		})
+		if err != nil {
+			b.logger.Warn("unable to watch pod state", zap.Error(err))
+			continue
+		}
 		waitfor.Resource(watchObj, (waitfor.Condition{}).PodRunning)
 	}
 	b.logger.Info("Created pods with test data", zap.String("LoadTest", loadTest.GetName()), zap.String("namespace", namespace))
