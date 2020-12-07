@@ -19,8 +19,8 @@ import (
 	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
 )
 
-// CreateLoadtest creates a load test CR
-func CreateLoadtest(clientSet clientSetV.Clientset, pods int32, name, testFile, testData, envVars string, loadTestType apisLoadTestV1.LoadTestType) error {
+// CreateLoadTest creates a load test CR
+func CreateLoadTest(clientSet clientSetV.Clientset, pods int32, name, testFile, testData, envVars string, loadTestType apisLoadTestV1.LoadTestType) error {
 	var ev, td = "", ""
 	tf, err := readFile(testFile)
 	if err != nil {
@@ -87,8 +87,8 @@ func readFile(filename string) (string, error) {
 	return str, nil
 }
 
-// WaitLoadtest waits until Loadtest resources exists
-func WaitLoadtest(clientSet clientSetV.Clientset, loadtestName string) error {
+// WaitLoadTest waits until Loadtest resources exists
+func WaitLoadTest(clientSet clientSetV.Clientset, loadtestName string) error {
 	watchObj, err := clientSet.KangalV1().LoadTests().Watch(context.Background(), metaV1.ListOptions{
 		FieldSelector: fmt.Sprintf("metadata.name=%s", loadtestName),
 	})
@@ -113,8 +113,8 @@ func DeleteLoadTest(clientSet clientSetV.Clientset, loadtestName string, testnam
 	return nil
 }
 
-// GetLoadtest returns a load test name
-func GetLoadtest(clientSet clientSetV.Clientset, loadtestName string) (string, error) {
+// GetLoadTest returns a load test name
+func GetLoadTest(clientSet clientSetV.Clientset, loadtestName string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), kubernetes.KubeTimeout)
 	defer cancel()
 
@@ -125,8 +125,8 @@ func GetLoadtest(clientSet clientSetV.Clientset, loadtestName string) (string, e
 	return result.Name, nil
 }
 
-// GetLoadtestTestdata returns a load test name
-func GetLoadtestTestdata(clientSet clientSetV.Clientset, loadtestName string) (string, error) {
+// GetLoadTestTestdata returns a load test name
+func GetLoadTestTestdata(clientSet clientSetV.Clientset, loadtestName string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), kubernetes.KubeTimeout)
 	defer cancel()
 
@@ -137,8 +137,8 @@ func GetLoadtestTestdata(clientSet clientSetV.Clientset, loadtestName string) (s
 	return result.Spec.TestData, nil
 }
 
-// GetLoadtestLabels returns load test labels.
-func GetLoadtestLabels(clientSet clientSetV.Clientset, loadtestName string) (map[string]string, error) {
+// GetLoadTestLabels returns load test labels.
+func GetLoadTestLabels(clientSet clientSetV.Clientset, loadtestName string) (map[string]string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), kubernetes.KubeTimeout)
 	defer cancel()
 
@@ -149,8 +149,8 @@ func GetLoadtestLabels(clientSet clientSetV.Clientset, loadtestName string) (map
 	return result.Labels, nil
 }
 
-// GetLoadtestEnvVars returns a load test name
-func GetLoadtestEnvVars(clientSet clientSetV.Clientset, loadtestName string) (string, error) {
+// GetLoadTestEnvVars returns a load test name
+func GetLoadTestEnvVars(clientSet clientSetV.Clientset, loadtestName string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), kubernetes.KubeTimeout)
 	defer cancel()
 
@@ -161,8 +161,8 @@ func GetLoadtestEnvVars(clientSet clientSetV.Clientset, loadtestName string) (st
 	return result.Spec.EnvVars, nil
 }
 
-// GetLoadtestNamespace returns a load test namespace
-func GetLoadtestNamespace(clientSet clientSetV.Clientset, loadtestName string) (string, error) {
+// GetLoadTestNamespace returns a load test namespace
+func GetLoadTestNamespace(clientSet clientSetV.Clientset, loadtestName string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), kubernetes.KubeTimeout)
 	defer cancel()
 
@@ -173,8 +173,8 @@ func GetLoadtestNamespace(clientSet clientSetV.Clientset, loadtestName string) (
 	return result.Status.Namespace, nil
 }
 
-// GetLoadtestPhase returns the current phase of given loadtest
-func GetLoadtestPhase(clientSet clientSetV.Clientset, loadtestName string) (string, error) {
+// GetLoadTestPhase returns the current phase of given loadtest
+func GetLoadTestPhase(clientSet clientSetV.Clientset, loadtestName string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), kubernetes.KubeTimeout)
 	defer cancel()
 

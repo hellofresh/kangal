@@ -34,7 +34,7 @@ func TestIntegrationKangalController(t *testing.T) {
 
 	client := kubeClient(t)
 
-	err := CreateLoadtest(clientSet, distributedPods, expectedLoadtestName, testFile, testData, envVars, loadtestType)
+	err := CreateLoadTest(clientSet, distributedPods, expectedLoadtestName, testFile, testData, envVars, loadtestType)
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
@@ -43,7 +43,7 @@ func TestIntegrationKangalController(t *testing.T) {
 	})
 
 	t.Run("Checking the name of created loadtest", func(t *testing.T) {
-		createdName, err := GetLoadtest(clientSet, expectedLoadtestName)
+		createdName, err := GetLoadTest(clientSet, expectedLoadtestName)
 		require.NoError(t, err)
 		assert.Equal(t, expectedLoadtestName, createdName)
 	})

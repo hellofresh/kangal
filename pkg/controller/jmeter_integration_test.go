@@ -51,7 +51,7 @@ func TestIntegrationJMeter(t *testing.T) {
 
 	client := kubeClient(t)
 
-	err := CreateLoadtest(clientSet, distributedPods, expectedLoadtestName, testFile, testData, envVars, loadtestType)
+	err := CreateLoadTest(clientSet, distributedPods, expectedLoadtestName, testFile, testData, envVars, loadtestType)
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		err := DeleteLoadTest(clientSet, expectedLoadtestName, t.Name())
@@ -60,7 +60,7 @@ func TestIntegrationJMeter(t *testing.T) {
 	var jmeterNamespace *coreV1.Namespace
 
 	t.Run("Checking the name of created loadtest", func(t *testing.T) {
-		createdName, err := GetLoadtest(clientSet, expectedLoadtestName)
+		createdName, err := GetLoadTest(clientSet, expectedLoadtestName)
 		require.NoError(t, err)
 		assert.Equal(t, expectedLoadtestName, createdName)
 	})
@@ -86,7 +86,7 @@ func TestIntegrationJMeter(t *testing.T) {
 				break
 			}
 		}
-		assert.NotNil(t, len(cm.Items))
+		assert.NotEmpty(t, cm.Items)
 	})
 
 	t.Run("Checking env vars secret is created and not empty", func(t *testing.T) {
@@ -152,7 +152,7 @@ func TestIntegrationJMeter(t *testing.T) {
 
 	t.Run("Checking loadtest is in Running state", func(t *testing.T) {
 		var phase string
-		phase, err = GetLoadtestPhase(clientSet, expectedLoadtestName)
+		phase, err = GetLoadTestPhase(clientSet, expectedLoadtestName)
 		require.NoError(t, err)
 		assert.Equal(t, string(loadTestV1.LoadTestRunning), phase)
 	})

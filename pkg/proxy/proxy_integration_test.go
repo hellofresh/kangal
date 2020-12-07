@@ -70,12 +70,12 @@ func TestIntegrationCreateLoadtestFormPostAllFiles(t *testing.T) {
 	})
 
 	t.Run("Checking the loadtest is created", func(t *testing.T) {
-		err := testHelper.WaitLoadtest(clientSet, createdLoadTestName)
+		err := testHelper.WaitLoadTest(clientSet, createdLoadTestName)
 		require.NoError(t, err)
 	})
 
 	t.Run("Checking if the loadtest labels are correct", func(t *testing.T) {
-		labels, err := testHelper.GetLoadtestLabels(clientSet, createdLoadTestName)
+		labels, err := testHelper.GetLoadTestLabels(clientSet, createdLoadTestName)
 		require.NoError(t, err)
 
 		expected := map[string]string{
@@ -164,7 +164,7 @@ func TestIntegrationCreateLoadtestReachMaxLimit(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
-	err := testHelper.WaitLoadtest(clientSet, createdLoadTestName)
+	err := testHelper.WaitLoadTest(clientSet, createdLoadTestName)
 	require.NoError(t, err)
 
 	t.Run("Creates second loadtest, must fail", func(t *testing.T) {
@@ -208,18 +208,18 @@ func TestIntegrationCreateLoadtestFormPostOneFile(t *testing.T) {
 	})
 
 	t.Run("Checking the loadtest is created", func(t *testing.T) {
-		err := testHelper.WaitLoadtest(clientSet, createdLoadTestName)
+		err := testHelper.WaitLoadTest(clientSet, createdLoadTestName)
 		require.NoError(t, err)
 	})
 
 	t.Run("Checking if the loadtest testData is correct", func(t *testing.T) {
-		data, err := testHelper.GetLoadtestTestdata(clientSet, createdLoadTestName)
+		data, err := testHelper.GetLoadTestTestdata(clientSet, createdLoadTestName)
 		require.NoError(t, err)
 		assert.Equal(t, "", data)
 	})
 
 	t.Run("Checking if the loadtest envVars is correct", func(t *testing.T) {
-		envVars, err := testHelper.GetLoadtestEnvVars(clientSet, createdLoadTestName)
+		envVars, err := testHelper.GetLoadTestEnvVars(clientSet, createdLoadTestName)
 		require.NoError(t, err)
 		assert.Equal(t, "", envVars)
 	})
@@ -329,7 +329,7 @@ func TestIntegrationDeleteLoadtest(t *testing.T) {
 	expectedLoadtestName := "loadtest-for-deletetest"
 
 	t.Run("Creates the loadtest", func(t *testing.T) {
-		err := testHelper.CreateLoadtest(clientSet, distributedPods, expectedLoadtestName, testFile, "", "", loadtestType)
+		err := testHelper.CreateLoadTest(clientSet, distributedPods, expectedLoadtestName, testFile, "", "", loadtestType)
 		require.NoError(t, err)
 	})
 
@@ -352,7 +352,7 @@ func TestIntegrationDeleteLoadtest(t *testing.T) {
 		res, _ := http.DefaultClient.Do(req)
 		assert.Equal(t, http.StatusNoContent, res.StatusCode)
 
-		if _, err := testHelper.GetLoadtest(clientSet, expectedLoadtestName); err != nil {
+		if _, err := testHelper.GetLoadTest(clientSet, expectedLoadtestName); err != nil {
 			notFoundMessage := `loadtests.kangal.hellofresh.com "loadtest-for-deletetest" not found`
 			assert.Equal(t, notFoundMessage, err.Error())
 		}
@@ -373,7 +373,7 @@ func TestIntegrationGetLoadtest(t *testing.T) {
 	expectedLoadtestName := "loadtest-for-gettest"
 
 	t.Run("Creates the loadtest", func(t *testing.T) {
-		err := testHelper.CreateLoadtest(clientSet, distributedPods, expectedLoadtestName, testFile, testData, "", loadtestType)
+		err := testHelper.CreateLoadTest(clientSet, distributedPods, expectedLoadtestName, testFile, testData, "", loadtestType)
 		require.NoError(t, err)
 	})
 
@@ -383,7 +383,7 @@ func TestIntegrationGetLoadtest(t *testing.T) {
 	})
 
 	t.Run("Checking the loadtest is created", func(t *testing.T) {
-		err := testHelper.WaitLoadtest(clientSet, expectedLoadtestName)
+		err := testHelper.WaitLoadTest(clientSet, expectedLoadtestName)
 		require.NoError(t, err)
 	})
 
@@ -414,7 +414,7 @@ func TestIntegrationGetLoadtest(t *testing.T) {
 		require.NoError(t, unmarshalErr, "Could not unmarshal response body")
 		assert.NotEmpty(t, dat.Namespace, "Could not get namespace from GET request")
 
-		currentNamespace, err := testHelper.GetLoadtestNamespace(clientSet, expectedLoadtestName)
+		currentNamespace, err := testHelper.GetLoadTestNamespace(clientSet, expectedLoadtestName)
 		require.NoError(t, err, "Could not get load test information")
 
 		assert.Equal(t, currentNamespace, dat.Namespace)
@@ -439,7 +439,7 @@ func TestIntegrationGetLoadtestLogs(t *testing.T) {
 	client := kubeClient(t)
 
 	t.Run("Creates the loadtest", func(t *testing.T) {
-		err := testHelper.CreateLoadtest(clientSet, distributedPods, expectedLoadtestName, testFile, "", "", loadtestType)
+		err := testHelper.CreateLoadTest(clientSet, distributedPods, expectedLoadtestName, testFile, "", "", loadtestType)
 		require.NoError(t, err)
 	})
 
@@ -449,7 +449,7 @@ func TestIntegrationGetLoadtestLogs(t *testing.T) {
 	})
 
 	t.Run("Checking the loadtest is created", func(t *testing.T) {
-		err := testHelper.WaitLoadtest(clientSet, expectedLoadtestName)
+		err := testHelper.WaitLoadTest(clientSet, expectedLoadtestName)
 		require.NoError(t, err)
 	})
 
