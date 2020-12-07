@@ -79,7 +79,7 @@ When the test is finished successfully the backend will save the report.
 
 The report for a particular test can be found by the link `https://${KANGAL_PROXY_ADDRESS}/load-test/loadtest-name/report/`.
 
-> Report persistance depends on the backend implementation.
+> Report persistence depends on the backend implementation.
 
 ## Delete 
 Delete your finished load test.
@@ -95,6 +95,9 @@ You can find out all the load tests
 ```bash
 curl http://${KANGAL_PROXY_ADDRESS}/load-test
 ```
+
+Output for this endpoint is paginated and default limit and possible max value per page is set to `50`.
+Use `MAX_LIST_LIMIT` env var when running proxy to change default value.
 
 You can filter by `tags`
 
@@ -113,7 +116,7 @@ All together
 curl 'http://${KANGAL_PROXY_ADDRESS}/load-test?phase=running&tags=tag1:value1'
 ```
 
-And limit your search
+Use custom limit value for your search
 
 ```bash
 curl 'http://${KANGAL_PROXY_ADDRESS}/load-test?tags=tag1:value1&limit=10'
