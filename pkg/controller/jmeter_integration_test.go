@@ -24,11 +24,6 @@ var (
 	clientSet clientSetV.Clientset
 )
 
-const (
-	ShortWaitSec = 1
-	LongWaitSec  = 5
-)
-
 func TestMain(m *testing.M) {
 	clientSet = kubeTestClient()
 	res := m.Run()
@@ -72,7 +67,6 @@ func TestIntegrationJMeter(t *testing.T) {
 
 	t.Run("Checking namespace is created", func(t *testing.T) {
 		for i := 0; i < 5; i++ {
-			waitfor.Time(LongWaitSec)
 			jmeterNamespace, _ = client.CoreV1().Namespaces().Get(context.Background(), expectedLoadtestName, metaV1.GetOptions{})
 			if jmeterNamespace != nil {
 				break
@@ -85,7 +79,6 @@ func TestIntegrationJMeter(t *testing.T) {
 	t.Run("Checking JMeter configmap is created", func(t *testing.T) {
 		var cm *coreV1.ConfigMapList
 		for i := 0; i < 5; i++ {
-			waitfor.Time(ShortWaitSec)
 			cm, _ = client.CoreV1().ConfigMaps(jmeterNamespace.Name).List(context.Background(), metaV1.ListOptions{LabelSelector: "app=hf-jmeter"})
 			if len(cm.Items) != 0 {
 				break
@@ -98,7 +91,6 @@ func TestIntegrationJMeter(t *testing.T) {
 		var secretsCount int
 		var secretItem coreV1.Secret
 		for i := 0; i < 5; i++ {
-			waitfor.Time(LongWaitSec)
 			secrets, err := GetSecret(client.CoreV1(), jmeterNamespace.Name)
 			require.NoError(t, err, "Could not get namespace secrets")
 
@@ -144,7 +136,6 @@ func TestIntegrationJMeter(t *testing.T) {
 	t.Run("Checking Job is created", func(t *testing.T) {
 		var job *batchV1.Job
 		for i := 0; i < 5; i++ {
-			waitfor.Time(LongWaitSec)
 			job, err = client.BatchV1().Jobs(jmeterNamespace.Name).Get(context.Background(), "loadtest-master", metaV1.GetOptions{})
 			require.NoError(t, err, "Could not get job")
 

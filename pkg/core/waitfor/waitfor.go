@@ -2,7 +2,6 @@ package waitfor
 
 import (
 	"context"
-	"time"
 
 	coreV1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/watch"
@@ -63,9 +62,4 @@ func Resource(obj watch.Interface, condFunc watchtools.ConditionFunc) (*watch.Ev
 // ResourceWithContext is Resource with custom context when the default context is not suitable
 func ResourceWithContext(ctx context.Context, obj watch.Interface, condFunc watchtools.ConditionFunc) (*watch.Event, error) {
 	return watchtools.UntilWithoutRetry(ctx, obj, condFunc)
-}
-
-// Time sleeps to wait kubernetes resources to be created
-func Time(d time.Duration) {
-	time.Sleep(d * time.Second)
 }

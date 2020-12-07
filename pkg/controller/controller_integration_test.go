@@ -37,6 +37,9 @@ func TestIntegrationKangalController(t *testing.T) {
 	err := CreateLoadTest(clientSet, distributedPods, expectedLoadtestName, testFile, testData, envVars, loadtestType)
 	require.NoError(t, err)
 
+	err = WaitLoadTest(clientSet, expectedLoadtestName)
+	require.NoError(t, err)
+
 	t.Cleanup(func() {
 		err := DeleteLoadTest(clientSet, expectedLoadtestName, t.Name())
 		assert.NoError(t, err)
