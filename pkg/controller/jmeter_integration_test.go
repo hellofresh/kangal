@@ -53,17 +53,22 @@ func TestIntegrationJMeter(t *testing.T) {
 
 	err := CreateLoadTest(clientSet, distributedPods, expectedLoadtestName, testFile, testData, envVars, loadtestType)
 	require.NoError(t, err)
+
+	err = WaitLoadTest(clientSet, expectedLoadtestName)
+	require.NoError(t, err)
+
 	t.Cleanup(func() {
 		err := DeleteLoadTest(clientSet, expectedLoadtestName, t.Name())
 		assert.NoError(t, err)
 	})
-	var jmeterNamespace *coreV1.Namespace
 
 	t.Run("Checking the name of created loadtest", func(t *testing.T) {
 		createdName, err := GetLoadTest(clientSet, expectedLoadtestName)
 		require.NoError(t, err)
 		assert.Equal(t, expectedLoadtestName, createdName)
 	})
+
+	var jmeterNamespace *coreV1.Namespace
 
 	t.Run("Checking namespace is created", func(t *testing.T) {
 		for i := 0; i < 5; i++ {
