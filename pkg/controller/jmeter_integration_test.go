@@ -15,6 +15,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	_ "github.com/hellofresh/kangal/pkg/backends/jmeter"
+	"github.com/hellofresh/kangal/pkg/core/waitfor"
 	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
 )
@@ -66,7 +67,7 @@ func TestIntegrationJMeter(t *testing.T) {
 
 	t.Run("Checking namespace is created", func(t *testing.T) {
 		for i := 0; i < 5; i++ {
-			WaitForResource(LongWaitSec)
+			waitfor.Time(LongWaitSec)
 			jmeterNamespace, _ = client.CoreV1().Namespaces().Get(context.Background(), expectedLoadtestName, metaV1.GetOptions{})
 			if jmeterNamespace != nil {
 				break
@@ -79,7 +80,7 @@ func TestIntegrationJMeter(t *testing.T) {
 	t.Run("Checking JMeter configmap is created", func(t *testing.T) {
 		var cm *coreV1.ConfigMapList
 		for i := 0; i < 5; i++ {
-			WaitForResource(ShortWaitSec)
+			waitfor.Time(ShortWaitSec)
 			cm, _ = client.CoreV1().ConfigMaps(jmeterNamespace.Name).List(context.Background(), metaV1.ListOptions{LabelSelector: "app=hf-jmeter"})
 			if len(cm.Items) != 0 {
 				break
@@ -92,7 +93,7 @@ func TestIntegrationJMeter(t *testing.T) {
 		var secretsCount int
 		var secretItem coreV1.Secret
 		for i := 0; i < 5; i++ {
-			WaitForResource(LongWaitSec)
+			waitfor.Time(LongWaitSec)
 			secrets, err := GetSecret(client.CoreV1(), jmeterNamespace.Name)
 			require.NoError(t, err, "Could not get namespace secrets")
 
@@ -111,7 +112,7 @@ func TestIntegrationJMeter(t *testing.T) {
 		var podsCount int
 		for i := 0; i < 5; i++ {
 			//added sleep to wait for kangal controller to create all required resources
-			WaitForResource(ShortWaitSec)
+			waitfor.Time(ShortWaitSec)
 			pods, _ := GetDistributedPods(client.CoreV1(), jmeterNamespace.Name)
 
 			if len(pods.Items) == int(distributedPods) {
@@ -130,7 +131,7 @@ func TestIntegrationJMeter(t *testing.T) {
 			LabelSelector: "app=loadtest-master",
 		})
 
-		watchEvent, err := WaitResourceWithContext(ctx, watchObj, (WaitCondition{}).PodRunning)
+		watchEvent, err := waitfor.ResourceWithContext(ctx, watchObj, (waitfor.Condition{}).PodRunning)
 		require.NoError(t, err)
 
 		pod := watchEvent.Object.(*coreV1.Pod)
@@ -140,7 +141,7 @@ func TestIntegrationJMeter(t *testing.T) {
 	t.Run("Checking Job is created", func(t *testing.T) {
 		var job *batchV1.Job
 		for i := 0; i < 5; i++ {
-			WaitForResource(LongWaitSec)
+			waitfor.Time(LongWaitSec)
 			job, err = client.BatchV1().Jobs(jmeterNamespace.Name).Get(context.Background(), "loadtest-master", metaV1.GetOptions{})
 			require.NoError(t, err, "Could not get job")
 

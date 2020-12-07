@@ -11,6 +11,7 @@ import (
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	_ "github.com/hellofresh/kangal/pkg/backends/fake"
+	"github.com/hellofresh/kangal/pkg/core/waitfor"
 	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 )
 
@@ -52,7 +53,7 @@ func TestIntegrationKangalController(t *testing.T) {
 			FieldSelector: fmt.Sprintf("metadata.name=%s", expectedLoadtestName),
 		})
 
-		watchEvent, err := WaitResource(watchObj, (WaitCondition{}).Added)
+		watchEvent, err := waitfor.Resource(watchObj, (waitfor.Condition{}).Added)
 		require.NoError(t, err)
 
 		namespace := watchEvent.Object.(*coreV1.Namespace)
@@ -64,7 +65,7 @@ func TestIntegrationKangalController(t *testing.T) {
 			LabelSelector: "app=loadtest-master",
 		})
 
-		watchEvent, err := WaitResource(watchObj, (WaitCondition{}).PodRunning)
+		watchEvent, err := waitfor.Resource(watchObj, (waitfor.Condition{}).PodRunning)
 		require.NoError(t, err)
 
 		pod := watchEvent.Object.(*coreV1.Pod)
@@ -76,7 +77,7 @@ func TestIntegrationKangalController(t *testing.T) {
 			FieldSelector: fmt.Sprintf("metadata.name=%s", expectedLoadtestName),
 		})
 
-		watchEvent, err := WaitResource(watchObj, (WaitCondition{}).LoadtestRunning)
+		watchEvent, err := waitfor.Resource(watchObj, (waitfor.Condition{}).LoadTestRunning)
 		require.NoError(t, err)
 
 		loadtest := watchEvent.Object.(*loadTestV1.LoadTest)
@@ -89,7 +90,7 @@ func TestIntegrationKangalController(t *testing.T) {
 			FieldSelector: fmt.Sprintf("metadata.name=%s", expectedLoadtestName),
 		})
 
-		watchEvent, err := WaitResource(watchObj, (WaitCondition{}).LoadtestFinished)
+		watchEvent, err := waitfor.Resource(watchObj, (waitfor.Condition{}).LoadTestFinished)
 		require.NoError(t, err)
 
 		loadtest := watchEvent.Object.(*loadTestV1.LoadTest)

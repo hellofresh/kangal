@@ -18,6 +18,7 @@ import (
 
 	_ "github.com/hellofresh/kangal/pkg/backends/fake"
 	testHelper "github.com/hellofresh/kangal/pkg/controller"
+	"github.com/hellofresh/kangal/pkg/core/waitfor"
 	apisLoadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
 )
@@ -457,7 +458,7 @@ func TestIntegrationGetLoadtestLogs(t *testing.T) {
 			LabelSelector: "app=loadtest-master",
 		})
 
-		watchEvent, err := testHelper.WaitResource(watchObj, (testHelper.WaitCondition{}).PodRunning)
+		watchEvent, err := waitfor.Resource(watchObj, (waitfor.Condition{}).PodRunning)
 		require.NoError(t, err)
 
 		pod := watchEvent.Object.(*coreV1.Pod)

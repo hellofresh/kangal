@@ -15,7 +15,6 @@ import (
 	restClient "k8s.io/client-go/rest"
 
 	"github.com/hellofresh/kangal/pkg/backends"
-	loadtest "github.com/hellofresh/kangal/pkg/controller"
 	cHttp "github.com/hellofresh/kangal/pkg/core/http"
 	mPkg "github.com/hellofresh/kangal/pkg/core/middleware"
 	kube "github.com/hellofresh/kangal/pkg/kubernetes"
@@ -74,7 +73,7 @@ func getLoadTestType(r *http.Request) apisLoadTestV1.LoadTestType {
 func (p *Proxy) List(w http.ResponseWriter, r *http.Request) {
 	logger := mPkg.GetLogger(r.Context())
 
-	ctx, cancel := context.WithTimeout(r.Context(), loadtest.KubeTimeout)
+	ctx, cancel := context.WithTimeout(r.Context(), kube.KubeTimeout)
 	defer cancel()
 
 	opt, err := fromHTTPRequestToListOptions(r)
@@ -120,7 +119,7 @@ func (p *Proxy) List(w http.ResponseWriter, r *http.Request) {
 func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 	logger := mPkg.GetLogger(r.Context())
 
-	ctx, cancel := context.WithTimeout(r.Context(), loadtest.KubeTimeout)
+	ctx, cancel := context.WithTimeout(r.Context(), kube.KubeTimeout)
 	defer cancel()
 
 	// Making valid LoadTestSpec based on HTTP request
@@ -216,7 +215,7 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 func (p *Proxy) Delete(w http.ResponseWriter, r *http.Request) {
 	logger := mPkg.GetLogger(r.Context())
 
-	ctx, cancel := context.WithTimeout(r.Context(), loadtest.KubeTimeout)
+	ctx, cancel := context.WithTimeout(r.Context(), kube.KubeTimeout)
 	defer cancel()
 
 	ltID := chi.URLParam(r, loadTestID)
@@ -236,7 +235,7 @@ func (p *Proxy) Delete(w http.ResponseWriter, r *http.Request) {
 func (p *Proxy) Get(w http.ResponseWriter, r *http.Request) {
 	logger := mPkg.GetLogger(r.Context())
 
-	ctx, cancel := context.WithTimeout(r.Context(), loadtest.KubeTimeout)
+	ctx, cancel := context.WithTimeout(r.Context(), kube.KubeTimeout)
 	defer cancel()
 
 	ltID := chi.URLParam(r, loadTestID)
@@ -274,7 +273,7 @@ func (p *Proxy) GetLogs(w http.ResponseWriter, r *http.Request) {
 	var logsRequest *restClient.Request
 	logger.Info("Retrieving logs for loadtest", zap.String("ltID", ltID))
 
-	ctx, cancel := context.WithTimeout(r.Context(), loadtest.KubeTimeout)
+	ctx, cancel := context.WithTimeout(r.Context(), kube.KubeTimeout)
 	defer cancel()
 
 	loadTest, err := p.kubeClient.GetLoadTest(ctx, ltID)
@@ -291,7 +290,7 @@ func (p *Proxy) GetLogs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctxLogs, cancelLogs := context.WithTimeout(context.Background(), loadtest.KubeTimeout)
+	ctxLogs, cancelLogs := context.WithTimeout(context.Background(), kube.KubeTimeout)
 	defer cancelLogs()
 	if workerID == "" {
 		logger.Info("Returning master pod logs")
