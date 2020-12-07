@@ -226,7 +226,7 @@ func TestProxy_List(t *testing.T) {
 			},
 			expectedCode:        200,
 			expectedContentType: "application/json; charset=utf-8",
-			expectedResponse:    `{"limit":0,"continue":"continue","remain":42,"items":[{"type":"JMeter","distributedPods":2,"loadtestName":"random","phase":"running","tags":{},"hasEnvVars":false,"hasTestData":true}]}`,
+			expectedResponse:    `{"limit":50,"continue":"continue","remain":42,"items":[{"type":"JMeter","distributedPods":2,"loadtestName":"random","phase":"running","tags":{},"hasEnvVars":false,"hasTestData":true}]}`,
 		},
 		{
 			scenario:  "success",
@@ -283,7 +283,7 @@ func TestProxy_List(t *testing.T) {
 			})
 			c := kube.NewClient(loadTestClientSet.KangalV1().LoadTests(), kubeClientSet, logger)
 
-			testProxyHandler := NewProxy(1, nil, c)
+			testProxyHandler := NewProxy(1, nil, c, 50)
 
 			req := httptest.NewRequest("POST", "http://example.com/foo?"+tc.urlParams, nil)
 			req = req.WithContext(ctx)
@@ -374,7 +374,7 @@ func TestProxyCreate(t *testing.T) {
 				backends.WithKangalClientSet(loadtestClientSet),
 			)
 
-			testProxyHandler := NewProxy(1, b, c)
+			testProxyHandler := NewProxy(1, b, c, 50)
 			handler := testProxyHandler.Create
 
 			requestWrap := createRequestWrapper(t, tt.requestFiles, strconv.Itoa(tt.distributedPods), string(tt.loadTestType), tt.tagsString, false)
@@ -478,7 +478,7 @@ func TestNewProxyRecreate(t *testing.T) {
 
 			w := httptest.NewRecorder()
 
-			testProxyHandler := NewProxy(1, b, c)
+			testProxyHandler := NewProxy(1, b, c, 50)
 			testProxyHandler.Create(w, req)
 
 			resp := w.Result()
@@ -578,7 +578,7 @@ func TestProxyCreateWithErrors(t *testing.T) {
 			req.Header.Set("Content-Type", requestWrap.contentType)
 			w := httptest.NewRecorder()
 
-			testProxyHandler := NewProxy(1, b, c)
+			testProxyHandler := NewProxy(1, b, c, 50)
 			testProxyHandler.Create(w, req)
 
 			resp := w.Result()
@@ -652,7 +652,7 @@ func TestProxyGet(t *testing.T) {
 
 			w := httptest.NewRecorder()
 
-			testProxyHandler := NewProxy(1, b, c)
+			testProxyHandler := NewProxy(1, b, c, 50)
 			testProxyHandler.Get(w, req)
 
 			resp := w.Result()
@@ -702,7 +702,7 @@ func TestProxyDelete(t *testing.T) {
 
 			w := httptest.NewRecorder()
 
-			testProxyHandler := NewProxy(1, nil, c)
+			testProxyHandler := NewProxy(1, nil, c, 50)
 			testProxyHandler.Delete(w, req)
 
 			resp := w.Result()
@@ -802,7 +802,7 @@ func TestProxyGetLogs(t *testing.T) {
 
 			w := httptest.NewRecorder()
 
-			testProxyHandler := NewProxy(1, b, c)
+			testProxyHandler := NewProxy(1, b, c, 50)
 			testProxyHandler.GetLogs(w, req.WithContext(ctx))
 
 			resp := w.Result()

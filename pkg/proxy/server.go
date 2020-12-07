@@ -32,7 +32,7 @@ func RunServer(ctx context.Context, cfg Config, rr Runner) error {
 		backends.WithLogger(rr.Logger),
 	)
 
-	proxyHandler := NewProxy(cfg.MaxLoadTestsRun, registry, rr.KubeClient)
+	proxyHandler := NewProxy(cfg.MaxLoadTestsRun, registry, rr.KubeClient, cfg.MaxListLimit)
 
 	// Start instrumented server
 	r := chi.NewRouter()

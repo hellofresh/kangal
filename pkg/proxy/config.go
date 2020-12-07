@@ -14,6 +14,7 @@ type Config struct {
 	OpenAPI         OpenAPIConfig
 	Report          report.Config
 	MaxLoadTestsRun int
+	MaxListLimit    int64 `envconfig:"MAX_LIST_LIMIT" required:"true" default:"50"`
 	MasterURL       string
 }
 

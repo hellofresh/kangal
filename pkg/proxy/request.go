@@ -53,8 +53,10 @@ func httpValidator(r *http.Request) url.Values {
 	return v.Validate()
 }
 
-func fromHTTPRequestToListOptions(r *http.Request) (*kubernetes.ListOptions, error) {
-	opt := kubernetes.ListOptions{}
+func fromHTTPRequestToListOptions(r *http.Request, maxListLimit int64) (*kubernetes.ListOptions, error) {
+	opt := kubernetes.ListOptions{
+		Limit: maxListLimit,
+	}
 	params := r.URL.Query()
 
 	// Build tags filter.
@@ -72,6 +74,10 @@ func fromHTTPRequestToListOptions(r *http.Request) (*kubernetes.ListOptions, err
 		limit, err := strconv.ParseInt(limitVal, 10, 64)
 		if err != nil {
 			return nil, err
+		}
+
+		if limit > maxListLimit {
+			return nil, fmt.Errorf("limit value is too big, max possible value is %d", maxListLimit)
 		}
 
 		opt.Limit = limit
