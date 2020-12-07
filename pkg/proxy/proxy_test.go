@@ -201,6 +201,14 @@ func TestProxy_List(t *testing.T) {
 			expectedResponse:    `{"error":"unknown Load Test phase"}`,
 		},
 		{
+			scenario:            "limit is too big",
+			urlParams:           "limit=100",
+			result:              &apisLoadTestV1.LoadTestList{},
+			expectedCode:        400,
+			expectedContentType: "application/json; charset=utf-8",
+			expectedResponse:    `{"error":"limit value is too big, max possible value is 50"}`,
+		},
+		{
 			scenario:  "valid phase",
 			urlParams: "phase=running",
 			result: &apisLoadTestV1.LoadTestList{
