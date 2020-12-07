@@ -111,8 +111,6 @@ func TestIntegrationJMeter(t *testing.T) {
 	t.Run("Checking all worker pods are created", func(t *testing.T) {
 		var podsCount int
 		for i := 0; i < 5; i++ {
-			//added sleep to wait for kangal controller to create all required resources
-			waitfor.Time(ShortWaitSec)
 			pods, _ := GetDistributedPods(client.CoreV1(), jmeterNamespace.Name)
 
 			if len(pods.Items) == int(distributedPods) {
