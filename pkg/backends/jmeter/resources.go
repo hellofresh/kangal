@@ -11,6 +11,7 @@ import (
 	"go.uber.org/zap"
 	batchV1 "k8s.io/api/batch/v1"
 	coreV1 "k8s.io/api/core/v1"
+	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -367,16 +368,32 @@ func (b *Backend) NewJMeterService() *coreV1.Service {
 func (b *Backend) CreatePodsWithTestdata(ctx context.Context, configMaps []*coreV1.ConfigMap, loadTest *loadTestV1.LoadTest, namespace string) error {
 	for i, cm := range configMaps {
 		configMap, err := b.kubeClientSet.CoreV1().ConfigMaps(namespace).Create(ctx, cm, metaV1.CreateOptions{})
-		if err != nil {
+		if err != nil && !kerrors.IsAlreadyExists(err) {
 			b.logger.Error("Error on creating testdata configMaps", zap.Error(err))
 			return err
 		}
 
+		if kerrors.IsAlreadyExists(err) {
+			configMap, err = b.kubeClientSet.CoreV1().ConfigMaps(namespace).Get(ctx, cm.Name, metaV1.GetOptions{})
+			if nil != err {
+				b.logger.Error("unable to reload ConfigMap", zap.Error(err))
+				return err
+			}
+		}
+
 		pod := b.NewPod(*loadTest, i, configMap, b.podAnnotations)
 		_, err = b.kubeClientSet.CoreV1().Pods(namespace).Create(ctx, pod, metaV1.CreateOptions{})
-		if err != nil {
+		if err != nil && !kerrors.IsAlreadyExists(err) {
 			b.logger.Error("Error on creating distributed pods", zap.Error(err))
 			return err
+		}
+
+		if kerrors.IsAlreadyExists(err) {
+			pod, err = b.kubeClientSet.CoreV1().Pods(namespace).Get(ctx, pod.Name, metaV1.GetOptions{})
+			if nil != err {
+				b.logger.Error("unable to reload Pod", zap.Error(err))
+				return err
+			}
 		}
 
 		// JMeter requires all workers to be running before master starts
