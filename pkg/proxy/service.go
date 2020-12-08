@@ -191,7 +191,7 @@ func (s *implLoadTestServiceServer) Create(ctx context.Context, in *grpcProxyV2.
 func (s *implLoadTestServiceServer) List(ctx context.Context, in *grpcProxyV2.ListRequest) (*grpcProxyV2.ListResponse, error) {
 	logger := ctxzap.Extract(ctx)
 
-	ctx, cancel := context.WithTimeout(ctx, loadtest.KubeTimeout)
+	ctx, cancel := context.WithTimeout(ctx, kube.KubeTimeout)
 	defer cancel()
 
 	logger.Debug("Retrieving list of load tests", zap.Any("in", in))

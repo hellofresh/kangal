@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -222,6 +224,80 @@ func TestImplLoadTestServiceServer_Get_Simple(t *testing.T) {
 	assert.Equal(t, true, dat.LoadTestStatus.GetHasTestData())
 }
 
+func TestImplLoadTestServiceServer_List_Simple(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode")
+	}
+
+	rq1 := grpcProxyV2.CreateRequest{
+		DistributedPods: 2,
+		Type:            grpcProxyV2.LoadTestType_LOAD_TEST_TYPE_FAKE,
+		TargetUrl:       "http://example.com/foo",
+		TestFile:        encodeContents(t, []byte(`foo`)),
+	}
+
+	ltName1 := createLoadtest(t, &rq1)
+
+	err := testHelper.WaitLoadTest(clientSet, ltName1)
+	require.NoError(t, err)
+
+	list := listLoadTests(t, new(grpcProxyV2.ListRequest))
+
+	assert.Empty(t, list.Remain)
+	assert.Empty(t, list.NextPageToken)
+	require.Len(t, list.LoadTestStatuses, 1)
+	assert.Equal(t, ltName1, list.LoadTestStatuses[0].Name)
+
+	rq2 := grpcProxyV2.CreateRequest{
+		DistributedPods: 2,
+		Type:            grpcProxyV2.LoadTestType_LOAD_TEST_TYPE_FAKE,
+		TargetUrl:       "http://example.com/foo",
+		TestFile:        encodeContents(t, []byte(`bar`)),
+	}
+
+	ltName2 := createLoadtest(t, &rq2)
+
+	err = testHelper.WaitLoadTest(clientSet, ltName2)
+	require.NoError(t, err)
+
+	// first try to get all existing tests on one page
+	list2 := listLoadTests(t, &grpcProxyV2.ListRequest{
+		PageSize: 2,
+	})
+
+	assert.Empty(t, list2.Remain)
+	assert.Empty(t, list2.NextPageToken)
+	require.Len(t, list2.LoadTestStatuses, 2)
+
+	// keep order for the future calls
+	orderedNames := []string{ltName1, ltName2}
+	if ltName2 == list2.LoadTestStatuses[0].Name {
+		orderedNames = []string{ltName2, ltName1}
+	}
+
+	assert.Equal(t, orderedNames[0], list2.LoadTestStatuses[0].Name)
+	assert.Equal(t, orderedNames[1], list2.LoadTestStatuses[1].Name)
+
+	// and now try to get one test per page
+	list3 := listLoadTests(t, &grpcProxyV2.ListRequest{
+		PageSize: 1,
+	})
+	assert.Equal(t, int64(1), list3.Remain)
+	require.NotEmpty(t, list3.NextPageToken)
+	require.Len(t, list3.LoadTestStatuses, 1)
+	assert.Equal(t, orderedNames[0], list3.LoadTestStatuses[0].Name)
+
+	list4 := listLoadTests(t, &grpcProxyV2.ListRequest{
+		PageSize:  1,
+		PageToken: list3.NextPageToken,
+	})
+
+	assert.Empty(t, list4.Remain)
+	assert.Empty(t, list4.NextPageToken)
+	require.Len(t, list4.LoadTestStatuses, 1)
+	assert.Equal(t, orderedNames[1], list4.LoadTestStatuses[0].Name)
+}
+
 func createLoadtest(t *testing.T, rq *grpcProxyV2.CreateRequest) string {
 	t.Helper()
 
@@ -247,4 +323,43 @@ func createLoadtest(t *testing.T, rq *grpcProxyV2.CreateRequest) string {
 	})
 
 	return createdLoadTestName
+}
+
+func listLoadTests(t *testing.T, rq *grpcProxyV2.ListRequest) *grpcProxyV2.ListResponse {
+	t.Helper()
+
+	// TODO: add tags support as currently they are not supported by rest proxy and swagger plugins
+	q := url.Values{
+		"phase": []string{grpcProxyV2.LoadTestPhase_name[int32(rq.GetPhase())]},
+	}
+	if rq.GetPageSize() > 0 {
+		q.Add("pageSize", strconv.Itoa(int(rq.GetPageSize())))
+	}
+	if rq.GetPageToken() != "" {
+		q.Add("pageToken", rq.GetPageToken())
+	}
+
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:%d/v2/load-test?%s", restPort, q.Encode()), nil)
+	require.NoError(t, err, "Could not create GET request")
+
+	resp, err := http.DefaultClient.Do(req)
+	require.NoError(t, err, "Could not send GET request")
+
+	defer func() {
+		err := resp.Body.Close()
+		assert.NoError(t, err)
+	}()
+
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+
+	restBody, err := ioutil.ReadAll(resp.Body)
+	require.NoError(t, err, "Could not get response body")
+	require.NotEmpty(t, restBody)
+	t.Logf("gRPC/REST gateway response: %s", restBody)
+
+	list := new(grpcProxyV2.ListResponse)
+	unmarshalErr := protojson.Unmarshal(restBody, list)
+	require.NoError(t, unmarshalErr, "Could not unmarshal response body")
+
+	return list
 }
