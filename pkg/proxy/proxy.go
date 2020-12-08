@@ -33,16 +33,18 @@ var (
 // Proxy handler
 type Proxy struct {
 	maxLoadTestsRun int
+	maxListLimit    int64
 	registry        backends.Registry
 	kubeClient      *kube.Client
 }
 
 // NewProxy returns new Proxy handlers
-func NewProxy(maxLoadTestsRun int, registry backends.Registry, kubeClient *kube.Client) *Proxy {
+func NewProxy(maxLoadTestsRun int, registry backends.Registry, kubeClient *kube.Client, maxListLimit int64) *Proxy {
 	return &Proxy{
 		maxLoadTestsRun: maxLoadTestsRun,
 		registry:        registry,
 		kubeClient:      kubeClient,
+		maxListLimit:    maxListLimit,
 	}
 }
 
@@ -76,7 +78,7 @@ func (p *Proxy) List(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), kube.KubeTimeout)
 	defer cancel()
 
-	opt, err := fromHTTPRequestToListOptions(r)
+	opt, err := fromHTTPRequestToListOptions(r, p.maxListLimit)
 	if err != nil {
 		logger.Error("could not parse filter", zap.Error(err))
 		render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest, err.Error()))
