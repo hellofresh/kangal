@@ -17,7 +17,6 @@ import (
 	k8sAPIErrors "k8s.io/apimachinery/pkg/api/errors"
 
 	"github.com/hellofresh/kangal/pkg/backends"
-	loadtest "github.com/hellofresh/kangal/pkg/controller"
 	kube "github.com/hellofresh/kangal/pkg/kubernetes"
 	apisLoadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	grpcProxyV2 "github.com/hellofresh/kangal/pkg/proxy/rpc/pb/grpc/proxy/v2"
@@ -51,7 +50,7 @@ func NewLoadTestServiceServer(kubeClient *kube.Client, registry backends.Registr
 func (s *implLoadTestServiceServer) Get(ctx context.Context, in *grpcProxyV2.GetRequest) (*grpcProxyV2.GetResponse, error) {
 	logger := ctxzap.Extract(ctx)
 
-	ctx, cancel := context.WithTimeout(ctx, loadtest.KubeTimeout)
+	ctx, cancel := context.WithTimeout(ctx, kube.KubeTimeout)
 	defer cancel()
 
 	logger.Debug("Retrieving info for loadtest", zap.String("name", in.GetName()))

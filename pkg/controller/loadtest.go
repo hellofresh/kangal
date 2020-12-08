@@ -23,6 +23,7 @@ import (
 
 	"github.com/hellofresh/kangal/pkg/backends"
 	"github.com/hellofresh/kangal/pkg/core/observability"
+	kubekangal "github.com/hellofresh/kangal/pkg/kubernetes"
 	loadtestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
 	sampleScheme "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned/scheme"
@@ -32,10 +33,8 @@ import (
 
 const (
 	controllerAgentName = "kangal"
-	// KubeTimeout timeout for kubernetes methods
-	KubeTimeout = 15 * time.Second
-	falseString = "false"
-	trueString  = "true"
+	falseString         = "false"
+	trueString          = "true"
 )
 
 // Controller is the controller implementation for LoadTest resources
@@ -275,7 +274,7 @@ func (c *Controller) processNextWorkItem() bool {
 // converge the two. It then updates the Status block of the LoadTest resource
 // with the current status of the resource.
 func (c *Controller) syncHandler(key string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), kubekangal.KubeTimeout)
 	defer cancel()
 
 	_, name, err := cache.SplitMetaNamespaceKey(key)

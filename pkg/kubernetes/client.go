@@ -22,9 +22,14 @@ import (
 var (
 	loadTestMasterLabelSelector = "app=loadtest-master"
 	loadTestWorkerLabelSelector = "app=loadtest-worker-pod"
-	// GracePeriod is duration in seconds before the object should be deleted.
+	// gracePeriod is duration in seconds before the object should be deleted.
 	// The value zero indicates delete immediately.
 	gracePeriod = int64(0)
+)
+
+const (
+	// KubeTimeout timeout for kubernetes methods
+	KubeTimeout = 30 * time.Second
 )
 
 //Client manages calls to Kubernetes API

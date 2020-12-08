@@ -37,10 +37,10 @@ func TestImplLoadTestServiceServer_Create_PostAllFiles(t *testing.T) {
 
 	createdLoadTestName := createLoadtest(t, &rq)
 
-	err := testHelper.WaitLoadtest(clientSet, createdLoadTestName)
+	err := testHelper.WaitLoadTest(clientSet, createdLoadTestName)
 	require.NoError(t, err)
 
-	labels, err := testHelper.GetLoadtestLabels(clientSet, createdLoadTestName)
+	labels, err := testHelper.GetLoadTestLabels(clientSet, createdLoadTestName)
 	require.NoError(t, err)
 
 	expected := map[string]string{
@@ -101,7 +101,7 @@ func TestImplLoadTestServiceServer_Create_ReachMaxLimit(t *testing.T) {
 
 	createdLoadTestName := createLoadtest(t, &rq)
 
-	err := testHelper.WaitLoadtest(clientSet, createdLoadTestName)
+	err := testHelper.WaitLoadTest(clientSet, createdLoadTestName)
 	require.NoError(t, err)
 
 	rqJSON2, err := protojson.Marshal(&rq2)
@@ -126,14 +126,14 @@ func TestImplLoadTestServiceServer_Create_PostOneFile(t *testing.T) {
 
 	createdLoadTestName := createLoadtest(t, &rq)
 
-	err := testHelper.WaitLoadtest(clientSet, createdLoadTestName)
+	err := testHelper.WaitLoadTest(clientSet, createdLoadTestName)
 	require.NoError(t, err)
 
-	data, err := testHelper.GetLoadtestTestdata(clientSet, createdLoadTestName)
+	data, err := testHelper.GetLoadTestTestdata(clientSet, createdLoadTestName)
 	require.NoError(t, err)
 	assert.Equal(t, "", data)
 
-	envVars, err := testHelper.GetLoadtestEnvVars(clientSet, createdLoadTestName)
+	envVars, err := testHelper.GetLoadTestEnvVars(clientSet, createdLoadTestName)
 	require.NoError(t, err)
 	assert.Equal(t, "", envVars)
 }
@@ -189,7 +189,7 @@ func TestImplLoadTestServiceServer_Get_Simple(t *testing.T) {
 
 	createdLoadTestName := createLoadtest(t, &rq)
 
-	err := testHelper.WaitLoadtest(clientSet, createdLoadTestName)
+	err := testHelper.WaitLoadTest(clientSet, createdLoadTestName)
 	require.NoError(t, err)
 
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:%d/v2/load-test/%s", restPort, createdLoadTestName), nil)

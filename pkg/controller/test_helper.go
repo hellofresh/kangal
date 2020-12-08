@@ -5,23 +5,22 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"time"
 
 	coreV1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/watch"
 	typeV1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	watchtools "k8s.io/client-go/tools/watch"
 
 	"github.com/hellofresh/kangal/pkg/backends"
+	"github.com/hellofresh/kangal/pkg/core/waitfor"
+	"github.com/hellofresh/kangal/pkg/kubernetes"
 	apisLoadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
 )
 
-// CreateLoadtest creates a load test CR
-func CreateLoadtest(clientSet clientSetV.Clientset, pods int32, name, testFile, testData, envVars string, loadTestType apisLoadTestV1.LoadTestType) error {
+// CreateLoadTest creates a load test CR
+func CreateLoadTest(clientSet clientSetV.Clientset, pods int32, name, testFile, testData, envVars string, loadTestType apisLoadTestV1.LoadTestType) error {
 	var ev, td = "", ""
 	tf, err := readFile(testFile)
 	if err != nil {
@@ -69,7 +68,7 @@ func CreateLoadtest(clientSet clientSetV.Clientset, pods int32, name, testFile, 
 	ltObj.Name = name
 	ltObj.Spec = loadTestSpec
 
-	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), kubernetes.KubeTimeout)
 	defer cancel()
 
 	_, err = clientSet.KangalV1().LoadTests().Create(ctx, ltObj, metaV1.CreateOptions{})
@@ -88,8 +87,8 @@ func readFile(filename string) (string, error) {
 	return str, nil
 }
 
-// WaitLoadtest waits until Loadtest resources exists
-func WaitLoadtest(clientSet clientSetV.Clientset, loadtestName string) error {
+// WaitLoadTest waits until Loadtest resources exists
+func WaitLoadTest(clientSet clientSetV.Clientset, loadtestName string) error {
 	watchObj, err := clientSet.KangalV1().LoadTests().Watch(context.Background(), metaV1.ListOptions{
 		FieldSelector: fmt.Sprintf("metadata.name=%s", loadtestName),
 	})
@@ -97,7 +96,7 @@ func WaitLoadtest(clientSet clientSetV.Clientset, loadtestName string) error {
 		return err
 	}
 
-	_, err = WaitResource(watchObj, (WaitCondition{}).LoadtestRunning)
+	_, err = waitfor.Resource(watchObj, (waitfor.Condition{}).LoadTestRunning)
 
 	return err
 }
@@ -105,7 +104,7 @@ func WaitLoadtest(clientSet clientSetV.Clientset, loadtestName string) error {
 // DeleteLoadTest deletes a load test CR
 func DeleteLoadTest(clientSet clientSetV.Clientset, loadtestName string, testname string) error {
 	fmt.Printf("Deleting object %v for the test %v \n", loadtestName, testname)
-	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), kubernetes.KubeTimeout)
 	defer cancel()
 
 	if err := clientSet.KangalV1().LoadTests().Delete(ctx, loadtestName, metaV1.DeleteOptions{}); err != nil {
@@ -114,9 +113,9 @@ func DeleteLoadTest(clientSet clientSetV.Clientset, loadtestName string, testnam
 	return nil
 }
 
-// GetLoadtest returns a load test name
-func GetLoadtest(clientSet clientSetV.Clientset, loadtestName string) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
+// GetLoadTest returns a load test name
+func GetLoadTest(clientSet clientSetV.Clientset, loadtestName string) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), kubernetes.KubeTimeout)
 	defer cancel()
 
 	result, err := clientSet.KangalV1().LoadTests().Get(ctx, loadtestName, metaV1.GetOptions{})
@@ -126,9 +125,9 @@ func GetLoadtest(clientSet clientSetV.Clientset, loadtestName string) (string, e
 	return result.Name, nil
 }
 
-// GetLoadtestTestdata returns a load test name
-func GetLoadtestTestdata(clientSet clientSetV.Clientset, loadtestName string) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
+// GetLoadTestTestdata returns a load test name
+func GetLoadTestTestdata(clientSet clientSetV.Clientset, loadtestName string) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), kubernetes.KubeTimeout)
 	defer cancel()
 
 	result, err := clientSet.KangalV1().LoadTests().Get(ctx, loadtestName, metaV1.GetOptions{})
@@ -138,9 +137,9 @@ func GetLoadtestTestdata(clientSet clientSetV.Clientset, loadtestName string) (s
 	return result.Spec.TestData, nil
 }
 
-// GetLoadtestLabels returns load test labels.
-func GetLoadtestLabels(clientSet clientSetV.Clientset, loadtestName string) (map[string]string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
+// GetLoadTestLabels returns load test labels.
+func GetLoadTestLabels(clientSet clientSetV.Clientset, loadtestName string) (map[string]string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), kubernetes.KubeTimeout)
 	defer cancel()
 
 	result, err := clientSet.KangalV1().LoadTests().Get(ctx, loadtestName, metaV1.GetOptions{})
@@ -150,9 +149,9 @@ func GetLoadtestLabels(clientSet clientSetV.Clientset, loadtestName string) (map
 	return result.Labels, nil
 }
 
-// GetLoadtestEnvVars returns a load test name
-func GetLoadtestEnvVars(clientSet clientSetV.Clientset, loadtestName string) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
+// GetLoadTestEnvVars returns a load test name
+func GetLoadTestEnvVars(clientSet clientSetV.Clientset, loadtestName string) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), kubernetes.KubeTimeout)
 	defer cancel()
 
 	result, err := clientSet.KangalV1().LoadTests().Get(ctx, loadtestName, metaV1.GetOptions{})
@@ -162,9 +161,9 @@ func GetLoadtestEnvVars(clientSet clientSetV.Clientset, loadtestName string) (st
 	return result.Spec.EnvVars, nil
 }
 
-// GetLoadtestNamespace returns a load test namespace
-func GetLoadtestNamespace(clientSet clientSetV.Clientset, loadtestName string) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
+// GetLoadTestNamespace returns a load test namespace
+func GetLoadTestNamespace(clientSet clientSetV.Clientset, loadtestName string) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), kubernetes.KubeTimeout)
 	defer cancel()
 
 	result, err := clientSet.KangalV1().LoadTests().Get(ctx, loadtestName, metaV1.GetOptions{})
@@ -174,9 +173,9 @@ func GetLoadtestNamespace(clientSet clientSetV.Clientset, loadtestName string) (
 	return result.Status.Namespace, nil
 }
 
-// GetLoadtestPhase returns the current phase of given loadtest
-func GetLoadtestPhase(clientSet clientSetV.Clientset, loadtestName string) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
+// GetLoadTestPhase returns the current phase of given loadtest
+func GetLoadTestPhase(clientSet clientSetV.Clientset, loadtestName string) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), kubernetes.KubeTimeout)
 	defer cancel()
 
 	result, err := clientSet.KangalV1().LoadTests().Get(ctx, loadtestName, metaV1.GetOptions{})
@@ -188,7 +187,7 @@ func GetLoadtestPhase(clientSet clientSetV.Clientset, loadtestName string) (stri
 
 // GetDistributedPods returns a number of distributed pods in load test namespace
 func GetDistributedPods(clientSet typeV1.CoreV1Interface, namespace string) (coreV1.PodList, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), kubernetes.KubeTimeout)
 	defer cancel()
 
 	opts := metaV1.ListOptions{
@@ -203,7 +202,7 @@ func GetDistributedPods(clientSet typeV1.CoreV1Interface, namespace string) (cor
 
 // GetSecret returns a list of created secrets according to the given label
 func GetSecret(clientSet typeV1.CoreV1Interface, namespace string) (coreV1.SecretList, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), kubernetes.KubeTimeout)
 	defer cancel()
 
 	opts := metaV1.ListOptions{
@@ -224,62 +223,4 @@ func BuildConfig() (*rest.Config, error) {
 		return nil, err
 	}
 	return config, nil
-}
-
-// WaitCondition contains useful functions for watch conditions
-type WaitCondition struct {
-}
-
-// Added waits until resources exists
-func (WaitCondition) Added(event watch.Event) (bool, error) {
-	if watch.Added == event.Type {
-		return true, nil
-	}
-
-	return false, nil
-}
-
-// PodRunning waits until Pod are with status phase running
-func (WaitCondition) PodRunning(event watch.Event) (bool, error) {
-	if coreV1.PodRunning == event.Object.(*coreV1.Pod).Status.Phase {
-		return true, nil
-	}
-
-	return false, nil
-}
-
-// LoadtestRunning waits until Loadtest are with status phase running
-func (WaitCondition) LoadtestRunning(event watch.Event) (bool, error) {
-	if apisLoadTestV1.LoadTestRunning == event.Object.(*apisLoadTestV1.LoadTest).Status.Phase {
-		return true, nil
-	}
-
-	return false, nil
-}
-
-// LoadtestFinished waits until Loadtest are with status phase finished
-func (WaitCondition) LoadtestFinished(event watch.Event) (bool, error) {
-	if apisLoadTestV1.LoadTestFinished == event.Object.(*apisLoadTestV1.LoadTest).Status.Phase {
-		return true, nil
-	}
-
-	return false, nil
-}
-
-// WaitResource waits until a kubernetes resources to match a condition
-func WaitResource(obj watch.Interface, condFunc watchtools.ConditionFunc) (*watch.Event, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
-	defer cancel()
-
-	return watchtools.UntilWithoutRetry(ctx, obj, condFunc)
-}
-
-// WaitResourceWithContext is WaitResource with custom context when the default context is not suitable
-func WaitResourceWithContext(ctx context.Context, obj watch.Interface, condFunc watchtools.ConditionFunc) (*watch.Event, error) {
-	return watchtools.UntilWithoutRetry(ctx, obj, condFunc)
-}
-
-// WaitForResource sleeps to wait kubernetes resources to be created
-func WaitForResource(d time.Duration) {
-	time.Sleep(d * time.Second)
 }
