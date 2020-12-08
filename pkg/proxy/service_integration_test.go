@@ -81,28 +81,28 @@ func TestImplLoadTestServiceServer_Create_ReachMaxLimit(t *testing.T) {
 		t.Skip("skipping test in short mode")
 	}
 
-	rq := grpcProxyV2.CreateRequest{
-		DistributedPods: 2,
-		Type:            grpcProxyV2.LoadTestType_LOAD_TEST_TYPE_FAKE,
-		TargetUrl:       "http://example.com/foo",
-		TestFile:        readFileContents(t, "testdata/valid/loadtest.jmx", true),
-		TestData:        readFileContents(t, "testdata/valid/envvars.csv", true),
-		EnvVars:         readFileContents(t, "testdata/valid/testdata.csv", true),
+	// this number comes from integration-tests.sh that runs real server with --max-load-tests parameter
+	maxLoadTests := 3
+	for i := 0; i < maxLoadTests; i++ {
+		rq := grpcProxyV2.CreateRequest{
+			DistributedPods: 2,
+			Type:            grpcProxyV2.LoadTestType_LOAD_TEST_TYPE_FAKE,
+			TargetUrl:       "http://example.com/foo",
+			TestFile:        encodeContents(t, []byte(fmt.Sprintf("test-%d", i))),
+		}
+
+		createdLoadTestName := createLoadtest(t, &rq)
+
+		err := testHelper.WaitLoadTest(clientSet, createdLoadTestName)
+		require.NoError(t, err)
 	}
 
 	rq2 := grpcProxyV2.CreateRequest{
 		DistributedPods: 2,
 		Type:            grpcProxyV2.LoadTestType_LOAD_TEST_TYPE_FAKE,
 		TargetUrl:       "http://example.com/foo",
-		TestFile:        readFileContents(t, "testdata/valid/loadtest2.jmx", true),
-		TestData:        readFileContents(t, "testdata/valid/envvars.csv", true),
-		EnvVars:         readFileContents(t, "testdata/valid/testdata.csv", true),
+		TestFile:        encodeContents(t, []byte(`this should fail`)),
 	}
-
-	createdLoadTestName := createLoadtest(t, &rq)
-
-	err := testHelper.WaitLoadTest(clientSet, createdLoadTestName)
-	require.NoError(t, err)
 
 	rqJSON2, err := protojson.Marshal(&rq2)
 	require.NoError(t, err)
