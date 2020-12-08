@@ -261,6 +261,12 @@ func readFileContents(t *testing.T, path string, base64Encoded bool) []byte {
 		return contents
 	}
 
+	return encodeContents(t, contents)
+}
+
+func encodeContents(t *testing.T, contents []byte) []byte {
+	t.Helper()
+
 	encoded := make([]byte, base64.StdEncoding.EncodedLen(len(contents)))
 	base64.StdEncoding.Encode(encoded, contents)
 	return encoded
