@@ -27,6 +27,7 @@ import (
 type APIRunner struct {
 	GRPCConfig      GRPCConfig
 	MaxLoadTestsRun int
+	MaxListLimit    int64
 	Exporter        *prometheus.Exporter
 	KubeClient      *kube.Client
 	Logger          *zap.Logger
@@ -49,7 +50,7 @@ func RunAPIServer(ctx context.Context, cfg Config, rr APIRunner) error {
 
 	serverAPI := grpc.NewServer(opts...)
 
-	loadTestServiceServer := NewLoadTestServiceServer(rr.KubeClient, registry, rr.MaxLoadTestsRun)
+	loadTestServiceServer := NewLoadTestServiceServer(rr.KubeClient, registry, rr.MaxLoadTestsRun, rr.MaxListLimit)
 
 	grpcProxyV2.RegisterLoadTestServiceServer(serverAPI, loadTestServiceServer)
 

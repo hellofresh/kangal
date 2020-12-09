@@ -35,14 +35,16 @@ type implLoadTestServiceServer struct {
 	kubeClient      *kube.Client
 	registry        backends.Registry
 	maxLoadTestsRun int
+	maxListLimit    int64
 }
 
 // NewLoadTestServiceServer instantiates new LoadTestServiceServer implementation
-func NewLoadTestServiceServer(kubeClient *kube.Client, registry backends.Registry, maxLoadTestsRun int) grpcProxyV2.LoadTestServiceServer {
+func NewLoadTestServiceServer(kubeClient *kube.Client, registry backends.Registry, maxLoadTestsRun int, maxListLimit int64) grpcProxyV2.LoadTestServiceServer {
 	return &implLoadTestServiceServer{
 		kubeClient:      kubeClient,
 		registry:        registry,
 		maxLoadTestsRun: maxLoadTestsRun,
+		maxListLimit:    maxListLimit,
 	}
 }
 
@@ -201,6 +203,12 @@ func (s *implLoadTestServiceServer) List(ctx context.Context, in *grpcProxyV2.Li
 		Continue: in.GetPageToken(),
 		Tags:     in.GetTags(),
 		Phase:    grpcToPhaseMap[in.GetPhase()],
+	}
+	if opt.Limit > s.maxListLimit {
+		return nil, status.Errorf(codes.InvalidArgument, "limit value is too big, max possible value is %d", s.maxListLimit)
+	}
+	if opt.Limit == 0 {
+		opt.Limit = s.maxListLimit
 	}
 
 	loadTests, err := s.kubeClient.ListLoadTest(ctx, opt)

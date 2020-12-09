@@ -77,6 +77,7 @@ func NewAPICmd(ctx context.Context) *cobra.Command {
 			return proxy.RunAPIServer(ctx, cfg, proxy.APIRunner{
 				GRPCConfig:      cfg.GRPC,
 				MaxLoadTestsRun: cfg.MaxLoadTestsRun,
+				MaxListLimit:    cfg.MaxListLimit,
 				Exporter:        pe,
 				KubeClient:      kubeClient,
 				Logger:          logger,

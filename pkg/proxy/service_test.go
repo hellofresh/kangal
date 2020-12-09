@@ -98,7 +98,7 @@ func TestImplLoadTestServiceServer_Get(t *testing.T) {
 				backends.WithKangalClientSet(loadtestClientSet),
 			)
 
-			svc := NewLoadTestServiceServer(c, b, 1)
+			svc := NewLoadTestServiceServer(c, b, 1, 50)
 
 			out, err := svc.Get(ctx, &grpcProxyV2.GetRequest{Name: "aaa"})
 			assert.Equal(t, tt.out, out)
@@ -244,7 +244,7 @@ func TestImplLoadTestServiceServer_Create(t *testing.T) {
 				ctx = metadata.NewIncomingContext(ctx, metadata.New(map[string]string{mdFromRESTGw: "true"}))
 			}
 
-			svc := NewLoadTestServiceServer(c, b, 1)
+			svc := NewLoadTestServiceServer(c, b, 1, 50)
 
 			out, err := svc.Create(ctx, &rq)
 			assert.Equal(t, tt.out, out)
@@ -392,7 +392,7 @@ func TestImplLoadTestServiceServer_List(t *testing.T) {
 				backends.WithKangalClientSet(loadTestClientSet),
 			)
 
-			svc := NewLoadTestServiceServer(c, b, 1)
+			svc := NewLoadTestServiceServer(c, b, 1, 50)
 
 			out, err := svc.List(ctx, tt.in)
 			assert.Equal(t, tt.out, out)
