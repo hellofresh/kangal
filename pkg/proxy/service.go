@@ -35,14 +35,16 @@ type implLoadTestServiceServer struct {
 	kubeClient      *kube.Client
 	registry        backends.Registry
 	maxLoadTestsRun int
+	maxListLimit    int64
 }
 
 // NewLoadTestServiceServer instantiates new LoadTestServiceServer implementation
-func NewLoadTestServiceServer(kubeClient *kube.Client, registry backends.Registry, maxLoadTestsRun int) grpcProxyV2.LoadTestServiceServer {
+func NewLoadTestServiceServer(kubeClient *kube.Client, registry backends.Registry, maxLoadTestsRun int, maxListLimit int64) grpcProxyV2.LoadTestServiceServer {
 	return &implLoadTestServiceServer{
 		kubeClient:      kubeClient,
 		registry:        registry,
 		maxLoadTestsRun: maxLoadTestsRun,
+		maxListLimit:    maxListLimit,
 	}
 }
 
@@ -188,8 +190,57 @@ func (s *implLoadTestServiceServer) Create(ctx context.Context, in *grpcProxyV2.
 }
 
 // List searches and returns load tests by given filters
-func (s *implLoadTestServiceServer) List(context.Context, *grpcProxyV2.ListRequest) (*grpcProxyV2.ListResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "")
+func (s *implLoadTestServiceServer) List(ctx context.Context, in *grpcProxyV2.ListRequest) (*grpcProxyV2.ListResponse, error) {
+	logger := ctxzap.Extract(ctx)
+
+	ctx, cancel := context.WithTimeout(ctx, kube.KubeTimeout)
+	defer cancel()
+
+	logger.Debug("Retrieving list of load tests", zap.Any("in", in))
+
+	opt := kube.ListOptions{
+		Limit:    in.GetPageSize(),
+		Continue: in.GetPageToken(),
+		Tags:     in.GetTags(),
+		Phase:    grpcToPhaseMap[in.GetPhase()],
+	}
+	if opt.Limit > s.maxListLimit {
+		return nil, status.Errorf(codes.InvalidArgument, "limit value is too big, max possible value is %d", s.maxListLimit)
+	}
+	if opt.Limit == 0 {
+		opt.Limit = s.maxListLimit
+	}
+
+	loadTests, err := s.kubeClient.ListLoadTest(ctx, opt)
+	if err != nil {
+		logger.Error("Could not list load tests", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, "could not list load tests: %s", err.Error())
+	}
+
+	var remain int64
+	if loadTests.GetRemainingItemCount() != nil {
+		remain = *loadTests.GetRemainingItemCount()
+	}
+
+	out := &grpcProxyV2.ListResponse{
+		PageSize:         in.GetPageSize(),
+		NextPageToken:    loadTests.GetContinue(),
+		Remain:           remain,
+		LoadTestStatuses: make([]*grpcProxyV2.LoadTestStatus, len(loadTests.Items)),
+	}
+	for i, lt := range loadTests.Items {
+		out.LoadTestStatuses[i] = &grpcProxyV2.LoadTestStatus{
+			Name:            lt.Status.Namespace,
+			DistributedPods: *lt.Spec.DistributedPods,
+			Phase:           phaseToGRPC(lt.Status.Phase),
+			Tags:            lt.Spec.Tags,
+			HasEnvVars:      len(lt.Spec.EnvVars) != 0,
+			HasTestData:     len(lt.Spec.TestData) != 0,
+			Type:            typeToGRPC(lt.Spec.Type),
+		}
+	}
+
+	return out, nil
 }
 
 func decodeFileContents(envVars, testData, testFile []byte) (envVarsDecoded []byte, testDataDecoded []byte, testFileDecoded []byte, err error) {

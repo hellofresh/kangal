@@ -68,14 +68,15 @@ message CreateResponse {
 }
 
 message ListRequest {
-    map<string, string> tags = 1;
-    int64 limit = 2;
-    string continue = 3;
+    int64 page_size = 1;
+    string page_token = 2;
+    map<string, string> tags = 3;
+    LoadTestPhase phase = 4;
 }
 
 message ListResponse {
-    int64 limit = 1;
-    string continue = 2;
+    int64 page_size = 1;
+    string next_page_token = 2;
     int64 remain = 3;
     repeated LoadTestStatus load_test_statuses = 4;
 }
