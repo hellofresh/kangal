@@ -15,7 +15,6 @@ import (
 	coreListersV1 "k8s.io/client-go/listers/core/v1"
 
 	"github.com/hellofresh/kangal/pkg/backends"
-	"github.com/hellofresh/kangal/pkg/core/helper"
 	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
 )
@@ -48,8 +47,8 @@ type Backend struct {
 	kangalClientSet clientSetV.Interface
 	logger          *zap.Logger
 	namespaceLister coreListersV1.NamespaceLister
-	masterResources helper.Resources
-	workerResources helper.Resources
+	masterResources backends.Resources
+	workerResources backends.Resources
 	masterConfig    loadTestV1.ImageDetails
 	workerConfig    loadTestV1.ImageDetails
 	config          *Config
@@ -88,13 +87,13 @@ func (b *Backend) SetDefaults() {
 		Tag:   b.config.WorkerImageTag,
 	}
 
-	b.masterResources = helper.Resources{
+	b.masterResources = backends.Resources{
 		CPULimits:      b.config.MasterCPULimits,
 		CPURequests:    b.config.MasterCPURequests,
 		MemoryLimits:   b.config.MasterMemoryLimits,
 		MemoryRequests: b.config.MasterMemoryRequests,
 	}
-	b.workerResources = helper.Resources{
+	b.workerResources = backends.Resources{
 		CPULimits:      b.config.WorkerCPULimits,
 		CPURequests:    b.config.WorkerCPURequests,
 		MemoryLimits:   b.config.WorkerMemoryLimits,

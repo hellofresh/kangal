@@ -9,7 +9,7 @@ import (
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	"github.com/hellofresh/kangal/pkg/core/helper"
+	"github.com/hellofresh/kangal/pkg/backends"
 	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 )
 
@@ -70,7 +70,7 @@ func newMasterJob(
 	testfileConfigMap *coreV1.ConfigMap,
 	envvarSecret *coreV1.Secret,
 	reportURL string,
-	masterResources helper.Resources,
+	masterResources backends.Resources,
 	podAnnotations map[string]string,
 	image loadTestV1.ImageDetails,
 	logger *zap.Logger,
@@ -151,7 +151,7 @@ func newMasterJob(
 									SubPath:   "locustfile.py",
 								},
 							},
-							Resources: helper.BuildResourceRequirements(masterResources),
+							Resources: backends.BuildResourceRequirements(masterResources),
 							EnvFrom:   envFrom,
 						},
 					},
@@ -212,7 +212,7 @@ func newWorkerJob(
 	testfileConfigMap *coreV1.ConfigMap,
 	envvarSecret *coreV1.Secret,
 	masterService *coreV1.Service,
-	workerResources helper.Resources,
+	workerResources backends.Resources,
 	podAnnotations map[string]string,
 	image loadTestV1.ImageDetails,
 	logger *zap.Logger,
@@ -283,7 +283,7 @@ func newWorkerJob(
 									SubPath:   "locustfile.py",
 								},
 							},
-							Resources: helper.BuildResourceRequirements(workerResources),
+							Resources: backends.BuildResourceRequirements(workerResources),
 							EnvFrom:   envFrom,
 						},
 					},
