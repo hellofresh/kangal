@@ -4,18 +4,18 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap"
-	v1 "k8s.io/api/core/v1"
+	"go.uber.org/zap/zaptest"
+	coreV1 "k8s.io/api/core/v1"
 
 	"github.com/hellofresh/kangal/pkg/backends"
 	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 )
 
-var logger = zap.NewNop()
-
 func TestSplitTestData(t *testing.T) {
 	teststring := "aaa \n bbb\n ccc\n"
 	testnum := 3
+
+	logger := zaptest.NewLogger(t)
 
 	result, err := splitTestData(teststring, testnum, logger)
 	assert.NoError(t, err)
@@ -26,6 +26,8 @@ func TestSplitTestData(t *testing.T) {
 func TestSplitTestDataEmptyString(t *testing.T) {
 	teststring := ""
 	testnum := 2
+
+	logger := zaptest.NewLogger(t)
 
 	result, err := splitTestData(teststring, testnum, logger)
 	assert.NoError(t, err)
@@ -39,6 +41,8 @@ func TestSplitTestDataEmptyLines(t *testing.T) {
 	teststring := "aaa \n \n \n"
 	testnum := 2
 
+	logger := zaptest.NewLogger(t)
+
 	result, err := splitTestData(teststring, testnum, logger)
 	assert.NoError(t, err)
 	assert.Equal(t, "aaa ", string(result[0][0][0]))
@@ -48,6 +52,8 @@ func TestSplitTestDataEmptyLines(t *testing.T) {
 func TestSplitTestDataSymbols(t *testing.T) {
 	teststring := "onë tw¡™£¢§ˆˆ•ªºœo\n3+4\n dreÄ \nquatr%o\n"
 	testnum := 2
+
+	logger := zaptest.NewLogger(t)
 
 	result, err := splitTestData(teststring, testnum, logger)
 
@@ -60,6 +66,8 @@ func TestSplitTestDataTrimComma(t *testing.T) {
 	teststring := "one, two, tree, four"
 	testnum := 1
 
+	logger := zaptest.NewLogger(t)
+
 	result, err := splitTestData(teststring, testnum, logger)
 	assert.NoError(t, err)
 	assert.Equal(t, 4, len(result[0][0]))
@@ -71,6 +79,8 @@ func TestSplitTestDataInvalid(t *testing.T) {
 	testnum := 1
 	expectedErrorMessage := "record on line 2: wrong number of fields"
 
+	logger := zaptest.NewLogger(t)
+
 	_, err := splitTestData(teststring, testnum, logger)
 	assert.Error(t, err)
 	assert.Equal(t, expectedErrorMessage, err.Error())
@@ -79,6 +89,7 @@ func TestSplitTestDataInvalid(t *testing.T) {
 func TestGetNamespaceFromName(t *testing.T) {
 	teststring := "dummy-name-for-the-test-fake-animal"
 	expectedNamespace := "fake-animal"
+	logger := zaptest.NewLogger(t)
 	res, err := getNamespaceFromLoadTestName(teststring, logger)
 	assert.NoError(t, err)
 	assert.Equal(t, expectedNamespace, res)
@@ -87,6 +98,7 @@ func TestGetNamespaceFromName(t *testing.T) {
 func TestGetNamespaceFromInvalidName(t *testing.T) {
 	teststring := "dummy_test_fak e_animal"
 	expectedError := "invalid argument"
+	logger := zaptest.NewLogger(t)
 	res, err := getNamespaceFromLoadTestName(teststring, logger)
 	assert.Error(t, err)
 	assert.Equal(t, expectedError, err.Error())
@@ -128,7 +140,7 @@ func TestPodResourceConfiguration(t *testing.T) {
 	assert.Equal(t, c.masterResources.MemoryLimits, masterJob.Spec.Template.Spec.Containers[0].Resources.Limits.Memory().String())
 	assert.Equal(t, c.masterResources.MemoryRequests, masterJob.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().String())
 
-	workerPod := c.NewPod(lt, 0, &v1.ConfigMap{}, map[string]string{"": ""})
+	workerPod := c.NewPod(lt, 0, &coreV1.ConfigMap{}, map[string]string{"": ""})
 	assert.Equal(t, c.workerResources.CPULimits, workerPod.Spec.Containers[0].Resources.Limits.Cpu().String())
 	assert.Equal(t, c.workerResources.CPURequests, workerPod.Spec.Containers[0].Resources.Requests.Cpu().String())
 	assert.Equal(t, c.workerResources.MemoryLimits, workerPod.Spec.Containers[0].Resources.Limits.Memory().String())
