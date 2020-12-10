@@ -15,7 +15,7 @@ import (
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	"github.com/hellofresh/kangal/pkg/core/helper"
+	"github.com/hellofresh/kangal/pkg/backends"
 	"github.com/hellofresh/kangal/pkg/core/waitfor"
 	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 )
@@ -114,7 +114,7 @@ func (b *Backend) NewConfigMap(loadTest loadTestV1.LoadTest) *coreV1.ConfigMap {
 func (b *Backend) NewSecret(loadTest loadTestV1.LoadTest) (*coreV1.Secret, error) {
 	envVars := loadTest.Spec.EnvVars
 
-	secretMap, err := helper.ReadEnvs(envVars)
+	secretMap, err := backends.ReadEnvs(envVars)
 	if err != nil {
 		b.logger.Error("Error on creating secrets from envVars file", zap.Error(err))
 		return nil, err
@@ -204,7 +204,7 @@ func (b *Backend) NewPod(loadTest loadTestV1.LoadTest, i int, configMap *coreV1.
 							MountPath: "/testdata",
 						},
 					},
-					Resources: helper.BuildResourceRequirements(b.workerResources),
+					Resources: backends.BuildResourceRequirements(b.workerResources),
 					EnvFrom: []coreV1.EnvFromSource{
 						{
 							SecretRef: &coreV1.SecretEnvSource{
@@ -301,7 +301,7 @@ func (b *Backend) NewJMeterMasterJob(loadTest loadTestV1.LoadTest, reportURL str
 									SubPath:   "jmeter.properties",
 								},
 							},
-							Resources: helper.BuildResourceRequirements(b.masterResources),
+							Resources: backends.BuildResourceRequirements(b.masterResources),
 						},
 					},
 					Volumes: []coreV1.Volume{

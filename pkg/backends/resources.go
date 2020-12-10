@@ -1,10 +1,6 @@
-package helper
+package backends
 
 import (
-	"encoding/csv"
-	"io"
-	"strings"
-
 	coreV1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
@@ -43,24 +39,4 @@ func BuildResourceRequirements(resources Resources) coreV1.ResourceRequirements 
 		Limits:   limits,
 		Requests: requests,
 	}
-}
-
-// ReadEnvs reads data from csv file to save it as a map for creating a secret
-func ReadEnvs(envVars string) (map[string]string, error) {
-	m := make(map[string]string)
-	reader := csv.NewReader(strings.NewReader(envVars))
-	for {
-		line, err := reader.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return nil, err
-		}
-		if len(line) != 2 {
-			return nil, ErrInvalidCSVFormat
-		}
-		m[line[0]] = line[1]
-	}
-	return m, nil
 }

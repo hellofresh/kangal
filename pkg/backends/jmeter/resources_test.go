@@ -3,11 +3,12 @@ package jmeter
 import (
 	"testing"
 
-	"github.com/hellofresh/kangal/pkg/core/helper"
-	loadtestv1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 	v1 "k8s.io/api/core/v1"
+
+	"github.com/hellofresh/kangal/pkg/backends"
+	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 )
 
 var logger = zap.NewNop()
@@ -93,13 +94,13 @@ func TestGetNamespaceFromInvalidName(t *testing.T) {
 }
 
 func TestPodResourceConfiguration(t *testing.T) {
-	lt := loadtestv1.LoadTest{
-		Spec: loadtestv1.LoadTestSpec{
-			MasterConfig: loadtestv1.ImageDetails{
+	lt := loadTestV1.LoadTest{
+		Spec: loadTestV1.LoadTestSpec{
+			MasterConfig: loadTestV1.ImageDetails{
 				Image: defaultMasterImageName,
 				Tag:   defaultMasterImageTag,
 			},
-			WorkerConfig: loadtestv1.ImageDetails{
+			WorkerConfig: loadTestV1.ImageDetails{
 				Image: defaultWorkerImageName,
 				Tag:   defaultWorkerImageTag,
 			},
@@ -107,13 +108,13 @@ func TestPodResourceConfiguration(t *testing.T) {
 	}
 
 	c := &Backend{
-		masterResources: helper.Resources{
+		masterResources: backends.Resources{
 			CPULimits:      "100m",
 			CPURequests:    "200m",
 			MemoryLimits:   "100Mi",
 			MemoryRequests: "200Mi",
 		},
-		workerResources: helper.Resources{
+		workerResources: backends.Resources{
 			CPULimits:      "300m",
 			CPURequests:    "400m",
 			MemoryLimits:   "300Mi",

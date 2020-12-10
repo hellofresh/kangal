@@ -12,7 +12,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/hellofresh/kangal/pkg/backends"
-	"github.com/hellofresh/kangal/pkg/core/helper"
 	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 )
 
@@ -41,8 +40,8 @@ type Backend struct {
 
 	// defined on SetDefaults
 	image           loadTestV1.ImageDetails
-	masterResources helper.Resources
-	workerResources helper.Resources
+	masterResources backends.Resources
+	workerResources backends.Resources
 }
 
 // Type returns backend type name
@@ -73,14 +72,14 @@ func (b *Backend) SetDefaults() {
 		Tag:   b.config.ImageTag,
 	}
 
-	b.workerResources = helper.Resources{
+	b.workerResources = backends.Resources{
 		CPULimits:      b.config.WorkerCPULimits,
 		CPURequests:    b.config.WorkerCPURequests,
 		MemoryLimits:   b.config.WorkerMemoryLimits,
 		MemoryRequests: b.config.WorkerMemoryRequests,
 	}
 
-	b.masterResources = helper.Resources{
+	b.masterResources = backends.Resources{
 		CPULimits:      b.config.MasterCPULimits,
 		CPURequests:    b.config.MasterCPURequests,
 		MemoryLimits:   b.config.MasterMemoryLimits,
@@ -160,7 +159,7 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, report
 	var secret *coreV1.Secret
 
 	if loadTest.Spec.EnvVars != "" {
-		envs, err := helper.ReadEnvs(loadTest.Spec.EnvVars)
+		envs, err := backends.ReadEnvs(loadTest.Spec.EnvVars)
 		if err != nil {
 			b.logger.Error("Error reading envVars", zap.Error(err))
 			return err
