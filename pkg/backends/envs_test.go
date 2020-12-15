@@ -13,8 +13,8 @@ func TestReadSecret(t *testing.T) {
 
 	result, err := backends.ReadEnvs(teststring)
 	assert.NoError(t, err)
-	assert.Equal(t, int(3), len(result))
-	assert.Equal(t, "2", string(result["bbb"]))
+	assert.Equal(t, 3, len(result))
+	assert.Equal(t, "2", result["bbb"])
 }
 
 func TestReadSecretInvalid(t *testing.T) {
@@ -31,5 +31,5 @@ func TestReadSecretEmpty(t *testing.T) {
 
 	result, err := backends.ReadEnvs(teststring)
 	assert.NoError(t, err)
-	assert.Equal(t, int(0), len(result))
+	assert.Equal(t, 0, len(result))
 }

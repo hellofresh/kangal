@@ -32,7 +32,7 @@ func TestShouldDeleteLoadtest(t *testing.T) {
 					},
 				},
 			},
-			time.Duration(time.Hour * 2),
+			time.Hour * 2,
 		},
 		{
 			"test finished now",
@@ -45,7 +45,7 @@ func TestShouldDeleteLoadtest(t *testing.T) {
 					},
 				},
 			},
-			time.Duration(time.Hour * 2),
+			time.Hour * 2,
 		},
 		{
 			"test errored long ago",
@@ -58,7 +58,7 @@ func TestShouldDeleteLoadtest(t *testing.T) {
 					},
 				},
 			},
-			time.Duration(time.Hour * 2),
+			time.Hour * 2,
 		},
 		{
 			"test errored long ago, no completion",
@@ -74,7 +74,7 @@ func TestShouldDeleteLoadtest(t *testing.T) {
 					CreationTimestamp: metav1TimeTwoMonthsAgo,
 				},
 			},
-			time.Duration(time.Hour * 2),
+			time.Hour * 2,
 		},
 		{
 			"test errored now, no jobstatus",
@@ -88,7 +88,7 @@ func TestShouldDeleteLoadtest(t *testing.T) {
 					CreationTimestamp: metav1TimeNow,
 				},
 			},
-			time.Duration(time.Hour * 2),
+			time.Hour * 2,
 		},
 	}
 
