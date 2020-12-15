@@ -12,7 +12,7 @@ func init() {
 	govalidator.AddCustomRule("duration", func(field string, rule string, message string, value interface{}) error {
 		_, err := time.ParseDuration(value.(string))
 		if nil != err {
-			return fmt.Errorf("The %s field must be a valid duration", field)
+			return fmt.Errorf("the %s field must be a valid duration", field)
 		}
 		return nil
 	})
@@ -20,7 +20,7 @@ func init() {
 	govalidator.AddCustomRule("http", func(field string, rule string, message string, value interface{}) error {
 		_, err := url.Parse(value.(string))
 		if nil != err {
-			return fmt.Errorf("The %s field must be a valid URL", field)
+			return fmt.Errorf("the %s field must be a valid URL", field)
 		}
 		return nil
 	})

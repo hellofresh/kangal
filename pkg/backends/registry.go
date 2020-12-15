@@ -10,9 +10,9 @@ import (
 
 var (
 	// ErrBackendRegistered returned when try to register a backend twice
-	ErrBackendRegistered = errors.New("Backend already registered")
+	ErrBackendRegistered = errors.New("backend already registered")
 	// ErrNoBackendRegistered returned when no backend found for given type
-	ErrNoBackendRegistered = errors.New("No backend registered")
+	ErrNoBackendRegistered = errors.New("no backend registered")
 )
 
 // defaultRegistry contains the list of available backends

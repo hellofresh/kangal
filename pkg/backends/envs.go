@@ -9,7 +9,7 @@ import (
 
 var (
 	// ErrInvalidCSVFormat when the number of columns is different than two
-	ErrInvalidCSVFormat = errors.New("Invalid csv format, expecting: key, value")
+	ErrInvalidCSVFormat = errors.New("invalid csv format, expecting: key, value")
 )
 
 // ReadEnvs reads data from csv file to save it as a map for creating a secret
