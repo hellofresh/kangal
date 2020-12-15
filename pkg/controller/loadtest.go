@@ -24,7 +24,7 @@ import (
 	"github.com/hellofresh/kangal/pkg/backends"
 	"github.com/hellofresh/kangal/pkg/core/observability"
 	kubekangal "github.com/hellofresh/kangal/pkg/kubernetes"
-	loadtestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
+	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
 	sampleScheme "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned/scheme"
 	"github.com/hellofresh/kangal/pkg/kubernetes/generated/informers/externalversions"
@@ -416,7 +416,7 @@ func (c *Controller) enqueueLoadTest(obj interface{}) {
 	c.workQueue.Add(key)
 }
 
-func (c *Controller) updateLoadTestStatus(ctx context.Context, loadTest *loadtestV1.LoadTest) (*loadtestV1.LoadTest, error) {
+func (c *Controller) updateLoadTestStatus(ctx context.Context, loadTest *loadTestV1.LoadTest) (*loadTestV1.LoadTest, error) {
 	// UpdateStatus will not allow changes to the Spec of the resource
 	return c.kangalClientSet.KangalV1().LoadTests().UpdateStatus(ctx, loadTest, metaV1.UpdateOptions{})
 }
@@ -424,7 +424,7 @@ func (c *Controller) updateLoadTestStatus(ctx context.Context, loadTest *loadtes
 // checkOrDeleteLoadTest deletes a LoadTest after it has the status "Finished" and
 // has been completed for more than the clean up threshold or in status "Errored"
 // and has creation time older then threshold
-func (c *Controller) checkOrDeleteLoadTest(ctx context.Context, loadTest *loadtestV1.LoadTest) error {
+func (c *Controller) checkOrDeleteLoadTest(ctx context.Context, loadTest *loadTestV1.LoadTest) error {
 	if checkLoadTestLifeTimeExceeded(loadTest, c.cfg.CleanUpThreshold) {
 		c.logger.Info("Deleting loadtest",
 			zap.String("loadtest", loadTest.Name), zap.String("phase", string(loadTest.Status.Phase)))
@@ -435,7 +435,7 @@ func (c *Controller) checkOrDeleteLoadTest(ctx context.Context, loadTest *loadte
 }
 
 // checkOrCreateNamespace checks if a namespace has been created and if not deletes it
-func (c *Controller) checkOrCreateNamespace(ctx context.Context, loadtest *loadtestV1.LoadTest) error {
+func (c *Controller) checkOrCreateNamespace(ctx context.Context, loadtest *loadTestV1.LoadTest) error {
 	if loadtest.Status.Namespace != "" {
 		return nil
 	}
@@ -467,7 +467,7 @@ func (c *Controller) checkOrCreateNamespace(ctx context.Context, loadtest *loadt
 }
 
 // newNamespace creates a new namespaces object with a random name
-func newNamespace(loadtest *loadtestV1.LoadTest, namespaceAnnotations map[string]string) (*coreV1.Namespace, error) {
+func newNamespace(loadtest *loadTestV1.LoadTest, namespaceAnnotations map[string]string) (*coreV1.Namespace, error) {
 	labels := map[string]string{
 		"app":        "kangal",
 		"controller": loadtest.Name,
@@ -479,21 +479,21 @@ func newNamespace(loadtest *loadtestV1.LoadTest, namespaceAnnotations map[string
 			Labels:      labels,
 			Annotations: namespaceAnnotations,
 			OwnerReferences: []metaV1.OwnerReference{
-				*metaV1.NewControllerRef(loadtest, loadtestV1.SchemeGroupVersion.WithKind("LoadTest")),
+				*metaV1.NewControllerRef(loadtest, loadTestV1.SchemeGroupVersion.WithKind("LoadTest")),
 			},
 		},
 	}, nil
 }
 
-func checkLoadTestLifeTimeExceeded(loadTest *loadtestV1.LoadTest, deleteThreshold time.Duration) bool {
+func checkLoadTestLifeTimeExceeded(loadTest *loadTestV1.LoadTest, deleteThreshold time.Duration) bool {
 	if loadTest.Status.JobStatus.CompletionTime != nil {
 		if time.Since(loadTest.Status.JobStatus.CompletionTime.Time) > deleteThreshold &&
-			(loadTest.Status.Phase == loadtestV1.LoadTestFinished || loadTest.Status.Phase == loadtestV1.LoadTestErrored) {
+			(loadTest.Status.Phase == loadTestV1.LoadTestFinished || loadTest.Status.Phase == loadTestV1.LoadTestErrored) {
 			return true
 		}
 	}
 
-	if loadTest.Status.Phase == loadtestV1.LoadTestErrored &&
+	if loadTest.Status.Phase == loadTestV1.LoadTestErrored &&
 		time.Since(loadTest.ObjectMeta.CreationTimestamp.Time) > deleteThreshold {
 		return true
 	}
