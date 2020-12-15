@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"context"
 	"fmt"
 
 	"contrib.go.opencensus.io/exporter/prometheus"
@@ -27,7 +26,7 @@ type Runner struct {
 }
 
 // Run runs an instance of kubernetes kubeController
-func Run(ctx context.Context, cfg Config, rr Runner) error {
+func Run(cfg Config, rr Runner) error {
 	stopCh := make(chan struct{})
 
 	registry := backends.New(
