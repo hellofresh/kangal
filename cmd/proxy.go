@@ -75,7 +75,7 @@ func NewProxyCmd(ctx context.Context) *cobra.Command {
 			cfg.MaxLoadTestsRun = opts.maxLoadTestsRun
 			cfg.MasterURL = opts.masterURL
 
-			return proxy.RunServer(ctx, cfg, proxy.Runner{
+			return proxy.RunServer(cfg, proxy.Runner{
 				Exporter:   pe,
 				KubeClient: kubeClient,
 				Logger:     logger,

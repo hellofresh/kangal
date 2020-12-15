@@ -1,7 +1,6 @@
 package proxy
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 
@@ -27,7 +26,7 @@ type Runner struct {
 }
 
 // RunServer runs Kangal proxy API
-func RunServer(ctx context.Context, cfg Config, rr Runner) error {
+func RunServer(cfg Config, rr Runner) error {
 	registry := backends.New(
 		backends.WithLogger(rr.Logger),
 	)
