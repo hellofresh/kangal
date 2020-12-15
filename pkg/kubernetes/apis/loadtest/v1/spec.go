@@ -6,12 +6,6 @@ import (
 )
 
 var (
-	// ErrInvalidLoadTestType error on LoadTest type if not of allowed types
-	ErrInvalidLoadTestType = errors.New("invalid LoadTest type")
-	// ErrRequireMinOneDistributedPod JMeter spec requires 1 or more DistributedPods
-	ErrRequireMinOneDistributedPod = errors.New("LoadTest must specify 1 or more DistributedPods")
-	// ErrRequireTestFile the TestFile filed is required to not be an empty string
-	ErrRequireTestFile = errors.New("LoadTest TestFile is required")
 	// ErrTagMissingLabel indicates that tag label is missing.
 	ErrTagMissingLabel = errors.New("missing tag label")
 	// ErrTagMissingValue indicates that tag value is missing.
