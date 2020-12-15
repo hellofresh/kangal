@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -26,7 +25,7 @@ type controllerCmdOptions struct {
 }
 
 // NewControllerCmd creates a new proxy command
-func NewControllerCmd(ctx context.Context) *cobra.Command {
+func NewControllerCmd() *cobra.Command {
 	opts := &controllerCmdOptions{}
 
 	cmd := &cobra.Command{
