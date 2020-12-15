@@ -76,8 +76,9 @@ func TestIntegrationJMeter(t *testing.T) {
 		require.Equal(t, expectedLoadtestName, jmeterNamespace.Name)
 	})
 
+	var cm *coreV1.ConfigMapList
+
 	t.Run("Checking JMeter configmap is created", func(t *testing.T) {
-		var cm *coreV1.ConfigMapList
 		for i := 0; i < 5; i++ {
 			cm, _ = client.CoreV1().ConfigMaps(jmeterNamespace.Name).List(context.Background(), metaV1.ListOptions{LabelSelector: "app=hf-jmeter"})
 			if len(cm.Items) != 0 {
