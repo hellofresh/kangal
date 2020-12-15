@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"flag"
 	"fmt"
 
@@ -24,7 +23,7 @@ type proxyCmdOpts struct {
 }
 
 // NewProxyCmd creates a new proxy command
-func NewProxyCmd(ctx context.Context) *cobra.Command {
+func NewProxyCmd() *cobra.Command {
 	opts := &proxyCmdOpts{}
 
 	cmd := &cobra.Command{
