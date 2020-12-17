@@ -102,7 +102,7 @@ func TestGetLoadTestStatusFromJobs(t *testing.T) {
 	}
 
 	for _, scenario := range scenarios {
-		actual := getLoadTestStatusFromJobs(scenario.MasterJob, scenario.WorkerJob)
+		actual := determineLoadTestStatusFromJobs(scenario.MasterJob, scenario.WorkerJob)
 		assert.Equal(t, scenario.Expected, actual)
 	}
 }

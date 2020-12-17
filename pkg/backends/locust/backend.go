@@ -246,7 +246,7 @@ func (b *Backend) SyncStatus(ctx context.Context, loadTest loadTestV1.LoadTest, 
 		return err
 	}
 
-	loadTestStatus.Phase = getLoadTestStatusFromJobs(masterJob, workerJob)
+	loadTestStatus.Phase = determineLoadTestStatusFromJobs(masterJob, workerJob)
 
 	return nil
 }
