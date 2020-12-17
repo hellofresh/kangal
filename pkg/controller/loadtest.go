@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"go.opencensus.io/stats"
 	"go.uber.org/zap"
 	batchV1 "k8s.io/api/batch/v1"
 	coreV1 "k8s.io/api/core/v1"
@@ -302,7 +303,7 @@ func (c *Controller) syncHandler(key string) error {
 	}
 	// copy object before mutate it
 	loadTest := loadTestFromCache.DeepCopy()
-	defer c.updateLoadTestStatus(ctx, loadTest)
+	defer c.updateLoadTestStatus(ctx, key, loadTest, loadTestFromCache)
 
 	var reportURL string
 	if c.cfg.KangalProxyURL != "" {
@@ -416,9 +417,25 @@ func (c *Controller) enqueueLoadTest(obj interface{}) {
 	c.workQueue.Add(key)
 }
 
-func (c *Controller) updateLoadTestStatus(ctx context.Context, loadTest *loadtestV1.LoadTest) (*loadtestV1.LoadTest, error) {
+func (c *Controller) updateLoadTestStatus(ctx context.Context, key string, loadTest *loadtestV1.LoadTest, loadTestFromCache *loadtestV1.LoadTest) {
 	// UpdateStatus will not allow changes to the Spec of the resource
-	return c.kangalClientSet.KangalV1().LoadTests().UpdateStatus(ctx, loadTest, metaV1.UpdateOptions{})
+	_, err := c.kangalClientSet.KangalV1().LoadTests().UpdateStatus(ctx, loadTest, metaV1.UpdateOptions{})
+	if err != nil {
+		// The LoadTest resource may be conflicted, in which case we stop
+		// processing.
+		if errors.IsConflict(err) {
+			utilRuntime.HandleError(fmt.Errorf("there is a conflict with loadtest '%s' between datastore and cache. it might be because object has been removed or modified in the datastore", key))
+			return
+		}
+		c.logger.Error("Failed updating loadtest status", zap.Error(err))
+		return
+	}
+
+	// Compare phase change and update metrics
+	if loadTestFromCache.Status.Phase != loadtestV1.LoadTestFinished &&
+		loadTest.Status.Phase == loadtestV1.LoadTestFinished {
+		stats.Record(ctx, observability.MFinishedLoadtestCountStat.M(1))
+	}
 }
 
 // checkOrDeleteLoadTest deletes a LoadTest after it has the status "Finished" and
