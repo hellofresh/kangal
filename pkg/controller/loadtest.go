@@ -457,6 +457,7 @@ func (c *Controller) checkOrCreateNamespace(ctx context.Context, loadtest *loadt
 		}
 		namespaceName = namespaceObj.GetName()
 		c.logger.Info("Created new namespace", zap.String("namespace", namespaceName), zap.String("LoadTest", loadtest.GetName()))
+		stats.Record(ctx, observability.MCreatedLoadtestCountStat.M(1))
 	} else {
 		namespaceName = namespaces.Items[0].Name
 	}
