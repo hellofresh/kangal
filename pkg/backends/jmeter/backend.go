@@ -283,7 +283,7 @@ func (b *Backend) SyncStatus(ctx context.Context, loadTest loadTestV1.LoadTest, 
 
 	// Get jmeter job in namespace and update the LoadTest status with
 	// the Job status
-	loadTestStatus.Phase = getLoadTestPhaseFromJob(job.Status)
+	loadTestStatus.Phase = determineLoadTestPhaseFromJob(job.Status)
 	loadTestStatus.JobStatus = job.Status
 
 	return nil
@@ -312,7 +312,8 @@ func workerPodHasTimeout(startTime *metaV1.Time, loadtestStatus loadTestV1.LoadT
 		loadtestStatus.Phase == loadTestV1.LoadTestCreating
 }
 
-func getLoadTestPhaseFromJob(status batchV1.JobStatus) loadTestV1.LoadTestPhase {
+// determineLoadTestPhaseFromJob
+func determineLoadTestPhaseFromJob(status batchV1.JobStatus) loadTestV1.LoadTestPhase {
 	if status.Active > 0 {
 		return loadTestV1.LoadTestRunning
 	}

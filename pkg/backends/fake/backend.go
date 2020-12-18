@@ -115,7 +115,7 @@ func (b *Backend) SyncStatus(ctx context.Context, _ loadTestV1.LoadTest, loadTes
 
 	// Get Fake job in namespace and update the LoadTest status with
 	// the Job status
-	loadTestStatus.Phase = getLoadTestPhaseFromJob(job.Status)
+	loadTestStatus.Phase = determineLoadTestPhaseFromJob(job.Status)
 	loadTestStatus.JobStatus = job.Status
 
 	return nil
@@ -165,7 +165,8 @@ func (b *Backend) newMasterJob(loadTest loadTestV1.LoadTest) *batchV1.Job {
 	}
 }
 
-func getLoadTestPhaseFromJob(status batchV1.JobStatus) loadTestV1.LoadTestPhase {
+// determineLoadTestPhaseFromJob reads existing job statuses and determines what the loadtest phase should be
+func determineLoadTestPhaseFromJob(status batchV1.JobStatus) loadTestV1.LoadTestPhase {
 	if status.Active > 0 {
 		return loadTestV1.LoadTestRunning
 	}

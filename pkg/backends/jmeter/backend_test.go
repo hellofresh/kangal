@@ -109,7 +109,7 @@ func TestGetLoadTestPhaseFromJob(t *testing.T) {
 	}
 
 	for _, test := range testPhases {
-		phase := getLoadTestPhaseFromJob(test.JobStatus)
+		phase := determineLoadTestPhaseFromJob(test.JobStatus)
 		assert.Equal(t, test.ExpectedPhase, phase)
 	}
 }

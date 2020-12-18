@@ -305,7 +305,8 @@ func newWorkerJob(
 	}
 }
 
-func getLoadTestStatusFromJobs(masterJob *batchV1.Job, workerJob *batchV1.Job) loadTestV1.LoadTestPhase {
+// determineLoadTestStatusFromJobs reads existing job statuses and determines what the loadtest status should be
+func determineLoadTestStatusFromJobs(masterJob *batchV1.Job, workerJob *batchV1.Job) loadTestV1.LoadTestPhase {
 	if workerJob.Status.Failed > int32(0) || masterJob.Status.Failed > int32(0) {
 		return loadTestV1.LoadTestErrored
 	}
