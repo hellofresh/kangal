@@ -15,6 +15,12 @@ var (
 	reconcileCountStat   = stats.Int64("reconcile_count", "Number of reconcile operations", stats.UnitDimensionless)
 	reconcileLatencyStat = stats.Int64("reconcile_latency", "Latency of reconcile operations", stats.UnitMilliseconds)
 
+	// MCreatedLoadtestCountStat counts the number of loadtests created
+	MCreatedLoadtestCountStat = stats.Int64("created_loadtests_count", "Number of loadtests created", stats.UnitDimensionless)
+
+	// MFinishedLoadtestCountStat counts the number of finished loadtests
+	MFinishedLoadtestCountStat = stats.Int64("finished_loadtests_count", "Number of finished loadtests", stats.UnitDimensionless)
+
 	// reconcileDistribution defines the bucket boundaries for the histogram of reconcile latency metric.
 	// Bucket boundaries are 10ms, 100ms, 1s, 10s, 30s and 60s.
 	reconcileDistribution = view.Distribution(10, 100, 1000, 10000, 30000, 60000)
@@ -45,6 +51,16 @@ var ControllerViews = []*view.View{
 		Measure:     reconcileLatencyStat,
 		Aggregation: reconcileDistribution,
 		TagKeys:     []tag.Key{reconcilerTagKey, keyTagKey, successTagKey},
+	},
+	{
+		Description: MCreatedLoadtestCountStat.Description(),
+		Measure:     MCreatedLoadtestCountStat,
+		Aggregation: view.Count(),
+	},
+	{
+		Description: MFinishedLoadtestCountStat.Description(),
+		Measure:     MFinishedLoadtestCountStat,
+		Aggregation: view.Count(),
 	},
 }
 
