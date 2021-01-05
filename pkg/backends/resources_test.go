@@ -15,6 +15,6 @@ func TestBuildResourceRequirements(t *testing.T) {
 		MemoryLimits:   "128Mi",
 		MemoryRequests: "64Mi",
 	})
-	assert.Equal(t, int(2), len(req.Limits))
-	assert.Equal(t, int(2), len(req.Requests))
+	assert.Equal(t, 2, len(req.Limits))
+	assert.Equal(t, 2, len(req.Requests))
 }

@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -26,7 +25,7 @@ type controllerCmdOptions struct {
 }
 
 // NewControllerCmd creates a new proxy command
-func NewControllerCmd(ctx context.Context) *cobra.Command {
+func NewControllerCmd() *cobra.Command {
 	opts := &controllerCmdOptions{}
 
 	cmd := &cobra.Command{
@@ -78,7 +77,7 @@ func NewControllerCmd(ctx context.Context) *cobra.Command {
 			kubeInformerFactory := kubeInformers.NewSharedInformerFactory(kubeClient, time.Second*30)
 			kangalInformerFactory := informers.NewSharedInformerFactory(kangalClient, time.Second*30)
 
-			return controller.Run(ctx, cfg, controller.Runner{
+			return controller.Run(cfg, controller.Runner{
 				Logger:         logger,
 				Exporter:       pe,
 				KubeClient:     kubeClient,

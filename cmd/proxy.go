@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"flag"
 	"fmt"
 
@@ -24,7 +23,7 @@ type proxyCmdOpts struct {
 }
 
 // NewProxyCmd creates a new proxy command
-func NewProxyCmd(ctx context.Context) *cobra.Command {
+func NewProxyCmd() *cobra.Command {
 	opts := &proxyCmdOpts{}
 
 	cmd := &cobra.Command{
@@ -75,7 +74,7 @@ func NewProxyCmd(ctx context.Context) *cobra.Command {
 			cfg.MaxLoadTestsRun = opts.maxLoadTestsRun
 			cfg.MasterURL = opts.masterURL
 
-			return proxy.RunServer(ctx, cfg, proxy.Runner{
+			return proxy.RunServer(cfg, proxy.Runner{
 				Exporter:   pe,
 				KubeClient: kubeClient,
 				Logger:     logger,

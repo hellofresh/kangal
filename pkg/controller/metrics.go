@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 
@@ -16,7 +15,7 @@ import (
 )
 
 //RunMetricsServer starts Prometheus metrics server
-func RunMetricsServer(ctx context.Context, cfg Config, rr Runner, stopChan chan struct{}) error {
+func RunMetricsServer(cfg Config, rr Runner, stopChan chan struct{}) error {
 	r := chi.NewRouter()
 	// Define Middleware
 	r.Use(middleware.RequestID)

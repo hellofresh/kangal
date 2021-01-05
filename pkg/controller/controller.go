@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"context"
 	"fmt"
 
 	"contrib.go.opencensus.io/exporter/prometheus"
@@ -27,7 +26,7 @@ type Runner struct {
 }
 
 // Run runs an instance of kubernetes kubeController
-func Run(ctx context.Context, cfg Config, rr Runner) error {
+func Run(cfg Config, rr Runner) error {
 	stopCh := make(chan struct{})
 
 	registry := backends.New(
@@ -45,7 +44,7 @@ func Run(ctx context.Context, cfg Config, rr Runner) error {
 	rr.KangalInformer.Start(stopCh)
 	rr.KubeInformer.Start(stopCh)
 
-	if err := RunMetricsServer(ctx, cfg, rr, stopCh); err != nil {
+	if err := RunMetricsServer(cfg, rr, stopCh); err != nil {
 		return fmt.Errorf("could not initialise Metrics Server: %w", err)
 	}
 

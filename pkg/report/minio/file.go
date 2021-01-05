@@ -22,7 +22,7 @@ func (f *memoryFile) Stat() (os.FileInfo, error) {
 	return &memoryFileInfo{f}, nil
 }
 
-func (f *memoryFile) Readdir(count int) ([]os.FileInfo, error) {
+func (f *memoryFile) Readdir(int) ([]os.FileInfo, error) {
 	return make([]os.FileInfo, 0), nil
 }
 

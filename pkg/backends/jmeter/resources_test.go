@@ -20,7 +20,7 @@ func TestSplitTestData(t *testing.T) {
 	result, err := splitTestData(teststring, testnum, logger)
 	assert.NoError(t, err)
 	assert.Equal(t, testnum, len(result))
-	assert.Equal(t, "aaa ", string(result[0][0][0]))
+	assert.Equal(t, "aaa ", result[0][0][0])
 }
 
 func TestSplitTestDataEmptyString(t *testing.T) {
@@ -45,8 +45,8 @@ func TestSplitTestDataEmptyLines(t *testing.T) {
 
 	result, err := splitTestData(teststring, testnum, logger)
 	assert.NoError(t, err)
-	assert.Equal(t, "aaa ", string(result[0][0][0]))
-	assert.Equal(t, " ", string(result[1][0][0]))
+	assert.Equal(t, "aaa ", result[0][0][0])
+	assert.Equal(t, " ", result[1][0][0])
 }
 
 func TestSplitTestDataSymbols(t *testing.T) {
@@ -58,8 +58,8 @@ func TestSplitTestDataSymbols(t *testing.T) {
 	result, err := splitTestData(teststring, testnum, logger)
 
 	assert.NoError(t, err)
-	assert.Equal(t, "3+4", string(result[0][1][0]))
-	assert.Equal(t, "quatr%o", string(result[1][1][0]))
+	assert.Equal(t, "3+4", result[0][1][0])
+	assert.Equal(t, "quatr%o", result[1][1][0])
 }
 
 func TestSplitTestDataTrimComma(t *testing.T) {
@@ -71,7 +71,7 @@ func TestSplitTestDataTrimComma(t *testing.T) {
 	result, err := splitTestData(teststring, testnum, logger)
 	assert.NoError(t, err)
 	assert.Equal(t, 4, len(result[0][0]))
-	assert.Equal(t, " four", string(result[0][0][3]))
+	assert.Equal(t, " four", result[0][0][3])
 }
 
 func TestSplitTestDataInvalid(t *testing.T) {

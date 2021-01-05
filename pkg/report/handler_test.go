@@ -12,20 +12,19 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-chi/chi"
+	"github.com/minio/minio-go/v6"
+	"github.com/spf13/afero"
+	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	k8sfake "k8s.io/client-go/kubernetes/fake"
 	k8stesting "k8s.io/client-go/testing"
 
 	kk8s "github.com/hellofresh/kangal/pkg/kubernetes"
-	loadtestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
+	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	"github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned/fake"
-	"github.com/spf13/afero"
-
-	"github.com/go-chi/chi"
-	"github.com/minio/minio-go/v6"
-	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap"
 )
 
 // fakeFS mocks http.FileSystem
@@ -80,7 +79,7 @@ func TestPersistHandler(t *testing.T) {
 			name:                   "All good",
 			fakeResponseStatusCode: http.StatusOK,
 			getLoadTestsFn: func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
-				return true, &loadtestV1.LoadTest{}, nil
+				return true, &loadTestV1.LoadTest{}, nil
 			},
 			expectedStatusCode: http.StatusOK,
 		},
@@ -88,7 +87,7 @@ func TestPersistHandler(t *testing.T) {
 			name:                   "LoadTest not found",
 			fakeResponseStatusCode: http.StatusOK,
 			getLoadTestsFn: func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
-				return true, nil, k8serrors.NewNotFound(loadtestV1.Resource("loadtests"), "loadtest-name")
+				return true, nil, k8serrors.NewNotFound(loadTestV1.Resource("loadtests"), "loadtest-name")
 			},
 			expectedStatusCode: http.StatusNotFound,
 		},
@@ -96,7 +95,7 @@ func TestPersistHandler(t *testing.T) {
 			name:                   "S3 wrong credentials",
 			fakeResponseStatusCode: http.StatusUnauthorized,
 			getLoadTestsFn: func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
-				return true, &loadtestV1.LoadTest{}, nil
+				return true, &loadTestV1.LoadTest{}, nil
 			},
 			expectedStatusCode: http.StatusUnauthorized,
 		},
@@ -104,7 +103,7 @@ func TestPersistHandler(t *testing.T) {
 			name:                   "Request timed out",
 			fakeResponseStatusCode: http.StatusRequestTimeout,
 			getLoadTestsFn: func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
-				return true, &loadtestV1.LoadTest{}, nil
+				return true, &loadTestV1.LoadTest{}, nil
 			},
 			expectedStatusCode: http.StatusRequestTimeout,
 		},

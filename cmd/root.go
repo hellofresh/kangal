@@ -35,8 +35,8 @@ func NewRootCmd(version string) *cobra.Command {
 		Version: version,
 	}
 
-	cmd.AddCommand(NewProxyCmd(ctx))
-	cmd.AddCommand(NewControllerCmd(ctx))
+	cmd.AddCommand(NewProxyCmd())
+	cmd.AddCommand(NewControllerCmd())
 	cmd.AddCommand(NewAPICmd(ctx))
 
 	return cmd

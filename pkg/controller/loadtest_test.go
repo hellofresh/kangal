@@ -4,10 +4,11 @@ import (
 	"testing"
 	"time"
 
-	loadtestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	"github.com/stretchr/testify/assert"
 	batchV1 "k8s.io/api/batch/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 )
 
 func TestShouldDeleteLoadtest(t *testing.T) {
@@ -17,54 +18,54 @@ func TestShouldDeleteLoadtest(t *testing.T) {
 	var testPhases = []struct {
 		Name             string
 		ExpectedResponse bool
-		LoadTest         loadtestV1.LoadTest
+		LoadTest         loadTestV1.LoadTest
 		Threshold        time.Duration
 	}{
 		{
 			"test finished long ago",
 			true,
-			loadtestV1.LoadTest{
-				Status: loadtestV1.LoadTestStatus{
-					Phase: loadtestV1.LoadTestFinished,
+			loadTestV1.LoadTest{
+				Status: loadTestV1.LoadTestStatus{
+					Phase: loadTestV1.LoadTestFinished,
 					JobStatus: batchV1.JobStatus{
 						CompletionTime: &metav1TimeTwoMonthsAgo,
 					},
 				},
 			},
-			time.Duration(time.Hour * 2),
+			time.Hour * 2,
 		},
 		{
 			"test finished now",
 			false,
-			loadtestV1.LoadTest{
-				Status: loadtestV1.LoadTestStatus{
-					Phase: loadtestV1.LoadTestFinished,
+			loadTestV1.LoadTest{
+				Status: loadTestV1.LoadTestStatus{
+					Phase: loadTestV1.LoadTestFinished,
 					JobStatus: batchV1.JobStatus{
 						CompletionTime: &metav1TimeNow,
 					},
 				},
 			},
-			time.Duration(time.Hour * 2),
+			time.Hour * 2,
 		},
 		{
 			"test errored long ago",
 			true,
-			loadtestV1.LoadTest{
-				Status: loadtestV1.LoadTestStatus{
-					Phase: loadtestV1.LoadTestErrored,
+			loadTestV1.LoadTest{
+				Status: loadTestV1.LoadTestStatus{
+					Phase: loadTestV1.LoadTestErrored,
 					JobStatus: batchV1.JobStatus{
 						CompletionTime: &metav1TimeTwoMonthsAgo,
 					},
 				},
 			},
-			time.Duration(time.Hour * 2),
+			time.Hour * 2,
 		},
 		{
 			"test errored long ago, no completion",
 			true,
-			loadtestV1.LoadTest{
-				Status: loadtestV1.LoadTestStatus{
-					Phase: loadtestV1.LoadTestErrored,
+			loadTestV1.LoadTest{
+				Status: loadTestV1.LoadTestStatus{
+					Phase: loadTestV1.LoadTestErrored,
 					JobStatus: batchV1.JobStatus{
 						CompletionTime: nil,
 					},
@@ -73,21 +74,21 @@ func TestShouldDeleteLoadtest(t *testing.T) {
 					CreationTimestamp: metav1TimeTwoMonthsAgo,
 				},
 			},
-			time.Duration(time.Hour * 2),
+			time.Hour * 2,
 		},
 		{
 			"test errored now, no jobstatus",
 			false,
-			loadtestV1.LoadTest{
-				Status: loadtestV1.LoadTestStatus{
-					Phase:     loadtestV1.LoadTestErrored,
+			loadTestV1.LoadTest{
+				Status: loadTestV1.LoadTestStatus{
+					Phase:     loadTestV1.LoadTestErrored,
 					JobStatus: batchV1.JobStatus{},
 				},
 				ObjectMeta: metaV1.ObjectMeta{
 					CreationTimestamp: metav1TimeNow,
 				},
 			},
-			time.Duration(time.Hour * 2),
+			time.Hour * 2,
 		},
 	}
 

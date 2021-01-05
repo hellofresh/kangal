@@ -22,7 +22,7 @@ func ErrResponse(status int, err string) *Response {
 }
 
 // Render renders a response
-func (e *Response) Render(w http.ResponseWriter, r *http.Request) error {
+func (e *Response) Render(_ http.ResponseWriter, r *http.Request) error {
 	render.Status(r, e.HTTPStatusCode)
 	return nil
 }

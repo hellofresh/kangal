@@ -34,16 +34,3 @@ func GetLogger(ctx context.Context) *zap.Logger {
 
 	return nil
 }
-
-// GetID returns request ID
-func GetID(ctx context.Context) string {
-	if ctx == nil {
-		panic("Can not get request ID from empty context")
-	}
-
-	if requestID, ok := ctx.Value(requestIDKey).(string); ok {
-		return requestID
-	}
-
-	return ""
-}
