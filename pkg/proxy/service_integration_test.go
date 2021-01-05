@@ -234,6 +234,11 @@ func TestImplLoadTestServiceServer_List_Simple(t *testing.T) {
 		Type:            grpcProxyV2.LoadTestType_LOAD_TEST_TYPE_FAKE,
 		TargetUrl:       "http://example.com/foo",
 		TestFile:        encodeContents(t, []byte(`foo`)),
+		Tags: map[string]string{
+			"department": "platform",
+			"team":       "kangal",
+			"app-name":   "test",
+		},
 	}
 
 	ltName1 := createLoadtest(t, &rq1)
@@ -253,6 +258,11 @@ func TestImplLoadTestServiceServer_List_Simple(t *testing.T) {
 		Type:            grpcProxyV2.LoadTestType_LOAD_TEST_TYPE_FAKE,
 		TargetUrl:       "http://example.com/foo",
 		TestFile:        encodeContents(t, []byte(`bar`)),
+		Tags: map[string]string{
+			"department": "not-platform",
+			"team":       "not-kangal",
+			"app-name":   "not-test",
+		},
 	}
 
 	ltName2 := createLoadtest(t, &rq2)
@@ -287,15 +297,26 @@ func TestImplLoadTestServiceServer_List_Simple(t *testing.T) {
 	require.Len(t, list3.LoadTestStatuses, 1)
 	assert.Equal(t, orderedNames[0], list3.LoadTestStatuses[0].Name)
 
+	// now list the next page from the previous one
 	list4 := listLoadTests(t, &grpcProxyV2.ListRequest{
 		PageSize:  1,
 		PageToken: list3.NextPageToken,
 	})
-
 	assert.Empty(t, list4.Remain)
 	assert.Empty(t, list4.NextPageToken)
 	require.Len(t, list4.LoadTestStatuses, 1)
 	assert.Equal(t, orderedNames[1], list4.LoadTestStatuses[0].Name)
+
+	// try listing with tags filter
+	list5 := listLoadTests(t, &grpcProxyV2.ListRequest{
+		Tags: map[string]string{
+			"department": "platform",
+			"team":       "kangal",
+		},
+	})
+	require.Len(t, list5.LoadTestStatuses, 1)
+	assert.Equal(t, list5.LoadTestStatuses[0].Name, ltName1)
+
 }
 
 func createLoadtest(t *testing.T, rq *grpcProxyV2.CreateRequest) string {
@@ -328,7 +349,6 @@ func createLoadtest(t *testing.T, rq *grpcProxyV2.CreateRequest) string {
 func listLoadTests(t *testing.T, rq *grpcProxyV2.ListRequest) *grpcProxyV2.ListResponse {
 	t.Helper()
 
-	// TODO: add tags support as currently they are not supported by rest proxy and swagger plugins
 	q := url.Values{
 		"phase": []string{grpcProxyV2.LoadTestPhase_name[int32(rq.GetPhase())]},
 	}
@@ -337,6 +357,12 @@ func listLoadTests(t *testing.T, rq *grpcProxyV2.ListRequest) *grpcProxyV2.ListR
 	}
 	if rq.GetPageToken() != "" {
 		q.Add("pageToken", rq.GetPageToken())
+	}
+	if len(rq.GetTags()) > 0 {
+		for key, val := range rq.GetTags() {
+			urlKey := fmt.Sprintf("tags[%s]", key)
+			q.Add(urlKey, val)
+		}
 	}
 
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:%d/v2/load-test?%s", restPort, q.Encode()), nil)
