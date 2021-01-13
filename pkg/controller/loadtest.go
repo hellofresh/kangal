@@ -303,7 +303,11 @@ func (c *Controller) syncHandler(key string) error {
 	}
 	// copy object before mutate it
 	loadTest := loadTestFromCache.DeepCopy()
-	defer c.updateLoadTestStatus(ctx, key, loadTest, loadTestFromCache)
+
+	// ensure that status is updated if any of the following fails
+	defer func() {
+		c.updateLoadTestStatus(ctx, key, loadTest, loadTestFromCache)
+	}()
 
 	var reportURL string
 	if c.cfg.KangalProxyURL != "" {
