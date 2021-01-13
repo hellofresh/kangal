@@ -303,35 +303,6 @@ func (c *Controller) syncHandler(key string) error {
 	}
 	// copy object before mutate it
 	loadTest := loadTestFromCache.DeepCopy()
-	defer c.updateLoadTestStatus(ctx, key, loadTest, loadTestFromCache)
-
-	var reportURL string
-	if c.cfg.KangalProxyURL != "" {
-		reportURL = fmt.Sprintf("%s/load-test/%s/report", c.cfg.KangalProxyURL, loadTest.GetName())
-	}
-
-	backend, err := c.registry.GetBackend(loadTest.Spec.Type)
-	if err != nil {
-		return fmt.Errorf("failed to resolve backend: %w", err)
-	}
-
-	// check or create namespace
-	err = c.checkOrCreateNamespace(ctx, loadTest)
-	if err != nil {
-		return err
-	}
-
-	// sync backend resources
-	err = backend.Sync(ctx, *loadTest, reportURL)
-	if err != nil {
-		return err
-	}
-
-	// sync backend status
-	err = backend.SyncStatus(ctx, *loadTest, &loadTest.Status)
-	if err != nil {
-		return err
-	}
 
 	// check and delete stale finished/errored loadtests
 	if checkLoadTestLifeTimeExceeded(loadTest, c.cfg.CleanUpThreshold) {
@@ -351,6 +322,37 @@ func (c *Controller) syncHandler(key string) error {
 
 		// LoadTest has been deleted at this point, so we stop further processing.
 		return nil
+	}
+	
+	var reportURL string
+	if c.cfg.KangalProxyURL != "" {
+		reportURL = fmt.Sprintf("%s/load-test/%s/report", c.cfg.KangalProxyURL, loadTest.GetName())
+	}
+
+	backend, err := c.registry.GetBackend(loadTest.Spec.Type)
+	if err != nil {
+		return fmt.Errorf("failed to resolve backend: %w", err)
+	}
+
+	// ensure that status is updated if any of the following fails
+	defer c.updateLoadTestStatus(ctx, key, loadTest, loadTestFromCache)
+
+	// check or create namespace
+	err = c.checkOrCreateNamespace(ctx, loadTest)
+	if err != nil {
+		return err
+	}
+
+	// sync backend resources
+	err = backend.Sync(ctx, *loadTest, reportURL)
+	if err != nil {
+		return err
+	}
+
+	// sync backend status
+	err = backend.SyncStatus(ctx, *loadTest, &loadTest.Status)
+	if err != nil {
+		return err
 	}
 
 	// Finally, we send updated loadtest resource back
