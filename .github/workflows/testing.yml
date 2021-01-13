@@ -119,6 +119,18 @@ jobs:
         run: |
           ./ci/integration-tests.sh
 
+      - name: Print Kangal Proxy Logs
+        run: |
+          cat /tmp/kangal_proxy.log
+
+      - name: Print Kangal gRPC/Rest Proxy Logs
+        run: |
+          cat /tmp/kangal_api.log
+
+      - name: Print Kangal Controller Logs
+        run: |
+          cat /tmp/kangal_controller.log
+
       - name: Upload codecov
         uses: codecov/codecov-action@v1
         if: success()
