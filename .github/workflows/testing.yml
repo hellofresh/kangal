@@ -119,6 +119,16 @@ jobs:
         run: |
           ./ci/integration-tests.sh
 
+      - name: Print Logs on Failure
+        if: failure()
+        run: |
+          echo "==> Printing Kangal Proxy Logs\n"
+          cat /tmp/kangal_proxy.log
+          echo "\n\n==> Printing Kangal gRPC/REST Proxy Logs\n"
+          cat /tmp/kangal_api.log
+          echo "\n\n==> Printing Kangal Controller Logs\n"
+          cat /tmp/kangal_controller.log
+
       - name: Upload codecov
         uses: codecov/codecov-action@v1
         if: success()
