@@ -323,12 +323,14 @@ func (c *Controller) syncHandler(key string) error {
 		// LoadTest has been deleted at this point, so we stop further processing.
 		return nil
 	}
-	
+
+	// get report url
 	var reportURL string
 	if c.cfg.KangalProxyURL != "" {
 		reportURL = fmt.Sprintf("%s/load-test/%s/report", c.cfg.KangalProxyURL, loadTest.GetName())
 	}
 
+	// get backend
 	backend, err := c.registry.GetBackend(loadTest.Spec.Type)
 	if err != nil {
 		return fmt.Errorf("failed to resolve backend: %w", err)
@@ -500,6 +502,8 @@ func newNamespace(loadtest *loadTestV1.LoadTest, namespaceAnnotations map[string
 	}, nil
 }
 
+// checkLoadTestLifeTimeExceeded returns true if the input loadtest has
+// existed for longer than certain threshold, and its status is Finished or Errorred
 func checkLoadTestLifeTimeExceeded(loadTest *loadTestV1.LoadTest, deleteThreshold time.Duration) bool {
 	if loadTest.Status.JobStatus.CompletionTime != nil {
 		if time.Since(loadTest.Status.JobStatus.CompletionTime.Time) > deleteThreshold &&
