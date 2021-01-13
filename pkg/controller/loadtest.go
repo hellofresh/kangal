@@ -333,16 +333,24 @@ func (c *Controller) syncHandler(key string) error {
 		return err
 	}
 
-	// check or clean LoadTest
-	err = c.checkOrDeleteLoadTest(ctx, loadTest)
-	if err != nil {
-		// The LoadTest resource may be conflicted, in which case we stop
-		// processing.
-		if errors.IsConflict(err) {
-			utilRuntime.HandleError(fmt.Errorf("there is a conflict with loadtest '%s' between datastore and cache. it might be because object has been removed or modified in the datastore", key))
-			return nil
+	// check and delete stale finished/errored loadtests
+	if checkLoadTestLifeTimeExceeded(loadTest, c.cfg.CleanUpThreshold) {
+		c.logger.Info("Deleting loadtest",
+			zap.String("loadtest", loadTest.Name),
+			zap.String("phase", string(loadTest.Status.Phase)),
+		)
+		err = c.kangalClientSet.KangalV1().LoadTests().Delete(ctx, loadTest.Name, metaV1.DeleteOptions{})
+		if err != nil {
+			// The LoadTest resource may be conflicted, in which case we stop processing.
+			if errors.IsConflict(err) {
+				utilRuntime.HandleError(fmt.Errorf("there is a conflict with loadtest '%s' between datastore and cache. it might be because object has been removed or modified in the datastore", key))
+				return nil
+			}
+			return err
 		}
-		return err
+
+		// LoadTest has been deleted at this point, so we stop further processing.
+		return nil
 	}
 
 	// Finally, we send updated loadtest resource back
@@ -436,19 +444,6 @@ func (c *Controller) updateLoadTestStatus(ctx context.Context, key string, loadT
 		loadTest.Status.Phase == loadTestV1.LoadTestFinished {
 		stats.Record(ctx, observability.MFinishedLoadtestCountStat.M(1))
 	}
-}
-
-// checkOrDeleteLoadTest deletes a LoadTest after it has the status "Finished" and
-// has been completed for more than the clean up threshold or in status "Errored"
-// and has creation time older then threshold
-func (c *Controller) checkOrDeleteLoadTest(ctx context.Context, loadTest *loadTestV1.LoadTest) error {
-	if checkLoadTestLifeTimeExceeded(loadTest, c.cfg.CleanUpThreshold) {
-		c.logger.Info("Deleting loadtest",
-			zap.String("loadtest", loadTest.Name), zap.String("phase", string(loadTest.Status.Phase)))
-		return c.kangalClientSet.KangalV1().LoadTests().Delete(ctx, loadTest.Name, metaV1.DeleteOptions{})
-	}
-
-	return nil
 }
 
 // checkOrCreateNamespace checks if a namespace has been created and if not deletes it
