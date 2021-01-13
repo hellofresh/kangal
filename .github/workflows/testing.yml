@@ -119,16 +119,14 @@ jobs:
         run: |
           ./ci/integration-tests.sh
 
-      - name: Print Kangal Proxy Logs
+      - name: Print Logs on Failure
+        if: failure()
         run: |
+          echo Printing Kangal Proxy Logs
           cat /tmp/kangal_proxy.log
-
-      - name: Print Kangal gRPC/Rest Proxy Logs
-        run: |
+          echo Printing Kangal gRPC/REST Proxy Logs
           cat /tmp/kangal_api.log
-
-      - name: Print Kangal Controller Logs
-        run: |
+          echo Printing Kangal Controller Logs
           cat /tmp/kangal_controller.log
 
       - name: Upload codecov
