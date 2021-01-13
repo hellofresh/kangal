@@ -122,11 +122,11 @@ jobs:
       - name: Print Logs on Failure
         if: failure()
         run: |
-          echo Printing Kangal Proxy Logs
+          echo "==> Printing Kangal Proxy Logs\n"
           cat /tmp/kangal_proxy.log
-          echo Printing Kangal gRPC/REST Proxy Logs
+          echo "\n\n==> Printing Kangal gRPC/REST Proxy Logs\n"
           cat /tmp/kangal_api.log
-          echo Printing Kangal Controller Logs
+          echo "\n\n==> Printing Kangal Controller Logs\n"
           cat /tmp/kangal_controller.log
 
       - name: Upload codecov
