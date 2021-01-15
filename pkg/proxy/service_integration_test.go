@@ -319,6 +319,47 @@ func TestImplLoadTestServiceServer_List_Simple(t *testing.T) {
 
 }
 
+func TestImplLoadTestServiceServer_Delete_Simple(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode")
+	}
+
+	// Create a loadtest
+	rq1 := grpcProxyV2.CreateRequest{
+		DistributedPods: 2,
+		Type:            grpcProxyV2.LoadTestType_LOAD_TEST_TYPE_FAKE,
+		TargetUrl:       "http://example.com/foo",
+		TestFile:        encodeContents(t, []byte(`foo`)),
+		Tags: map[string]string{
+			"department": "not-platform",
+			"team":       "not-kangal",
+			"app-name":   "not-test",
+		},
+	}
+	createdLoadTestName := createLoadtest(t, &rq1)
+	err := testHelper.WaitLoadTest(clientSet, createdLoadTestName)
+	require.NoError(t, err)
+
+	// Delete loadtest
+	req, err := http.NewRequest(http.MethodDelete, fmt.Sprintf("http://localhost:%d/v2/load-test/%s", restPort, createdLoadTestName), nil)
+	require.NoError(t, err, "Could not create DELETE request")
+
+	resp, err := http.DefaultClient.Do(req)
+	require.NoError(t, err, "Could not send DELETE request")
+
+	defer func() {
+		err := resp.Body.Close()
+		assert.NoError(t, err)
+	}()
+
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// Check if it's actually deleted
+	_, err = testHelper.GetLoadTest(clientSet, createdLoadTestName)
+	assert.Error(t, err)
+
+}
+
 func createLoadtestAndCleanup(t *testing.T, rq *grpcProxyV2.CreateRequest) string {
 	t.Helper()
 
