@@ -37,7 +37,7 @@ func TestImplLoadTestServiceServer_Create_PostAllFiles(t *testing.T) {
 		EnvVars:         readFileContents(t, "testdata/valid/testdata.csv", true),
 	}
 
-	createdLoadTestName := createLoadtest(t, &rq)
+	createdLoadTestName := createLoadtestAndCleanup(t, &rq)
 
 	err := testHelper.WaitLoadTest(clientSet, createdLoadTestName)
 	require.NoError(t, err)
@@ -67,7 +67,7 @@ func TestImplLoadTestServiceServer_Create_Duplicates(t *testing.T) {
 		EnvVars:         readFileContents(t, "testdata/valid/testdata.csv", true),
 	}
 
-	createLoadtest(t, &rq)
+	createLoadtestAndCleanup(t, &rq)
 
 	rqJSON, err := protojson.Marshal(&rq)
 	require.NoError(t, err)
@@ -93,7 +93,7 @@ func TestImplLoadTestServiceServer_Create_ReachMaxLimit(t *testing.T) {
 			TestFile:        encodeContents(t, []byte(fmt.Sprintf("test-%d", i))),
 		}
 
-		createdLoadTestName := createLoadtest(t, &rq)
+		createdLoadTestName := createLoadtestAndCleanup(t, &rq)
 
 		err := testHelper.WaitLoadTest(clientSet, createdLoadTestName)
 		require.NoError(t, err)
@@ -126,7 +126,7 @@ func TestImplLoadTestServiceServer_Create_PostOneFile(t *testing.T) {
 		TestFile:        readFileContents(t, "testdata/valid/loadtest2.jmx", true),
 	}
 
-	createdLoadTestName := createLoadtest(t, &rq)
+	createdLoadTestName := createLoadtestAndCleanup(t, &rq)
 
 	err := testHelper.WaitLoadTest(clientSet, createdLoadTestName)
 	require.NoError(t, err)
@@ -189,7 +189,7 @@ func TestImplLoadTestServiceServer_Get_Simple(t *testing.T) {
 		TestData:        readFileContents(t, "testdata/valid/envvars.csv", true),
 	}
 
-	createdLoadTestName := createLoadtest(t, &rq)
+	createdLoadTestName := createLoadtestAndCleanup(t, &rq)
 
 	err := testHelper.WaitLoadTest(clientSet, createdLoadTestName)
 	require.NoError(t, err)
@@ -241,7 +241,7 @@ func TestImplLoadTestServiceServer_List_Simple(t *testing.T) {
 		},
 	}
 
-	ltName1 := createLoadtest(t, &rq1)
+	ltName1 := createLoadtestAndCleanup(t, &rq1)
 
 	err := testHelper.WaitLoadTest(clientSet, ltName1)
 	require.NoError(t, err)
@@ -265,7 +265,7 @@ func TestImplLoadTestServiceServer_List_Simple(t *testing.T) {
 		},
 	}
 
-	ltName2 := createLoadtest(t, &rq2)
+	ltName2 := createLoadtestAndCleanup(t, &rq2)
 
 	err = testHelper.WaitLoadTest(clientSet, ltName2)
 	require.NoError(t, err)
@@ -319,6 +319,19 @@ func TestImplLoadTestServiceServer_List_Simple(t *testing.T) {
 
 }
 
+func createLoadtestAndCleanup(t *testing.T, rq *grpcProxyV2.CreateRequest) string {
+	t.Helper()
+
+	createdLoadTestName := createLoadtest(t, rq)
+
+	t.Cleanup(func() {
+		err := testHelper.DeleteLoadTest(clientSet, createdLoadTestName, t.Name())
+		assert.NoError(t, err)
+	})
+
+	return createdLoadTestName
+}
+
 func createLoadtest(t *testing.T, rq *grpcProxyV2.CreateRequest) string {
 	t.Helper()
 
@@ -336,14 +349,7 @@ func createLoadtest(t *testing.T, rq *grpcProxyV2.CreateRequest) string {
 	err = protojson.Unmarshal(respBytes, &rs)
 	require.NoError(t, err)
 
-	createdLoadTestName := rs.GetLoadTestStatus().GetName()
-
-	t.Cleanup(func() {
-		err := testHelper.DeleteLoadTest(clientSet, createdLoadTestName, t.Name())
-		assert.NoError(t, err)
-	})
-
-	return createdLoadTestName
+	return rs.GetLoadTestStatus().GetName()
 }
 
 func listLoadTests(t *testing.T, rq *grpcProxyV2.ListRequest) *grpcProxyV2.ListResponse {
