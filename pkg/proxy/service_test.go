@@ -421,10 +421,10 @@ func TestImplLoadTestServiceServer_Delete(t *testing.T) {
 
 	svc := NewLoadTestServiceServer(c, b, 1, 50)
 
-	empty, err := svc.Delete(ctx, &grpcProxyV2.DeleteRequest{Name: "loadtest-fake"})
+	deleteResponse, err := svc.Delete(ctx, &grpcProxyV2.DeleteRequest{Name: "loadtest-fake"})
 
 	assert.NoError(t, err)
-	assert.Empty(t, empty)
+	assert.Empty(t, deleteResponse)
 }
 
 func readFileContents(t *testing.T, path string, base64Encoded bool) []byte {

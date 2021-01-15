@@ -2,7 +2,6 @@ syntax = "proto3";
 package grpc.proxy.v2;
 
 import "google/protobuf/duration.proto";
-import "google/protobuf/empty.proto";
 import "google/api/annotations.proto";
 
 option go_package = "grpc/proxy/v2";
@@ -89,6 +88,9 @@ message DeleteRequest {
     string name = 1;
 }
 
+message DeleteResponse {
+}
+
 service LoadTestService {
     // Get returns load test by given name
     rpc Get (GetRequest) returns (GetResponse) {
@@ -112,7 +114,7 @@ service LoadTestService {
         };
     }
 
-    rpc Delete (DeleteRequest) returns (google.protobuf.Empty) {
+    rpc Delete (DeleteRequest) returns (DeleteResponse) {
         option (google.api.http) = {
             delete: "/v2/load-test/{name}"
         };
