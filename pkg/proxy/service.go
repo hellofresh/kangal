@@ -243,6 +243,20 @@ func (s *implLoadTestServiceServer) List(ctx context.Context, in *grpcProxyV2.Li
 	return out, nil
 }
 
+// Delete deletes a load test
+func (s *implLoadTestServiceServer) Delete(ctx context.Context, in *grpcProxyV2.DeleteRequest) (*grpcProxyV2.DeleteResponse, error) {
+	logger := ctxzap.Extract(ctx)
+
+	ctx, cancel := context.WithTimeout(ctx, kube.KubeTimeout)
+	defer cancel()
+
+	logger.Debug("Deleting loadtest", zap.String("name", in.GetName()))
+
+	err := s.kubeClient.DeleteLoadTest(ctx, in.GetName())
+
+	return &grpcProxyV2.DeleteResponse{}, err
+}
+
 func decodeFileContents(envVars, testData, testFile []byte) (envVarsDecoded []byte, testDataDecoded []byte, testFileDecoded []byte, err error) {
 	envVarsDecoded = make([]byte, base64.StdEncoding.DecodedLen(len(envVars)))
 	if _, err = base64.StdEncoding.Decode(envVarsDecoded, envVars); err != nil {

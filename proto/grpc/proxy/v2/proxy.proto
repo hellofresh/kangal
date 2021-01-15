@@ -84,6 +84,13 @@ message ListResponse {
     repeated LoadTestStatus load_test_statuses = 4;
 }
 
+message DeleteRequest {
+    string name = 1;
+}
+
+message DeleteResponse {
+}
+
 service LoadTestService {
     // Get returns load test by given name
     rpc Get (GetRequest) returns (GetResponse) {
@@ -104,6 +111,12 @@ service LoadTestService {
     rpc List (ListRequest) returns (ListResponse) {
         option (google.api.http) = {
             get: "/v2/load-test"
+        };
+    }
+
+    rpc Delete (DeleteRequest) returns (DeleteResponse) {
+        option (google.api.http) = {
+            delete: "/v2/load-test/{name}"
         };
     }
 }
