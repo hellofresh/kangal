@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 	k8sAPIErrors "k8s.io/apimachinery/pkg/api/errors"
 
 	"github.com/hellofresh/kangal/pkg/backends"
@@ -241,6 +242,20 @@ func (s *implLoadTestServiceServer) List(ctx context.Context, in *grpcProxyV2.Li
 	}
 
 	return out, nil
+}
+
+// Delete deletes a load test
+func (s *implLoadTestServiceServer) Delete(ctx context.Context, in *grpcProxyV2.DeleteRequest) (*emptypb.Empty, error) {
+	logger := ctxzap.Extract(ctx)
+
+	ctx, cancel := context.WithTimeout(ctx, kube.KubeTimeout)
+	defer cancel()
+
+	logger.Debug("Deleting loadtest", zap.String("name", in.GetName()))
+
+	err := s.kubeClient.DeleteLoadTest(ctx, in.GetName())
+
+	return &emptypb.Empty{}, err
 }
 
 func decodeFileContents(envVars, testData, testFile []byte) (envVarsDecoded []byte, testDataDecoded []byte, testFileDecoded []byte, err error) {

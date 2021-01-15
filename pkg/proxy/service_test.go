@@ -401,6 +401,32 @@ func TestImplLoadTestServiceServer_List(t *testing.T) {
 	}
 }
 
+func TestImplLoadTestServiceServer_Delete(t *testing.T) {
+	var (
+		kubeClientSet     = fake.NewSimpleClientset()
+		loadtestClientSet = fakeClientset.NewSimpleClientset()
+		logger            = zaptest.NewLogger(t)
+	)
+	ctx := ctxzap.ToContext(context.Background(), logger)
+
+	loadtestClientSet.Fake.PrependReactor("delete", "loadtests", func(action k8sTesting.Action) (handled bool, ret runtime.Object, err error) {
+		return true, &apisLoadTestV1.LoadTest{}, nil
+	})
+	c := kube.NewClient(loadtestClientSet.KangalV1().LoadTests(), kubeClientSet, logger)
+	b := backends.New(
+		backends.WithLogger(logger),
+		backends.WithKubeClientSet(kubeClientSet),
+		backends.WithKangalClientSet(loadtestClientSet),
+	)
+
+	svc := NewLoadTestServiceServer(c, b, 1, 50)
+
+	empty, err := svc.Delete(ctx, &grpcProxyV2.DeleteRequest{Name: "loadtest-fake"})
+
+	assert.NoError(t, err)
+	assert.Empty(t, empty)
+}
+
 func readFileContents(t *testing.T, path string, base64Encoded bool) []byte {
 	t.Helper()
 
