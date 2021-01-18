@@ -2,11 +2,13 @@ package proxy
 
 import (
 	"bytes"
+	"encoding/csv"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/thedevsaddam/govalidator"
@@ -169,7 +171,24 @@ func getEnvVars(r *http.Request) (string, error) {
 }
 
 func getTestData(r *http.Request) (string, error) {
-	return getFileFromHTTP(r, testData)
+	stringTestData, err := getFileFromHTTP(r, testData)
+	if err != nil {
+		return "", err
+	}
+
+	reader := csv.NewReader(strings.NewReader(stringTestData))
+
+	for {
+		_, err := reader.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return stringTestData, nil
 }
 
 func getTestFile(r *http.Request) (string, error) {
