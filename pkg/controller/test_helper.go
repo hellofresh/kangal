@@ -20,21 +20,14 @@ import (
 )
 
 // CreateLoadTest creates a load test CR
-func CreateLoadTest(clientSet clientSetV.Clientset, pods int32, name, testFile, testData, envVars string, loadTestType apisLoadTestV1.LoadTestType) error {
-	var ev, td = "", ""
+func CreateLoadTest(clientSet clientSetV.Clientset, pods int32, name, testFile, testData string, envVars map[string]string, loadTestType apisLoadTestV1.LoadTestType) error {
+	var td = ""
 	tf, err := readFile(testFile)
 	if err != nil {
 		return err
 	}
 	if testData != "" {
 		td, err = readFile(testData)
-		if err != nil {
-			return err
-		}
-	}
-
-	if envVars != "" {
-		ev, err = readFile(envVars)
 		if err != nil {
 			return err
 		}
@@ -54,7 +47,7 @@ func CreateLoadTest(clientSet clientSetV.Clientset, pods int32, name, testFile, 
 		Tags:            apisLoadTestV1.LoadTestTags{},
 		TestFile:        tf,
 		TestData:        td,
-		EnvVars:         ev,
+		EnvVars:         envVars,
 		TargetURL:       "",
 		Duration:        0,
 	}
@@ -150,13 +143,13 @@ func GetLoadTestLabels(clientSet clientSetV.Clientset, loadtestName string) (map
 }
 
 // GetLoadTestEnvVars returns a load test name
-func GetLoadTestEnvVars(clientSet clientSetV.Clientset, loadtestName string) (string, error) {
+func GetLoadTestEnvVars(clientSet clientSetV.Clientset, loadtestName string) (map[string]string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), kubernetes.KubeTimeout)
 	defer cancel()
 
 	result, err := clientSet.KangalV1().LoadTests().Get(ctx, loadtestName, metaV1.GetOptions{})
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	return result.Spec.EnvVars, nil
 }

@@ -44,17 +44,17 @@ type LoadTestPodsStatus struct {
 
 // LoadTestSpec is the spec for a LoadTest resource
 type LoadTestSpec struct {
-	Type            LoadTestType  `json:"type"`
-	Overwrite       bool          `json:"overwrite"`
-	MasterConfig    ImageDetails  `json:"masterConfig"`
-	WorkerConfig    ImageDetails  `json:"workerConfig"`
-	DistributedPods *int32        `json:"distributedPods"`
-	Tags            LoadTestTags  `json:"tags"`
-	TestFile        string        `json:"testFile"`
-	TestData        string        `json:"testData,omitempty"`
-	EnvVars         string        `json:"envVars,omitempty"`
-	TargetURL       string        `json:"targetURL,omitempty"`
-	Duration        time.Duration `json:"duration,omitempty"`
+	Type            LoadTestType      `json:"type"`
+	Overwrite       bool              `json:"overwrite"`
+	MasterConfig    ImageDetails      `json:"masterConfig"`
+	WorkerConfig    ImageDetails      `json:"workerConfig"`
+	DistributedPods *int32            `json:"distributedPods"`
+	Tags            LoadTestTags      `json:"tags"`
+	TestFile        string            `json:"testFile"`
+	TestData        string            `json:"testData,omitempty"`
+	EnvVars         map[string]string `json:"envVars,omitempty"`
+	TargetURL       string            `json:"targetURL,omitempty"`
+	Duration        time.Duration     `json:"duration,omitempty"`
 }
 
 // LoadTestTags is a list of tags of a LoadTest resource.

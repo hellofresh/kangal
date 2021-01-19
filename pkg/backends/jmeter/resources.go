@@ -112,13 +112,7 @@ func (b *Backend) NewConfigMap(loadTest loadTestV1.LoadTest) *coreV1.ConfigMap {
 
 // NewSecret creates a secret from file envVars
 func (b *Backend) NewSecret(loadTest loadTestV1.LoadTest) (*coreV1.Secret, error) {
-	envVars := loadTest.Spec.EnvVars
-
-	secretMap, err := backends.ReadEnvs(envVars)
-	if err != nil {
-		b.logger.Error("Error on creating secrets from envVars file", zap.Error(err))
-		return nil, err
-	}
+	secretMap := loadTest.Spec.EnvVars
 
 	return &coreV1.Secret{
 		ObjectMeta: metaV1.ObjectMeta{

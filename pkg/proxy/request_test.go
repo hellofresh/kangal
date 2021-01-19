@@ -152,7 +152,7 @@ func TestEnvVarFile(t *testing.T) {
 	for _, ti := range []struct {
 		tag              string
 		requestFile      map[string]string
-		expectedResponse string
+		expectedResponse map[string]string
 		expectError      bool
 	}{
 		{
@@ -160,7 +160,7 @@ func TestEnvVarFile(t *testing.T) {
 			requestFile: map[string]string{
 				envVars: "testdata/valid/envvars.csv",
 			},
-			expectedResponse: "envVar1,value1\nenvVar2,value2\n",
+			expectedResponse: map[string]string{"envVar1": "value1", "envVar2": "value2"},
 			expectError:      false,
 		},
 		{
@@ -168,13 +168,13 @@ func TestEnvVarFile(t *testing.T) {
 			requestFile: map[string]string{
 				envVars: "testdata/invalid/empty.csv",
 			},
-			expectedResponse: "",
+			expectedResponse: nil,
 			expectError:      true,
 		},
 		{
 			tag:              "no env vars file",
 			requestFile:      map[string]string{},
-			expectedResponse: "",
+			expectedResponse: map[string]string{},
 			expectError:      false,
 		},
 	} {

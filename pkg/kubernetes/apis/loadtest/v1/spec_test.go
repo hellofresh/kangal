@@ -17,7 +17,7 @@ func TestBuildLoadTestSpec(t *testing.T) {
 		tags            LoadTestTags
 		testFileStr     string
 		testDataStr     string
-		envVarsStr      string
+		envVars         map[string]string
 		masterConfig    ImageDetails
 		workerConfig    ImageDetails
 		targetURL       string
@@ -41,6 +41,7 @@ func TestBuildLoadTestSpec(t *testing.T) {
 					Image: "image",
 					Tag:   "tag",
 				},
+				envVars: map[string]string{"foo": "bar"},
 			},
 			want: LoadTestSpec{
 				Type:      "Fake",
@@ -54,14 +55,14 @@ func TestBuildLoadTestSpec(t *testing.T) {
 				Tags:            LoadTestTags{"team": "kangal"},
 				TestFile:        "something in the file",
 				TestData:        "",
-				EnvVars:         "",
+				EnvVars:         map[string]string{"foo": "bar"},
 			},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := NewSpec(tt.args.loadTestType, tt.args.overwrite, tt.args.distributedPods, tt.args.tags, tt.args.testFileStr, tt.args.testDataStr, tt.args.envVarsStr, tt.args.masterConfig, tt.args.workerConfig, tt.args.targetURL, tt.args.duration)
+			got := NewSpec(tt.args.loadTestType, tt.args.overwrite, tt.args.distributedPods, tt.args.tags, tt.args.testFileStr, tt.args.testDataStr, tt.args.envVars, tt.args.masterConfig, tt.args.workerConfig, tt.args.targetURL, tt.args.duration)
 			assert.Equal(t, tt.want, got)
 		})
 	}

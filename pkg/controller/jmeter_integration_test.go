@@ -41,7 +41,7 @@ func TestIntegrationJMeter(t *testing.T) {
 	loadtestType := loadTestV1.LoadTestTypeJMeter
 	expectedLoadtestName := "loadtest-jmeter-integration"
 	testFile := "testdata/valid/loadtest.jmx"
-	envVars := "testdata/valid/envvars.csv"
+	envVars := map[string]string{"foo":"bar", "foo2": "bar2"}
 	testData := "testdata/valid/testdata.csv"
 
 	client := kubeClient(t)

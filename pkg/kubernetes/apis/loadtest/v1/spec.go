@@ -15,7 +15,7 @@ var (
 )
 
 //NewSpec initialize spec for LoadTest custom resource
-func NewSpec(loadTestType LoadTestType, overwrite bool, distributedPods int32, tags LoadTestTags, testFileStr, testDataStr, envVarsStr string, masterConfig, workerConfig ImageDetails, targetURL string, duration time.Duration) LoadTestSpec {
+func NewSpec(loadTestType LoadTestType, overwrite bool, distributedPods int32, tags LoadTestTags, testFileStr, testDataStr string, envVars map[string]string, masterConfig, workerConfig ImageDetails, targetURL string, duration time.Duration) LoadTestSpec {
 	return LoadTestSpec{
 		Type:            loadTestType,
 		Overwrite:       overwrite,
@@ -25,7 +25,7 @@ func NewSpec(loadTestType LoadTestType, overwrite bool, distributedPods int32, t
 		Tags:            tags,
 		TestFile:        testFileStr,
 		TestData:        testDataStr,
-		EnvVars:         envVarsStr,
+		EnvVars:         envVars,
 		TargetURL:       targetURL,
 		Duration:        duration,
 	}

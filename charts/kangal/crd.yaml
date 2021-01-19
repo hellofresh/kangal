@@ -54,7 +54,10 @@ spec:
                 testData:
                   type: string
                 envVars:
-                  type: string
+                  type: object
+                  nullable: true
+                  additionalProperties:
+                    type: string
                 targetURL:
                   type: string
                 duration:
