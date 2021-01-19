@@ -303,17 +303,41 @@ func (c *Controller) syncHandler(key string) error {
 	}
 	// copy object before mutate it
 	loadTest := loadTestFromCache.DeepCopy()
-	defer c.updateLoadTestStatus(ctx, key, loadTest, loadTestFromCache)
 
+	// check and delete stale finished/errored loadtests
+	if checkLoadTestLifeTimeExceeded(loadTest, c.cfg.CleanUpThreshold) {
+		c.logger.Info("Deleting loadtest due to exceeded lifetime",
+			zap.String("loadtest", loadTest.Name),
+			zap.String("phase", string(loadTest.Status.Phase)),
+		)
+		err = c.kangalClientSet.KangalV1().LoadTests().Delete(ctx, loadTest.Name, metaV1.DeleteOptions{})
+		if err != nil {
+			// The LoadTest resource may be conflicted, in which case we stop processing.
+			if errors.IsConflict(err) {
+				utilRuntime.HandleError(fmt.Errorf("there is a conflict with loadtest %q between datastore and cache. it might be because object has been removed or modified in the datastore", key))
+				return nil
+			}
+			return err
+		}
+
+		// LoadTest has been deleted at this point, so we stop further processing.
+		return nil
+	}
+
+	// get report url
 	var reportURL string
 	if c.cfg.KangalProxyURL != "" {
 		reportURL = fmt.Sprintf("%s/load-test/%s/report", c.cfg.KangalProxyURL, loadTest.GetName())
 	}
 
+	// get backend
 	backend, err := c.registry.GetBackend(loadTest.Spec.Type)
 	if err != nil {
 		return fmt.Errorf("failed to resolve backend: %w", err)
 	}
+
+	// ensure that status is updated if any of the following fails
+	defer c.updateLoadTestStatus(ctx, key, loadTest, loadTestFromCache)
 
 	// check or create namespace
 	err = c.checkOrCreateNamespace(ctx, loadTest)
@@ -330,18 +354,6 @@ func (c *Controller) syncHandler(key string) error {
 	// sync backend status
 	err = backend.SyncStatus(ctx, *loadTest, &loadTest.Status)
 	if err != nil {
-		return err
-	}
-
-	// check or clean LoadTest
-	err = c.checkOrDeleteLoadTest(ctx, loadTest)
-	if err != nil {
-		// The LoadTest resource may be conflicted, in which case we stop
-		// processing.
-		if errors.IsConflict(err) {
-			utilRuntime.HandleError(fmt.Errorf("there is a conflict with loadtest '%s' between datastore and cache. it might be because object has been removed or modified in the datastore", key))
-			return nil
-		}
 		return err
 	}
 
@@ -438,19 +450,6 @@ func (c *Controller) updateLoadTestStatus(ctx context.Context, key string, loadT
 	}
 }
 
-// checkOrDeleteLoadTest deletes a LoadTest after it has the status "Finished" and
-// has been completed for more than the clean up threshold or in status "Errored"
-// and has creation time older then threshold
-func (c *Controller) checkOrDeleteLoadTest(ctx context.Context, loadTest *loadTestV1.LoadTest) error {
-	if checkLoadTestLifeTimeExceeded(loadTest, c.cfg.CleanUpThreshold) {
-		c.logger.Info("Deleting loadtest",
-			zap.String("loadtest", loadTest.Name), zap.String("phase", string(loadTest.Status.Phase)))
-		return c.kangalClientSet.KangalV1().LoadTests().Delete(ctx, loadTest.Name, metaV1.DeleteOptions{})
-	}
-
-	return nil
-}
-
 // checkOrCreateNamespace checks if a namespace has been created and if not deletes it
 func (c *Controller) checkOrCreateNamespace(ctx context.Context, loadtest *loadTestV1.LoadTest) error {
 	if loadtest.Status.Namespace != "" {
@@ -503,6 +502,8 @@ func newNamespace(loadtest *loadTestV1.LoadTest, namespaceAnnotations map[string
 	}, nil
 }
 
+// checkLoadTestLifeTimeExceeded returns true if the input loadtest has
+// existed for longer than certain threshold, and its status is Finished or Errorred
 func checkLoadTestLifeTimeExceeded(loadTest *loadTestV1.LoadTest, deleteThreshold time.Duration) bool {
 	if loadTest.Status.JobStatus.CompletionTime != nil {
 		if time.Since(loadTest.Status.JobStatus.CompletionTime.Time) > deleteThreshold &&
