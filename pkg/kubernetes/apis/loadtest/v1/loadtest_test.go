@@ -21,7 +21,7 @@ func TestBuildLoadTestObject(t *testing.T) {
 		Tags:            map[string]string{"department": "platform", "team": "kangal"},
 		TestFile:        "load-test file\n",
 		TestData:        "test data 1\ntest data 2\n",
-		EnvVars:         map[string]string{"envVar1":"value1","envVar2":"value2"},
+		EnvVars:         map[string]string{"envVar1": "value1", "envVar2": "value2"},
 	}
 
 	expectedLabels := map[string]string{

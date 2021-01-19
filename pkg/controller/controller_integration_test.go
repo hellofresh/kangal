@@ -29,7 +29,7 @@ func TestIntegrationKangalController(t *testing.T) {
 	distributedPods := int32(1)
 	loadtestType := loadTestV1.LoadTestTypeFake
 	testFile := "testdata/valid/loadtest.jmx"
-	envVars := map[string]string{"foo":"bar", "foo2": "bar2"}
+	envVars := map[string]string{"foo": "bar", "foo2": "bar2"}
 	testData := "testdata/valid/testdata.csv"
 
 	client := kubeClient(t)
