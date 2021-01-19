@@ -306,7 +306,7 @@ func (c *Controller) syncHandler(key string) error {
 
 	// check and delete stale finished/errored loadtests
 	if checkLoadTestLifeTimeExceeded(loadTest, c.cfg.CleanUpThreshold) {
-		c.logger.Info("Deleting loadtest",
+		c.logger.Info("Deleting loadtest due to exceeded lifetime",
 			zap.String("loadtest", loadTest.Name),
 			zap.String("phase", string(loadTest.Status.Phase)),
 		)
@@ -314,7 +314,7 @@ func (c *Controller) syncHandler(key string) error {
 		if err != nil {
 			// The LoadTest resource may be conflicted, in which case we stop processing.
 			if errors.IsConflict(err) {
-				utilRuntime.HandleError(fmt.Errorf("there is a conflict with loadtest '%s' between datastore and cache. it might be because object has been removed or modified in the datastore", key))
+				utilRuntime.HandleError(fmt.Errorf("there is a conflict with loadtest %q between datastore and cache. it might be because object has been removed or modified in the datastore", key))
 				return nil
 			}
 			return err
