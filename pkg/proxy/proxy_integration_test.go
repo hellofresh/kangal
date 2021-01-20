@@ -221,7 +221,7 @@ func TestIntegrationCreateLoadtestFormPostOneFile(t *testing.T) {
 	t.Run("Checking if the loadtest envVars is correct", func(t *testing.T) {
 		envVars, err := testHelper.GetLoadTestEnvVars(clientSet, createdLoadTestName)
 		require.NoError(t, err)
-		assert.Equal(t, "", envVars)
+		assert.Equal(t, map[string]string(nil), envVars)
 	})
 }
 

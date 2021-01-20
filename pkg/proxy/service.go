@@ -105,7 +105,7 @@ func (s *implLoadTestServiceServer) Create(ctx context.Context, in *grpcProxyV2.
 
 	ev, err := ReadEnvs(string(envVars))
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.InvalidArgument, "%s", err.Error())
 	}
 
 	ltSpec := apisLoadTestV1.LoadTestSpec{
