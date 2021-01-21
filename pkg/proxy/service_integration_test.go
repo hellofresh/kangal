@@ -33,8 +33,8 @@ func TestImplLoadTestServiceServer_Create_PostAllFiles(t *testing.T) {
 		TargetUrl:       "http://example.com/foo",
 		Tags:            map[string]string{"department": "platform", "team": "kangal"},
 		TestFile:        readFileContents(t, "testdata/valid/loadtest.jmx", true),
-		TestData:        readFileContents(t, "testdata/valid/envvars.csv", true),
-		EnvVars:         readFileContents(t, "testdata/valid/testdata.csv", true),
+		EnvVars:         readFileContents(t, "testdata/valid/envvars.csv", true),
+		TestData:        readFileContents(t, "testdata/valid/testdata.csv", true),
 	}
 
 	createdLoadTestName := createLoadtestAndCleanup(t, &rq)
@@ -63,8 +63,8 @@ func TestImplLoadTestServiceServer_Create_Duplicates(t *testing.T) {
 		Type:            grpcProxyV2.LoadTestType_LOAD_TEST_TYPE_FAKE,
 		TargetUrl:       "http://example.com/foo",
 		TestFile:        readFileContents(t, "testdata/valid/loadtest.jmx", true),
-		TestData:        readFileContents(t, "testdata/valid/envvars.csv", true),
-		EnvVars:         readFileContents(t, "testdata/valid/testdata.csv", true),
+		EnvVars:         readFileContents(t, "testdata/valid/envvars.csv", true),
+		TestData:        readFileContents(t, "testdata/valid/testdata.csv", true),
 	}
 
 	createLoadtestAndCleanup(t, &rq)
@@ -137,7 +137,7 @@ func TestImplLoadTestServiceServer_Create_PostOneFile(t *testing.T) {
 
 	envVars, err := testHelper.GetLoadTestEnvVars(clientSet, createdLoadTestName)
 	require.NoError(t, err)
-	assert.Equal(t, "", envVars)
+	assert.Equal(t, map[string]string(nil), envVars)
 }
 
 func TestImplLoadTestServiceServer_Create_EmptyTestFile(t *testing.T) {
@@ -186,7 +186,7 @@ func TestImplLoadTestServiceServer_Get_Simple(t *testing.T) {
 		TargetUrl:       "http://example.com/foo",
 		Tags:            map[string]string{"department": "platform", "team": "kangal"},
 		TestFile:        readFileContents(t, "testdata/valid/loadtest.jmx", true),
-		TestData:        readFileContents(t, "testdata/valid/envvars.csv", true),
+		TestData:        readFileContents(t, "testdata/valid/testdata.csv", true),
 	}
 
 	createdLoadTestName := createLoadtestAndCleanup(t, &rq)

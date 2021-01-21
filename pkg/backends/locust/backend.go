@@ -158,22 +158,15 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, report
 
 	var secret *coreV1.Secret
 
-	if loadTest.Spec.EnvVars != "" {
-		envs, err := backends.ReadEnvs(loadTest.Spec.EnvVars)
-		if err != nil {
-			b.logger.Error("Error reading envVars", zap.Error(err))
+	if loadTest.Spec.EnvVars != nil {
+		secret = newSecret(loadTest, loadTest.Spec.EnvVars)
+		_, err = b.kubeClientSet.
+			CoreV1().
+			Secrets(loadTest.Status.Namespace).
+			Create(ctx, secret, metaV1.CreateOptions{})
+		if err != nil && !k8sAPIErrors.IsAlreadyExists(err) {
+			b.logger.Error("Error on creating secret", zap.Error(err))
 			return err
-		}
-		if len(envs) > 0 {
-			secret = newSecret(loadTest, envs)
-			_, err = b.kubeClientSet.
-				CoreV1().
-				Secrets(loadTest.Status.Namespace).
-				Create(ctx, secret, metaV1.CreateOptions{})
-			if err != nil && !k8sAPIErrors.IsAlreadyExists(err) {
-				b.logger.Error("Error on creating secret", zap.Error(err))
-				return err
-			}
 		}
 	}
 

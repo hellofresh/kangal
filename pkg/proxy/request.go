@@ -2,11 +2,13 @@ package proxy
 
 import (
 	"bytes"
+	"encoding/csv"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/thedevsaddam/govalidator"
@@ -164,12 +166,44 @@ func fromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger) (apisLoa
 	}, nil
 }
 
-func getEnvVars(r *http.Request) (string, error) {
-	return getFileFromHTTP(r, envVars)
+func getEnvVars(r *http.Request) (map[string]string, error) {
+	stringEnv, err := getFileFromHTTP(r, envVars)
+	if err != nil {
+		return nil, err
+	}
+	s, err := ReadEnvs(stringEnv)
+	if err != nil {
+		return nil, err
+	}
+	return s, nil
 }
 
 func getTestData(r *http.Request) (string, error) {
-	return getFileFromHTTP(r, testData)
+	stringTestData, err := getFileFromHTTP(r, testData)
+	if err != nil {
+		return "", err
+	}
+
+	err = checkCsvFile(stringTestData)
+	if err != nil {
+		return "", err
+	}
+
+	return stringTestData, nil
+}
+
+func checkCsvFile(s string) error {
+	reader := csv.NewReader(strings.NewReader(s))
+	for {
+		_, err := reader.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func getTestFile(r *http.Request) (string, error) {

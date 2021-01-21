@@ -1,17 +1,15 @@
-package backends_test
+package proxy
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/hellofresh/kangal/pkg/backends"
 )
 
 func TestReadSecret(t *testing.T) {
 	teststring := "aaa,1\nbbb,2\nccc,3\n"
 
-	result, err := backends.ReadEnvs(teststring)
+	result, err := ReadEnvs(teststring)
 	assert.NoError(t, err)
 	assert.Equal(t, 3, len(result))
 	assert.Equal(t, "2", result["bbb"])
@@ -19,9 +17,9 @@ func TestReadSecret(t *testing.T) {
 
 func TestReadSecretInvalid(t *testing.T) {
 	teststring := "aaa:1\nbbb;2\nccc;3\n"
-	expectedError := backends.ErrInvalidCSVFormat
+	expectedError := ErrInvalidCSVFormat
 
-	_, err := backends.ReadEnvs(teststring)
+	_, err := ReadEnvs(teststring)
 	assert.Error(t, err)
 	assert.Equal(t, expectedError, err)
 }
@@ -29,7 +27,7 @@ func TestReadSecretInvalid(t *testing.T) {
 func TestReadSecretEmpty(t *testing.T) {
 	teststring := ""
 
-	result, err := backends.ReadEnvs(teststring)
+	result, err := ReadEnvs(teststring)
 	assert.NoError(t, err)
 	assert.Equal(t, 0, len(result))
 }

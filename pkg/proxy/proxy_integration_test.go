@@ -221,7 +221,7 @@ func TestIntegrationCreateLoadtestFormPostOneFile(t *testing.T) {
 	t.Run("Checking if the loadtest envVars is correct", func(t *testing.T) {
 		envVars, err := testHelper.GetLoadTestEnvVars(clientSet, createdLoadTestName)
 		require.NoError(t, err)
-		assert.Equal(t, "", envVars)
+		assert.Equal(t, map[string]string(nil), envVars)
 	})
 }
 
@@ -329,7 +329,7 @@ func TestIntegrationDeleteLoadtest(t *testing.T) {
 	expectedLoadtestName := "loadtest-for-deletetest"
 
 	t.Run("Creates the loadtest", func(t *testing.T) {
-		err := testHelper.CreateLoadTest(clientSet, distributedPods, expectedLoadtestName, testFile, "", "", loadtestType)
+		err := testHelper.CreateLoadTest(clientSet, distributedPods, expectedLoadtestName, testFile, "", nil, loadtestType)
 		require.NoError(t, err)
 	})
 
@@ -373,7 +373,7 @@ func TestIntegrationGetLoadtest(t *testing.T) {
 	expectedLoadtestName := "loadtest-for-gettest"
 
 	t.Run("Creates the loadtest", func(t *testing.T) {
-		err := testHelper.CreateLoadTest(clientSet, distributedPods, expectedLoadtestName, testFile, testData, "", loadtestType)
+		err := testHelper.CreateLoadTest(clientSet, distributedPods, expectedLoadtestName, testFile, testData, nil, loadtestType)
 		require.NoError(t, err)
 	})
 
@@ -439,7 +439,7 @@ func TestIntegrationGetLoadtestLogs(t *testing.T) {
 	client := kubeClient(t)
 
 	t.Run("Creates the loadtest", func(t *testing.T) {
-		err := testHelper.CreateLoadTest(clientSet, distributedPods, expectedLoadtestName, testFile, "", "", loadtestType)
+		err := testHelper.CreateLoadTest(clientSet, distributedPods, expectedLoadtestName, testFile, "", nil, loadtestType)
 		require.NoError(t, err)
 	})
 

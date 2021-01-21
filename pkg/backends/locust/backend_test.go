@@ -32,7 +32,7 @@ func TestSync(t *testing.T) {
 			Name: "loadtest-name",
 		},
 		Spec: loadTestV1.LoadTestSpec{
-			EnvVars:         "my-secret,my-super-secret\n",
+			EnvVars:         map[string]string{"my-secret": "my-super-secret"},
 			DistributedPods: &distributedPods,
 		},
 		Status: loadTestV1.LoadTestStatus{
@@ -104,7 +104,7 @@ func TestTransformLoadTestSpec(t *testing.T) {
 		distributedPods int32
 		tags            loadTestV1.LoadTestTags
 		testFileStr     string
-		envVarsStr      string
+		envVarsStr      map[string]string
 		targetURL       string
 		duration        time.Duration
 	}
@@ -121,7 +121,7 @@ func TestTransformLoadTestSpec(t *testing.T) {
 				distributedPods: 3,
 				tags:            loadTestV1.LoadTestTags{"team": "kangal"},
 				testFileStr:     "something in the file",
-				envVarsStr:      "my-key,my-value",
+				envVarsStr:      map[string]string{"my-key": "my-value"},
 				targetURL:       "http://my-app.my-domain.com",
 			},
 			want: loadTestV1.LoadTestSpec{
@@ -129,7 +129,7 @@ func TestTransformLoadTestSpec(t *testing.T) {
 				DistributedPods: &distributedPods,
 				Tags:            loadTestV1.LoadTestTags{"team": "kangal"},
 				TestFile:        "something in the file",
-				EnvVars:         "my-key,my-value",
+				EnvVars:         map[string]string{"my-key": "my-value"},
 				TargetURL:       "http://my-app.my-domain.com",
 				MasterConfig:    loadTestV1.ImageDetails{Image: defaultImageName, Tag: defaultImageTag},
 			},
