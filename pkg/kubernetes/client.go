@@ -27,11 +27,6 @@ var (
 	gracePeriod = int64(0)
 )
 
-const (
-	// KubeTimeout timeout for kubernetes methods
-	KubeTimeout = 30 * time.Second
-)
-
 //Client manages calls to Kubernetes API
 type Client struct {
 	ltClient   loadTestV1.LoadTestInterface

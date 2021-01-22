@@ -2,12 +2,12 @@ package waitfor
 
 import (
 	"context"
+	"time"
 
 	coreV1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/watch"
 	watchtools "k8s.io/client-go/tools/watch"
 
-	"github.com/hellofresh/kangal/pkg/kubernetes"
 	apisLoadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 )
 
@@ -53,7 +53,7 @@ func (Condition) LoadTestFinished(event watch.Event) (bool, error) {
 
 // Resource waits until a kubernetes resources to match a condition
 func Resource(obj watch.Interface, condFunc watchtools.ConditionFunc) (*watch.Event, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), kubernetes.KubeTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	return watchtools.UntilWithoutRetry(ctx, obj, condFunc)
