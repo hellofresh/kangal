@@ -19,8 +19,8 @@ type Config struct {
 	// S3 compatible configuration access keys and endpoints needed to store load test reports
 	KangalProxyURL string `envconfig:"KANGAL_PROXY_URL" default:""`
 
-	// KubeClientTimeoutSeconds specifies timeout for each operation done by kube client
-	KubeClientTimeoutSeconds uint `envconfig:"KUBE_CLIENT_TIMEOUT_SECONDS" default:"5"`
+	// KubeClientTimeout specifies timeout for each operation done by kube client
+	KubeClientTimeout time.Duration `envconfig:"KUBE_CLIENT_TIMEOUT" default:"5s"`
 
 	MasterURL            string
 	KubeConfig           string

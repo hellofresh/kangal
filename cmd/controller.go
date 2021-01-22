@@ -58,7 +58,7 @@ func NewControllerCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("error building kubeConfig: %w", err)
 			}
-			kubeCfg.Timeout = time.Duration(cfg.KubeClientTimeoutSeconds) * time.Second
+			kubeCfg.Timeout = cfg.KubeClientTimeout
 
 			kubeClient, err := kubernetes.NewForConfig(kubeCfg)
 			if err != nil {

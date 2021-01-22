@@ -3,7 +3,6 @@ package cmd
 import (
 	"flag"
 	"fmt"
-	"time"
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/spf13/cobra"
@@ -53,7 +52,7 @@ func NewProxyCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("building config from flags: %w", err)
 			}
-			k8sConfig.Timeout = time.Duration(cfg.KubeClientTimeoutSeconds) * time.Second
+			k8sConfig.Timeout = cfg.KubeClientTimeout
 
 			kangalClientSet, err := loadTestV1.NewForConfig(k8sConfig)
 			if err != nil {
