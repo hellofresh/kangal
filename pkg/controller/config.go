@@ -11,11 +11,16 @@ type Config struct {
 	Debug    bool `envconfig:"DEBUG"`
 	HTTPPort int  `envconfig:"WEB_HTTP_PORT" default:"8080"`
 	Logger   observability.LoggerConfig
+
 	// CleanUpThresholdEnvVar is used if we want to increase the amount of time a
 	// load test lives for, the default is 1 hour. (ex. 5h)
 	CleanUpThreshold time.Duration `envconfig:"CLEANUP_THRESHOLD" default:"1h"`
+
 	// S3 compatible configuration access keys and endpoints needed to store load test reports
 	KangalProxyURL string `envconfig:"KANGAL_PROXY_URL" default:""`
+
+	// KubeClientTimeoutSeconds specifies timeout for each operation done by kube client
+	KubeClientTimeoutSeconds uint `envconfig:"KUBE_CLIENT_TIMEOUT_SECONDS" default:"5"`
 
 	MasterURL            string
 	KubeConfig           string

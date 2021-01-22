@@ -16,6 +16,9 @@ type Config struct {
 	MaxLoadTestsRun int
 	MaxListLimit    int64 `envconfig:"MAX_LIST_LIMIT" required:"true" default:"50"`
 	MasterURL       string
+
+	// KubeClientTimeoutSeconds specifies timeout for each operation done by kube client
+	KubeClientTimeoutSeconds uint `envconfig:"KUBE_CLIENT_TIMEOUT_SECONDS" default:"5"`
 }
 
 // OpenAPIConfig is the OpenAPI specification-specific parameters
