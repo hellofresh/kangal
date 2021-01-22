@@ -51,10 +51,6 @@ func NewLoadTestServiceServer(kubeClient *kube.Client, registry backends.Registr
 // Get returns load test by given name
 func (s *implLoadTestServiceServer) Get(ctx context.Context, in *grpcProxyV2.GetRequest) (*grpcProxyV2.GetResponse, error) {
 	logger := ctxzap.Extract(ctx)
-
-	ctx, cancel := context.WithTimeout(ctx, kube.KubeTimeout)
-	defer cancel()
-
 	logger.Debug("Retrieving info for loadtest", zap.String("name", in.GetName()))
 
 	result, err := s.kubeClient.GetLoadTest(ctx, in.GetName())
@@ -197,10 +193,6 @@ func (s *implLoadTestServiceServer) Create(ctx context.Context, in *grpcProxyV2.
 // List searches and returns load tests by given filters
 func (s *implLoadTestServiceServer) List(ctx context.Context, in *grpcProxyV2.ListRequest) (*grpcProxyV2.ListResponse, error) {
 	logger := ctxzap.Extract(ctx)
-
-	ctx, cancel := context.WithTimeout(ctx, kube.KubeTimeout)
-	defer cancel()
-
 	logger.Debug("Retrieving list of load tests", zap.Any("in", in))
 
 	opt := kube.ListOptions{
@@ -251,10 +243,6 @@ func (s *implLoadTestServiceServer) List(ctx context.Context, in *grpcProxyV2.Li
 // Delete deletes a load test
 func (s *implLoadTestServiceServer) Delete(ctx context.Context, in *grpcProxyV2.DeleteRequest) (*grpcProxyV2.DeleteResponse, error) {
 	logger := ctxzap.Extract(ctx)
-
-	ctx, cancel := context.WithTimeout(ctx, kube.KubeTimeout)
-	defer cancel()
-
 	logger.Debug("Deleting loadtest", zap.String("name", in.GetName()))
 
 	err := s.kubeClient.DeleteLoadTest(ctx, in.GetName())

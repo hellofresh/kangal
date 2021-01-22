@@ -20,8 +20,7 @@ import (
 )
 
 func TestCreateLoadTest(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	var logger = zap.NewNop()
 	loadtestClientSet := fakeClientset.NewSimpleClientset()
@@ -43,8 +42,7 @@ func TestCreateLoadTest(t *testing.T) {
 }
 
 func TestCreateLoadTestWithError(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	var logger = zap.NewNop()
 	loadtestClientset := fakeClientset.NewSimpleClientset()
@@ -63,8 +61,7 @@ func TestCreateLoadTestWithError(t *testing.T) {
 }
 
 func TestDeleteLoadTest(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	var logger = zap.NewNop()
 	loadtestClientset := fakeClientset.NewSimpleClientset()
@@ -82,8 +79,7 @@ func TestDeleteLoadTest(t *testing.T) {
 }
 
 func TestCreateLoadTestCRNoLoadTest(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	var logger = zap.NewNop()
 	loadtestClientset := fakeClientset.NewSimpleClientset()
@@ -132,8 +128,7 @@ func TestGetLoadTestsByLabel(t *testing.T) {
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
-			defer cancel()
+			ctx := context.Background()
 
 			var logger = zap.NewNop()
 			loadtestClientset := fakeClientset.NewSimpleClientset()
@@ -155,8 +150,7 @@ func TestGetLoadTestsByLabel(t *testing.T) {
 }
 
 func TestGetLoadTest(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	var logger = zap.NewNop()
 	loadtestClientset := fakeClientset.NewSimpleClientset()
@@ -266,8 +260,7 @@ func TestClient_ListLoadTest(t *testing.T) {
 		t.Run(tc.scenario, func(t *testing.T) {
 			t.Parallel()
 
-			ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
-			defer cancel()
+			ctx := context.Background()
 
 			loadTestClientSet := fakeClientset.NewSimpleClientset()
 			kubeClientSet := fake.NewSimpleClientset()
@@ -363,8 +356,7 @@ func TestClient_filterLoadTestsByPhase(t *testing.T) {
 }
 
 func TestCountActiveLoadTests(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	loadtestClientset := fakeClientset.NewSimpleClientset()
 	kubeClientSet := fake.NewSimpleClientset()
@@ -399,8 +391,7 @@ func TestCountActiveLoadTests(t *testing.T) {
 }
 
 func TestGetLoadTestNoLoadTest(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	var logger = zap.NewNop()
 	loadtestClientset := fakeClientset.NewSimpleClientset()
@@ -418,8 +409,7 @@ func TestGetLoadTestNoLoadTest(t *testing.T) {
 }
 
 func TestGetMasterPodLogs(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), KubeTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	var logger = zap.NewNop()
 	loadtestClientset := fakeClientset.NewSimpleClientset()
