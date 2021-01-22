@@ -205,6 +205,6 @@ func BuildConfig() (*rest.Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	config.Timeout = 15 * time.Second
+	config.Timeout = 30 * time.Second
 	return config, nil
 }
