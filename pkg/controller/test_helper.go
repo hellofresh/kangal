@@ -19,6 +19,10 @@ import (
 	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
 )
 
+const (
+	kubeClientDefaultTimeout = 1 * time.Minute
+)
+
 // CreateLoadTest creates a load test CR
 func CreateLoadTest(clientSet clientSetV.Clientset, pods int32, name, testFile, testData string, envVars map[string]string, loadTestType apisLoadTestV1.LoadTestType) error {
 	var td = ""
@@ -205,6 +209,6 @@ func BuildConfig() (*rest.Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	config.Timeout = 30 * time.Second
+	config.Timeout = kubeClientDefaultTimeout
 	return config, nil
 }

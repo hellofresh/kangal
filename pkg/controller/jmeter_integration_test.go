@@ -162,7 +162,6 @@ func kubeTestClient() clientSetV.Clientset {
 	}
 
 	config, err := BuildConfig()
-	config.Timeout = 60 * time.Second
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -179,7 +178,6 @@ func kubeClient(t *testing.T) *kubernetes.Clientset {
 
 	config, err := BuildConfig()
 	require.NoError(t, err)
-	config.Timeout = 60 * time.Second
 
 	cSet, err := kubernetes.NewForConfig(config)
 	require.NoError(t, err)
