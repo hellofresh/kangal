@@ -7,7 +7,6 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/hellofresh/kangal/pkg/core/observability"
 	kube "github.com/hellofresh/kangal/pkg/kubernetes"
@@ -48,11 +47,10 @@ func NewProxyCmd() *cobra.Command {
 				return fmt.Errorf("could not initialise Prometheus exporter: %w", err)
 			}
 
-			k8sConfig, err := clientcmd.BuildConfigFromFlags(opts.masterURL, opts.kubeConfig)
+			k8sConfig, err := buildKubeClientConfig(cfg.MasterURL, opts.kubeConfig, cfg.KubeClientTimeout)
 			if err != nil {
 				return fmt.Errorf("building config from flags: %w", err)
 			}
-			k8sConfig.Timeout = cfg.KubeClientTimeout
 
 			kangalClientSet, err := loadTestV1.NewForConfig(k8sConfig)
 			if err != nil {

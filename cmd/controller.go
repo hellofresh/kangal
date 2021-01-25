@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	"k8s.io/client-go/rest"
+
 	"github.com/kelseyhightower/envconfig"
 	"github.com/spf13/cobra"
 	kubeInformers "k8s.io/client-go/informers"
@@ -54,11 +56,10 @@ func NewControllerCmd() *cobra.Command {
 				return err
 			}
 
-			kubeCfg, err := clientcmd.BuildConfigFromFlags(cfg.MasterURL, cfg.KubeConfig)
+			kubeCfg, err := buildKubeClientConfig(cfg.MasterURL, cfg.KubeConfig, cfg.KubeClientTimeout)
 			if err != nil {
 				return fmt.Errorf("error building kubeConfig: %w", err)
 			}
-			kubeCfg.Timeout = cfg.KubeClientTimeout
 
 			kubeClient, err := kubernetes.NewForConfig(kubeCfg)
 			if err != nil {
@@ -131,4 +132,14 @@ func convertAnnotationToMap(s []string) (map[string]string, error) {
 		m[key] = value
 	}
 	return m, nil
+}
+
+func buildKubeClientConfig(masterURL string, kubeConfigPath string, timeout time.Duration) (*rest.Config, error) {
+	kubeCfg, err := clientcmd.BuildConfigFromFlags(masterURL, kubeConfigPath)
+	if err != nil {
+		return nil, err
+	}
+
+	kubeCfg.Timeout = timeout
+	return kubeCfg, nil
 }
