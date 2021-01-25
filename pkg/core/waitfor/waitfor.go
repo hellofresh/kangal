@@ -11,6 +11,12 @@ import (
 	apisLoadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 )
 
+const (
+	// waitForResourceTimeout is the timeout used to wait until a resource reaches a desired state
+	// TODO: Move as envconfig?
+	waitForResourceTimeout = 30 * time.Second
+)
+
 // Condition contains useful functions for watch conditions
 type Condition struct {
 }
@@ -53,7 +59,7 @@ func (Condition) LoadTestFinished(event watch.Event) (bool, error) {
 
 // Resource waits until a kubernetes resources to match a condition
 func Resource(obj watch.Interface, condFunc watchtools.ConditionFunc) (*watch.Event, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), waitForResourceTimeout)
 	defer cancel()
 
 	return watchtools.UntilWithoutRetry(ctx, obj, condFunc)
