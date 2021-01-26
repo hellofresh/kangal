@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"time"
 
 	coreV1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -14,9 +15,12 @@ import (
 
 	"github.com/hellofresh/kangal/pkg/backends"
 	"github.com/hellofresh/kangal/pkg/core/waitfor"
-	"github.com/hellofresh/kangal/pkg/kubernetes"
 	apisLoadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
+)
+
+const (
+	kubeClientDefaultTimeout = 1 * time.Minute
 )
 
 // CreateLoadTest creates a load test CR
@@ -61,8 +65,7 @@ func CreateLoadTest(clientSet clientSetV.Clientset, pods int32, name, testFile, 
 	ltObj.Name = name
 	ltObj.Spec = loadTestSpec
 
-	ctx, cancel := context.WithTimeout(context.Background(), kubernetes.KubeTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	_, err = clientSet.KangalV1().LoadTests().Create(ctx, ltObj, metaV1.CreateOptions{})
 	if err != nil {
@@ -97,8 +100,7 @@ func WaitLoadTest(clientSet clientSetV.Clientset, loadtestName string) error {
 // DeleteLoadTest deletes a load test CR
 func DeleteLoadTest(clientSet clientSetV.Clientset, loadtestName string, testname string) error {
 	fmt.Printf("Deleting object %v for the test %v \n", loadtestName, testname)
-	ctx, cancel := context.WithTimeout(context.Background(), kubernetes.KubeTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	if err := clientSet.KangalV1().LoadTests().Delete(ctx, loadtestName, metaV1.DeleteOptions{}); err != nil {
 		return err
@@ -108,8 +110,7 @@ func DeleteLoadTest(clientSet clientSetV.Clientset, loadtestName string, testnam
 
 // GetLoadTest returns a load test name
 func GetLoadTest(clientSet clientSetV.Clientset, loadtestName string) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), kubernetes.KubeTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	result, err := clientSet.KangalV1().LoadTests().Get(ctx, loadtestName, metaV1.GetOptions{})
 	if err != nil {
@@ -120,8 +121,7 @@ func GetLoadTest(clientSet clientSetV.Clientset, loadtestName string) (string, e
 
 // GetLoadTestTestdata returns a load test name
 func GetLoadTestTestdata(clientSet clientSetV.Clientset, loadtestName string) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), kubernetes.KubeTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	result, err := clientSet.KangalV1().LoadTests().Get(ctx, loadtestName, metaV1.GetOptions{})
 	if err != nil {
@@ -132,8 +132,7 @@ func GetLoadTestTestdata(clientSet clientSetV.Clientset, loadtestName string) (s
 
 // GetLoadTestLabels returns load test labels.
 func GetLoadTestLabels(clientSet clientSetV.Clientset, loadtestName string) (map[string]string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), kubernetes.KubeTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	result, err := clientSet.KangalV1().LoadTests().Get(ctx, loadtestName, metaV1.GetOptions{})
 	if err != nil {
@@ -144,8 +143,7 @@ func GetLoadTestLabels(clientSet clientSetV.Clientset, loadtestName string) (map
 
 // GetLoadTestEnvVars returns a load test name
 func GetLoadTestEnvVars(clientSet clientSetV.Clientset, loadtestName string) (map[string]string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), kubernetes.KubeTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	result, err := clientSet.KangalV1().LoadTests().Get(ctx, loadtestName, metaV1.GetOptions{})
 	if err != nil {
@@ -156,8 +154,7 @@ func GetLoadTestEnvVars(clientSet clientSetV.Clientset, loadtestName string) (ma
 
 // GetLoadTestNamespace returns a load test namespace
 func GetLoadTestNamespace(clientSet clientSetV.Clientset, loadtestName string) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), kubernetes.KubeTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	result, err := clientSet.KangalV1().LoadTests().Get(ctx, loadtestName, metaV1.GetOptions{})
 	if err != nil {
@@ -168,8 +165,7 @@ func GetLoadTestNamespace(clientSet clientSetV.Clientset, loadtestName string) (
 
 // GetLoadTestPhase returns the current phase of given loadtest
 func GetLoadTestPhase(clientSet clientSetV.Clientset, loadtestName string) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), kubernetes.KubeTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	result, err := clientSet.KangalV1().LoadTests().Get(ctx, loadtestName, metaV1.GetOptions{})
 	if err != nil {
@@ -180,8 +176,7 @@ func GetLoadTestPhase(clientSet clientSetV.Clientset, loadtestName string) (stri
 
 // GetDistributedPods returns a number of distributed pods in load test namespace
 func GetDistributedPods(clientSet typeV1.CoreV1Interface, namespace string) (coreV1.PodList, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), kubernetes.KubeTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	opts := metaV1.ListOptions{
 		LabelSelector: "app=loadtest-worker-pod",
@@ -195,8 +190,7 @@ func GetDistributedPods(clientSet typeV1.CoreV1Interface, namespace string) (cor
 
 // GetSecret returns a list of created secrets according to the given label
 func GetSecret(clientSet typeV1.CoreV1Interface, namespace string) (coreV1.SecretList, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), kubernetes.KubeTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	opts := metaV1.ListOptions{
 		LabelSelector: "secret-source=env-vars-from-file",
@@ -215,5 +209,6 @@ func BuildConfig() (*rest.Config, error) {
 	if err != nil {
 		return nil, err
 	}
+	config.Timeout = kubeClientDefaultTimeout
 	return config, nil
 }

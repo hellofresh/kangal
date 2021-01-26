@@ -73,10 +73,8 @@ func getLoadTestType(r *http.Request) apisLoadTestV1.LoadTestType {
 
 // List lists all the load tests.
 func (p *Proxy) List(w http.ResponseWriter, r *http.Request) {
-	logger := mPkg.GetLogger(r.Context())
-
-	ctx, cancel := context.WithTimeout(r.Context(), kube.KubeTimeout)
-	defer cancel()
+	ctx := r.Context()
+	logger := mPkg.GetLogger(ctx)
 
 	opt, err := fromHTTPRequestToListOptions(r, p.maxListLimit)
 	if err != nil {
@@ -119,10 +117,8 @@ func (p *Proxy) List(w http.ResponseWriter, r *http.Request) {
 
 //Create creates loadtest CR on POST request
 func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
-	logger := mPkg.GetLogger(r.Context())
-
-	ctx, cancel := context.WithTimeout(r.Context(), kube.KubeTimeout)
-	defer cancel()
+	ctx := r.Context()
+	logger := mPkg.GetLogger(ctx)
 
 	// Making valid LoadTestSpec based on HTTP request
 	ltSpec, err := fromHTTPRequestToLoadTestSpec(r, logger)
@@ -215,10 +211,8 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 
 //Delete deletes load test CR
 func (p *Proxy) Delete(w http.ResponseWriter, r *http.Request) {
-	logger := mPkg.GetLogger(r.Context())
-
-	ctx, cancel := context.WithTimeout(r.Context(), kube.KubeTimeout)
-	defer cancel()
+	ctx := r.Context()
+	logger := mPkg.GetLogger(ctx)
 
 	ltID := chi.URLParam(r, loadTestID)
 	logger.Debug("Deleting loadtest", zap.String("ltID", ltID))
@@ -235,10 +229,8 @@ func (p *Proxy) Delete(w http.ResponseWriter, r *http.Request) {
 
 //Get returns the loadtest CR info
 func (p *Proxy) Get(w http.ResponseWriter, r *http.Request) {
-	logger := mPkg.GetLogger(r.Context())
-
-	ctx, cancel := context.WithTimeout(r.Context(), kube.KubeTimeout)
-	defer cancel()
+	ctx := r.Context()
+	logger := mPkg.GetLogger(ctx)
 
 	ltID := chi.URLParam(r, loadTestID)
 	logger.Debug("Retrieving info for loadtest", zap.String("ltID", ltID))
@@ -269,14 +261,12 @@ func (p *Proxy) Get(w http.ResponseWriter, r *http.Request) {
 
 //GetLogs returns the loadtest logs from master or worker pods
 func (p *Proxy) GetLogs(w http.ResponseWriter, r *http.Request) {
-	logger := mPkg.GetLogger(r.Context())
+	ctx := r.Context()
+	logger := mPkg.GetLogger(ctx)
 	ltID := chi.URLParam(r, loadTestID)
 	workerID := chi.URLParam(r, workerPodID)
 	var logsRequest *restClient.Request
 	logger.Info("Retrieving logs for loadtest", zap.String("ltID", ltID))
-
-	ctx, cancel := context.WithTimeout(r.Context(), kube.KubeTimeout)
-	defer cancel()
 
 	loadTest, err := p.kubeClient.GetLoadTest(ctx, ltID)
 	if err != nil {
@@ -292,11 +282,9 @@ func (p *Proxy) GetLogs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctxLogs, cancelLogs := context.WithTimeout(context.Background(), kube.KubeTimeout)
-	defer cancelLogs()
 	if workerID == "" {
 		logger.Info("Returning master pod logs")
-		logsRequest, err = p.kubeClient.GetMasterPodRequest(ctxLogs, namespace)
+		logsRequest, err = p.kubeClient.GetMasterPodRequest(ctx, namespace)
 		if err != nil {
 			logger.Error("Could not get load test logs request:", zap.Error(err))
 			render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest, err.Error()))
@@ -304,7 +292,7 @@ func (p *Proxy) GetLogs(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		logger.Info("Returning worker pod logs")
-		logsRequest, err = p.kubeClient.GetWorkerPodRequest(ctxLogs, namespace, workerID)
+		logsRequest, err = p.kubeClient.GetWorkerPodRequest(ctx, namespace, workerID)
 		if err != nil {
 			logger.Error("Could not get load test logs request:", zap.Error(err))
 			render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest, err.Error()))

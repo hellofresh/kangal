@@ -1,6 +1,8 @@
 package proxy
 
 import (
+	"time"
+
 	"github.com/hellofresh/kangal/pkg/core/observability"
 	"github.com/hellofresh/kangal/pkg/report"
 )
@@ -16,6 +18,9 @@ type Config struct {
 	MaxLoadTestsRun int
 	MaxListLimit    int64 `envconfig:"MAX_LIST_LIMIT" required:"true" default:"50"`
 	MasterURL       string
+
+	// KubeClientTimeout specifies timeout for each operation done by kube client
+	KubeClientTimeout time.Duration `envconfig:"KUBE_CLIENT_TIMEOUT" default:"5s"`
 }
 
 // OpenAPIConfig is the OpenAPI specification-specific parameters

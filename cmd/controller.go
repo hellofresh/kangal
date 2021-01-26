@@ -8,11 +8,11 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/spf13/cobra"
 	kubeInformers "k8s.io/client-go/informers"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
+	kubernetesClient "k8s.io/client-go/kubernetes"
 
 	"github.com/hellofresh/kangal/pkg/controller"
 	"github.com/hellofresh/kangal/pkg/core/observability"
+	"github.com/hellofresh/kangal/pkg/kubernetes"
 	clientSet "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
 	informers "github.com/hellofresh/kangal/pkg/kubernetes/generated/informers/externalversions"
 )
@@ -54,12 +54,12 @@ func NewControllerCmd() *cobra.Command {
 				return err
 			}
 
-			kubeCfg, err := clientcmd.BuildConfigFromFlags(cfg.MasterURL, cfg.KubeConfig)
+			kubeCfg, err := kubernetes.BuildClientConfig(cfg.MasterURL, cfg.KubeConfig, cfg.KubeClientTimeout)
 			if err != nil {
 				return fmt.Errorf("error building kubeConfig: %w", err)
 			}
 
-			kubeClient, err := kubernetes.NewForConfig(kubeCfg)
+			kubeClient, err := kubernetesClient.NewForConfig(kubeCfg)
 			if err != nil {
 				return fmt.Errorf("error building kubernetes clientSet: %w", err)
 			}

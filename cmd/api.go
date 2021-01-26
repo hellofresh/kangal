@@ -7,11 +7,10 @@ import (
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/spf13/cobra"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
+	kubernetesClient "k8s.io/client-go/kubernetes"
 
 	"github.com/hellofresh/kangal/pkg/core/observability"
-	kube "github.com/hellofresh/kangal/pkg/kubernetes"
+	"github.com/hellofresh/kangal/pkg/kubernetes"
 	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned/typed/loadtest/v1"
 	"github.com/hellofresh/kangal/pkg/proxy"
 	"github.com/hellofresh/kangal/pkg/report"
@@ -48,7 +47,7 @@ func NewAPICmd(ctx context.Context) *cobra.Command {
 				return fmt.Errorf("could not initialise Prometheus exporter: %w", err)
 			}
 
-			k8sConfig, err := clientcmd.BuildConfigFromFlags(opts.masterURL, opts.kubeConfig)
+			k8sConfig, err := kubernetes.BuildClientConfig(opts.masterURL, opts.kubeConfig, cfg.KubeClientTimeout)
 			if err != nil {
 				return fmt.Errorf("building config from flags: %w", err)
 			}
@@ -58,13 +57,13 @@ func NewAPICmd(ctx context.Context) *cobra.Command {
 				return fmt.Errorf("building kangal clientset: %w", err)
 			}
 
-			kubeClientSet, err := kubernetes.NewForConfig(k8sConfig)
+			kubeClientSet, err := kubernetesClient.NewForConfig(k8sConfig)
 			if err != nil {
 				return fmt.Errorf("building kubernetes clientset: %w", err)
 			}
 
 			loadTestClient := kangalClientSet.LoadTests()
-			kubeClient := kube.NewClient(loadTestClient, kubeClientSet, logger)
+			kubeClient := kubernetes.NewClient(loadTestClient, kubeClientSet, logger)
 
 			err = report.InitObjectStorageClient(cfg.Report)
 			if err != nil {
