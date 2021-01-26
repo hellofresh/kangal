@@ -47,7 +47,7 @@ func NewAPICmd(ctx context.Context) *cobra.Command {
 				return fmt.Errorf("could not initialise Prometheus exporter: %w", err)
 			}
 
-			k8sConfig, err := kubernetes.BuildClientConfig(cfg.MasterURL, opts.kubeConfig, cfg.KubeClientTimeout)
+			k8sConfig, err := kubernetes.BuildClientConfig(opts.masterURL, opts.kubeConfig, cfg.KubeClientTimeout)
 			if err != nil {
 				return fmt.Errorf("building config from flags: %w", err)
 			}
