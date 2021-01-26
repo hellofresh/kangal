@@ -6,7 +6,7 @@ import (
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/spf13/cobra"
-	kubeClient "k8s.io/client-go/kubernetes"
+	kubernetesClient "k8s.io/client-go/kubernetes"
 
 	"github.com/hellofresh/kangal/pkg/core/observability"
 	"github.com/hellofresh/kangal/pkg/kubernetes"
@@ -57,7 +57,7 @@ func NewProxyCmd() *cobra.Command {
 				return fmt.Errorf("building kangal clientset: %w", err)
 			}
 
-			kubeClientSet, err := kubeClient.NewForConfig(k8sConfig)
+			kubeClientSet, err := kubernetesClient.NewForConfig(k8sConfig)
 			if err != nil {
 				return fmt.Errorf("building kubernetes clientset: %w", err)
 			}
