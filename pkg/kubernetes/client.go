@@ -14,6 +14,7 @@ import (
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	restClient "k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 
 	apisLoadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned/typed/loadtest/v1"
@@ -234,4 +235,15 @@ func sortWorkerPods(pods *coreV1.PodList) {
 	sort.Slice(pods.Items, func(i, j int) bool {
 		return strings.Compare(pods.Items[i].ObjectMeta.Name, pods.Items[j].ObjectMeta.Name) < 0
 	})
+}
+
+// BuildKubeClientConfig is used in cmd package
+func BuildKubeClientConfig(masterURL string, kubeConfigPath string, timeout time.Duration) (*restClient.Config, error) {
+	kubeCfg, err := clientcmd.BuildConfigFromFlags(masterURL, kubeConfigPath)
+	if err != nil {
+		return nil, err
+	}
+
+	kubeCfg.Timeout = timeout
+	return kubeCfg, nil
 }
