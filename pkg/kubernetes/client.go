@@ -237,8 +237,8 @@ func sortWorkerPods(pods *coreV1.PodList) {
 	})
 }
 
-// BuildKubeClientConfig is used in cmd package
-func BuildKubeClientConfig(masterURL string, kubeConfigPath string, timeout time.Duration) (*restClient.Config, error) {
+// BuildClientConfig is used in cmd package
+func BuildClientConfig(masterURL string, kubeConfigPath string, timeout time.Duration) (*restClient.Config, error) {
 	kubeCfg, err := clientcmd.BuildConfigFromFlags(masterURL, kubeConfigPath)
 	if err != nil {
 		return nil, err
