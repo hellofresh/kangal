@@ -22,6 +22,9 @@ type Config struct {
 	// KubeClientTimeout specifies timeout for each operation done by kube client
 	KubeClientTimeout time.Duration `envconfig:"KUBE_CLIENT_TIMEOUT" default:"5s"`
 
+	// SyncHandlerTimeout specifies the time limit for each sync operation
+	SyncHandlerTimeout time.Duration `envconfig:"SYNC_HANDLER_TIMEOUT" default:"60s"`
+
 	MasterURL            string
 	KubeConfig           string
 	NamespaceAnnotations map[string]string

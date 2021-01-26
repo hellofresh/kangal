@@ -35,7 +35,6 @@ const (
 	controllerAgentName = "kangal"
 	falseString         = "false"
 	trueString          = "true"
-	syncHandlerTimeout  = time.Minute
 )
 
 // Controller is the controller implementation for LoadTest resources
@@ -275,7 +274,7 @@ func (c *Controller) processNextWorkItem() bool {
 // converge the two. It then updates the Status block of the LoadTest resource
 // with the current status of the resource.
 func (c *Controller) syncHandler(key string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), syncHandlerTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), c.cfg.SyncHandlerTimeout)
 	defer cancel()
 
 	_, name, err := cache.SplitMetaNamespaceKey(key)
