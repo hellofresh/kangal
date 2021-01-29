@@ -277,6 +277,10 @@ func (c *Controller) syncHandler(key string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), c.cfg.SyncHandlerTimeout)
 	defer cancel()
 
+	logger := c.logger.With(
+		zap.String("loadtest", key),
+	)
+
 	_, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
 		utilRuntime.HandleError(fmt.Errorf("invalid resource key: %s", key))
@@ -305,8 +309,7 @@ func (c *Controller) syncHandler(key string) error {
 
 	// check and delete stale finished/errored loadtests
 	if checkLoadTestLifeTimeExceeded(loadTest, c.cfg.CleanUpThreshold) {
-		c.logger.Info("Deleting loadtest due to exceeded lifetime",
-			zap.String("loadtest", loadTest.Name),
+		logger.Info("Deleting loadtest due to exceeded lifetime",
 			zap.String("phase", string(loadTest.Status.Phase)),
 		)
 		err = c.kangalClientSet.KangalV1().LoadTests().Delete(ctx, loadTest.Name, metaV1.DeleteOptions{})
@@ -417,6 +420,12 @@ func (c *Controller) enqueueLoadTest(obj interface{}) {
 }
 
 func (c *Controller) updateLoadTestStatus(ctx context.Context, key string, loadTest *loadTestV1.LoadTest, loadTestFromCache *loadTestV1.LoadTest) {
+	c.logger.Info("Updating loadtest status",
+		zap.String("loadtest", loadTest.GetName()),
+		zap.String("new status", string(loadTest.Status.Phase)),
+		zap.String("previous status", string(loadTestFromCache.Status.Phase)),
+	)
+
 	// UpdateStatus will not allow changes to the Spec of the resource
 	_, err := c.kangalClientSet.KangalV1().LoadTests().UpdateStatus(ctx, loadTest, metaV1.UpdateOptions{})
 	if err != nil {
@@ -426,7 +435,10 @@ func (c *Controller) updateLoadTestStatus(ctx context.Context, key string, loadT
 			utilRuntime.HandleError(fmt.Errorf("there is a conflict with loadtest '%s' between datastore and cache. it might be because object has been removed or modified in the datastore", key))
 			return
 		}
-		c.logger.Error("Failed updating loadtest status", zap.Error(err))
+		c.logger.Error("Failed updating loadtest status",
+			zap.String("loadtest", loadTest.GetName()),
+			zap.Error(err),
+		)
 		return
 	}
 
