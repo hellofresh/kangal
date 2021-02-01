@@ -356,18 +356,6 @@ func (c *Controller) syncHandler(key string) error {
 		return err
 	}
 
-	// Finally, we send updated loadtest resource back
-	_, err = c.kangalClientSet.KangalV1().LoadTests().Update(ctx, loadTest, metaV1.UpdateOptions{})
-	if err != nil {
-		// The LoadTest resource may be conflicted, in which case we stop
-		// processing.
-		if errors.IsConflict(err) {
-			utilRuntime.HandleError(fmt.Errorf("the loadtest '%s'has been modified; please apply your changes to the latest version and try again", key))
-			return nil
-		}
-		return err
-	}
-
 	return nil
 }
 
