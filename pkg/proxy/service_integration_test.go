@@ -2,12 +2,16 @@ package proxy
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strconv"
 	"testing"
+
+	"github.com/hellofresh/kangal/pkg/core/waitfor"
+	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -358,6 +362,52 @@ func TestImplLoadTestServiceServer_Delete_Simple(t *testing.T) {
 	_, err = testHelper.GetLoadTest(clientSet, createdLoadTestName)
 	assert.Error(t, err)
 
+}
+
+func TestImplLoadTestServiceServer_GetLogs_Simple(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode")
+	}
+
+	// Create a loadtest
+	rq1 := grpcProxyV2.CreateRequest{
+		DistributedPods: 2,
+		Type:            grpcProxyV2.LoadTestType_LOAD_TEST_TYPE_FAKE,
+		TargetUrl:       "http://example.com/foo",
+		TestFile:        encodeContents(t, []byte(`foo`)),
+		Tags: map[string]string{
+			"department": "platform",
+			"team":       "kangal",
+			"app-name":   "test",
+		},
+	}
+	createdLoadTestName := createLoadtestAndCleanup(t, &rq1)
+	err := testHelper.WaitLoadTest(clientSet, createdLoadTestName)
+	require.NoError(t, err)
+
+	// Wait until loadtest runs so we can get the logs
+	watchObj, _ := clientSet.KangalV1().LoadTests().Watch(context.Background(), metaV1.ListOptions{
+		FieldSelector: fmt.Sprintf("metadata.name=%s", createdLoadTestName),
+	})
+	waitfor.Resource(watchObj, (waitfor.Condition{}).LoadTestFinished)
+
+	// Get logs
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:%d/v2/load-test/%s/logs", restPort, createdLoadTestName), nil)
+	require.NoError(t, err, "Could not create GET request")
+
+	resp, err := http.DefaultClient.Do(req)
+	require.NoError(t, err, "Could not send GET request")
+
+	defer func() {
+		err := resp.Body.Close()
+		assert.NoError(t, err)
+	}()
+
+	restBody, err := ioutil.ReadAll(resp.Body)
+	t.Logf("gRPC/REST gateway response: %s", restBody)
+
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.NotEmpty(t, restBody)
 }
 
 func createLoadtestAndCleanup(t *testing.T, rq *grpcProxyV2.CreateRequest) string {
