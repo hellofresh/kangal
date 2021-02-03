@@ -156,7 +156,7 @@ func (b *Backend) newMasterJob(loadTest loadTestV1.LoadTest) *batchV1.Job {
 							Image:           imageRef,
 							ImagePullPolicy: "Always",
 							Command:         []string{"/bin/sh", "-c", "--"},
-							Args:            []string{"sleep 10"},
+							Args:            []string{"sleep 10 && echo done sleeping"},
 						},
 					},
 				},
