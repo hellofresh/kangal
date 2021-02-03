@@ -420,10 +420,13 @@ func (c *Controller) enqueueLoadTest(obj interface{}) {
 }
 
 func (c *Controller) updateLoadTestStatus(ctx context.Context, key string, loadTest *loadTestV1.LoadTest, loadTestFromCache *loadTestV1.LoadTest) {
-	c.logger.Info("Updating loadtest status",
+	logger := c.logger.With(
 		zap.String("loadtest", loadTest.GetName()),
-		zap.String("new status", string(loadTest.Status.Phase)),
-		zap.String("previous status", string(loadTestFromCache.Status.Phase)),
+	)
+
+	logger.Debug("Updating loadtest status",
+		zap.String("new phase", string(loadTest.Status.Phase)),
+		zap.String("previous phase", string(loadTestFromCache.Status.Phase)),
 	)
 
 	// UpdateStatus will not allow changes to the Spec of the resource
@@ -435,10 +438,7 @@ func (c *Controller) updateLoadTestStatus(ctx context.Context, key string, loadT
 			utilRuntime.HandleError(fmt.Errorf("there is a conflict with loadtest '%s' between datastore and cache. it might be because object has been removed or modified in the datastore", key))
 			return
 		}
-		c.logger.Error("Failed updating loadtest status",
-			zap.String("loadtest", loadTest.GetName()),
-			zap.Error(err),
-		)
+		logger.Error("Failed updating loadtest status", zap.Error(err))
 		return
 	}
 
@@ -447,6 +447,7 @@ func (c *Controller) updateLoadTestStatus(ctx context.Context, key string, loadT
 		loadTest.Status.Phase == loadTestV1.LoadTestFinished {
 		stats.Record(ctx, observability.MFinishedLoadtestCountStat.M(1))
 	}
+	logger.Info("Status updated", zap.Any("status", loadTest.Status))
 }
 
 // checkOrCreateNamespace checks if a namespace has been created and if not deletes it
