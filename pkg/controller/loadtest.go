@@ -258,7 +258,7 @@ func (c *Controller) processNextWorkItem() bool {
 		// Finally, if no error occurs we Forget this item so it does not
 		// get queued again until another change happens.
 		c.workQueue.Forget(obj)
-		c.logger.Debug("Successfully synced", zap.String("loadTest", key))
+		c.logger.Debug("Successfully synced", zap.String("loadtest", key))
 		return nil
 	}(obj)
 
@@ -393,7 +393,7 @@ func (c *Controller) handleObject(obj interface{}) {
 			return
 		}
 
-		c.logger.Debug("Processing object", zap.String("loadtest", object.GetName()))
+		c.logger.Debug("Processing object", zap.String("object-name", object.GetName()))
 		foo, err := c.loadtestsLister.Get(ownerRef.Name)
 		if err != nil {
 			c.logger.Debug("ignoring orphaned object", zap.String("loadtest", object.GetSelfLink()),
@@ -471,14 +471,13 @@ func (c *Controller) checkOrCreateNamespace(ctx context.Context, loadtest *loadT
 			return err
 		}
 		namespaceName = namespaceObj.GetName()
-		c.logger.Info("Created new namespace", zap.String("namespace", namespaceName), zap.String("LoadTest", loadtest.GetName()))
+		c.logger.Info("Created new namespace", zap.String("namespace", namespaceName), zap.String("loadtest", loadtest.GetName()))
 		stats.Record(ctx, observability.MCreatedLoadtestCountStat.M(1))
 	} else {
 		namespaceName = namespaces.Items[0].Name
 	}
 
 	loadtest.Status.Namespace = namespaceName
-
 	return nil
 }
 
