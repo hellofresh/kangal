@@ -91,6 +91,14 @@ message DeleteRequest {
 message DeleteResponse {
 }
 
+message GetLogsRequest {
+    string name = 1;
+}
+
+message GetLogsResponse {
+    string logs = 1;
+}
+
 service LoadTestService {
     // Get returns load test by given name
     rpc Get (GetRequest) returns (GetResponse) {
@@ -117,6 +125,12 @@ service LoadTestService {
     rpc Delete (DeleteRequest) returns (DeleteResponse) {
         option (google.api.http) = {
             delete: "/v2/load-test/{name}"
+        };
+    }
+
+    rpc GetLogs (GetLogsRequest) returns (GetLogsResponse) {
+        option (google.api.http) = {
+            get: "/v2/load-test/{name}/logs"
         };
     }
 }

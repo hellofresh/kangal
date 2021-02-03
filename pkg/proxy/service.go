@@ -250,6 +250,41 @@ func (s *implLoadTestServiceServer) Delete(ctx context.Context, in *grpcProxyV2.
 	return &grpcProxyV2.DeleteResponse{}, err
 }
 
+func (s *implLoadTestServiceServer) GetLogs(ctx context.Context, in *grpcProxyV2.GetLogsRequest) (*grpcProxyV2.GetLogsResponse, error) {
+	loadtestName := in.GetName()
+
+	logger := ctxzap.Extract(ctx)
+	logger = logger.With(zap.String("loadtest", loadtestName))
+
+	logger.Info("Retrieving logs for loadtest")
+
+	loadTest, err := s.kubeClient.GetLoadTest(ctx, loadtestName)
+	if err != nil {
+		logger.Error("could not get loadtest object", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, "could not get loadtest object %q: %s", loadtestName, err.Error())
+	}
+
+	namespace := loadTest.Status.Namespace
+	if namespace == "" {
+		logger.Error("loadtest has no namespace", zap.Error(err))
+		return nil, status.Errorf(codes.Unavailable, "loadtest has no namespace %q: %s", loadtestName, err.Error())
+	}
+
+	logsRequest, err := s.kubeClient.GetMasterPodRequest(ctx, namespace)
+	if err != nil {
+		logger.Error("could not create log fetching request", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, "could not create log fetching request for loadtest %q: %s", loadtestName, err.Error())
+	}
+
+	logs, err := doRequest(logsRequest)
+	if err != nil {
+		logger.Error("could not get master pod logs", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, "could not get master pod logs from loadtest %q: %s", loadtestName, err.Error())
+	}
+
+	return &grpcProxyV2.GetLogsResponse{Logs: string(logs)}, nil
+}
+
 func decodeFileContents(envVars, testData, testFile []byte) (envVarsDecoded []byte, testDataDecoded []byte, testFileDecoded []byte, err error) {
 	envVarsDecoded = make([]byte, base64.StdEncoding.DecodedLen(len(envVars)))
 	if _, err = base64.StdEncoding.Decode(envVarsDecoded, envVars); err != nil {
