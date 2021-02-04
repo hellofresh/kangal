@@ -120,6 +120,7 @@ func TestPodResourceConfiguration(t *testing.T) {
 	}
 
 	c := &Backend{
+		logger: zaptest.NewLogger(t),
 		masterResources: backends.Resources{
 			CPULimits:      "100m",
 			CPURequests:    "200m",

@@ -125,14 +125,19 @@ func (b *Backend) NewSecret(loadTest loadTestV1.LoadTest) (*coreV1.Secret, error
 
 // NewTestdataConfigMap creates a new configMap containing testdata
 func (b *Backend) NewTestdataConfigMap(loadTest loadTestV1.LoadTest) ([]*coreV1.ConfigMap, error) {
+	logger := b.logger.With(
+		zap.String("loadtest", loadTest.GetName()),
+		zap.String("namespace", loadTest.Status.Namespace),
+	)
+
 	testdata := loadTest.Spec.TestData
 	n := int(*loadTest.Spec.DistributedPods)
 
 	cMaps := make([]*coreV1.ConfigMap, n)
 
-	chunks, err := splitTestData(testdata, n, b.logger)
+	chunks, err := splitTestData(testdata, n, logger)
 	if err != nil {
-		b.logger.Error("Error on splitting csv test data", zap.Error(err))
+		logger.Error("Error on splitting csv test data", zap.Error(err))
 		return nil, err
 	}
 
@@ -142,7 +147,7 @@ func (b *Backend) NewTestdataConfigMap(loadTest loadTestV1.LoadTest) ([]*coreV1.
 		stringWriter.Reset()
 		csvWriter := csv.NewWriter(stringWriter)
 		if err := csvWriter.WriteAll(chunks[i]); err != nil {
-			b.logger.Error("Error on writing csv test data to chunks", zap.Error(err))
+			logger.Error("Error on writing csv test data to chunks", zap.Error(err))
 			return nil, err
 		}
 
@@ -165,12 +170,17 @@ func (b *Backend) NewTestdataConfigMap(loadTest loadTestV1.LoadTest) ([]*coreV1.
 
 // NewPod creates a new pod which mounts a configmap that contains jmeter testdata
 func (b *Backend) NewPod(loadTest loadTestV1.LoadTest, i int, configMap *coreV1.ConfigMap, podAnnotations map[string]string) *coreV1.Pod {
+	logger := b.logger.With(
+		zap.String("loadtest", loadTest.GetName()),
+		zap.String("namespace", loadTest.Status.Namespace),
+	)
+
 	optionalVolume := true
 
 	imageRef := fmt.Sprintf("%s:%s", loadTest.Spec.WorkerConfig.Image, loadTest.Spec.WorkerConfig.Tag)
 	if "" == loadTest.Spec.WorkerConfig.Image || "" == loadTest.Spec.WorkerConfig.Tag {
 		imageRef = fmt.Sprintf("%s:%s", b.workerConfig.Image, b.workerConfig.Tag)
-		b.logger.Warn("Loadtest.Spec.WorkerConfig is empty; using default worker image", zap.String("imageRef", imageRef))
+		logger.Warn("Loadtest.Spec.WorkerConfig is empty; using default worker image", zap.String("imageRef", imageRef))
 	}
 
 	return &coreV1.Pod{
@@ -229,12 +239,17 @@ func (b *Backend) NewPod(loadTest loadTestV1.LoadTest, i int, configMap *coreV1.
 
 // NewJMeterMasterJob creates a new job which runs the jmeter master pod
 func (b *Backend) NewJMeterMasterJob(loadTest loadTestV1.LoadTest, reportURL string, podAnnotations map[string]string) *batchV1.Job {
+	logger := b.logger.With(
+		zap.String("loadtest", loadTest.GetName()),
+		zap.String("namespace", loadTest.Status.Namespace),
+	)
+
 	var one int32 = 1
 
 	imageRef := fmt.Sprintf("%s:%s", loadTest.Spec.MasterConfig.Image, loadTest.Spec.MasterConfig.Tag)
 	if "" == loadTest.Spec.MasterConfig.Image || "" == loadTest.Spec.MasterConfig.Tag {
 		imageRef = fmt.Sprintf("%s:%s", b.masterConfig.Image, b.masterConfig.Tag)
-		b.logger.Warn("Loadtest.Spec.MasterConfig is empty; using default master image", zap.String("imageRef", imageRef))
+		logger.Warn("Loadtest.Spec.MasterConfig is empty; using default master image", zap.String("imageRef", imageRef))
 	}
 
 	jMeterEnvVars := []coreV1.EnvVar{
@@ -360,17 +375,21 @@ func (b *Backend) NewJMeterService() *coreV1.Service {
 
 // CreatePodsWithTestdata creates workers Pods
 func (b *Backend) CreatePodsWithTestdata(ctx context.Context, configMaps []*coreV1.ConfigMap, loadTest *loadTestV1.LoadTest, namespace string) error {
+	logger := b.logger.With(
+		zap.String("loadtest", loadTest.GetName()),
+		zap.String("namespace", loadTest.Status.Namespace),
+	)
 	for i, cm := range configMaps {
 		configMap, err := b.kubeClientSet.CoreV1().ConfigMaps(namespace).Create(ctx, cm, metaV1.CreateOptions{})
 		if err != nil && !kerrors.IsAlreadyExists(err) {
-			b.logger.Error("Error on creating testdata configMaps", zap.Error(err))
+			logger.Error("Error on creating testdata configMaps", zap.Error(err))
 			return err
 		}
 
 		if kerrors.IsAlreadyExists(err) {
 			configMap, err = b.kubeClientSet.CoreV1().ConfigMaps(namespace).Get(ctx, cm.Name, metaV1.GetOptions{})
 			if nil != err {
-				b.logger.Error("unable to reload ConfigMap", zap.Error(err))
+				logger.Error("unable to reload ConfigMap", zap.Error(err))
 				return err
 			}
 		}
@@ -378,14 +397,14 @@ func (b *Backend) CreatePodsWithTestdata(ctx context.Context, configMaps []*core
 		pod := b.NewPod(*loadTest, i, configMap, b.podAnnotations)
 		_, err = b.kubeClientSet.CoreV1().Pods(namespace).Create(ctx, pod, metaV1.CreateOptions{})
 		if err != nil && !kerrors.IsAlreadyExists(err) {
-			b.logger.Error("Error on creating distributed pods", zap.Error(err))
+			logger.Error("Error on creating distributed pods", zap.Error(err))
 			return err
 		}
 
 		if kerrors.IsAlreadyExists(err) {
 			pod, err = b.kubeClientSet.CoreV1().Pods(namespace).Get(ctx, pod.Name, metaV1.GetOptions{})
 			if nil != err {
-				b.logger.Error("unable to reload Pod", zap.Error(err))
+				logger.Error("unable to reload Pod", zap.Error(err))
 				return err
 			}
 		}
@@ -396,12 +415,12 @@ func (b *Backend) CreatePodsWithTestdata(ctx context.Context, configMaps []*core
 			FieldSelector: fmt.Sprintf("metadata.name=%s", pod.ObjectMeta.Name),
 		})
 		if err != nil {
-			b.logger.Warn("unable to watch pod state", zap.Error(err))
+			logger.Warn("unable to watch pod state", zap.Error(err))
 			continue
 		}
 		waitfor.Resource(watchObj, (waitfor.Condition{}).PodRunning)
 	}
-	b.logger.Info("Created pods with test data", zap.String("LoadTest", loadTest.GetName()), zap.String("namespace", namespace))
+	logger.Info("Created pods with test data")
 	return nil
 }
 

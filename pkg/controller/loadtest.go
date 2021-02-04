@@ -258,7 +258,7 @@ func (c *Controller) processNextWorkItem() bool {
 		// Finally, if no error occurs we Forget this item so it does not
 		// get queued again until another change happens.
 		c.workQueue.Forget(obj)
-		c.logger.Debug("Successfully synced", zap.String("loadTest", key))
+		c.logger.Debug("Successfully synced", zap.String("loadtest", key))
 		return nil
 	}(obj)
 
@@ -276,6 +276,10 @@ func (c *Controller) processNextWorkItem() bool {
 func (c *Controller) syncHandler(key string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), c.cfg.SyncHandlerTimeout)
 	defer cancel()
+
+	logger := c.logger.With(
+		zap.String("loadtest", key),
+	)
 
 	_, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
@@ -305,8 +309,7 @@ func (c *Controller) syncHandler(key string) error {
 
 	// check and delete stale finished/errored loadtests
 	if checkLoadTestLifeTimeExceeded(loadTest, c.cfg.CleanUpThreshold) {
-		c.logger.Info("Deleting loadtest due to exceeded lifetime",
-			zap.String("loadtest", loadTest.Name),
+		logger.Info("Deleting loadtest due to exceeded lifetime",
 			zap.String("phase", string(loadTest.Status.Phase)),
 		)
 		err = c.kangalClientSet.KangalV1().LoadTests().Delete(ctx, loadTest.Name, metaV1.DeleteOptions{})
@@ -390,7 +393,7 @@ func (c *Controller) handleObject(obj interface{}) {
 			return
 		}
 
-		c.logger.Debug("Processing object", zap.String("loadtest", object.GetName()))
+		c.logger.Debug("Processing object", zap.String("object-name", object.GetName()))
 		foo, err := c.loadtestsLister.Get(ownerRef.Name)
 		if err != nil {
 			c.logger.Debug("ignoring orphaned object", zap.String("loadtest", object.GetSelfLink()),
@@ -417,6 +420,15 @@ func (c *Controller) enqueueLoadTest(obj interface{}) {
 }
 
 func (c *Controller) updateLoadTestStatus(ctx context.Context, key string, loadTest *loadTestV1.LoadTest, loadTestFromCache *loadTestV1.LoadTest) {
+	logger := c.logger.With(
+		zap.String("loadtest", loadTest.GetName()),
+	)
+
+	logger.Debug("Updating loadtest status",
+		zap.String("new phase", string(loadTest.Status.Phase)),
+		zap.String("previous phase", string(loadTestFromCache.Status.Phase)),
+	)
+
 	// UpdateStatus will not allow changes to the Spec of the resource
 	_, err := c.kangalClientSet.KangalV1().LoadTests().UpdateStatus(ctx, loadTest, metaV1.UpdateOptions{})
 	if err != nil {
@@ -426,7 +438,7 @@ func (c *Controller) updateLoadTestStatus(ctx context.Context, key string, loadT
 			utilRuntime.HandleError(fmt.Errorf("there is a conflict with loadtest '%s' between datastore and cache. it might be because object has been removed or modified in the datastore", key))
 			return
 		}
-		c.logger.Error("Failed updating loadtest status", zap.Error(err))
+		logger.Error("Failed updating loadtest status", zap.Error(err))
 		return
 	}
 
@@ -435,6 +447,7 @@ func (c *Controller) updateLoadTestStatus(ctx context.Context, key string, loadT
 		loadTest.Status.Phase == loadTestV1.LoadTestFinished {
 		stats.Record(ctx, observability.MFinishedLoadtestCountStat.M(1))
 	}
+	logger.Info("Status updated", zap.Any("status", loadTest.Status))
 }
 
 // checkOrCreateNamespace checks if a namespace has been created and if not deletes it
@@ -459,14 +472,13 @@ func (c *Controller) checkOrCreateNamespace(ctx context.Context, loadtest *loadT
 			return err
 		}
 		namespaceName = namespaceObj.GetName()
-		c.logger.Info("Created new namespace", zap.String("namespace", namespaceName), zap.String("LoadTest", loadtest.GetName()))
+		c.logger.Info("Created new namespace", zap.String("namespace", namespaceName), zap.String("loadtest", loadtest.GetName()))
 		stats.Record(ctx, observability.MCreatedLoadtestCountStat.M(1))
 	} else {
 		namespaceName = namespaces.Items[0].Name
 	}
 
 	loadtest.Status.Namespace = namespaceName
-
 	return nil
 }
 
