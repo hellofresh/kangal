@@ -1,5 +1,0 @@
-# all the protobuf/grpc stuff generated with protoc goes here,
-# ignore it in the VCS so that all other would get the latest version
-# generated from proto files, then we need to care only protofiles stored in the VCS
-*
-!.gitignore

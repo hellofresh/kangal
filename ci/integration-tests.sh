@@ -15,17 +15,6 @@ if ! kill -s 0 "${PID_PROXY}"; then
   exit 1
 fi
 
-echo "Starting kangal gRPC/REST proxy"
-./bin/kangal api --kubeconfig="$HOME/.kube/config" --max-load-tests 3 >/tmp/kangal_api.log 2>&1 &
-PID_API=$!
-sleep 1
-echo "Check if gRPC/REST proxy is running"
-if ! kill -s 0 "${PID_API}"; then
-  echo "Failed to run kangal gRPC/REST proxy"
-  cat /tmp/kangal_api.log
-  exit 1
-fi
-
 echo "Proxy is running"
 echo "Starting kangal controller"
 WEB_HTTP_PORT=8888 ./bin/kangal controller --kubeconfig="$HOME/.kube/config" >/tmp/kangal_controller.log 2>&1 &
