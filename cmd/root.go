@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"context"
-
 	"github.com/spf13/cobra"
 )
 
@@ -27,8 +25,6 @@ type LogConfig struct {
 
 // NewRootCmd creates a new instance of the root command
 func NewRootCmd(version string) *cobra.Command {
-	ctx := context.Background()
-
 	cmd := &cobra.Command{
 		Use:     "kangal",
 		Short:   "Kangal is an application for creating environments for performance testing",
@@ -37,7 +33,6 @@ func NewRootCmd(version string) *cobra.Command {
 
 	cmd.AddCommand(NewProxyCmd())
 	cmd.AddCommand(NewControllerCmd())
-	cmd.AddCommand(NewAPICmd(ctx))
 
 	return cmd
 }

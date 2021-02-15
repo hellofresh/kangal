@@ -16,36 +16,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Setup buf
-        uses: wizhi/setup-buf@v1
-        env:
-          ACTIONS_ALLOW_UNSECURE_COMMANDS: "true"
+      - name: Lint Go code
+        uses: golangci/golangci-lint-action@v2
         with:
-          version: 0.31.1
-
-      - name: Install Protoc deps
-        run: make protoc
-
-      - name: Lint ProtoBuf
-        run: buf check lint --config=./.github/buf.yaml
-
-      # next three actions replace golangci/golangci-lint-action@v2 to make golangci work
-      # with deps already preinstalled, otherwise it fails with bunch of errors like
-      # "/bin/tar: ../../../go/pkg/mod/...: Cannot open: File exists"
-      # found solution at https://github.com/golangci/golangci-lint-action/issues/81
-      - uses: actions/cache@v2
-        with:
-          path: |
-            ~/go/pkg/mod
-            ~/.cache
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: ${{ runner.os }}-go-
-
-      - name: Install golangci linter
-        run: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.33.0
-
-      - name: Run golangci linter
-        run: ./bin/golangci-lint run ./...
+          version: v1.33
 
       - name: Lint GoReleaser
         uses: goreleaser/goreleaser-action@v2
@@ -124,8 +98,6 @@ jobs:
         run: |
           echo "==> Printing Kangal Proxy Logs\n"
           cat /tmp/kangal_proxy.log
-          echo "\n\n==> Printing Kangal gRPC/REST Proxy Logs\n"
-          cat /tmp/kangal_api.log
           echo "\n\n==> Printing Kangal Controller Logs\n"
           cat /tmp/kangal_controller.log
 

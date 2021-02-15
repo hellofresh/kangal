@@ -13,9 +13,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Install Protoc deps
-        run: make protoc
-
       - name: Docker Login
         if: success() && startsWith(github.ref, 'refs/tags/')
         env:
