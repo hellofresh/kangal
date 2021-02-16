@@ -78,9 +78,9 @@ The following table lists the common configurable parameters for `Kangal` chart:
 | `configmap.AWS_BUCKET_NAME`          | The name of the bucket for saving reports                                                           | `my-bucket`                           |
 | `configmap.AWS_ENDPOINT_URL`         | Storage connection parameter                                                                        | `s3.us-east-1.amazonaws.com`          |
 | `configmap.AWS_DEFAULT_REGION`       | Storage connection parameter                                                                        | `us-east-1`                           |
-| `configmap.JMETER_MASTER_IMAGE_NAME` | Default JMeter master image name/repository if none is provided when creating a new loadtest        | `hellofreshtech/kangal-jmeter-master` |
+| `configmap.JMETER_MASTER_IMAGE_NAME` | Default JMeter master image name/repository if none is provided when creating a new loadtest        | `hellofresh/kangal-jmeter-master` |
 | `configmap.JMETER_MASTER_IMAGE_TAG`  | Tag of the JMeter master image above                                                                | `latest`                              |
-| `configmap.JMETER_WORKER_IMAGE_NAME` | Default JMeter worker image name/repository if none is provided when creating a new loadtest        | `hellofreshtech/kangal-jmeter-worker` |
+| `configmap.JMETER_WORKER_IMAGE_NAME` | Default JMeter worker image name/repository if none is provided when creating a new loadtest        | `hellofresh/kangal-jmeter-worker` |
 | `configmap.JMETER_WORKER_IMAGE_TAG`  | Tag of the JMeter worker image above                                                                | `latest`                              |
 | `configmap.LOCUST_IMAGE_NAME`        | Default Locust image name/repository if none is provided when creating a new loadtest               | `locustio/locust`                     |
 | `configmap.LOCUST_IMAGE_TAG`         | Tag of the Locust image above                                                                       | `1.3.0`                               |
@@ -90,7 +90,7 @@ Deployment specific configurations:
 ### Kangal Proxy
 | Parameter                               | Description                                           | Default                                |
 |-----------------------------------------|-------------------------------------------------------|----------------------------------------|
-| `proxy.image.repository`                | Repository of the image                               | `hellofreshtech/kangal`                |
+| `proxy.image.repository`                | Repository of the image                               | `hellofresh/kangal`                |
 | `proxy.image.tag`                       | Tag of the image                                      | `latest`                               |
 | `proxy.image.pullPolicy`                | Pull policy of the image                              | `Always`                               |
 | `proxy.args`                            | Argument for `kangal` command                         | `["proxy"]`                            |
@@ -142,7 +142,7 @@ Deployment specific configurations:
 ### Kangal Controller
 | Parameter                             | Description                                | Default                      |
 |---------------------------------------|--------------------------------------------|------------------------------|
-| `controller.image.repository`         | Repository of the image                    | `hellofreshtech/kangal`      |
+| `controller.image.repository`         | Repository of the image                    | `hellofresh/kangal`      |
 | `controller.image.tag`                | Tag of the image                           | `latest`                     |
 | `controller.image.pullPolicy`         | Pull policy of the image                   | `Always`                     |
 | `controller.args`                     | Argument for `kangal` command              | `["controller"]`             |

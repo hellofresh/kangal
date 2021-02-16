@@ -18,7 +18,7 @@ In this section you can find information about load generators and how to write 
 Currently, there are the following load generator types implemented for Kangal:
 
 - **Fake** - Mock up provider used for testing purpouses, not generating any load.
-- **JMeter** - Kangal creates JMeter load test environments based on [hellofreshtech/kangal-jmeter](https://github.com/hellofresh/kangal-jmeter) docker image.
+- **JMeter** - Kangal creates JMeter load test environments based on [hellofresh/kangal-jmeter](https://github.com/hellofresh/kangal-jmeter) docker image.
 - **Locust** - Kangal creates Locust load test environments based on official docker image [locustio/locust](https://hub.docker.com/r/locustio/locust).
 
 ### JMeter

@@ -21,8 +21,8 @@ dockers:
     binaries:
       - kangal
     image_templates:
-      - "hellofreshtech/kangal:latest"
-      - "hellofreshtech/kangal:{{.Tag}}"
+      - "hellofresh/kangal:latest"
+      - "hellofresh/kangal:{{.Tag}}"
     dockerfile: Dockerfile
     extra_files:
       - openapi.json

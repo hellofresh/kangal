@@ -31,8 +31,8 @@ var (
 )
 
 const (
-	defaultMasterImageName = "hellofreshtech/kangal-jmeter-master"
-	defaultWorkerImageName = "hellofreshtech/kangal-jmeter-worker"
+	defaultMasterImageName = "hellofresh/kangal-jmeter-master"
+	defaultWorkerImageName = "hellofresh/kangal-jmeter-worker"
 	defaultMasterImageTag  = "latest"
 	defaultWorkerImageTag  = "latest"
 )
