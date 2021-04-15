@@ -58,8 +58,21 @@ func ShowHandler() func(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
 		objStat, err := obj.Stat()
-		if nil == err && "application/x-tar" == objStat.ContentType {
+		// not found error can be a directory
+		if objErr, _ := err.(minio.ErrorResponse); http.StatusNotFound == objErr.StatusCode {
+			http.FileServer(fs).ServeHTTP(w, r)
+			return
+		}
+		// unknown error
+		if nil != err {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// serve uncompressed tar archive content
+		if "application/x-tar" == objStat.ContentType {
 			prefix := fmt.Sprintf("%s/%s", tmpDir, loadTestName)
 			err = untar(prefix, obj, afero.NewOsFs())
 			if nil != err {
@@ -71,7 +84,8 @@ func ShowHandler() func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		http.FileServer(fs).ServeHTTP(w, r)
+		// serve existing static file
+		http.ServeContent(w, r, objStat.Key, objStat.LastModified, obj)
 	}
 }
 
