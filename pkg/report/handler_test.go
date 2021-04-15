@@ -38,13 +38,18 @@ func (fakeFS) Open(name string) (http.File, error) {
 }
 
 func TestShowHandler(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer srv.Close()
+
 	req, err := http.NewRequest("GET", "/load-test/loadtest-name/report/", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// init dependencies for report package
-	minioClient, _ = minio.New("localhost:80", "access-key", "secret-access-key", false)
+	minioClient, _ = minio.New(srv.Listener.Addr().String(), "access-key", "secret-access-key", false)
 	bucketName = "bucket-name"
 	fs = &fakeFS{}
 
