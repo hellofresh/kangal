@@ -167,8 +167,6 @@ openapi-ui:
 configMap:
   #  Those values needed to send Kangal reports to external object storage
   #  Kangal supports S3 compatible object storage APIs
-  AWS_ACCESS_KEY_ID: ""
-  AWS_SECRET_ACCESS_KEY: ""
   AWS_ENDPOINT_URL: "s3.us-east-1.amazonaws.com"
   AWS_BUCKET_NAME: "my-bucket"
   AWS_DEFAULT_REGION: "us-east-1"
@@ -178,3 +176,7 @@ configMap:
   JMETER_WORKER_IMAGE_TAG: "latest"
   LOCUST_IMAGE_NAME: "locustio/locust"
   LOCUST_IMAGE_TAG: "1.3.0"
+
+secrets:
+  AWS_ACCESS_KEY_ID: ""
+  AWS_SECRET_ACCESS_KEY: ""
