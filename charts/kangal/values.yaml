@@ -31,7 +31,7 @@ proxy:
       kubernetes.io/ingress.class: "nginx"
     path: /
     hosts:
-      http: "kangal-proxy.local"
+      http: "kangal-proxy.example.com"
 
   resources: {}
     # We usually recommend not to specify default resources and to leave this as a conscious
@@ -75,9 +75,9 @@ proxy:
   # Environmental variables to set in api
   env:
     # OpenAPI specification specific parameters
-    OPEN_API_SERVER_URL: "https://kangal-openapi.local"
     OPEN_API_SERVER_DESCRIPTION: "Kangal proxy default value"
-    OPEN_API_UI_URL: "https://kangal-openapi-ui.local"
+    OPEN_API_SERVER_URL: "https://kangal-proxy.example.com/openapi"
+    OPEN_API_UI_URL: "https://kangal-openapi-ui.example.com"
 
 controller:
   # Number of pods to run
@@ -125,7 +125,7 @@ controller:
 
   # Environmental variables to set
   env:
-    KANGAL_PROXY_URL: "https://kangal-proxy.local"
+    KANGAL_PROXY_URL: "https://kangal-proxy.example.com"
 
 openapi-ui:
   enabled: true
@@ -149,7 +149,7 @@ openapi-ui:
       kubernetes.io/ingress.class: "nginx"
     path: /
     hosts:
-      http: "kangal-openapi.local"
+      http: "kangal-openapi-ui.example.com"
 
   # Annotations to be added to pod
   podAnnotations: {}
@@ -161,9 +161,9 @@ openapi-ui:
   # Environmental variables to set in openapi-ui
   env:
     PORT: "8080"
-    URL: "https://kangal.local/openapi"
+    URL: "https://kangal-proxy.example.com/openapi"
     VALIDATOR_URL: "null"
-    OPEN_API_SERVER_URL: "https://kangal-openapi-ui.local"
+    OPEN_API_SERVER_URL: "https://kangal-openapi-ui.example.com"
 
 configMap:
   #  Those values needed to send Kangal reports to external object storage
