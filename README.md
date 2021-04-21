@@ -137,11 +137,10 @@ Let's start by downloading an example JMeter test and POST it to Kangal proxy.
 ```shell
 $ curl -s -O https://raw.githubusercontent.com/hellofresh/kangal/master/examples/constant_load.jmx
 $ curl \
-    -H "Host: kangal-proxy.local" \
     -F "distributedPods=1" \
     -F "testFile=@constant_load.jmx" \
     -F "type=JMeter" \
-    http://localhost:80/load-test
+    http://${KANGAL_PROXY_ADDRESS}/load-test
 ```
 ```json
 {
@@ -159,7 +158,7 @@ Your first load test was created successfully, in this example with the name `lo
 Check the load status with:
 
 ```shell
-$ curl http://localhost:80/load-test/loadtest-dunking-hedgehog
+$ curl http://${KANGAL_PROXY_ADDRESS}/load-test/loadtest-dunking-hedgehog
 ```
 ```json
 {
