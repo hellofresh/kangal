@@ -107,11 +107,6 @@ Now, install the chart using the following command:
 $ helm install --set environment=dev kangal kangal/kangal
 ```
 
-> for Helm v2:
-> ```shell
-> $ helm install --set environment=dev --name kangal kangal/kangal
-> ```
-
 That's it, Kangal should be installed, check if is all correct by running:
 
 ```shell
