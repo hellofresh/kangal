@@ -8,7 +8,7 @@
   {{ fail (printf "host must be defined for ingress: %s" $key ) }}
 {{- end}}
 ---
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ $fullName }}-{{ $key }}
@@ -30,18 +30,24 @@ spec:
       http:
         paths:
           - path: {{ $ingressPath }}
+            pathType: ImplementationSpecific
             backend:
-              serviceName: {{ $fullName }}-{{ $key }}
-              servicePort: {{ $labelPort }}
+              service:
+                name: {{ $fullName }}-{{ $key }}
+                port:
+                  name: {{ $labelPort }}
 {{- else }}
 {{- range $key,$host := $hostValue }}
     - host: {{ $host }}
       http:
         paths:
           - path: {{ $ingressPath }}
+            pathType: ImplementationSpecific
             backend:
-              serviceName: {{ $fullName }}-{{ $key }}
-              servicePort: {{ $labelPort }}
+              service:
+                name: {{ $fullName }}-{{ $key }}
+                port:
+                  name: {{ $labelPort }}
 {{- end }}
 {{- end }}
 {{- end }}
