@@ -11,7 +11,7 @@ metadata:
     release: {{ $.Release.Name }}
     heritage: {{ $.Release.Service }}
     prometheus: kube-prometheus
-  name: {{ template "<CHARTNAME>.fullname" $ }}-{{ $key }}-k8s
+  name: {{ template "<CHARTNAME>.fullname" $ }}-{{ $key }}
 spec:
   endpoints:
   - interval: 30s
