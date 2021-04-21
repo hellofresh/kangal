@@ -16,9 +16,7 @@ $ helm repo add kangal https://hellofresh.github.io/kangal
 
 To install the chart with the release name `kangal`:
 ```shell
-$ helm install \
-  --set environment=dev \
-  kangal kangal/kangal
+$ helm install kangal kangal/kangal
 ```
 
 > **Tip**: You can provide values on the command line with `--set` or using the `values` file with `-f my-values-file.yaml`. Eg.:
@@ -40,7 +38,6 @@ secrets:
 To install the chart with the release name `kangal` and use an specific version:
 ```shell
 $ helm install \
-  --set environment=dev \
   --set proxy.image.tag=1.0.3 \
   --set controller.image.tag=1.0.3 \
   kangal kangal/kangal

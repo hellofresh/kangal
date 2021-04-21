@@ -98,7 +98,7 @@ $ helm repo add kangal https://hellofresh.github.io/kangal
 Now, install the chart using the following command:
 
 ```shell
-$ helm install --set environment=dev kangal kangal/kangal
+$ helm install kangal kangal/kangal
 ```
 
 That's it, Kangal should be installed, check if is all correct by running:
