@@ -85,30 +85,30 @@ The following table lists the common configurable parameters for `Kangal` chart:
 Deployment specific configurations:
 
 ### Kangal Proxy
-| Parameter                               | Description                                           | Default                                 |
-|-----------------------------------------|-------------------------------------------------------|-----------------------------------------|
-| `proxy.image.repository`                | Repository of the image                               | `hellofresh/kangal`                     |
-| `proxy.image.tag`                       | Tag of the image                                      | `latest`                                |
-| `proxy.image.pullPolicy`                | Pull policy of the image                              | `Always`                                |
-| `proxy.args`                            | Argument for `kangal` command                         | `[proxy]`                               |
-| `proxy.replicaCount`                    | Number of pod replicas                                | `2`                                     |
-| `proxy.service.enabled`                 | Service enabling flag                                 | `true`                                  |
-| `proxy.service.enablePrometheus`        | ServiceMonitor for Prometheus enabled flag            | `false`                                 |
-| `proxy.service.type`                    | Service type                                          | `ClusterIP`                             |
-| `proxy.service.ports.http`              | Service port                                          | `80`                                    |
-| `proxy.ingress.enabled`                 | Ingress enabled flag                                  | `true`                                  |
-| `proxy.ingress.annotations`             | Ingress annotations                                   | `kubernetes.io/ingress.class: nginx`    |
-| `proxy.ingress.path`                    | Ingress path                                          | `/`                                     |
-| `proxy.ingress.hosts.http`              | Ingress hosts. *Required* if ingress is enabled       | `kangal-proxy.example.com`              |
-| `proxy.resources`                       | CPU/Memory resource requests/limits                   | Default values of the cluster           |
-| `proxy.nodeSelector`                    | Node labels for pod assignment                        | `{}`                                    |
-| `proxy.tolerations`                     | Tolerations for nodes that have taints on them        | `[]`                                    |
-| `proxy.affinity`                        | Pod scheduling preferences                            | `{}`                                    |
-| `proxy.podAnnotations`                  | Annotation to be added to pod                         | `{}`                                    |
-| `proxy.containerPorts.http`             | The ports that the container listens to               | `8080`                                  |
-| `proxy.env.OPEN_API_SERVER_DESCRIPTION` | *Required.* A Description to the OpenAPI server URL   | `Kangal proxy default value`            |
-| `proxy.env.OPEN_API_SERVER_URL`         | *Required.* A URL to the OpenAPI specification server | `https://kangal-openapi.example.com`    |
-| `proxy.env.OPEN_API_UI_URL`             | A URL to the OpenAPI UI                               | `https://kangal-openapi-ui.example.com` |
+| Parameter                               | Description                                           | Default                                    |
+|-----------------------------------------|-------------------------------------------------------|--------------------------------------------|
+| `proxy.image.repository`                | Repository of the image                               | `hellofresh/kangal`                        |
+| `proxy.image.tag`                       | Tag of the image                                      | `latest`                                   |
+| `proxy.image.pullPolicy`                | Pull policy of the image                              | `Always`                                   |
+| `proxy.args`                            | Argument for `kangal` command                         | `[proxy]`                                  |
+| `proxy.replicaCount`                    | Number of pod replicas                                | `2`                                        |
+| `proxy.service.enabled`                 | Service enabling flag                                 | `true`                                     |
+| `proxy.service.enablePrometheus`        | ServiceMonitor for Prometheus enabled flag            | `false`                                    |
+| `proxy.service.type`                    | Service type                                          | `ClusterIP`                                |
+| `proxy.service.ports.http`              | Service port                                          | `80`                                       |
+| `proxy.ingress.enabled`                 | Ingress enabled flag                                  | `true`                                     |
+| `proxy.ingress.annotations`             | Ingress annotations                                   | `kubernetes.io/ingress.class: nginx`       |
+| `proxy.ingress.path`                    | Ingress path                                          | `/`                                        |
+| `proxy.ingress.hosts.http`              | Ingress hosts. *Required* if ingress is enabled       | `kangal-proxy.example.com`                 |
+| `proxy.resources`                       | CPU/Memory resource requests/limits                   | Default values of the cluster              |
+| `proxy.nodeSelector`                    | Node labels for pod assignment                        | `{}`                                       |
+| `proxy.tolerations`                     | Tolerations for nodes that have taints on them        | `[]`                                       |
+| `proxy.affinity`                        | Pod scheduling preferences                            | `{}`                                       |
+| `proxy.podAnnotations`                  | Annotation to be added to pod                         | `{}`                                       |
+| `proxy.containerPorts.http`             | The ports that the container listens to               | `8080`                                     |
+| `proxy.env.OPEN_API_SERVER_DESCRIPTION` | *Required.* A Description to the OpenAPI server URL   | `Kangal proxy default value`               |
+| `proxy.env.OPEN_API_SERVER_URL`         | *Required.* A URL to the OpenAPI specification server | `https://kangal-proxy.example.com/openapi` |
+| `proxy.env.OPEN_API_UI_URL`             | A URL to the OpenAPI UI                               | `https://kangal-openapi-ui.example.com`    |
 
 ### OpenAPI UI
 | Parameter                             | Description                                     | Default                                    |
