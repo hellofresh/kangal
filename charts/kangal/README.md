@@ -68,8 +68,8 @@ The following table lists the common configurable parameters for `Kangal` chart:
 | Parameter                            | Description                                                                                         | Default                               |
 |--------------------------------------|-----------------------------------------------------------------------------------------------------|---------------------------------------|
 | `environment`                        | The name that identifies the environment installation                                               | `dev`                                 |
-| `fullnameOverride`                   | String to fully override kangal.fullname template with a string                                     | `nil`                                 |
-| `nameOverride`                       | String to partially override kangal.fullname template with a string (will prepend the release name) | `nil`                                 |
+| `fullnameOverride`                   | String to fully override kangal.fullname template with a string                                     | ``                                    |
+| `nameOverride`                       | String to partially override kangal.fullname template with a string (will prepend the release name) | ``                                    |
 | `secrets.AWS_ACCESS_KEY_ID`          | AWS access key ID. If not defined report will not be stored                                         | `my-access-key-id`                    |
 | `secrets.AWS_SECRET_ACCESS_KEY`      | AWS secret access key                                                                               | `my-secret-access-key`                |
 | `configmap.AWS_BUCKET_NAME`          | The name of the bucket for saving reports                                                           | `my-bucket`                           |
