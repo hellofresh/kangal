@@ -1,4 +1,4 @@
-apiVersion: v1
+apiVersion: v2
 description: Run JMeter performance tests in Kubernetes cluster with Kangal
 keywords:
   - kubernetes
@@ -6,7 +6,7 @@ keywords:
   - performance tests
   - tests runner
 name: kangal
-version: 1.4.10
+version: 2.0.0
 home: https://github.com/hellofresh/kangal
 icon: https://raw.githubusercontent.com/hellofresh/kangal/master/logo.svg
 maintainers:

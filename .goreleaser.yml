@@ -29,4 +29,4 @@ dockers:
 
 release:
   extra_files:
-  - glob: charts/kangal/crd.yaml
+  - glob: charts/kangal/crds/loadtest.yaml

@@ -40,7 +40,7 @@ With Kangal, you can spin up an isolated environment in a Kubernetes cluster to 
 Kangal application uses Kubernetes [Custom Resources](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/).
 
 LoadTest custom resource (CR) is a main working entity.
-LoadTest custom resource definition (CRD) can be found in [charts/kangal/crd.yaml](charts/kangal/crd.yaml).
+LoadTest custom resource definition (CRD) can be found in [charts/kangal/crds/loadtest.yaml](charts/kangal/crds/loadtest.yaml).
 
 Kangal application contains two main parts:
  - **Proxy** to create, delete and check load tests and reports via REST API requests
@@ -89,13 +89,7 @@ The component is responsible for managing all the aspects of the performance tes
 This tutorial will guide through Kangal installation process and usage.
 
 ### Installing using helm
-First, let's create the Custom Resource Definition by running:
-
-```shell
-$ kubectl apply -f https://raw.githubusercontent.com/hellofresh/kangal/master/charts/kangal/crd.yaml
-```
-
-Add the repository to Helm:
+First, add the repository to Helm:
 
 ```shell
 $ helm repo add kangal https://hellofresh.github.io/kangal
@@ -104,13 +98,8 @@ $ helm repo add kangal https://hellofresh.github.io/kangal
 Now, install the chart using the following command:
 
 ```shell
-$ helm install --set environment=dev kangal kangal/kangal
+$ helm install kangal kangal/kangal
 ```
-
-> for Helm v2:
-> ```shell
-> $ helm install --set environment=dev --name kangal kangal/kangal
-> ```
 
 That's it, Kangal should be installed, check if is all correct by running:
 
@@ -148,11 +137,10 @@ Let's start by downloading an example JMeter test and POST it to Kangal proxy.
 ```shell
 $ curl -s -O https://raw.githubusercontent.com/hellofresh/kangal/master/examples/constant_load.jmx
 $ curl \
-    -H "Host: kangal-proxy.local" \
     -F "distributedPods=1" \
     -F "testFile=@constant_load.jmx" \
     -F "type=JMeter" \
-    http://localhost:80/load-test
+    http://${KANGAL_PROXY_ADDRESS}/load-test
 ```
 ```json
 {
@@ -170,7 +158,7 @@ Your first load test was created successfully, in this example with the name `lo
 Check the load status with:
 
 ```shell
-$ curl http://localhost:80/load-test/loadtest-dunking-hedgehog
+$ curl http://${KANGAL_PROXY_ADDRESS}/load-test/loadtest-dunking-hedgehog
 ```
 ```json
 {
