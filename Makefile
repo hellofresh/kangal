@@ -38,7 +38,7 @@ build:
 apply-crd:
 	@printf "$(OK_COLOR)==> Applying Kangal CRD to the current cluster $(NO_COLOR)\n"
 	@kubectl delete crd loadtests.kangal.hellofresh.com || true
-	@kubectl apply -f charts/kangal/crd.yaml
+	@kubectl apply -f charts/kangal/crds/loadtest.yaml
 
 dev-lint:
 	@printf "$(OK_COLOR)==> Linting code$(NO_COLOR)\n"

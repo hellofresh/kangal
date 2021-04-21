@@ -43,7 +43,7 @@ Kangal can be easily extended by adding different load generators as backends.
 2. Create a new backend resource definition in Kangal source code: 
  - [main.go](/main.go)
  - [pkg/backends/](/pkg/backends)
- - [charts/kangal/crd.yaml](/charts/kangal/crd.yaml#L43)
+ - [charts/kangal/crds/loadtest.yaml](/charts/kangal/crds/loadtest.yaml#L43)
  - [openapi.json](/openapi.json#L280)
  - [proxy.proto](/proto/grpc/proxy/v2/proxy.proto#L11)
 
@@ -88,7 +88,7 @@ cd kangal
 ### 2. Create required Kubernetes resource LoadTest CRD in your cluster
 
 ```bash
-kubectl apply -f charts/kagal/crd.yaml
+kubectl apply -f charts/kagal/crds/loadtest.yaml
 ```
 
 or just use:

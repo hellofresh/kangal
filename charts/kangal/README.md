@@ -14,11 +14,6 @@ To add the the repository to Helm:
 $ helm repo add kangal https://hellofresh.github.io/kangal
 ```
 
-To install the Custom Resource Definition:
-```shell
-$ kubectl apply -f https://raw.githubusercontent.com/hellofresh/kangal/master/charts/kangal/crd.yaml
-```
-
 To install the chart with the release name `kangal`:
 ```shell
 $ helm install \
@@ -61,8 +56,12 @@ To uninstall/delete the `kangal` deployment:
 
 ```shell
 $ helm delete kangal
-$ kubectl delete crd loadtests.kangal.hellofresh.com
 ```
+
+> **Note:** Helm does not handle CRD deletion, so you have to manually remove it by running:
+> ```shell
+> $ kubectl delete crd loadtests.kangal.hellofresh.com
+> ```
 
 ## Configuration
 To install Kangal to your infrastructure you need 3 deployments: Kangal-Proxy, Kangal-Controller and Kangal-openapi-UI
