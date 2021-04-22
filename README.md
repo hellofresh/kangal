@@ -124,9 +124,9 @@ To run a LoadTest you first need to find Kangal proxy endpoint. Use this command
 
 ```shell
 $ kubectl get ingress
-NAME                HOSTS                  ADDRESS     PORTS   AGE
-kangal-openapi-ui   kangal-openapi.local   localhost   80      5m48s
-kangal-proxy        kangal-proxy.local     localhost   80      5m48s
+NAME                HOSTS                           ADDRESS     PORTS   AGE
+kangal-openapi-ui   kangal-openapi-ui.example.com   localhost   80      5m48s
+kangal-proxy        kangal-proxy.example.com        localhost   80      5m48s
 ```
 
 > This is assuming you have a properly configured [Ingress Controller](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/). If it is not the case you can use [Port Forwarding](https://kubernetes.io/docs/tasks/access-application-cluster/port-forward-access-application-cluster/).
