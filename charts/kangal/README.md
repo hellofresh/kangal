@@ -19,21 +19,25 @@ To install the chart with the release name `kangal`:
 $ helm install kangal kangal/kangal
 ```
 
-> **Tip**: You can provide values on the command line with `--set` or using the `values` file with `-f my-values-file.yaml`. Eg.:
-To set AWS credentials using command line you can use the following flags:
-
-```
-  --set secrets.AWS_ACCESS_KEY_ID="my-aws-key-id" \
-  --set secrets.AWS_SECRET_ACCESS_KEY="my-aws-secret-access-key" \
-```
-
-or using setting this into your `values` file:
-
-```yaml
-secrets:
-  AWS_ACCESS_KEY_ID: my-aws-key-id
-  AWS_SECRET_ACCESS_KEY: my-aws-secret-access-key
-```
+> **Tip**: You can provide custom installation parameters, so, for example, to set AWS credentials you can use this command:
+> ```shell
+> helm install \
+>   --set secrets.AWS_ACCESS_KEY_ID="my-aws-key-id" \
+>   --set secrets.AWS_SECRET_ACCESS_KEY="my-aws-secret-access-key" \
+>   kangal kangal/kangal
+> ```
+> 
+> Alternatively, you can create a `values` file to provide those parameters, so, create a `my-values.yaml` file with the following content:
+> ```yaml
+> secrets:
+>   AWS_ACCESS_KEY_ID: my-aws-key-id
+>   AWS_SECRET_ACCESS_KEY: my-aws-secret-access-key
+> ```
+> and then use this command:
+> ```shell
+> helm install -f my-values.yaml kangal kangal/kangal
+> ```
+> See the default chart values file at [charts/kangal/values.yaml](/charts/kangal/values.yaml)
 
 To install the chart with the release name `kangal` and use an specific version:
 ```shell
