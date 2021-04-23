@@ -2,6 +2,7 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+version: &version latest
 environment: dev
 nameOverride: ""
 fullnameOverride: ""
@@ -12,7 +13,7 @@ proxy:
 
   image:
     repository: hellofresh/kangal
-    tag: latest
+    tag: *version
     pullPolicy: Always
 
   # Arguments for kangal command
@@ -85,7 +86,7 @@ controller:
 
   image:
     repository: hellofresh/kangal
-    tag: latest
+    tag: *version
     pullPolicy: Always
 
   # Arguments for kangal command
