@@ -19,6 +19,9 @@ To install the chart with the release name `kangal`:
 $ helm install kangal kangal/kangal
 ```
 
+The command deploys Kangal on the Kubernetes cluster in the default configuration.
+It also creates the Custom Resource Definition (CRD) if not exists.
+
 > **Tip**: You can provide custom installation parameters, so, for example, to set AWS credentials you can use this command:
 > ```shell
 > helm install \
@@ -46,9 +49,6 @@ $ helm install \
   --set controller.image.tag=1.0.3 \
   kangal kangal/kangal
 ```
-
-The command deploys Kangal on the Kubernetes cluster in the default configuration.
-It also applies the latest version of Custom Resource Definition (CRD) to the cluster.
 
 > **Tip**: List all releases using `helm list`
 
