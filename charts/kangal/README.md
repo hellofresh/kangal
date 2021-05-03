@@ -75,6 +75,8 @@ The following table lists the common configurable parameters for `Kangal` chart:
 | `configmap.AWS_BUCKET_NAME`          | The name of the bucket for saving reports                                                           | `my-bucket`                           |
 | `configmap.AWS_ENDPOINT_URL`         | Storage connection parameter                                                                        | `s3.us-east-1.amazonaws.com`          |
 | `configmap.AWS_DEFAULT_REGION`       | Storage connection parameter                                                                        | `us-east-1`                           |
+| `configmap.AWS_USE_HTTPS`            | Set to "true" to use HTTPS                                                                          | `false`                               |
+| `configmap.AWS_PRESIGNED_EXPIRES`    | Expiration time for Presigned URLs                                                                  | `30m`                                 |
 | `configmap.JMETER_MASTER_IMAGE_NAME` | Default JMeter master image name/repository if none is provided when creating a new loadtest        | `hellofresh/kangal-jmeter-master`     |
 | `configmap.JMETER_MASTER_IMAGE_TAG`  | Tag of the JMeter master image above                                                                | `latest`                              |
 | `configmap.JMETER_WORKER_IMAGE_NAME` | Default JMeter worker image name/repository if none is provided when creating a new loadtest        | `hellofresh/kangal-jmeter-worker`     |
