@@ -6,7 +6,7 @@ keywords:
   - performance tests
   - tests runner
 name: kangal
-version: 2.0.1
+version: 2.0.2
 home: https://github.com/hellofresh/kangal
 icon: https://raw.githubusercontent.com/hellofresh/kangal/master/logo.svg
 maintainers:
