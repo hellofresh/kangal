@@ -170,14 +170,14 @@ func PersistHandler(kubeClient *kk8s.Client, logger *zap.Logger) func(w http.Res
 		}
 		defer proxyResp.Body.Close()
 
-		body := "Report persisted"
-
 		if http.StatusOK != proxyResp.StatusCode {
 			b, _ := ioutil.ReadAll(proxyResp.Body)
-			body = string(b)
+			logger.Error("Failed to persist report", zap.ByteString("error", b), zap.String("loadtest", loadTestName))
+			render.Render(w, r, khttp.ErrResponse(proxyResp.StatusCode, string(b)))
+			return
 		}
 
 		render.Status(r, proxyResp.StatusCode)
-		render.JSON(w, r, body)
+		render.JSON(w, r, "Report persisted")
 	}
 }

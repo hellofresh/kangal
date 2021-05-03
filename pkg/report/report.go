@@ -56,7 +56,7 @@ func InitObjectStorageClient(cfg Config) error {
 	creds := credentials.NewChainCredentials(awsCredProviders)
 
 	// Init object storage (S3 compatible) client
-	minioClient, err = minio.NewWithCredentials(endpoint, creds, false, cfg.AWSRegion)
+	minioClient, err = minio.NewWithCredentials(endpoint, creds, cfg.AWSUseHTTPS, cfg.AWSRegion)
 	if err != nil {
 		return err
 	}
