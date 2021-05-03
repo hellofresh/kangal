@@ -3,7 +3,6 @@ package report
 import (
 	"errors"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -56,16 +55,8 @@ func InitObjectStorageClient(cfg Config) error {
 	}
 	creds := credentials.NewChainCredentials(awsCredProviders)
 
-	secure := false
-	if cfg.AWSUseHTTPS != "" {
-		secure, err = strconv.ParseBool(cfg.AWSUseHTTPS)
-		if nil != err {
-			return err
-		}
-	}
-
 	// Init object storage (S3 compatible) client
-	minioClient, err = minio.NewWithCredentials(endpoint, creds, secure, cfg.AWSRegion)
+	minioClient, err = minio.NewWithCredentials(endpoint, creds, cfg.AWSUseHTTPS, cfg.AWSRegion)
 	if err != nil {
 		return err
 	}

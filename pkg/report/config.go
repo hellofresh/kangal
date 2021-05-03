@@ -8,6 +8,6 @@ type Config struct {
 	AWSRegion           string `envconfig:"AWS_DEFAULT_REGION" default:""`
 	AWSEndpointURL      string `envconfig:"AWS_ENDPOINT_URL" default:""`
 	AWSBucketName       string `envconfig:"AWS_BUCKET_NAME" default:""`
-	AWSUseHTTPS         string `envconfig:"AWS_USE_HTTPS" default:""`
+	AWSUseHTTPS         bool   `envconfig:"AWS_USE_HTTPS" default:"false"`
 	AWSPresignedExpires string `envconfig:"AWS_PRESIGNED_EXPIRES" default:""`
 }
