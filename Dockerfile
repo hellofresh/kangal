@@ -1,6 +1,8 @@
 FROM ubuntu:20.10
 
-RUN mkdir -p /etc/kangal
+RUN apt-get update && \
+    apt-get install -y ca-certificates && \
+    mkdir -p /etc/kangal
 
 ADD kangal /bin/kangal
 ADD openapi.json /etc/kangal/
