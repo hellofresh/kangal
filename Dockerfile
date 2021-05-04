@@ -1,7 +1,7 @@
 FROM ubuntu:20.10
 
 RUN apt-get update && \
-    apt-get install -y ca-certificates && \
+    apt-get install --no-install-recommends -y ca-certificates && \
     mkdir -p /etc/kangal
 
 ADD kangal /bin/kangal
