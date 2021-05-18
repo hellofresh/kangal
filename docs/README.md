@@ -88,7 +88,7 @@ cd kangal
 ### 2. Create required Kubernetes resource LoadTest CRD in your cluster
 
 ```bash
-kubectl apply -f charts/kagal/crds/loadtest.yaml
+kubectl apply -f charts/kangal/crds/loadtest.yaml
 ```
 
 or just use:
@@ -97,17 +97,7 @@ or just use:
 make apply-crd
 ```
 
-### 3. Download the dependencies
-
-#### 3.1 Compile Protocol Buffers definitions into source code
-
-```bash
-make protoc
-```
-
-Remember to run this command every time you change something in any of the protobuf files
-
-#### 3.2 Get project dependencies
+### 3 Get project dependencies
 
 ```bash
 go mod vendor
