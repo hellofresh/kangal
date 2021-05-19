@@ -40,10 +40,10 @@ func TestIntegrationKangalController(t *testing.T) {
 	err = WaitLoadTest(clientSet, expectedLoadtestName)
 	require.NoError(t, err)
 
-	t.Cleanup(func() {
-		err := DeleteLoadTest(clientSet, expectedLoadtestName, t.Name())
-		assert.NoError(t, err)
-	})
+	//t.Cleanup(func() {
+	//	err := DeleteLoadTest(clientSet, expectedLoadtestName, t.Name())
+	//	assert.NoError(t, err)
+	//})
 
 	t.Run("Checking the name of created loadtest", func(t *testing.T) {
 		createdName, err := GetLoadTest(clientSet, expectedLoadtestName)
@@ -98,5 +98,12 @@ func TestIntegrationKangalController(t *testing.T) {
 
 		loadtest := watchEvent.Object.(*loadTestV1.LoadTest)
 		assert.Equal(t, loadTestV1.LoadTestFinished, loadtest.Status.Phase)
+	})
+
+	t.Run("Checking loadtest is deleted", func(t *testing.T) {
+		// We expect the loadtest will be deleted after it finished
+		lt, _ := clientSet.KangalV1().LoadTests().Get(context.Background(), expectedLoadtestName, metaV1.GetOptions{})
+
+		assert.Equal(t, nil, lt)
 	})
 }
