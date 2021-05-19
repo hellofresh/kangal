@@ -316,9 +316,11 @@ func (c *Controller) syncHandler(key string) error {
 		if err != nil {
 			// The LoadTest resource may be conflicted, in which case we stop processing.
 			if errors.IsConflict(err) {
+				logger.Error("There is a conflict while deleting the loadtest", zap.Error(err))
 				utilRuntime.HandleError(fmt.Errorf("there is a conflict with loadtest %q between datastore and cache. it might be because object has been removed or modified in the datastore", key))
 				return nil
 			}
+			logger.Error("Failed to delete loadtest:", zap.Error(err))
 			return err
 		}
 
@@ -424,22 +426,26 @@ func (c *Controller) updateLoadTestStatus(ctx context.Context, key string, loadT
 		zap.String("loadtest", loadTest.GetName()),
 	)
 
-	logger.Debug("Updating loadtest status",
-		zap.String("new phase", string(loadTest.Status.Phase)),
-		zap.String("previous phase", string(loadTestFromCache.Status.Phase)),
-	)
+	if loadTest.Status.Phase != loadTestFromCache.Status.Phase {
+		logger.Debug("Updating loadtest status",
+			zap.String("new phase", string(loadTest.Status.Phase)),
+			zap.String("previous phase", string(loadTestFromCache.Status.Phase)),
+		)
 
-	// UpdateStatus will not allow changes to the Spec of the resource
-	_, err := c.kangalClientSet.KangalV1().LoadTests().UpdateStatus(ctx, loadTest, metaV1.UpdateOptions{})
-	if err != nil {
-		// The LoadTest resource may be conflicted, in which case we stop
-		// processing.
-		if errors.IsConflict(err) {
-			utilRuntime.HandleError(fmt.Errorf("there is a conflict with loadtest '%s' between datastore and cache. it might be because object has been removed or modified in the datastore", key))
+		// UpdateStatus will not allow changes to the Spec of the resource
+		_, err := c.kangalClientSet.KangalV1().LoadTests().UpdateStatus(ctx, loadTest, metaV1.UpdateOptions{})
+		if err != nil {
+			// The LoadTest resource may be conflicted, in which case we stop
+			// processing.
+			if errors.IsConflict(err) {
+				utilRuntime.HandleError(fmt.Errorf("there is a conflict with loadtest '%s' between datastore and cache. it might be because object has been removed or modified in the datastore", key))
+				return
+			}
+			logger.Error("Failed updating loadtest status", zap.Error(err))
 			return
 		}
-		logger.Error("Failed updating loadtest status", zap.Error(err))
-		return
+
+		logger.Debug("Status updated", zap.Any("status", loadTest.Status))
 	}
 
 	// Compare phase change and update metrics
@@ -447,7 +453,6 @@ func (c *Controller) updateLoadTestStatus(ctx context.Context, key string, loadT
 		loadTest.Status.Phase == loadTestV1.LoadTestFinished {
 		stats.Record(ctx, observability.MFinishedLoadtestCountStat.M(1))
 	}
-	logger.Info("Status updated", zap.Any("status", loadTest.Status))
 }
 
 // checkOrCreateNamespace checks if a namespace has been created and if not deletes it
@@ -502,7 +507,7 @@ func newNamespace(loadtest *loadTestV1.LoadTest, namespaceAnnotations map[string
 }
 
 // checkLoadTestLifeTimeExceeded returns true if the input loadtest has
-// existed for longer than certain threshold, and its status is Finished or Errorred
+// existed for longer than certain threshold, and its status is Finished or Errored
 func checkLoadTestLifeTimeExceeded(loadTest *loadTestV1.LoadTest, deleteThreshold time.Duration) bool {
 	if loadTest.Status.JobStatus.CompletionTime != nil {
 		if time.Since(loadTest.Status.JobStatus.CompletionTime.Time) > deleteThreshold &&
