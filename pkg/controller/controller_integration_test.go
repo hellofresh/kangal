@@ -93,10 +93,16 @@ func TestIntegrationKangalController(t *testing.T) {
 
 	// Checking finished loadtest is deleted
 	// SyncHandler runs every 10s for integration test.
-	// We expect SyncHandler to delete finished loadtest after 10s but wait 30s to be sure
-	time.Sleep(30 * time.Second)
-	lt, _ := clientSet.KangalV1().LoadTests().Get(context.Background(), expectedLoadtestName, metaV1.GetOptions{})
-	// assert that the returned object is empty which means lt "loadtest-fake-integration" was deleted
-	assert.Equal(t, "", lt.Name)
-	assert.Equal(t, "", lt.Namespace)
+	// We expect SyncHandler to delete finished loadtest after 10s but wait 30s and check every 5s
+	var deleted = false
+	for i := 0; i < 6; i++ {
+		time.Sleep(5 * time.Second)
+		lt, _ := clientSet.KangalV1().LoadTests().Get(context.Background(), expectedLoadtestName, metaV1.GetOptions{})
+		// assert that the returned object is empty which means lt "loadtest-fake-integration" was deleted
+		if lt.Name == "" && lt.Namespace == "" {
+			deleted = true
+			break
+		}
+	}
+	assert.True(t, deleted)
 }
