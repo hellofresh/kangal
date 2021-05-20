@@ -103,9 +103,11 @@ func TestIntegrationKangalController(t *testing.T) {
 
 	t.Run("Checking loadtest is deleted", func(t *testing.T) {
 		// We expect the loadtest will be deleted after 1 min after it finished
-		time.Sleep(60 * time.Second)
+		time.Sleep(30 * time.Second)
 		lt, _ := clientSet.KangalV1().LoadTests().Get(context.Background(), expectedLoadtestName, metaV1.GetOptions{})
 
-		assert.Equal(t, nil, lt)
+		// assert that the returned object is empty which means lt "loadtest-fake-integration" was deleted
+		assert.Equal(t, "", lt.Name)
+		assert.Equal(t, "", lt.Namespace)
 	})
 }

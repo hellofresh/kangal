@@ -17,7 +17,7 @@ fi
 
 echo "Proxy is running"
 echo "Starting kangal controller"
-WEB_HTTP_PORT=8888 CLEANUP_THRESHOLD=30s SYNC_HANDLER_TIMEOUT=30s ./bin/kangal controller --kubeconfig="$HOME/.kube/config" >/tmp/kangal_controller.log 2>&1 &
+WEB_HTTP_PORT=8888 CLEANUP_THRESHOLD=10s SYNC_HANDLER_TIMEOUT=10s ./bin/kangal controller --kubeconfig="$HOME/.kube/config" >/tmp/kangal_controller.log 2>&1 &
 PID_CONTROLLER=$!
 sleep 1
 echo "Check if controller is running"
