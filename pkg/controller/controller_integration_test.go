@@ -17,9 +17,10 @@ import (
 )
 
 func TestIntegrationKangalController(t *testing.T) {
-	// This integration test cover main idea and logic about Kangal controller
-	// First of all it creates new LoadTest resource, then it expects that Kangal Controller created resources
-	// and changed LoadTest status to "finished".
+	// This integration test covers main workflow of Kangal controller.
+	// First of all test_helper creates a new LoadTest object.
+	// After this Kangal controller creates all associated resources
+	// and updates LoadTest statuses from "created" to "finished".
 	if testing.Short() {
 		t.Skip("skipping test in short mode")
 	}
@@ -41,73 +42,61 @@ func TestIntegrationKangalController(t *testing.T) {
 	err = WaitLoadTest(clientSet, expectedLoadtestName)
 	require.NoError(t, err)
 
-	//t.Cleanup(func() {
-	//	err := DeleteLoadTest(clientSet, expectedLoadtestName, t.Name())
-	//	assert.NoError(t, err)
-	//})
-
-	t.Run("Checking the name of created loadtest", func(t *testing.T) {
-		createdName, err := GetLoadTest(clientSet, expectedLoadtestName)
-		require.NoError(t, err)
-		assert.Equal(t, expectedLoadtestName, createdName)
+	t.Cleanup(func() {
+		if t.Failed() {
+			err := DeleteLoadTest(clientSet, expectedLoadtestName, t.Name())
+			assert.NoError(t, err)
+		}
 	})
 
-	t.Run("Checking namespace is created", func(t *testing.T) {
-		watchObj, _ := client.CoreV1().Namespaces().Watch(context.Background(), metaV1.ListOptions{
-			FieldSelector: fmt.Sprintf("metadata.name=%s", expectedLoadtestName),
-		})
+	// Checking the name of created loadtest
+	createdName, err := GetLoadTest(clientSet, expectedLoadtestName)
+	require.NoError(t, err)
+	require.Equal(t, expectedLoadtestName, createdName)
 
-		watchEvent, err := waitfor.Resource(watchObj, (waitfor.Condition{}).Added)
-		require.NoError(t, err)
-
-		namespace := watchEvent.Object.(*coreV1.Namespace)
-		require.Equal(t, expectedLoadtestName, namespace.Name)
+	// Checking namespace is created
+	watchObj, _ := client.CoreV1().Namespaces().Watch(context.Background(), metaV1.ListOptions{
+		FieldSelector: fmt.Sprintf("metadata.name=%s", expectedLoadtestName),
 	})
+	watchEvent, err := waitfor.Resource(watchObj, (waitfor.Condition{}).Added)
+	require.NoError(t, err)
+	namespace := watchEvent.Object.(*coreV1.Namespace)
+	require.Equal(t, expectedLoadtestName, namespace.Name)
 
-	t.Run("Checking master pod is created", func(t *testing.T) {
-		watchObj, _ := client.CoreV1().Pods(expectedLoadtestName).Watch(context.Background(), metaV1.ListOptions{
-			LabelSelector: "app=loadtest-master",
-		})
-
-		watchEvent, err := waitfor.Resource(watchObj, (waitfor.Condition{}).PodRunning)
-		require.NoError(t, err)
-
-		pod := watchEvent.Object.(*coreV1.Pod)
-		assert.Equal(t, coreV1.PodRunning, pod.Status.Phase)
+	// Checking master pod is created
+	watchObj, _ = client.CoreV1().Pods(expectedLoadtestName).Watch(context.Background(), metaV1.ListOptions{
+		LabelSelector: "app=loadtest-master",
 	})
+	watchEvent, err = waitfor.Resource(watchObj, (waitfor.Condition{}).PodRunning)
+	require.NoError(t, err)
+	pod := watchEvent.Object.(*coreV1.Pod)
+	require.Equal(t, coreV1.PodRunning, pod.Status.Phase)
 
-	t.Run("Checking loadtest is in Running state", func(t *testing.T) {
-		watchObj, _ := clientSet.KangalV1().LoadTests().Watch(context.Background(), metaV1.ListOptions{
-			FieldSelector: fmt.Sprintf("metadata.name=%s", expectedLoadtestName),
-		})
-
-		watchEvent, err := waitfor.Resource(watchObj, (waitfor.Condition{}).LoadTestRunning)
-		require.NoError(t, err)
-
-		loadtest := watchEvent.Object.(*loadTestV1.LoadTest)
-		assert.Equal(t, loadTestV1.LoadTestRunning, loadtest.Status.Phase)
+	// Checking loadtest is in Running state
+	watchObj, _ = clientSet.KangalV1().LoadTests().Watch(context.Background(), metaV1.ListOptions{
+		FieldSelector: fmt.Sprintf("metadata.name=%s", expectedLoadtestName),
 	})
+	watchEvent, err = waitfor.Resource(watchObj, (waitfor.Condition{}).LoadTestRunning)
+	require.NoError(t, err)
+	loadtest := watchEvent.Object.(*loadTestV1.LoadTest)
+	require.Equal(t, loadTestV1.LoadTestRunning, loadtest.Status.Phase)
 
-	t.Run("Checking loadtest is in Finished state", func(t *testing.T) {
-		// We do run fake provider which has 10 sec sleep before finishing job
-		watchObj, _ := clientSet.KangalV1().LoadTests().Watch(context.Background(), metaV1.ListOptions{
-			FieldSelector: fmt.Sprintf("metadata.name=%s", expectedLoadtestName),
-		})
-
-		watchEvent, err := waitfor.Resource(watchObj, (waitfor.Condition{}).LoadTestFinished)
-		require.NoError(t, err)
-
-		loadtest := watchEvent.Object.(*loadTestV1.LoadTest)
-		assert.Equal(t, loadTestV1.LoadTestFinished, loadtest.Status.Phase)
+	// Checking loadtest is in Finished state
+	// We use loadtests with fake provider which only runs for 10 sec and then finishes the job
+	watchObj, _ = clientSet.KangalV1().LoadTests().Watch(context.Background(), metaV1.ListOptions{
+		FieldSelector: fmt.Sprintf("metadata.name=%s", expectedLoadtestName),
 	})
+	watchEvent, err = waitfor.Resource(watchObj, (waitfor.Condition{}).LoadTestFinished)
+	require.NoError(t, err)
+	loadtest = watchEvent.Object.(*loadTestV1.LoadTest)
+	require.Equal(t, loadTestV1.LoadTestFinished, loadtest.Status.Phase)
 
-	t.Run("Checking loadtest is deleted", func(t *testing.T) {
-		// We expect the loadtest will be deleted after 1 min after it finished
-		time.Sleep(30 * time.Second)
-		lt, _ := clientSet.KangalV1().LoadTests().Get(context.Background(), expectedLoadtestName, metaV1.GetOptions{})
-
-		// assert that the returned object is empty which means lt "loadtest-fake-integration" was deleted
-		assert.Equal(t, "", lt.Name)
-		assert.Equal(t, "", lt.Namespace)
-	})
+	// Checking finished loadtest is deleted
+	// SyncHandler runs every 10s for integration test.
+	// We expect SyncHandler to delete finished loadtest after 10s but wait 30s to be sure
+	time.Sleep(30 * time.Second)
+	lt, _ := clientSet.KangalV1().LoadTests().Get(context.Background(), expectedLoadtestName, metaV1.GetOptions{})
+	// assert that the returned object is empty which means lt "loadtest-fake-integration" was deleted
+	assert.Equal(t, "", lt.Name)
+	assert.Equal(t, "", lt.Namespace)
 }
