@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -40,10 +41,10 @@ func TestIntegrationKangalController(t *testing.T) {
 	err = WaitLoadTest(clientSet, expectedLoadtestName)
 	require.NoError(t, err)
 
-	t.Cleanup(func() {
-		err := DeleteLoadTest(clientSet, expectedLoadtestName, t.Name())
-		assert.NoError(t, err)
-	})
+	//t.Cleanup(func() {
+	//	err := DeleteLoadTest(clientSet, expectedLoadtestName, t.Name())
+	//	assert.NoError(t, err)
+	//})
 
 	t.Run("Checking the name of created loadtest", func(t *testing.T) {
 		createdName, err := GetLoadTest(clientSet, expectedLoadtestName)
@@ -98,5 +99,15 @@ func TestIntegrationKangalController(t *testing.T) {
 
 		loadtest := watchEvent.Object.(*loadTestV1.LoadTest)
 		assert.Equal(t, loadTestV1.LoadTestFinished, loadtest.Status.Phase)
+	})
+
+	t.Run("Checking loadtest is deleted", func(t *testing.T) {
+		// We expect the loadtest will be deleted after 1 min after it finished
+		time.Sleep(30 * time.Second)
+		lt, _ := clientSet.KangalV1().LoadTests().Get(context.Background(), expectedLoadtestName, metaV1.GetOptions{})
+
+		// assert that the returned object is empty which means lt "loadtest-fake-integration" was deleted
+		assert.Equal(t, "", lt.Name)
+		assert.Equal(t, "", lt.Namespace)
 	})
 }
