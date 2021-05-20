@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -101,7 +102,8 @@ func TestIntegrationKangalController(t *testing.T) {
 	})
 
 	t.Run("Checking loadtest is deleted", func(t *testing.T) {
-		// We expect the loadtest will be deleted after it finished
+		// We expect the loadtest will be deleted after 1 min after it finished
+		time.Sleep(30)
 		lt, _ := clientSet.KangalV1().LoadTests().Get(context.Background(), expectedLoadtestName, metaV1.GetOptions{})
 
 		assert.Equal(t, nil, lt)
