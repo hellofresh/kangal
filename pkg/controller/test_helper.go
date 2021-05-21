@@ -171,7 +171,8 @@ func GetLoadTestPhase(clientSet clientSetV.Clientset, loadtestName string) (stri
 	if err != nil {
 		return "", err
 	}
-	return string(result.Status.Phase), nil
+
+	return result.Status.Phase.String(), nil
 }
 
 // GetDistributedPods returns a number of distributed pods in load test namespace

@@ -611,7 +611,7 @@ func TestProxyGet(t *testing.T) {
 			"Valid request",
 			apisLoadTestV1.LoadTest{
 				Spec: apisLoadTestV1.LoadTestSpec{
-					Type:            "JMeter",
+					Type:            apisLoadTestV1.LoadTestTypeJMeter,
 					DistributedPods: &pods,
 					Tags: apisLoadTestV1.LoadTestTags{
 						"team": "kangal",
@@ -765,7 +765,7 @@ func TestProxyGetLogs(t *testing.T) {
 			"Can't get load test",
 			apisLoadTestV1.LoadTest{
 				Spec: apisLoadTestV1.LoadTestSpec{
-					Type:            "JMeter",
+					Type:            apisLoadTestV1.LoadTestTypeJMeter,
 					Overwrite:       false,
 					DistributedPods: &pods,
 				},

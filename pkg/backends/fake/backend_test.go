@@ -272,7 +272,7 @@ func TestTransformLoadTestSpec(t *testing.T) {
 	var distributedPods int32 = 1
 
 	spec := loadTestV1.LoadTestSpec{
-		Type:            "Fake",
+		Type:            loadTestV1.LoadTestTypeFake,
 		Overwrite:       true,
 		DistributedPods: &distributedPods,
 		Tags:            loadTestV1.LoadTestTags{"team": "kangal"},

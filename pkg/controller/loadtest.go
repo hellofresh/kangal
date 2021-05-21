@@ -343,7 +343,7 @@ func (c *Controller) syncHandler(key string) error {
 	// check and delete stale finished/errored loadtests
 	if checkLoadTestLifeTimeExceeded(loadTest, c.cfg.CleanUpThreshold) {
 		logger.Info("Deleting loadtest due to exceeded lifetime",
-			zap.String("phase", string(loadTest.Status.Phase)),
+			zap.String("phase", loadTest.Status.Phase.String()),
 		)
 		c.deleteLoadTest(ctx, key, loadTest)
 	}
@@ -415,8 +415,8 @@ func (c *Controller) updateLoadTestStatus(ctx context.Context, key string, loadT
 
 	if loadTest.Status.Phase != loadTestFromCache.Status.Phase {
 		logger.Debug("Updating loadtest status",
-			zap.String("new phase", string(loadTest.Status.Phase)),
-			zap.String("previous phase", string(loadTestFromCache.Status.Phase)),
+			zap.String("new phase", loadTest.Status.Phase.String()),
+			zap.String("previous phase", loadTestFromCache.Status.Phase.String()),
 		)
 
 		// UpdateStatus will not allow changes to the Spec of the resource
