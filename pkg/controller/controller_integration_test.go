@@ -93,9 +93,9 @@ func TestIntegrationKangalController(t *testing.T) {
 
 	// Checking finished loadtest is deleted
 	// SyncHandler runs every 10s for integration test.
-	// We expect SyncHandler to delete finished loadtest after 10s but wait 30s and check every 5s
-	var deleted = false
-	for i := 0; i < 6; i++ {
+	// We expect SyncHandler to delete finished loadtest after 10s but wait 40s and check every 5s
+	var deleted bool
+	for i := 0; i < 8; i++ {
 		time.Sleep(5 * time.Second)
 		lt, _ := clientSet.KangalV1().LoadTests().Get(context.Background(), expectedLoadtestName, metaV1.GetOptions{})
 		// assert that the returned object is empty which means lt "loadtest-fake-integration" was deleted
@@ -104,5 +104,5 @@ func TestIntegrationKangalController(t *testing.T) {
 			break
 		}
 	}
-	assert.True(t, deleted)
+	assert.True(t, deleted, "Looks like test was not deleted during expected time frame")
 }

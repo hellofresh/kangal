@@ -513,14 +513,14 @@ func checkLoadTestLifeTimeExceeded(loadTest *loadTestV1.LoadTest, deleteThreshol
 
 func (c *Controller) deleteLoadTest(ctx context.Context, key string, loadTest *loadTestV1.LoadTest) {
 	err := c.kangalClientSet.KangalV1().LoadTests().Delete(ctx, loadTest.Name, metaV1.DeleteOptions{})
-	if err != nil {
-		// The LoadTest resource may be conflicted, in which case we stop processing.
-		if errors.IsConflict(err) {
-			c.logger.Error("There is a conflict while deleting the loadtest", zap.Error(err))
-			utilRuntime.HandleError(fmt.Errorf("there is a conflict with loadtest %q between datastore and cache. it might be because object has been removed or modified in the datastore", key))
-			return
-		}
-		c.logger.Error("Failed to delete loadtest:", zap.Error(err))
+	if err == nil {
 		return
 	}
+
+	// The LoadTest resource may be conflicted, in which case we stop processing.
+	if errors.IsConflict(err) {
+		c.logger.Error("There is a conflict while deleting the loadtest", zap.Error(err))
+		utilRuntime.HandleError(fmt.Errorf("there is a conflict with loadtest %q between datastore and cache. It might be because object has been removed or modified in the datastore", key))
+	}
+	c.logger.Error("Failed to delete loadtest:", zap.Error(err))
 }
