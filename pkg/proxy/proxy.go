@@ -97,10 +97,10 @@ func (p *Proxy) List(w http.ResponseWriter, r *http.Request) {
 	items := make([]LoadTestStatus, len(loadTests.Items))
 	for i, lt := range loadTests.Items {
 		items[i] = LoadTestStatus{
-			Type:            string(lt.Spec.Type),
+			Type:            lt.Spec.Type.String(),
 			DistributedPods: *lt.Spec.DistributedPods,
 			Namespace:       lt.Status.Namespace,
-			Phase:           string(lt.Status.Phase),
+			Phase:           lt.Status.Phase.String(),
 			Tags:            lt.Spec.Tags,
 			HasEnvVars:      len(lt.Spec.EnvVars) != 0,
 			HasTestData:     len(lt.Spec.TestData) != 0,
@@ -199,7 +199,7 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 
 	render.Status(r, http.StatusCreated)
 	render.JSON(w, r, &LoadTestStatus{
-		Type:            string(loadTest.Spec.Type),
+		Type:            loadTest.Spec.Type.String(),
 		DistributedPods: *loadTest.Spec.DistributedPods,
 		Namespace:       loadTestName,
 		Phase:           string(apisLoadTestV1.LoadTestCreating),
@@ -249,10 +249,10 @@ func (p *Proxy) Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	render.JSON(w, r, &LoadTestStatus{
-		Type:            string(result.Spec.Type),
+		Type:            result.Spec.Type.String(),
 		DistributedPods: *result.Spec.DistributedPods,
 		Namespace:       result.Status.Namespace,
-		Phase:           string(result.Status.Phase),
+		Phase:           result.Status.Phase.String(),
 		Tags:            result.Spec.Tags,
 		HasEnvVars:      len(result.Spec.EnvVars) != 0,
 		HasTestData:     len(result.Spec.TestData) != 0,

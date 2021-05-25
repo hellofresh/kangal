@@ -87,6 +87,11 @@ type LoadTestStatus struct {
 // LoadTestPhase defines the phases that a loadtest can be in
 type LoadTestPhase string
 
+// String returns string representation of LoadTestPhase
+func (p LoadTestPhase) String() string {
+	return string(p)
+}
+
 const (
 	// LoadTestCreating is after a namespaces has been created for a LoadTest
 	// but before any process have been created
@@ -108,6 +113,11 @@ const (
 
 // LoadTestType needs to be specified to know what tool to use when running a loadtest
 type LoadTestType string
+
+// String returns string representation of LoadTestType
+func (t LoadTestType) String() string {
+	return string(t)
+}
 
 const (
 	// LoadTestTypeJMeter tells the controller to run the loadtest using JMeter

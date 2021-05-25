@@ -32,7 +32,7 @@ func TestBuildLoadTestSpec(t *testing.T) {
 		{
 			name: "Spec is creating",
 			args: args{
-				loadTestType:    "Fake",
+				loadTestType:    LoadTestTypeFake,
 				overwrite:       true,
 				distributedPods: 3,
 				tags:            LoadTestTags{"team": "kangal"},
@@ -44,7 +44,7 @@ func TestBuildLoadTestSpec(t *testing.T) {
 				envVars: map[string]string{"foo": "bar"},
 			},
 			want: LoadTestSpec{
-				Type:      "Fake",
+				Type:      LoadTestTypeFake,
 				Overwrite: true,
 				MasterConfig: ImageDetails{
 					Image: "image",
