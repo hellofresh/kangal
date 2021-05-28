@@ -56,44 +56,6 @@ var (
 	}
 )
 
-// NewJMeterSettingsConfigMap creates a new configmap which holds jmeter config
-func (b *Backend) NewJMeterSettingsConfigMap() *coreV1.ConfigMap {
-	data := map[string]string{
-		"jmeter.properties": `num_sample_threshold=5
-time_threshold=1000
-#---------------------------------------------------------------------------
-# Results file configuration
-#---------------------------------------------------------------------------
-jmeter.save.saveservice.output_format=csv
-jmeter.save.saveservice.response_data=true
-jmeter.save.saveservice.response_data.on_error=true
-jmeter.save.saveservice.response_message=true
-#---------------------------------------------------------------------------
-# Additional property files to load
-#---------------------------------------------------------------------------
-user.properties=user.properties
-system.properties=system.properties
-#---------------------------------------------------------------------------
-# Reporting configuration
-#---------------------------------------------------------------------------
-jmeter.reportgenerator.apdex_satisfied_threshold=200
-jmeter.reportgenerator.apdex_tolerated_threshold=500
-jmeter.reportgenerator.report_title=Kangal JMeter Dashboard
-jmeter.reportgenerator.overall_granularity=10000
-jmeter.save.saveservice.timestamp_format = yyyy/MM/dd HH:mm:ss zzz`,
-	}
-
-	return &coreV1.ConfigMap{
-		ObjectMeta: metaV1.ObjectMeta{
-			Name: LoadTestLabel,
-			Labels: map[string]string{
-				"app": "hf-jmeter",
-			},
-		},
-		Data: data,
-	}
-}
-
 // NewConfigMap creates a new configMap containing loadtest script
 func (b *Backend) NewConfigMap(loadTest loadTestV1.LoadTest) *coreV1.ConfigMap {
 	testfile := loadTest.Spec.TestFile
@@ -105,6 +67,9 @@ func (b *Backend) NewConfigMap(loadTest loadTestV1.LoadTest) *coreV1.ConfigMap {
 	return &coreV1.ConfigMap{
 		ObjectMeta: metaV1.ObjectMeta{
 			Name: loadTestFile,
+			Labels: map[string]string{
+				"app": "hf-jmeter",
+			},
 		},
 		Data: data,
 	}
@@ -180,7 +145,7 @@ func (b *Backend) NewPod(loadTest loadTestV1.LoadTest, i int, configMap *coreV1.
 	imageRef := fmt.Sprintf("%s:%s", loadTest.Spec.WorkerConfig.Image, loadTest.Spec.WorkerConfig.Tag)
 	if "" == loadTest.Spec.WorkerConfig.Image || "" == loadTest.Spec.WorkerConfig.Tag {
 		imageRef = fmt.Sprintf("%s:%s", b.workerConfig.Image, b.workerConfig.Tag)
-		logger.Warn("Loadtest.Spec.WorkerConfig is empty; using default worker image", zap.String("imageRef", imageRef))
+		logger.Debug("Loadtest.Spec.WorkerConfig is empty; using worker image from config", zap.String("imageRef", imageRef))
 	}
 
 	return &coreV1.Pod{
@@ -249,7 +214,7 @@ func (b *Backend) NewJMeterMasterJob(loadTest loadTestV1.LoadTest, reportURL str
 	imageRef := fmt.Sprintf("%s:%s", loadTest.Spec.MasterConfig.Image, loadTest.Spec.MasterConfig.Tag)
 	if "" == loadTest.Spec.MasterConfig.Image || "" == loadTest.Spec.MasterConfig.Tag {
 		imageRef = fmt.Sprintf("%s:%s", b.masterConfig.Image, b.masterConfig.Tag)
-		logger.Warn("Loadtest.Spec.MasterConfig is empty; using default master image", zap.String("imageRef", imageRef))
+		logger.Debug("Loadtest.Spec.MasterConfig is empty; using master image from config", zap.String("imageRef", imageRef))
 	}
 
 	jMeterEnvVars := []coreV1.EnvVar{
@@ -304,11 +269,6 @@ func (b *Backend) NewJMeterMasterJob(loadTest loadTestV1.LoadTest, reportURL str
 									Name:      "tests",
 									MountPath: "/tests",
 								},
-								{
-									Name:      "config",
-									MountPath: "/opt/apache-jmeter-5.0/bin/jmeter.properties",
-									SubPath:   "jmeter.properties",
-								},
 							},
 							Resources: backends.BuildResourceRequirements(b.masterResources),
 						},
@@ -320,16 +280,6 @@ func (b *Backend) NewJMeterMasterJob(loadTest loadTestV1.LoadTest, reportURL str
 								ConfigMap: &coreV1.ConfigMapVolumeSource{
 									LocalObjectReference: coreV1.LocalObjectReference{
 										Name: loadTestFile,
-									},
-								},
-							},
-						},
-						{
-							Name: "config",
-							VolumeSource: coreV1.VolumeSource{
-								ConfigMap: &coreV1.ConfigMapVolumeSource{
-									LocalObjectReference: coreV1.LocalObjectReference{
-										Name: LoadTestLabel,
 									},
 								},
 							},
