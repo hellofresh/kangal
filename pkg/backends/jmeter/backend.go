@@ -68,13 +68,17 @@ func (b *Backend) GetEnvConfig() interface{} {
 
 // SetDefaults must set default values
 func (b *Backend) SetDefaults() {
-	if b.config.MasterImageName == "" || b.config.MasterImageTag == "" {
+	if b.config.MasterImageName == "" {
 		b.config.MasterImageName = defaultMasterImageName
+	}
+	if b.config.MasterImageTag == "" {
 		b.config.MasterImageTag = defaultMasterImageTag
 	}
 
-	if b.config.WorkerImageName == "" || b.config.WorkerImageTag == "" {
+	if b.config.WorkerImageName == "" {
 		b.config.WorkerImageName = defaultWorkerImageName
+	}
+	if b.config.WorkerImageTag == "" {
 		b.config.WorkerImageTag = defaultWorkerImageTag
 	}
 
@@ -169,11 +173,6 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, report
 		_, err = b.kubeClientSet.CoreV1().ConfigMaps(loadTest.Status.Namespace).Create(ctx, b.NewConfigMap(loadTest), metaV1.CreateOptions{})
 		if err != nil && !kerrors.IsAlreadyExists(err) {
 			logger.Error("Error on creating testfile configmap", zap.Error(err))
-			return err
-		}
-
-		_, err = b.kubeClientSet.CoreV1().ConfigMaps(loadTest.Status.Namespace).Create(ctx, b.NewJMeterSettingsConfigMap(), metaV1.CreateOptions{})
-		if err != nil && !kerrors.IsAlreadyExists(err) {
 			return err
 		}
 
