@@ -67,6 +67,9 @@ func (b *Backend) NewConfigMap(loadTest loadTestV1.LoadTest) *coreV1.ConfigMap {
 	return &coreV1.ConfigMap{
 		ObjectMeta: metaV1.ObjectMeta{
 			Name: loadTestFile,
+			Labels: map[string]string{
+				"app": "hf-jmeter",
+			},
 		},
 		Data: data,
 	}
