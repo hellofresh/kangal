@@ -206,8 +206,7 @@ func (b *Backend) SyncStatus(ctx context.Context, loadTest loadTestV1.LoadTest, 
 		loadTestStatus.Phase = loadTestV1.LoadTestCreating
 	}
 
-	if loadTestStatus.Phase == loadTestV1.LoadTestErrored ||
-		loadTestStatus.Phase == loadTestV1.LoadTestFinished {
+	if loadTestStatus.Phase == loadTestV1.LoadTestErrored {
 		return nil
 	}
 
@@ -240,6 +239,7 @@ func (b *Backend) SyncStatus(ctx context.Context, loadTest loadTestV1.LoadTest, 
 	}
 
 	loadTestStatus.Phase = determineLoadTestStatusFromJobs(masterJob, workerJob)
+	loadTestStatus.JobStatus = masterJob.Status
 
 	return nil
 }
