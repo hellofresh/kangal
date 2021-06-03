@@ -1,4 +1,4 @@
-t@github.com:jdani/kangal.git# Kangal Chart
+# Kangal Chart
 [Kangal](https://github.com/hellofresh/kangal) is a tool to spin up an isolated environment in a Kubernetes cluster to run performance tests using different load test providers.
 
 ## Introduction
