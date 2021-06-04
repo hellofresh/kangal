@@ -18,8 +18,8 @@
           <boolProp name="LoopController.continue_forever">false</boolProp>
           <stringProp name="LoopController.loops">1</stringProp>
         </elementProp>
-        <stringProp name="ThreadGroup.num_threads">60</stringProp>
-        <stringProp name="ThreadGroup.ramp_time">60</stringProp>
+        <stringProp name="ThreadGroup.num_threads">30</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">30</stringProp>
         <boolProp name="ThreadGroup.scheduler">false</boolProp>
         <stringProp name="ThreadGroup.duration"></stringProp>
         <stringProp name="ThreadGroup.delay"></stringProp>
@@ -45,60 +45,6 @@
           <stringProp name="HTTPSampler.connect_timeout"></stringProp>
           <stringProp name="HTTPSampler.response_timeout"></stringProp>
         </HTTPSamplerProxy>
-        <hashTree/>
-        <BackendListener guiclass="BackendListenerGui" testclass="BackendListener" testname="Backend Listener" enabled="true">
-          <elementProp name="arguments" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" enabled="true">
-            <collectionProp name="Arguments.arguments">
-              <elementProp name="influxdbMetricsSender" elementType="Argument">
-                <stringProp name="Argument.name">influxdbMetricsSender</stringProp>
-                <stringProp name="Argument.value">org.apache.jmeter.visualizers.backend.influxdb.HttpMetricsSender</stringProp>
-                <stringProp name="Argument.metadata">=</stringProp>
-              </elementProp>
-              <elementProp name="influxdbUrl" elementType="Argument">
-                <stringProp name="Argument.name">influxdbUrl</stringProp>
-                <stringProp name="Argument.value">http://influxdb-jmeter.tools-k8s.hellofresh.io:80/write?db=jmeter</stringProp>
-                <stringProp name="Argument.metadata">=</stringProp>
-              </elementProp>
-              <elementProp name="application" elementType="Argument">
-                <stringProp name="Argument.name">application</stringProp>
-                <stringProp name="Argument.value">run_inntegration_test</stringProp>
-                <stringProp name="Argument.metadata">=</stringProp>
-              </elementProp>
-              <elementProp name="measurement" elementType="Argument">
-                <stringProp name="Argument.name">measurement</stringProp>
-                <stringProp name="Argument.value">jmeter</stringProp>
-                <stringProp name="Argument.metadata">=</stringProp>
-              </elementProp>
-              <elementProp name="summaryOnly" elementType="Argument">
-                <stringProp name="Argument.name">summaryOnly</stringProp>
-                <stringProp name="Argument.value">false</stringProp>
-                <stringProp name="Argument.metadata">=</stringProp>
-              </elementProp>
-              <elementProp name="samplersRegex" elementType="Argument">
-                <stringProp name="Argument.name">samplersRegex</stringProp>
-                <stringProp name="Argument.value">.*</stringProp>
-                <stringProp name="Argument.metadata">=</stringProp>
-              </elementProp>
-              <elementProp name="percentiles" elementType="Argument">
-                <stringProp name="Argument.name">percentiles</stringProp>
-                <stringProp name="Argument.value">90;95;99</stringProp>
-                <stringProp name="Argument.metadata">=</stringProp>
-              </elementProp>
-              <elementProp name="testTitle" elementType="Argument">
-                <stringProp name="Argument.name">testTitle</stringProp>
-                <stringProp name="Argument.value">simple_integration_test</stringProp>
-                <stringProp name="Argument.metadata">=</stringProp>
-              </elementProp>
-              <elementProp name="eventTags" elementType="Argument">
-                <stringProp name="Argument.name">eventTags</stringProp>
-                <stringProp name="Argument.value"></stringProp>
-                <stringProp name="Argument.metadata">=</stringProp>
-              </elementProp>
-            </collectionProp>
-          </elementProp>
-          <stringProp name="classname">org.apache.jmeter.visualizers.backend.influxdb.InfluxdbBackendListenerClient</stringProp>
-          <stringProp name="TestPlan.comments">This listener will send data to Influx DB.</stringProp>
-        </BackendListener>
         <hashTree/>
       </hashTree>
     </hashTree>

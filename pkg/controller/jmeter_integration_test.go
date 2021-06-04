@@ -39,6 +39,7 @@ func TestIntegrationJMeter(t *testing.T) {
 	t.Log()
 
 	distributedPods := int32(2)
+	watchTimeout := int64(80)
 	loadtestType := loadTestV1.LoadTestTypeJMeter
 	expectedLoadtestName := "loadtest-jmeter-integration"
 	testFile := "testdata/valid/integration_test.jmx"
@@ -121,7 +122,7 @@ func TestIntegrationJMeter(t *testing.T) {
 	})
 
 	t.Run("Checking master pod is created", func(t *testing.T) {
-		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 80*time.Second)
 		defer cancel()
 
 		watchObj, _ := client.CoreV1().Pods(expectedLoadtestName).Watch(context.Background(), metaV1.ListOptions{
@@ -156,10 +157,14 @@ func TestIntegrationJMeter(t *testing.T) {
 	})
 
 	t.Run("Checking loadtest is in Finished state", func(t *testing.T) {
-		watchObj, _ := clientSet.KangalV1().LoadTests().Watch(context.Background(), metaV1.ListOptions{
-			FieldSelector: fmt.Sprintf("metadata.name=%s", expectedLoadtestName),
+		ctx, cancel := context.WithTimeout(context.Background(), 80*time.Second)
+		defer cancel()
+
+		watchObj, _ := clientSet.KangalV1().LoadTests().Watch(ctx, metaV1.ListOptions{
+			FieldSelector:  fmt.Sprintf("metadata.name=%s", expectedLoadtestName),
+			TimeoutSeconds: &watchTimeout,
 		})
-		watchEvent, err := waitfor.Resource(watchObj, (waitfor.Condition{}).LoadTestFinished)
+		watchEvent, _ := waitfor.Resource(watchObj, (waitfor.Condition{}).LoadTestFinished)
 		require.NoError(t, err)
 		loadtest := watchEvent.Object.(*loadTestV1.LoadTest)
 		require.Equal(t, loadTestV1.LoadTestFinished, loadtest.Status.Phase)

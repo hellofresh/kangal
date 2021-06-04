@@ -3,18 +3,12 @@ set -e
 
 export AWS_ACCESS_KEY_ID=""
 export AWS_SECRET_ACCESS_KEY=""
-export TEST_FILE="pkg/controller/testdata/valid/integration_test.jmx"
 
 # Create a simple service to be called from the created loadTest
 # This service will log all the requests
 kubectl create ns test-busybox
 
 kubectl run --generator=run-pod/v1 busybox --namespace=test-busybox --port=8280 --image=busybox -- sh -c "echo 'Hello' > /var/www/index.html && httpd -f -p 8280 -h /var/www/ -vv"
-# kubectl run busybox --namespace=test-busybox \
-#                       --port=8280 \
-#                       --image=busybox \
-#                       -- sh -c "echo 'Hello' > /var/www/index.html && httpd -f -p 8280 -h /var/www/ -vvv"
-kubectl get pods -n test-busybox
 
 kubectl expose pod busybox --type=NodePort --namespace=test-busybox
 
@@ -29,8 +23,6 @@ NODE_PORT=$(kubectl get service busybox -n test-busybox | grep busybox | cut -d 
 #update JMX test to use node:port
 sed -i "s/TEST_IP/$NODE_IP/g" ./pkg/controller/testdata/valid/integration_test.jmx
 sed -i "s/TEST_PORT/${NODE_PORT}/g" ./pkg/controller/testdata/valid/integration_test.jmx
-
-cat ./pkg/controller/testdata/valid/integration_test.jmx
 
 echo "Starting kangal proxy"
 ./bin/kangal proxy --kubeconfig="$HOME/.kube/config" --max-load-tests 1 >/tmp/kangal_proxy.log 2>&1 &
@@ -58,8 +50,12 @@ fi
 echo "Controller is running"
 echo "Starting integration tests"
 
-# check the logs of busybox server and count the number of requests sent by JMeter
-kubectl logs busybox | grep "response:200" | wc -l
-
 # Run the integration tests
 KUBECONFIG="$HOME/.kube/config" make test-integration
+
+# check the logs of busybox server and count the number of requests sent by JMeter
+REQUEST_COUNT=$(kubectl logs busybox -n test-busybox | grep -c "response:200")
+if [ ${REQUEST_COUNT} -ne 30 ]; then
+  echo "JMeter Integration Test sent $REQUEST_COUNT requests, but 30 requests were expected. Test failed."
+  exit 1
+fi
