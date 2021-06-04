@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"testing"
@@ -40,7 +41,7 @@ func TestIntegrationJMeter(t *testing.T) {
 	distributedPods := int32(2)
 	loadtestType := loadTestV1.LoadTestTypeJMeter
 	expectedLoadtestName := "loadtest-jmeter-integration"
-	testFile := "testdata/valid/loadtest.jmx"
+	testFile := "testdata/valid/integration_test.jmx"
 	envVars := map[string]string{"foo": "bar", "foo2": "bar2"}
 	testData := "testdata/valid/testdata.csv"
 
@@ -152,6 +153,16 @@ func TestIntegrationJMeter(t *testing.T) {
 		phase, err = GetLoadTestPhase(clientSet, expectedLoadtestName)
 		require.NoError(t, err)
 		assert.Equal(t, string(loadTestV1.LoadTestRunning), phase)
+	})
+
+	t.Run("Checking loadtest is in Finished state", func(t *testing.T) {
+		watchObj, _ := clientSet.KangalV1().LoadTests().Watch(context.Background(), metaV1.ListOptions{
+			FieldSelector: fmt.Sprintf("metadata.name=%s", expectedLoadtestName),
+		})
+		watchEvent, err := waitfor.Resource(watchObj, (waitfor.Condition{}).LoadTestFinished)
+		require.NoError(t, err)
+		loadtest := watchEvent.Object.(*loadTestV1.LoadTest)
+		require.Equal(t, loadTestV1.LoadTestFinished, loadtest.Status.Phase)
 	})
 }
 
