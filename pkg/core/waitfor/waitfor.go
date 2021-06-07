@@ -14,7 +14,7 @@ import (
 const (
 	// waitForResourceTimeout is the timeout used to wait until a resource reaches a desired state
 	// TODO: Move as envconfig?
-	waitForResourceTimeout = 80 * time.Second
+	waitForResourceTimeout = 30 * time.Second
 )
 
 // Condition contains useful functions for watch conditions

@@ -14,6 +14,7 @@ import (
 	coreV1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	watchtools "k8s.io/client-go/tools/watch"
 
 	_ "github.com/hellofresh/kangal/pkg/backends/jmeter"
 	"github.com/hellofresh/kangal/pkg/core/waitfor"
@@ -157,14 +158,14 @@ func TestIntegrationJMeter(t *testing.T) {
 	})
 
 	t.Run("Checking loadtest is in Finished state", func(t *testing.T) {
-		ctx, cancel := context.WithTimeout(context.Background(), 80*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 		defer cancel()
 
 		watchObj, _ := clientSet.KangalV1().LoadTests().Watch(ctx, metaV1.ListOptions{
 			FieldSelector:  fmt.Sprintf("metadata.name=%s", expectedLoadtestName),
 			TimeoutSeconds: &watchTimeout,
 		})
-		watchEvent, _ := waitfor.Resource(watchObj, (waitfor.Condition{}).LoadTestFinished)
+		watchEvent, err := watchtools.UntilWithoutRetry(ctx, watchObj, (waitfor.Condition{}).LoadTestFinished)
 		require.NoError(t, err)
 		loadtest := watchEvent.Object.(*loadTestV1.LoadTest)
 		require.Equal(t, loadTestV1.LoadTestFinished, loadtest.Status.Phase)

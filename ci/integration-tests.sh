@@ -14,10 +14,10 @@ kubectl expose pod busybox --type=NodePort --namespace=test-busybox
 
 kubectl wait --for=condition=ready pod busybox -n test-busybox
 
-#add func to extract the node IP
+#extract the node IP
 NODE_IP=$(kubectl describe pod busybox -n test-busybox | grep "Node:" | cut -d '/' -f 2)
 
-#add func to extract the node port
+#extract the node port
 NODE_PORT=$(kubectl get service busybox -n test-busybox | grep busybox | cut -d ':' -f 2 | cut -d '/' -f 1)
 
 #update JMX test to use node:port
@@ -54,8 +54,11 @@ echo "Starting integration tests"
 KUBECONFIG="$HOME/.kube/config" make test-integration
 
 # check the logs of busybox server and count the number of requests sent by JMeter
+# integration_test.jmx is designed to send 30 requests during 30 seconds.
+# jmeter_integration_test.go creates a loadTest with 2 distributed pods, which leads us to 60 desired requests to the server
+DESIRED_REQUESTS_COUNT=60
 REQUEST_COUNT=$(kubectl logs busybox -n test-busybox | grep -c "response:200")
-if [ ${REQUEST_COUNT} -ne 30 ]; then
-  echo "JMeter Integration Test sent $REQUEST_COUNT requests, but 30 requests were expected. Test failed."
+if [ "${REQUEST_COUNT}" -ne "${DESIRED_REQUESTS_COUNT}" ]; then
+  echo "JMeter Integration Test sent $REQUEST_COUNT requests, but $DESIRED_REQUESTS_COUNT requests were expected. Test failed."
   exit 1
 fi
