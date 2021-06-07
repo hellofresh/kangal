@@ -8,16 +8,17 @@ import (
 	"testing"
 	"time"
 
-	_ "github.com/hellofresh/kangal/pkg/backends/jmeter"
-	"github.com/hellofresh/kangal/pkg/core/waitfor"
-	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
-	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	batchV1 "k8s.io/api/batch/v1"
 	coreV1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+
+	_ "github.com/hellofresh/kangal/pkg/backends/jmeter"
+	"github.com/hellofresh/kangal/pkg/core/waitfor"
+	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
+	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
 )
 
 var (
@@ -121,7 +122,7 @@ func TestIntegrationJMeter(t *testing.T) {
 	})
 
 	t.Run("Checking master pod is created", func(t *testing.T) {
-		ctx, cancel := context.WithTimeout(context.Background(), 80*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 		defer cancel()
 
 		watchObj, _ := client.CoreV1().Pods(expectedLoadtestName).Watch(context.Background(), metaV1.ListOptions{
