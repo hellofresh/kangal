@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -429,6 +430,7 @@ func TestIntegrationGetLoadtestLogs(t *testing.T) {
 		t.Skip("skipping test in short mode")
 	}
 
+	waitForResourceTimeout := 30 * time.Second
 	distributedPods := int32(1)
 	loadtestType := apisLoadTestV1.LoadTestTypeFake
 
@@ -458,7 +460,7 @@ func TestIntegrationGetLoadtestLogs(t *testing.T) {
 			LabelSelector: "app=loadtest-master",
 		})
 
-		watchEvent, err := waitfor.Resource(watchObj, (waitfor.Condition{}).PodRunning)
+		watchEvent, err := waitfor.Resource(watchObj, (waitfor.Condition{}).PodRunning, waitForResourceTimeout)
 		require.NoError(t, err)
 
 		pod := watchEvent.Object.(*coreV1.Pod)

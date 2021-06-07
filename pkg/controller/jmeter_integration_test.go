@@ -8,18 +8,16 @@ import (
 	"testing"
 	"time"
 
+	_ "github.com/hellofresh/kangal/pkg/backends/jmeter"
+	"github.com/hellofresh/kangal/pkg/core/waitfor"
+	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
+	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	batchV1 "k8s.io/api/batch/v1"
 	coreV1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	watchtools "k8s.io/client-go/tools/watch"
-
-	_ "github.com/hellofresh/kangal/pkg/backends/jmeter"
-	"github.com/hellofresh/kangal/pkg/core/waitfor"
-	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
-	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
 )
 
 var (
@@ -40,7 +38,7 @@ func TestIntegrationJMeter(t *testing.T) {
 	t.Log()
 
 	distributedPods := int32(2)
-	watchTimeout := int64(80)
+	waitForResourceTimeout := 60 * time.Second
 	loadtestType := loadTestV1.LoadTestTypeJMeter
 	expectedLoadtestName := "loadtest-jmeter-integration"
 	testFile := "testdata/valid/integration_test.jmx"
@@ -158,14 +156,13 @@ func TestIntegrationJMeter(t *testing.T) {
 	})
 
 	t.Run("Checking loadtest is in Finished state", func(t *testing.T) {
-		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), waitForResourceTimeout)
 		defer cancel()
 
 		watchObj, _ := clientSet.KangalV1().LoadTests().Watch(ctx, metaV1.ListOptions{
-			FieldSelector:  fmt.Sprintf("metadata.name=%s", expectedLoadtestName),
-			TimeoutSeconds: &watchTimeout,
+			FieldSelector: fmt.Sprintf("metadata.name=%s", expectedLoadtestName),
 		})
-		watchEvent, err := watchtools.UntilWithoutRetry(ctx, watchObj, (waitfor.Condition{}).LoadTestFinished)
+		watchEvent, err := waitfor.Resource(watchObj, (waitfor.Condition{}).LoadTestFinished, waitForResourceTimeout)
 		require.NoError(t, err)
 		loadtest := watchEvent.Object.(*loadTestV1.LoadTest)
 		require.Equal(t, loadTestV1.LoadTestFinished, loadtest.Status.Phase)

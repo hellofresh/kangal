@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 
 	"go.uber.org/zap"
 	batchV1 "k8s.io/api/batch/v1"
@@ -43,6 +44,8 @@ const (
 	loadTestSecretLabel = "env-vars-from-file"
 	// loadTestSecretLabelKey is a label key of a secret containing environment variables
 	loadTestSecretLabelKey = "secret-source"
+	// waitForResourceTimeout is the timeout used to wait until a resource reaches a desired state
+	waitForResourceTimeout = 30 * time.Second
 )
 
 var (
@@ -368,7 +371,7 @@ func (b *Backend) CreatePodsWithTestdata(ctx context.Context, configMaps []*core
 			logger.Warn("unable to watch pod state", zap.Error(err))
 			continue
 		}
-		waitfor.Resource(watchObj, (waitfor.Condition{}).PodRunning)
+		waitfor.Resource(watchObj, (waitfor.Condition{}).PodRunning, waitForResourceTimeout)
 	}
 	logger.Info("Created pods with test data")
 	return nil
