@@ -127,7 +127,7 @@ Deployment specific configurations:
 | `openapi-ui.ingress.enabled`          | Ingress enabled flag                            | `true`                                     |
 | `openapi-ui.ingress.annotations`      | Ingress annotations                             | `kubernetes.io/ingress.class: nginx`       |
 | `openapi-ui.ingress.path`             | Ingress path                                    | `/`                                        |
-| `openapi-ui.ingress.hosts`            | Ingress hosts. *Required* if ingress is enabled | `kangal-openapi-ui.example.com`            |
+| `openapi-ui.ingress.hosts.http`       | Ingress hosts. *Required* if ingress is enabled | `kangal-openapi-ui.example.com`            |
 | `openapi-ui.resources`                | CPU/Memory resource requests/limits             | Default values of the cluster              |
 | `openapi-ui.nodeSelector`             | Node labels for pod assignment                  | `{}`                                       |
 | `openapi-ui.tolerations`              | Tolerations for nodes that have taints on them  | `[]`                                       |
