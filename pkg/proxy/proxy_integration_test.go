@@ -430,9 +430,9 @@ func TestIntegrationGetLoadtestLogs(t *testing.T) {
 		t.Skip("skipping test in short mode")
 	}
 
-	waitForResourceTimeout := 30 * time.Second
 	distributedPods := int32(1)
 	loadtestType := apisLoadTestV1.LoadTestTypeFake
+	waitForResourceTimeout := 10 * time.Second
 
 	testFile := "testdata/valid/loadtest.jmx"
 
