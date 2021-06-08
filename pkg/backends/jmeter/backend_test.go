@@ -3,6 +3,7 @@ package jmeter
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -120,6 +121,7 @@ func TestSync(t *testing.T) {
 
 	// Arbitrary test values
 	distributedPodsNum := int32(2)
+	waitForResourceTimeout := 3 * time.Second
 	namespace := "loadtest-namespace"
 	reportURL := "http://kangal-proxy.local/load-test/loadtest-name/report"
 
@@ -157,6 +159,9 @@ func TestSync(t *testing.T) {
 		kangalClientSet: client,
 		logger:          logger,
 		namespaceLister: namespaceLister,
+		config: &Config{
+			WaitForResourceTimeout: waitForResourceTimeout,
+		},
 	}
 
 	err := b.Sync(ctx, loadTest, reportURL)
