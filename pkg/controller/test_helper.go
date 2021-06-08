@@ -21,7 +21,7 @@ import (
 
 const (
 	kubeClientDefaultTimeout = 1 * time.Minute
-	waitForResourceTimeout   = 10 * time.Second
+	waitForResourceTimeout   = 30 * time.Second
 )
 
 // CreateLoadTest creates a load test CR
