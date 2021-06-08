@@ -1,0 +1,16 @@
+{
+  "call": "helloworld.Greeter.SayHello",
+  "total": 10,
+  "concurrency": 2,
+  "metadata": {
+    "foo": "bar",
+    "trace_id": "{{.RequestNumber}}",
+    "timestamp": "{{.TimestampUnix}}"
+  },
+  "max-duration": "10s",
+  "host": "0.0.0.0:50051",
+  "insecure": true,
+  "async": true,
+  "format": "html",
+  "output": "/results"
+}
