@@ -26,6 +26,7 @@ func TestIntegrationKangalController(t *testing.T) {
 	}
 
 	expectedLoadtestName := "loadtest-fake-integration"
+	waitForResourceTimeout := 30 * time.Second
 
 	// TODO: those attributes should gone once we do improvements on proxy side and move kube_client to own kube package
 	distributedPods := int32(1)
@@ -58,7 +59,7 @@ func TestIntegrationKangalController(t *testing.T) {
 	watchObj, _ := client.CoreV1().Namespaces().Watch(context.Background(), metaV1.ListOptions{
 		FieldSelector: fmt.Sprintf("metadata.name=%s", expectedLoadtestName),
 	})
-	watchEvent, err := waitfor.Resource(watchObj, (waitfor.Condition{}).Added)
+	watchEvent, err := waitfor.Resource(watchObj, (waitfor.Condition{}).Added, waitForResourceTimeout)
 	require.NoError(t, err)
 	namespace := watchEvent.Object.(*coreV1.Namespace)
 	require.Equal(t, expectedLoadtestName, namespace.Name)
@@ -67,7 +68,7 @@ func TestIntegrationKangalController(t *testing.T) {
 	watchObj, _ = client.CoreV1().Pods(expectedLoadtestName).Watch(context.Background(), metaV1.ListOptions{
 		LabelSelector: "app=loadtest-master",
 	})
-	watchEvent, err = waitfor.Resource(watchObj, (waitfor.Condition{}).PodRunning)
+	watchEvent, err = waitfor.Resource(watchObj, (waitfor.Condition{}).PodRunning, waitForResourceTimeout)
 	require.NoError(t, err)
 	pod := watchEvent.Object.(*coreV1.Pod)
 	require.Equal(t, coreV1.PodRunning, pod.Status.Phase)
@@ -76,7 +77,7 @@ func TestIntegrationKangalController(t *testing.T) {
 	watchObj, _ = clientSet.KangalV1().LoadTests().Watch(context.Background(), metaV1.ListOptions{
 		FieldSelector: fmt.Sprintf("metadata.name=%s", expectedLoadtestName),
 	})
-	watchEvent, err = waitfor.Resource(watchObj, (waitfor.Condition{}).LoadTestRunning)
+	watchEvent, err = waitfor.Resource(watchObj, (waitfor.Condition{}).LoadTestRunning, waitForResourceTimeout)
 	require.NoError(t, err)
 	loadtest := watchEvent.Object.(*loadTestV1.LoadTest)
 	require.Equal(t, loadTestV1.LoadTestRunning, loadtest.Status.Phase)
@@ -86,7 +87,7 @@ func TestIntegrationKangalController(t *testing.T) {
 	watchObj, _ = clientSet.KangalV1().LoadTests().Watch(context.Background(), metaV1.ListOptions{
 		FieldSelector: fmt.Sprintf("metadata.name=%s", expectedLoadtestName),
 	})
-	watchEvent, err = waitfor.Resource(watchObj, (waitfor.Condition{}).LoadTestFinished)
+	watchEvent, err = waitfor.Resource(watchObj, (waitfor.Condition{}).LoadTestFinished, waitForResourceTimeout)
 	require.NoError(t, err)
 	loadtest = watchEvent.Object.(*loadTestV1.LoadTest)
 	require.Equal(t, loadTestV1.LoadTestFinished, loadtest.Status.Phase)

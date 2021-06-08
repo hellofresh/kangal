@@ -50,7 +50,7 @@ var (
 	loadTestWorkerPodLabels = map[string]string{
 		loadTestWorkerPodLabelKey: loadTestWorkerPodLabelValue,
 	}
-	//loadTestSecretLabels is a labeles set for created secrets
+	//loadTestSecretLabels is a labels set for created secrets
 	loadTestSecretLabels = map[string]string{
 		loadTestSecretLabelKey: loadTestSecretLabel,
 	}
@@ -368,7 +368,7 @@ func (b *Backend) CreatePodsWithTestdata(ctx context.Context, configMaps []*core
 			logger.Warn("unable to watch pod state", zap.Error(err))
 			continue
 		}
-		waitfor.Resource(watchObj, (waitfor.Condition{}).PodRunning)
+		waitfor.Resource(watchObj, (waitfor.Condition{}).PodRunning, b.config.WaitForResourceTimeout)
 	}
 	logger.Info("Created pods with test data")
 	return nil
