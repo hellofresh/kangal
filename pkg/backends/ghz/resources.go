@@ -71,6 +71,8 @@ func (b *Backend) NewJob(
 			OwnerReferences: []metaV1.OwnerReference{*ownerRef},
 		},
 		Spec: batchV1.JobSpec{
+			Parallelism:  loadTest.Spec.DistributedPods,
+			Completions:  loadTest.Spec.DistributedPods,
 			BackoffLimit: &backoffLimit,
 			Template: coreV1.PodTemplateSpec{
 				ObjectMeta: metaV1.ObjectMeta{
