@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -431,6 +432,7 @@ func TestIntegrationGetLoadtestLogs(t *testing.T) {
 
 	distributedPods := int32(1)
 	loadtestType := apisLoadTestV1.LoadTestTypeFake
+	waitForResourceTimeout := 10 * time.Second
 
 	testFile := "testdata/valid/loadtest.jmx"
 
@@ -458,7 +460,7 @@ func TestIntegrationGetLoadtestLogs(t *testing.T) {
 			LabelSelector: "app=loadtest-master",
 		})
 
-		watchEvent, err := waitfor.Resource(watchObj, (waitfor.Condition{}).PodRunning)
+		watchEvent, err := waitfor.Resource(watchObj, (waitfor.Condition{}).PodRunning, waitForResourceTimeout)
 		require.NoError(t, err)
 
 		pod := watchEvent.Object.(*coreV1.Pod)

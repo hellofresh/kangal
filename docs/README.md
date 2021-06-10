@@ -45,7 +45,6 @@ Kangal can be easily extended by adding different load generators as backends.
  - [pkg/backends/](/pkg/backends)
  - [charts/kangal/crds/loadtest.yaml](/charts/kangal/crds/loadtest.yaml#L43)
  - [openapi.json](/openapi.json#L280)
- - [proxy.proto](/proto/grpc/proxy/v2/proxy.proto#L11)
 
 ## Reporting
 Reporting is an important part of load testing process. It basically contains in two parts:

@@ -21,6 +21,7 @@ import (
 
 const (
 	kubeClientDefaultTimeout = 1 * time.Minute
+	waitForResourceTimeout   = 30 * time.Second
 )
 
 // CreateLoadTest creates a load test CR
@@ -92,7 +93,7 @@ func WaitLoadTest(clientSet clientSetV.Clientset, loadtestName string) error {
 		return err
 	}
 
-	_, err = waitfor.Resource(watchObj, (waitfor.Condition{}).LoadTestRunning)
+	_, err = waitfor.Resource(watchObj, (waitfor.Condition{}).LoadTestRunning, waitForResourceTimeout)
 
 	return err
 }
