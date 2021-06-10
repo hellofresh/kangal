@@ -59,6 +59,8 @@ func (b *Backend) NewJob(
 		})
 	}
 
+	backoffLimit := int32(0)
+
 	return &batchV1.Job{
 		ObjectMeta: metaV1.ObjectMeta{
 			Name:      loadTestJobName,
@@ -69,7 +71,7 @@ func (b *Backend) NewJob(
 			OwnerReferences: []metaV1.OwnerReference{*ownerRef},
 		},
 		Spec: batchV1.JobSpec{
-			BackoffLimit: nil,
+			BackoffLimit: &backoffLimit,
 			Template: coreV1.PodTemplateSpec{
 				ObjectMeta: metaV1.ObjectMeta{
 					Labels: map[string]string{
