@@ -21,6 +21,8 @@ import (
 const (
 	backendType     = "type"
 	overwrite       = "overwrite"
+	masterImage     = "masterImage"
+	workerImage     = "workerImage"
 	distributedPods = "distributedPods"
 	tags            = "tags"
 	testFile        = "testFile"
@@ -37,6 +39,8 @@ func httpValidator(r *http.Request) url.Values {
 	rules := govalidator.MapData{
 		"type":            []string{"required"},
 		"overwrite":       []string{"in:1,True,true,t,T,TRUE,0,False,false,f,F,FALSE"},
+		"masterImage":     []string{"regex:^.*:.*$"},
+		"workerImage":     []string{"regex:^.*:.*$"},
 		"distributedPods": []string{"numeric_between:1,"},
 		"file:testFile":   []string{"ext:jmx,py"},
 		"file:envVars":    []string{"ext:csv"},
@@ -153,9 +157,23 @@ func fromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger) (apisLoa
 		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %q from request: %w", duration, err)
 	}
 
+	mi, err := getImage(r, masterImage)
+	if err != nil {
+		logger.Debug("Bad value", zap.String("field", masterImage), zap.Error(err))
+		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %q from request: %w", masterImage, err)
+	}
+
+	wi, err := getImage(r, workerImage)
+	if err != nil {
+		logger.Debug("Bad value", zap.String("field", workerImage), zap.Error(err))
+		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %q from request: %w", workerImage, err)
+	}
+
 	return apisLoadTestV1.LoadTestSpec{
 		Type:            getLoadTestType(r),
 		Overwrite:       o,
+		MasterConfig:    mi,
+		WorkerConfig:    wi,
 		DistributedPods: &dp,
 		Tags:            tagList,
 		TestFile:        tf,
@@ -266,6 +284,25 @@ func getDuration(r *http.Request) (time.Duration, error) {
 	}
 
 	return time.ParseDuration(val)
+}
+
+func getImage(r *http.Request, role string) (apisLoadTestV1.ImageDetails, error) {
+
+	imageStr := r.FormValue(role)
+
+	imgName := ""
+	imgTag := ""
+
+	if strings.Contains(imageStr, ":") {
+		image := strings.Split(imageStr, ":")
+		imgName = image[0]
+		imgTag = image[1]
+	}
+
+	return apisLoadTestV1.ImageDetails{
+		Image: imgName,
+		Tag:   imgTag,
+	}, nil
 }
 
 //fileToString converts file to string
