@@ -5,6 +5,7 @@ import (
 
 	"github.com/hellofresh/kangal/cmd"
 	_ "github.com/hellofresh/kangal/pkg/backends/fake"
+	_ "github.com/hellofresh/kangal/pkg/backends/ghz"
 	_ "github.com/hellofresh/kangal/pkg/backends/jmeter"
 	_ "github.com/hellofresh/kangal/pkg/backends/locust"
 )

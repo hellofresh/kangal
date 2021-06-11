@@ -38,7 +38,7 @@ func httpValidator(r *http.Request) url.Values {
 		"type":            []string{"required"},
 		"overwrite":       []string{"in:1,True,true,t,T,TRUE,0,False,false,f,F,FALSE"},
 		"distributedPods": []string{"numeric_between:1,"},
-		"file:testFile":   []string{"ext:jmx,py"},
+		"file:testFile":   []string{"ext:jmx,py,json"},
 		"file:envVars":    []string{"ext:csv"},
 		"file:testData":   []string{"ext:csv"},
 		"targetURL":       []string{"http"},

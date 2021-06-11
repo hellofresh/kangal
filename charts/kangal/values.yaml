@@ -172,6 +172,8 @@ configMap:
   AWS_ENDPOINT_URL: s3.us-east-1.amazonaws.com
   AWS_BUCKET_NAME: my-bucket
   AWS_USE_HTTPS: "false"
+  GHZ_IMAGE_NAME: hellofresh/kangal-ghz
+  GHZ_IMAGE_TAG: latest
   JMETER_MASTER_IMAGE_NAME: hellofresh/kangal-jmeter-master
   JMETER_MASTER_IMAGE_TAG: latest
   JMETER_WORKER_IMAGE_NAME: hellofresh/kangal-jmeter-worker

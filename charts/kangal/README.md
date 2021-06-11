@@ -77,6 +77,8 @@ The following table lists the common configurable parameters for `Kangal` chart:
 | `configmap.AWS_DEFAULT_REGION`       | Storage connection parameter                                                                        | `us-east-1`                           |
 | `configmap.AWS_USE_HTTPS`            | Set to "true" to use HTTPS                                                                          | `false`                               |
 | `configmap.AWS_PRESIGNED_EXPIRES`    | Expiration time for Presigned URLs                                                                  | `30m`                                 |
+| `configmap.GHZ_IMAGE_NAME`           | Default ghz image name/repository if none is provided when creating a new loadtest                  | `hellofresh/kangal-ghz`               |
+| `configmap.GHZ_IMAGE_TAG`            | Tag of the ghz image above                                                                          | `latest`                               |
 | `configmap.JMETER_MASTER_IMAGE_NAME` | Default JMeter master image name/repository if none is provided when creating a new loadtest        | `hellofresh/kangal-jmeter-master`     |
 | `configmap.JMETER_MASTER_IMAGE_TAG`  | Tag of the JMeter master image above                                                                | `latest`                              |
 | `configmap.JMETER_WORKER_IMAGE_NAME` | Default JMeter worker image name/repository if none is provided when creating a new loadtest        | `hellofresh/kangal-jmeter-worker`     |
@@ -175,3 +177,11 @@ Deployment specific configurations:
 | `controller.env.LOCUST_WORKER_CPU_REQUESTS`    | Master CPU requests         | ``                |
 | `controller.env.LOCUST_WORKER_MEMORY_LIMITS`   | Master memory limits        | ``                |
 | `controller.env.LOCUST_WORKER_MEMORY_REQUESTS` | Master memory requests      | ``                |
+
+### Kangal Controller (`ghz` specific)
+| Parameter                                   | Description     | Default           |
+|---------------------------------------------|-----------------|-------------------|
+| `controller.env.GHZ_MASTER_CPU_LIMITS`      | CPU limits      | ``                |
+| `controller.env.GHZ_MASTER_CPU_REQUESTS`    | CPU requests    | ``                |
+| `controller.env.GHZ_MASTER_MEMORY_LIMITS`   | Memory limits   | ``                |
+| `controller.env.GHZ_MASTER_MEMORY_REQUESTS` | Memory requests | ``                |

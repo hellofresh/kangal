@@ -408,7 +408,7 @@
 		"schemas": {
 			"LoadTestType": {
 				"type": "string",
-				"enum": ["JMeter", "Fake", "Locust"]
+				"enum": ["JMeter", "Fake", "Locust", "Ghz"]
 			},
 			"LoadTestPhase": {
 				"type": "string",
