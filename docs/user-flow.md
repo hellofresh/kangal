@@ -49,6 +49,24 @@ curl -X POST http://${KANGAL_PROXY_ADDRESS}/load-test \
   -F overwrite=true
 ```
 
+Or even select the container images to use for Master and Worker roles:
+
+```bash
+curl -X POST http://${KANGAL_PROXY_ADDRESS}/load-test \
+  -H 'Content-Type: multipart/form-data' \
+  -F distributedPods=1 \
+  -F testFile=@examples/constant_load.jmx \
+  -F testData=@artifacts/loadtests/testData.csv \
+  -F envVars=@artifacts/loadtests/envVars.csv \
+  -F type=JMeter \
+  -F tags=tag1:value1,tag2:value2 \
+  -F overwrite=true \
+  -F masterImage=masterContainerImage:latest \
+  -F workerImage=workerContainerImage:latest
+```
+
+
+
 ## Check 
 Check the status of the load test.
 
