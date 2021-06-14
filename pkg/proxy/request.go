@@ -39,8 +39,8 @@ func httpValidator(r *http.Request) url.Values {
 	rules := govalidator.MapData{
 		"type":            []string{"required"},
 		"overwrite":       []string{"in:1,True,true,t,T,TRUE,0,False,false,f,F,FALSE"},
-		"masterImage":     []string{"regex:^.*:.*$"},
-		"workerImage":     []string{"regex:^.*:.*$"},
+		"masterImage":     []string{"regex:^.*:.*$|^$"},
+		"workerImage":     []string{"regex:^.*:.*$|^$"},
 		"distributedPods": []string{"numeric_between:1,"},
 		"file:testFile":   []string{"ext:jmx,py"},
 		"file:envVars":    []string{"ext:csv"},
