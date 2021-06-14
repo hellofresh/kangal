@@ -105,7 +105,7 @@ func TestHTTPValidator(t *testing.T) {
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			request := buildMocFormReq(t, tt.requestFiles, tt.distributedPods, tt.loadTestType, "")
+			request := buildMocFormReq(t, tt.requestFiles, tt.distributedPods, tt.loadTestType, "", "", "")
 
 			result := httpValidator(request)
 			assert.Equal(t, tt.expectedResponse, result.Get(tt.failingLine))
@@ -134,7 +134,7 @@ func TestCreateWithTimeout(t *testing.T) {
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			request := buildMocFormReq(t, tt.requestFiles, tt.distributedPods, tt.loadTestType, "")
+			request := buildMocFormReq(t, tt.requestFiles, tt.distributedPods, tt.loadTestType, "", "", "")
 
 			// Pass a context with a timeout to tell a blocking function that it
 			// should abandon its work after the timeout elapses.
@@ -385,7 +385,7 @@ func TestProxyCreate(t *testing.T) {
 			testProxyHandler := NewProxy(1, b, c, 50)
 			handler := testProxyHandler.Create
 
-			requestWrap := createRequestWrapper(t, tt.requestFiles, strconv.Itoa(tt.distributedPods), string(tt.loadTestType), tt.tagsString, false)
+			requestWrap := createRequestWrapper(t, tt.requestFiles, strconv.Itoa(tt.distributedPods), string(tt.loadTestType), tt.tagsString, false, "", "")
 
 			req := httptest.NewRequest("POST", "http://example.com/foo", requestWrap.body)
 			req.Header.Set("Content-Type", requestWrap.contentType)
@@ -478,7 +478,7 @@ func TestNewProxyRecreate(t *testing.T) {
 			requestFiles := map[string]string{
 				"testFile": "testdata/valid/loadtest.jmx",
 			}
-			requestWrap := createRequestWrapper(t, requestFiles, "2", "Fake", "", tt.overwrite)
+			requestWrap := createRequestWrapper(t, requestFiles, "2", "Fake", "", tt.overwrite, "", "")
 
 			req := httptest.NewRequest("POST", "http://example.com/load-test", requestWrap.body)
 			req = req.WithContext(ctx)
@@ -579,7 +579,7 @@ func TestProxyCreateWithErrors(t *testing.T) {
 			requestFiles := map[string]string{
 				"testFile": "testdata/valid/loadtest.jmx",
 			}
-			requestWrap := createRequestWrapper(t, requestFiles, "2", "Fake", "", false)
+			requestWrap := createRequestWrapper(t, requestFiles, "2", "Fake", "", false, "", "")
 
 			req := httptest.NewRequest("POST", "http://example.com/load-test", requestWrap.body)
 			req = req.WithContext(ctx)
@@ -823,10 +823,10 @@ func TestProxyGetLogs(t *testing.T) {
 
 }
 
-func buildMocFormReq(t *testing.T, requestFiles map[string]string, distributedPods, ltType, tagsString string) *http.Request {
+func buildMocFormReq(t *testing.T, requestFiles map[string]string, distributedPods, ltType, tagsString string, masterImate string, workerImage string) *http.Request {
 	t.Helper()
 
-	request := createRequestWrapper(t, requestFiles, distributedPods, ltType, tagsString, false)
+	request := createRequestWrapper(t, requestFiles, distributedPods, ltType, tagsString, false, masterImate, workerImage)
 
 	req, err := http.NewRequest("POST", "/load-test", request.body)
 	require.NoError(t, err)

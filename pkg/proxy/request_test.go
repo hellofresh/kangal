@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"bytes"
+	"fmt"
 	"net/http"
 	"net/url"
 	"testing"
@@ -16,7 +17,7 @@ import (
 
 func TestNewFakeFromHTTPLoadTest(t *testing.T) {
 	ltType := apisLoadTestV1.LoadTestTypeFake
-	r := buildMocFormReq(t, map[string]string{}, "", string(ltType), "")
+	r := buildMocFormReq(t, map[string]string{}, "", string(ltType), "", "", "")
 
 	loadTest, err := fromHTTPRequestToLoadTestSpec(r, zaptest.NewLogger(t))
 	require.Error(t, err)
@@ -44,7 +45,7 @@ func TestDistributedPods(t *testing.T) {
 		},
 	} {
 		t.Run(ti.tag, func(t *testing.T) {
-			request := buildMocFormReq(t, map[string]string{}, ti.distributedPods, string(apisLoadTestV1.LoadTestTypeJMeter), "")
+			request := buildMocFormReq(t, map[string]string{}, ti.distributedPods, string(apisLoadTestV1.LoadTestTypeJMeter), "", "", "")
 
 			n, err := getDistributedPods(request)
 			assert.Equal(t, n, ti.expectedResponse)
@@ -89,7 +90,7 @@ func TestTestFile(t *testing.T) {
 		},
 	} {
 		t.Run(ti.tag, func(t *testing.T) {
-			request := buildMocFormReq(t, ti.requestFile, "1", string(apisLoadTestV1.LoadTestTypeJMeter), "")
+			request := buildMocFormReq(t, ti.requestFile, "1", string(apisLoadTestV1.LoadTestTypeJMeter), "", "", "")
 
 			n, err := getTestFile(request)
 			assert.Equal(t, ti.expectedResponse, n)
@@ -134,7 +135,7 @@ func TestDataFile(t *testing.T) {
 		},
 	} {
 		t.Run(ti.tag, func(t *testing.T) {
-			request := buildMocFormReq(t, ti.requestFile, "1", string(apisLoadTestV1.LoadTestTypeJMeter), "")
+			request := buildMocFormReq(t, ti.requestFile, "1", string(apisLoadTestV1.LoadTestTypeJMeter), "", "", "")
 
 			n, err := getTestData(request)
 			assert.Equal(t, ti.expectedResponse, n)
@@ -179,7 +180,7 @@ func TestEnvVarFile(t *testing.T) {
 		},
 	} {
 		t.Run(ti.tag, func(t *testing.T) {
-			request := buildMocFormReq(t, ti.requestFile, "1", string(apisLoadTestV1.LoadTestTypeJMeter), "")
+			request := buildMocFormReq(t, ti.requestFile, "1", string(apisLoadTestV1.LoadTestTypeJMeter), "", "", "")
 
 			n, err := getEnvVars(request)
 			assert.Equal(t, ti.expectedResponse, n)
@@ -240,7 +241,7 @@ func TestTags(t *testing.T) {
 		t.Run(tc.scenario, func(t *testing.T) {
 			t.Parallel()
 
-			req := buildMocFormReq(t, nil, "1", string(apisLoadTestV1.LoadTestTypeJMeter), tc.input)
+			req := buildMocFormReq(t, nil, "1", string(apisLoadTestV1.LoadTestTypeJMeter), tc.input, "", "")
 
 			result, err := getTags(req)
 
@@ -351,7 +352,7 @@ func TestInit(t *testing.T) {
 	} {
 
 		t.Run(ti.tag, func(t *testing.T) {
-			request := buildMocFormReq(t, ti.requestFile, ti.distributedPods, string(ltType), ti.tags)
+			request := buildMocFormReq(t, ti.requestFile, ti.distributedPods, string(ltType), ti.tags, "", "")
 
 			_, err := fromHTTPRequestToLoadTestSpec(request, zaptest.NewLogger(t))
 
@@ -374,7 +375,7 @@ func TestCheckLoadTestSpec(t *testing.T) {
 	}
 	distributedPods := "2"
 
-	request := buildMocFormReq(t, requestFiles, distributedPods, string(ltType), "label:value")
+	request := buildMocFormReq(t, requestFiles, distributedPods, string(ltType), "label:value", "", "")
 
 	spec, err := fromHTTPRequestToLoadTestSpec(request, zaptest.NewLogger(t))
 	require.NoError(t, err)
@@ -427,5 +428,103 @@ func TestGetDuration(t *testing.T) {
 		}
 
 		assert.Equal(t, scenario.expected, actual)
+	}
+}
+
+func TestGetImage(t *testing.T) {
+	for _, ti := range []struct {
+		tag                   string
+		role                  string
+		imageName             string
+		imageTag              string
+		expectedImageResponse string
+		expectedTagResponse   string
+		expectError           bool
+	}{
+		{
+			tag:                   "valid master image",
+			role:                  "masterImage",
+			imageName:             "hellofresh/kangal-jmeter-master",
+			imageTag:              "latest",
+			expectedImageResponse: "hellofresh/kangal-jmeter-master",
+			expectedTagResponse:   "latest",
+			expectError:           false,
+		},
+		{
+			tag:                   "valid worker set",
+			role:                  "workerImage",
+			imageName:             "hellofresh/kangal-jmeter-worker",
+			imageTag:              "latest",
+			expectedImageResponse: "hellofresh/kangal-jmeter-worker",
+			expectedTagResponse:   "latest",
+			expectError:           false,
+		},
+		{
+			tag:                   "valid empty master image and tag",
+			role:                  "masterImage",
+			imageName:             "",
+			imageTag:              "",
+			expectedImageResponse: "",
+			expectedTagResponse:   "",
+			expectError:           false,
+		},
+		{
+			tag:                   "invalid master image name",
+			role:                  "masterImage",
+			imageName:             "hellofresh/kangal-jmeter-master",
+			imageTag:              "latest",
+			expectedImageResponse: "hellofresh/kangal-jmeter-worker",
+			expectedTagResponse:   "latest",
+			expectError:           true,
+		},
+		{
+			tag:                   "invalid worker image tag",
+			role:                  "workerImage",
+			imageName:             "hellofresh/kangal-jmeter-worker",
+			imageTag:              "1.0",
+			expectedImageResponse: "hellofresh/kangal-jmeter-worker",
+			expectedTagResponse:   "latest",
+			expectError:           true,
+		},
+	} {
+		t.Run(ti.tag, func(t *testing.T) {
+
+			image := apisLoadTestV1.ImageDetails{
+				Image: "",
+				Tag:   "",
+			}
+			err := error(nil)
+
+			sent_image := ti.imageName + ":" + ti.imageTag
+			expected_image := ti.expectedImageResponse + ":" + ti.expectedTagResponse
+
+			if ti.role == "masterImage" {
+				request := buildMocFormReq(t, map[string]string{}, "1", string(apisLoadTestV1.LoadTestTypeJMeter), "", sent_image, "")
+				image, err = getImage(request, ti.role)
+			}
+			if ti.role == "workerImage" {
+				request := buildMocFormReq(t, map[string]string{}, "1", string(apisLoadTestV1.LoadTestTypeJMeter), "", "", sent_image)
+				image, err = getImage(request, ti.role)
+			}
+
+			actual_image := image.Image + ":" + image.Tag
+
+			fmt.Println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+			fmt.Println("Tag: " + ti.tag)
+			fmt.Println("sent: " + sent_image)
+			fmt.Println("Expected: " + expected_image)
+			fmt.Println("actual: " + actual_image)
+			fmt.Println(err)
+			fmt.Println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+
+			if ti.expectError {
+				// assert.Error(t, err)
+				assert.NotEqual(t, expected_image, actual_image)
+			} else {
+				// assert.NoError(t, err)
+				assert.Equal(t, expected_image, actual_image)
+			}
+
+		})
 	}
 }

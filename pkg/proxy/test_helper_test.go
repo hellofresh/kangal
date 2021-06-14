@@ -26,7 +26,7 @@ type Request struct {
 	contentType string
 }
 
-func createRequestWrapper(t *testing.T, requestFiles map[string]string, distributedPods string, loadtestType string, tagsString string, overwrite bool) *Request {
+func createRequestWrapper(t *testing.T, requestFiles map[string]string, distributedPods string, loadtestType string, tagsString string, overwrite bool, masterImage string, workerImage string) *Request {
 	t.Helper()
 
 	request := &Request{}
@@ -40,6 +40,12 @@ func createRequestWrapper(t *testing.T, requestFiles map[string]string, distribu
 	require.NoError(t, err)
 
 	err = writer.WriteField("type", loadtestType)
+	require.NoError(t, err)
+
+	err = writer.WriteField("masterImage", masterImage)
+	require.NoError(t, err)
+
+	err = writer.WriteField("workerImage", workerImage)
 	require.NoError(t, err)
 
 	if overwrite {
