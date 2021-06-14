@@ -495,34 +495,34 @@ func TestGetImage(t *testing.T) {
 			}
 			err := error(nil)
 
-			sent_image := ti.imageName + ":" + ti.imageTag
-			expected_image := ti.expectedImageResponse + ":" + ti.expectedTagResponse
+			sentImage := ti.imageName + ":" + ti.imageTag
+			expectedImage := ti.expectedImageResponse + ":" + ti.expectedTagResponse
 
 			if ti.role == "masterImage" {
-				request := buildMocFormReq(t, map[string]string{}, "1", string(apisLoadTestV1.LoadTestTypeJMeter), "", sent_image, "")
+				request := buildMocFormReq(t, map[string]string{}, "1", string(apisLoadTestV1.LoadTestTypeJMeter), "", sentImage, "")
 				image, err = getImage(request, ti.role)
 			}
 			if ti.role == "workerImage" {
-				request := buildMocFormReq(t, map[string]string{}, "1", string(apisLoadTestV1.LoadTestTypeJMeter), "", "", sent_image)
+				request := buildMocFormReq(t, map[string]string{}, "1", string(apisLoadTestV1.LoadTestTypeJMeter), "", "", sentImage)
 				image, err = getImage(request, ti.role)
 			}
 
-			actual_image := image.Image + ":" + image.Tag
+			actualImage := image.Image + ":" + image.Tag
 
 			fmt.Println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
 			fmt.Println("Tag: " + ti.tag)
-			fmt.Println("sent: " + sent_image)
-			fmt.Println("Expected: " + expected_image)
-			fmt.Println("actual: " + actual_image)
+			fmt.Println("sent: " + sentImage)
+			fmt.Println("Expected: " + expectedImage)
+			fmt.Println("actual: " + actualImage)
 			fmt.Println(err)
 			fmt.Println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
 
 			if ti.expectError {
 				// assert.Error(t, err)
-				assert.NotEqual(t, expected_image, actual_image)
+				assert.NotEqual(t, expectedImage, actualImage)
 			} else {
 				// assert.NoError(t, err)
-				assert.Equal(t, expected_image, actual_image)
+				assert.Equal(t, expectedImage, actualImage)
 			}
 
 		})
