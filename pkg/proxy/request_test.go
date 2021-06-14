@@ -2,7 +2,6 @@ package proxy
 
 import (
 	"bytes"
-	"fmt"
 	"net/http"
 	"net/url"
 	"testing"
@@ -508,14 +507,6 @@ func TestGetImage(t *testing.T) {
 			}
 
 			actualImage := image.Image + ":" + image.Tag
-
-			fmt.Println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-			fmt.Println("Tag: " + ti.tag)
-			fmt.Println("sent: " + sentImage)
-			fmt.Println("Expected: " + expectedImage)
-			fmt.Println("actual: " + actualImage)
-			fmt.Println(err)
-			fmt.Println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
 
 			if ti.expectError {
 				// assert.Error(t, err)
