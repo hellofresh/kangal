@@ -61,9 +61,10 @@ curl -X POST http://${KANGAL_PROXY_ADDRESS}/load-test \
   -F type=JMeter \
   -F tags=tag1:value1,tag2:value2 \
   -F overwrite=true \
-  -F masterImage=masterContainerImage:latest \
-  -F workerImage=workerContainerImage:latest
+  -F masterImage=hellofresh/kangal-jmeter-master:5.4.1 \
+  -F workerImage=hellofresh/kangal-jmeter-worker:5.4.1
 ```
+**Note: ** For locust only master image will be taken into account!!
 
 
 
