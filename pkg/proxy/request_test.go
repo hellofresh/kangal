@@ -492,7 +492,6 @@ func TestGetImage(t *testing.T) {
 				Image: "",
 				Tag:   "",
 			}
-			err := error(nil)
 
 			sentImage := ti.imageName + ":" + ti.imageTag
 			expectedImage := ti.expectedImageResponse + ":" + ti.expectedTagResponse
