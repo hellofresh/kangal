@@ -508,10 +508,8 @@ func TestGetImage(t *testing.T) {
 			actualImage := image.Image + ":" + image.Tag
 
 			if ti.expectError {
-				// assert.Error(t, err)
 				assert.NotEqual(t, expectedImage, actualImage)
 			} else {
-				// assert.NoError(t, err)
 				assert.Equal(t, expectedImage, actualImage)
 			}
 
