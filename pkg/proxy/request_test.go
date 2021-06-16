@@ -432,58 +432,76 @@ func TestGetDuration(t *testing.T) {
 
 func TestGetImage(t *testing.T) {
 	for _, ti := range []struct {
-		tag                   string
-		role                  string
-		imageName             string
-		imageTag              string
-		expectedImageResponse string
-		expectedTagResponse   string
-		expectError           bool
+		tag              string
+		role             string
+		imageName        string
+		imageTag         string
+		expectedResponse string
+		expectError      bool
 	}{
 		{
-			tag:                   "valid master image",
-			role:                  "masterImage",
-			imageName:             "hellofresh/kangal-jmeter-master",
-			imageTag:              "latest",
-			expectedImageResponse: "hellofresh/kangal-jmeter-master",
-			expectedTagResponse:   "latest",
-			expectError:           false,
+			tag:              "valid master image",
+			role:             "masterImage",
+			imageName:        "hellofresh/kangal-jmeter-master",
+			imageTag:         "latest",
+			expectedResponse: "hellofresh/kangal-jmeter-master:latest",
+			expectError:      false,
 		},
 		{
-			tag:                   "valid worker set",
-			role:                  "workerImage",
-			imageName:             "hellofresh/kangal-jmeter-worker",
-			imageTag:              "latest",
-			expectedImageResponse: "hellofresh/kangal-jmeter-worker",
-			expectedTagResponse:   "latest",
-			expectError:           false,
+			tag:              "valid worker set",
+			role:             "workerImage",
+			imageName:        "hellofresh/kangal-jmeter-worker",
+			imageTag:         "latest",
+			expectedResponse: "hellofresh/kangal-jmeter-worker:latest",
+			expectError:      false,
 		},
 		{
-			tag:                   "valid empty master image and tag",
-			role:                  "masterImage",
-			imageName:             "",
-			imageTag:              "",
-			expectedImageResponse: "",
-			expectedTagResponse:   "",
-			expectError:           false,
+			tag:              "valid empty master image and tag",
+			role:             "masterImage",
+			imageName:        "",
+			imageTag:         "",
+			expectedResponse: "",
+			expectError:      false,
 		},
 		{
-			tag:                   "invalid master image name",
-			role:                  "masterImage",
-			imageName:             "hellofresh/kangal-jmeter-master",
-			imageTag:              "latest",
-			expectedImageResponse: "hellofresh/kangal-jmeter-worker",
-			expectedTagResponse:   "latest",
-			expectError:           true,
+			tag:              "invalid master image name",
+			role:             "masterImage",
+			imageName:        "hellofresh/kangal-jmeter-master",
+			imageTag:         "latest",
+			expectedResponse: "hellofresh/kangal-jmeter-worker:latest",
+			expectError:      true,
 		},
 		{
-			tag:                   "invalid worker image tag",
-			role:                  "workerImage",
-			imageName:             "hellofresh/kangal-jmeter-worker",
-			imageTag:              "1.0",
-			expectedImageResponse: "hellofresh/kangal-jmeter-worker",
-			expectedTagResponse:   "latest",
-			expectError:           true,
+			tag:              "invalid worker image tag",
+			role:             "workerImage",
+			imageName:        "hellofresh/kangal-jmeter-worker",
+			imageTag:         "1.0",
+			expectedResponse: "hellofresh/kangal-jmeter-worker:latest",
+			expectError:      true,
+		},
+		{
+			tag:              "image without tag",
+			role:             "workerImage",
+			imageName:        "hellofresh/kangal-jmeter-worker",
+			imageTag:         "",
+			expectedResponse: "",
+			expectError:      false,
+		},
+		{
+			tag:              "host registry includes port",
+			role:             "workerImage",
+			imageName:        "test.com:5000/hellofresh/hellofreshkangal-jmeter-worker",
+			imageTag:         "v1.7",
+			expectedResponse: "test.com:5000/hellofresh/hellofreshkangal-jmeter-worker:v1.7",
+			expectError:      false,
+		},
+		{
+			tag:              "Empty tag",
+			role:             "workerImage",
+			imageName:        "test.com:5000/hellofresh/hellofreshkangal-jmeter-worker",
+			imageTag:         "",
+			expectedResponse: "",
+			expectError:      false,
 		},
 	} {
 		t.Run(ti.tag, func(t *testing.T) {
@@ -493,8 +511,10 @@ func TestGetImage(t *testing.T) {
 				Tag:   "",
 			}
 
-			sentImage := ti.imageName + ":" + ti.imageTag
-			expectedImage := ti.expectedImageResponse + ":" + ti.expectedTagResponse
+			sentImage := ""
+			if (ti.imageName != "") && (ti.imageTag != "") {
+				sentImage = ti.imageName + ":" + ti.imageTag
+			}
 
 			if ti.role == "masterImage" {
 				request := buildMocFormReq(t, map[string]string{}, "1", string(apisLoadTestV1.LoadTestTypeJMeter), "", sentImage, "")
@@ -505,12 +525,15 @@ func TestGetImage(t *testing.T) {
 				image = getImage(request, ti.role)
 			}
 
-			actualImage := image.Image + ":" + image.Tag
+			actualImage := ""
+			if (image.Image != "") && (image.Tag != "") {
+				actualImage = image.Image + ":" + image.Tag
+			}
 
 			if ti.expectError {
-				assert.NotEqual(t, expectedImage, actualImage)
+				assert.NotEqual(t, ti.expectedResponse, actualImage)
 			} else {
-				assert.Equal(t, expectedImage, actualImage)
+				assert.Equal(t, ti.expectedResponse, actualImage)
 			}
 
 		})
