@@ -158,16 +158,7 @@ func fromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger) (apisLoa
 	}
 
 	mi := getImage(r, masterImage)
-	if err != nil {
-		logger.Debug("Bad value", zap.String("field", masterImage), zap.Error(err))
-		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %q from request: %w", masterImage, err)
-	}
-
 	wi := getImage(r, workerImage)
-	if err != nil {
-		logger.Debug("Bad value", zap.String("field", workerImage), zap.Error(err))
-		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %q from request: %w", workerImage, err)
-	}
 
 	return apisLoadTestV1.LoadTestSpec{
 		Type:            getLoadTestType(r),
