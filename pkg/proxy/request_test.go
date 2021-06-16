@@ -493,23 +493,19 @@ func TestGetImage(t *testing.T) {
 				Tag:   "",
 			}
 
-			err := error(nil)
-
 			sentImage := ti.imageName + ":" + ti.imageTag
 			expectedImage := ti.expectedImageResponse + ":" + ti.expectedTagResponse
 
 			if ti.role == "masterImage" {
 				request := buildMocFormReq(t, map[string]string{}, "1", string(apisLoadTestV1.LoadTestTypeJMeter), "", sentImage, "")
-				image, err = getImage(request, ti.role)
+				image = getImage(request, ti.role)
 			}
 			if ti.role == "workerImage" {
 				request := buildMocFormReq(t, map[string]string{}, "1", string(apisLoadTestV1.LoadTestTypeJMeter), "", "", sentImage)
-				image, err = getImage(request, ti.role)
+				image = getImage(request, ti.role)
 			}
 
 			actualImage := image.Image + ":" + image.Tag
-
-			assert.Nil(t, err)
 
 			if ti.expectError {
 				// assert.Error(t, err)

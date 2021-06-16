@@ -157,13 +157,13 @@ func fromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger) (apisLoa
 		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %q from request: %w", duration, err)
 	}
 
-	mi, err := getImage(r, masterImage)
+	mi := getImage(r, masterImage)
 	if err != nil {
 		logger.Debug("Bad value", zap.String("field", masterImage), zap.Error(err))
 		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %q from request: %w", masterImage, err)
 	}
 
-	wi, err := getImage(r, workerImage)
+	wi := getImage(r, workerImage)
 	if err != nil {
 		logger.Debug("Bad value", zap.String("field", workerImage), zap.Error(err))
 		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %q from request: %w", workerImage, err)
@@ -286,7 +286,7 @@ func getDuration(r *http.Request) (time.Duration, error) {
 	return time.ParseDuration(val)
 }
 
-func getImage(r *http.Request, role string) (apisLoadTestV1.ImageDetails, error) {
+func getImage(r *http.Request, role string) apisLoadTestV1.ImageDetails {
 
 	imageStr := r.FormValue(role)
 
@@ -302,7 +302,7 @@ func getImage(r *http.Request, role string) (apisLoadTestV1.ImageDetails, error)
 	return apisLoadTestV1.ImageDetails{
 		Image: imgName,
 		Tag:   imgTag,
-	}, nil
+	}
 }
 
 //fileToString converts file to string
