@@ -284,10 +284,56 @@ func getImage(r *http.Request, role string) apisLoadTestV1.ImageDetails {
 	imgName := ""
 	imgTag := ""
 
-	if strings.Contains(imageStr, ":") {
-		image := strings.Split(imageStr, ":")
-		imgName = image[0]
-		imgTag = image[1]
+	// Gen image url colon and slash struct
+	structImgChars := ":/"
+	structImgURI := ""
+	for _, c := range imageStr {
+
+		if strings.Contains(structImgChars, string(c)) {
+			structImgURI += string(c)
+		}
+	}
+
+	if structImgURI == "" {
+		// Format: image
+		imgName = imageStr
+		imgTag = ""
+	}
+
+	if structImgURI == ":" {
+		// Format: image:tag
+		imgName = strings.Split(imageStr, ":")[0]
+		imgTag = strings.Split(imageStr, ":")[1]
+	}
+
+	if structImgURI == "/" {
+		// Format: registry/image
+		imgName = imageStr
+		imgTag = ""
+	}
+
+	if structImgURI == "/:" {
+		// Format: registry/image:tag
+		imgName = strings.Split(imageStr, ":")[0]
+		imgTag = strings.Split(imageStr, ":")[1]
+	}
+
+	if structImgURI == "://" {
+		// Format: host:port/registry/image
+		imgName = imageStr
+		imgTag = ""
+	}
+
+	if structImgURI == "://:" {
+		// Format: host:port/registry/image:tag
+		imgName = strings.Split(imageStr, ":")[0] + ":" + strings.Split(imageStr, ":")[1]
+		imgTag = strings.Split(imageStr, ":")[2]
+	}
+
+	if structImgURI == "//:" {
+		// Format: host/registry/image:tag
+		imgName = strings.Split(imageStr, ":")[0]
+		imgTag = strings.Split(imageStr, ":")[1]
 	}
 
 	return apisLoadTestV1.ImageDetails{
