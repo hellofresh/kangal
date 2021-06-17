@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -291,7 +290,7 @@ func TestProxy_List(t *testing.T) {
 			})
 			c := kube.NewClient(loadTestClientSet.KangalV1().LoadTests(), kubeClientSet, logger)
 
-			testProxyHandler := NewProxy(1, nil, c, 50)
+			testProxyHandler := NewProxy(1, nil, c, 50, false)
 
 			req := httptest.NewRequest("POST", "http://example.com/foo?"+tc.urlParams, nil)
 			req = req.WithContext(ctx)
@@ -312,55 +311,27 @@ func TestProxy_List(t *testing.T) {
 func TestProxyCreate(t *testing.T) {
 	for _, tt := range []struct {
 		name                string
-		distributedPods     int
-		tagsString          string
-		loadTestType        apisLoadTestV1.LoadTestType
-		requestFiles        map[string]string
 		expectedCode        int
 		expectedResponse    string
 		expectedContentType string
 		creationError       error
+		AllowedCustomImages bool
+		masterImage         string
+		workerImage         string
+		expectedMasterImage string
+		expectedWorkerImage string
 	}{
 		{
-			"Valid request, only test file",
-			10,
-			"team:kangal",
-			apisLoadTestV1.LoadTestTypeJMeter,
-			map[string]string{
-				"testFile": "testdata/valid/loadtest.jmx",
-			},
+			"Allowing and passing custom images for master and worker",
 			http.StatusCreated,
-			`{"type":"JMeter","distributedPods":10,"phase":"creating","tags":{"team":"kangal"},"hasEnvVars":false,"hasTestData":false}` + "\n",
+			`{"type":"JMeter","distributedPods":1,"phase":"creating","tags":{"team":"kangal"},"hasEnvVars":false,"hasTestData":false}` + "\n",
 			"application/json; charset=utf-8",
 			nil,
-		},
-		{
-			"Valid request, all files",
-			10,
-			"",
-			apisLoadTestV1.LoadTestTypeFake,
-			map[string]string{
-				"testFile": "testdata/valid/loadtest.jmx",
-				"testData": "testdata/valid/testdata.csv",
-				"envVars":  "testdata/valid/envvars.csv",
-			},
-			http.StatusCreated,
-			`{"type":"Fake","distributedPods":10,"phase":"creating","tags":{},"hasEnvVars":true,"hasTestData":true}` + "\n",
-			"application/json; charset=utf-8",
-			nil,
-		},
-		{
-			"Error on creation",
-			10,
-			"",
-			apisLoadTestV1.LoadTestTypeFake,
-			map[string]string{
-				"testFile": "testdata/valid/loadtest.jmx",
-			},
-			http.StatusConflict,
-			`{"error":"test creation error"}` + "\n",
-			"application/json; charset=utf-8",
-			errors.New("test creation error"),
+			true,
+			"hellofresh/kangal-jmeter-master:5.4.1",
+			"hellofresh/kangal-jmeter-master:5.4.1",
+			"hellofresh/kangal-jmeter-master:5.4.1",
+			"hellofresh/kangal-jmeter-master:5.4.1",
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
@@ -382,10 +353,10 @@ func TestProxyCreate(t *testing.T) {
 				backends.WithKangalClientSet(loadtestClientSet),
 			)
 
-			testProxyHandler := NewProxy(1, b, c, 50)
+			testProxyHandler := NewProxy(1, b, c, 50, tt.AllowedCustomImages)
 			handler := testProxyHandler.Create
 
-			requestWrap := createRequestWrapper(t, tt.requestFiles, strconv.Itoa(tt.distributedPods), string(tt.loadTestType), tt.tagsString, false, "", "")
+			requestWrap := createRequestWrapper(t, map[string]string, "1", string(apisLoadTestV1.LoadTestTypeJMeter), "team:kangal", false, tt.masterImage, tt.workerImage)
 
 			req := httptest.NewRequest("POST", "http://example.com/foo", requestWrap.body)
 			req.Header.Set("Content-Type", requestWrap.contentType)
@@ -486,7 +457,7 @@ func TestNewProxyRecreate(t *testing.T) {
 
 			w := httptest.NewRecorder()
 
-			testProxyHandler := NewProxy(1, b, c, 50)
+			testProxyHandler := NewProxy(1, b, c, 50, false)
 			testProxyHandler.Create(w, req)
 
 			resp := w.Result()
@@ -586,7 +557,7 @@ func TestProxyCreateWithErrors(t *testing.T) {
 			req.Header.Set("Content-Type", requestWrap.contentType)
 			w := httptest.NewRecorder()
 
-			testProxyHandler := NewProxy(1, b, c, 50)
+			testProxyHandler := NewProxy(1, b, c, 50, false)
 			testProxyHandler.Create(w, req)
 
 			resp := w.Result()
@@ -660,7 +631,7 @@ func TestProxyGet(t *testing.T) {
 
 			w := httptest.NewRecorder()
 
-			testProxyHandler := NewProxy(1, b, c, 50)
+			testProxyHandler := NewProxy(1, b, c, 50, false)
 			testProxyHandler.Get(w, req)
 
 			resp := w.Result()
@@ -710,7 +681,7 @@ func TestProxyDelete(t *testing.T) {
 
 			w := httptest.NewRecorder()
 
-			testProxyHandler := NewProxy(1, nil, c, 50)
+			testProxyHandler := NewProxy(1, nil, c, 50, false)
 			testProxyHandler.Delete(w, req)
 
 			resp := w.Result()
@@ -810,7 +781,7 @@ func TestProxyGetLogs(t *testing.T) {
 
 			w := httptest.NewRecorder()
 
-			testProxyHandler := NewProxy(1, b, c, 50)
+			testProxyHandler := NewProxy(1, b, c, 50, false)
 			testProxyHandler.GetLogs(w, req.WithContext(ctx))
 
 			resp := w.Result()
