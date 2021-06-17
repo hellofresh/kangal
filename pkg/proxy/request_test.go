@@ -18,7 +18,7 @@ func TestNewFakeFromHTTPLoadTest(t *testing.T) {
 	ltType := apisLoadTestV1.LoadTestTypeFake
 	r := buildMocFormReq(t, map[string]string{}, "", string(ltType), "", "", "")
 
-	loadTest, err := fromHTTPRequestToLoadTestSpec(r, zaptest.NewLogger(t))
+	loadTest, err := fromHTTPRequestToLoadTestSpec(r, zaptest.NewLogger(t), false)
 	require.Error(t, err)
 	assert.Equal(t, apisLoadTestV1.LoadTestSpec{}, loadTest)
 }
@@ -353,7 +353,7 @@ func TestInit(t *testing.T) {
 		t.Run(ti.tag, func(t *testing.T) {
 			request := buildMocFormReq(t, ti.requestFile, ti.distributedPods, string(ltType), ti.tags, "", "")
 
-			_, err := fromHTTPRequestToLoadTestSpec(request, zaptest.NewLogger(t))
+			_, err := fromHTTPRequestToLoadTestSpec(request, zaptest.NewLogger(t), false)
 
 			if ti.expectError {
 				assert.Error(t, err)
@@ -376,7 +376,7 @@ func TestCheckLoadTestSpec(t *testing.T) {
 
 	request := buildMocFormReq(t, requestFiles, distributedPods, string(ltType), "label:value", "", "")
 
-	spec, err := fromHTTPRequestToLoadTestSpec(request, zaptest.NewLogger(t))
+	spec, err := fromHTTPRequestToLoadTestSpec(request, zaptest.NewLogger(t), false)
 	require.NoError(t, err)
 
 	lt, err := apisLoadTestV1.BuildLoadTestObject(spec)
