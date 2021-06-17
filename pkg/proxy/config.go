@@ -17,7 +17,7 @@ type Config struct {
 	MaxLoadTestsRun     int
 	MaxListLimit        int64 `envconfig:"MAX_LIST_LIMIT" required:"true" default:"50"`
 	MasterURL           string
-	allowedCustomImages bool `envconfig:"ALLOWED_CUSTOM_IMAGES" default:"false"`
+	AllowedCustomImages bool `envconfig:"ALLOWED_CUSTOM_IMAGES" default:"false"`
 
 	// KubeClientTimeout specifies timeout for each operation done by kube client
 	KubeClientTimeout time.Duration `envconfig:"KUBE_CLIENT_TIMEOUT" default:"5s"`
