@@ -103,7 +103,7 @@ func fromHTTPRequestToListOptions(r *http.Request, maxListLimit int64) (*kuberne
 }
 
 // fromHTTPRequestToLoadTestSpec creates a load test spec from HTTP request
-func fromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger) (apisLoadTestV1.LoadTestSpec, error) {
+func fromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger, allowedCustomImages bool) (apisLoadTestV1.LoadTestSpec, error) {
 	if e := httpValidator(r); len(e) > 0 {
 		logger.Debug("User request validation failed", zap.Any("errors", e))
 		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf(e.Encode())
@@ -157,8 +157,18 @@ func fromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger) (apisLoa
 		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %q from request: %w", duration, err)
 	}
 
-	mi := getImage(r, masterImage)
-	wi := getImage(r, workerImage)
+	mi := apisLoadTestV1.ImageDetails{
+		Image: "",
+		Tag:   "",
+	}
+	wi := apisLoadTestV1.ImageDetails{
+		Image: "",
+		Tag:   "",
+	}
+	if allowedCustomImages {
+		mi = getImage(r, masterImage)
+		wi = getImage(r, workerImage)
+	}
 
 	return apisLoadTestV1.LoadTestSpec{
 		Type:            getLoadTestType(r),

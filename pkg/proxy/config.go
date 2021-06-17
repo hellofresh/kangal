@@ -9,14 +9,15 @@ import (
 
 // Config is the possible Proxy configurations
 type Config struct {
-	Debug           bool `envconfig:"DEBUG"`
-	HTTPPort        int  `envconfig:"WEB_HTTP_PORT" default:"8080"`
-	Logger          observability.LoggerConfig
-	OpenAPI         OpenAPIConfig
-	Report          report.Config
-	MaxLoadTestsRun int
-	MaxListLimit    int64 `envconfig:"MAX_LIST_LIMIT" required:"true" default:"50"`
-	MasterURL       string
+	Debug               bool `envconfig:"DEBUG"`
+	HTTPPort            int  `envconfig:"WEB_HTTP_PORT" default:"8080"`
+	Logger              observability.LoggerConfig
+	OpenAPI             OpenAPIConfig
+	Report              report.Config
+	MaxLoadTestsRun     int
+	MaxListLimit        int64 `envconfig:"MAX_LIST_LIMIT" required:"true" default:"50"`
+	MasterURL           string
+	allowedCustomImages bool `envconfig:"ALLOWED_CUSTOM_IMAGES" default:"false"`
 
 	// KubeClientTimeout specifies timeout for each operation done by kube client
 	KubeClientTimeout time.Duration `envconfig:"KUBE_CLIENT_TIMEOUT" default:"5s"`
