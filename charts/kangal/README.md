@@ -72,17 +72,19 @@ The following table lists the common configurable parameters for `Kangal` chart:
 | `nameOverride`                       | String to partially override kangal.fullname template with a string (will prepend the release name) | ``                                    |
 | `secrets.AWS_ACCESS_KEY_ID`          | AWS access key ID. If not defined report will not be stored                                         | `my-access-key-id`                    |
 | `secrets.AWS_SECRET_ACCESS_KEY`      | AWS secret access key                                                                               | `my-secret-access-key`                |
-| `configmap.AWS_BUCKET_NAME`          | The name of the bucket for saving reports                                                           | `my-bucket`                           |
-| `configmap.AWS_ENDPOINT_URL`         | Storage connection parameter                                                                        | `s3.us-east-1.amazonaws.com`          |
-| `configmap.AWS_DEFAULT_REGION`       | Storage connection parameter                                                                        | `us-east-1`                           |
-| `configmap.AWS_USE_HTTPS`            | Set to "true" to use HTTPS                                                                          | `false`                               |
-| `configmap.AWS_PRESIGNED_EXPIRES`    | Expiration time for Presigned URLs                                                                  | `30m`                                 |
-| `configmap.JMETER_MASTER_IMAGE_NAME` | Default JMeter master image name/repository if none is provided when creating a new loadtest        | `hellofresh/kangal-jmeter-master`     |
-| `configmap.JMETER_MASTER_IMAGE_TAG`  | Tag of the JMeter master image above                                                                | `latest`                              |
-| `configmap.JMETER_WORKER_IMAGE_NAME` | Default JMeter worker image name/repository if none is provided when creating a new loadtest        | `hellofresh/kangal-jmeter-worker`     |
-| `configmap.JMETER_WORKER_IMAGE_TAG`  | Tag of the JMeter worker image above                                                                | `latest`                              |
-| `configmap.LOCUST_IMAGE_NAME`        | Default Locust image name/repository if none is provided when creating a new loadtest               | `locustio/locust`                     |
-| `configmap.LOCUST_IMAGE_TAG`         | Tag of the Locust image above                                                                       | `1.3.0`                               |
+| `configMap.AWS_BUCKET_NAME`          | The name of the bucket for saving reports                                                           | `my-bucket`                           |
+| `configMap.AWS_ENDPOINT_URL`         | Storage connection parameter                                                                        | `s3.us-east-1.amazonaws.com`          |
+| `configMap.AWS_DEFAULT_REGION`       | Storage connection parameter                                                                        | `us-east-1`                           |
+| `configMap.AWS_USE_HTTPS`            | Set to "true" to use HTTPS                                                                          | `false`                               |
+| `configMap.AWS_PRESIGNED_EXPIRES`    | Expiration time for Presigned URLs                                                                  | `30m`                                 |
+| `configMap.GHZ_IMAGE_NAME`           | Default ghz image name/repository if none is provided when creating a new loadtest                  | `hellofresh/kangal-ghz`               |
+| `configMap.GHZ_IMAGE_TAG`            | Tag of the ghz image above                                                                          | `latest`                               |
+| `configMap.JMETER_MASTER_IMAGE_NAME` | Default JMeter master image name/repository if none is provided when creating a new loadtest        | `hellofresh/kangal-jmeter-master`     |
+| `configMap.JMETER_MASTER_IMAGE_TAG`  | Tag of the JMeter master image above                                                                | `latest`                              |
+| `configMap.JMETER_WORKER_IMAGE_NAME` | Default JMeter worker image name/repository if none is provided when creating a new loadtest        | `hellofresh/kangal-jmeter-worker`     |
+| `configMap.JMETER_WORKER_IMAGE_TAG`  | Tag of the JMeter worker image above                                                                | `latest`                              |
+| `configMap.LOCUST_IMAGE_NAME`        | Default Locust image name/repository if none is provided when creating a new loadtest               | `locustio/locust`                     |
+| `configMap.LOCUST_IMAGE_TAG`         | Tag of the Locust image above                                                                       | `1.3.0`                               |
 
 Deployment specific configurations:
 
@@ -176,3 +178,11 @@ Deployment specific configurations:
 | `controller.env.LOCUST_WORKER_CPU_REQUESTS`    | Master CPU requests         | ``                |
 | `controller.env.LOCUST_WORKER_MEMORY_LIMITS`   | Master memory limits        | ``                |
 | `controller.env.LOCUST_WORKER_MEMORY_REQUESTS` | Master memory requests      | ``                |
+
+### Kangal Controller (`ghz` specific)
+| Parameter                                   | Description     | Default           |
+|---------------------------------------------|-----------------|-------------------|
+| `controller.env.GHZ_MASTER_CPU_LIMITS`      | CPU limits      | ``                |
+| `controller.env.GHZ_MASTER_CPU_REQUESTS`    | CPU requests    | ``                |
+| `controller.env.GHZ_MASTER_MEMORY_LIMITS`   | Memory limits   | ``                |
+| `controller.env.GHZ_MASTER_MEMORY_REQUESTS` | Memory requests | ``                |

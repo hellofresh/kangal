@@ -18,6 +18,18 @@ NODE_PORT=$(kubectl get service busybox -n test-busybox | grep busybox | cut -d 
 sed -i "s/TEST_IP/$NODE_IP/g" ./pkg/controller/testdata/valid/integration_test.jmx
 sed -i "s/TEST_PORT/${NODE_PORT}/g" ./pkg/controller/testdata/valid/integration_test.jmx
 
+# Run dummy grpc server to test ghz
+kubectl create ns test-ghz
+kubectl run --generator=run-pod/v1 greeter-server --namespace=test-ghz --port=50051 --image=greeter_server:local
+kubectl expose pod greeter-server --type=NodePort --namespace=test-ghz
+kubectl wait --for=condition=ready pod greeter-server -n test-ghz
+
+NODE_IP=$(kubectl describe pod greeter-server -n test-ghz | grep "Node:" | cut -d '/' -f 2)
+NODE_PORT=$(kubectl get service greeter-server -n test-ghz | grep greeter-server | cut -d ':' -f 2 | cut -d '/' -f 1)
+
+sed -i "s/0.0.0.0/$NODE_IP/g" ./pkg/controller/testdata/ghz/config.json
+sed -i "s/50051/${NODE_PORT}/g" ./pkg/controller/testdata/ghz/config.json
+
 echo "Starting kangal proxy"
 ./bin/kangal proxy --kubeconfig="$HOME/.kube/config" --max-load-tests 1 >/tmp/kangal_proxy.log 2>&1 &
 PID_PROXY=$!
@@ -54,5 +66,12 @@ DESIRED_REQUESTS_COUNT=60
 REQUEST_COUNT=$(kubectl logs busybox -n test-busybox | grep -c "response:200")
 if [ "${REQUEST_COUNT}" -ne "${DESIRED_REQUESTS_COUNT}" ]; then
   echo "JMeter Integration Test sent $REQUEST_COUNT requests, but $DESIRED_REQUESTS_COUNT requests were expected. Test failed."
+  exit 1
+fi
+
+# Verify that greeter-server received something
+REQUEST_COUNT=$(kubectl logs greeter-server -n test-ghz --tail=100 | grep -c "Received")
+if [ "$REQUEST_COUNT" -eq "0" ]; then
+  echo "Expected dummy grpc server to receive >0 request, but found 0. Test failed."
   exit 1
 fi
