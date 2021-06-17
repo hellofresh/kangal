@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -311,27 +312,55 @@ func TestProxy_List(t *testing.T) {
 func TestProxyCreate(t *testing.T) {
 	for _, tt := range []struct {
 		name                string
+		distributedPods     int
+		tagsString          string
+		loadTestType        apisLoadTestV1.LoadTestType
+		requestFiles        map[string]string
 		expectedCode        int
 		expectedResponse    string
 		expectedContentType string
 		creationError       error
-		AllowedCustomImages bool
-		masterImage         string
-		workerImage         string
-		expectedMasterImage string
-		expectedWorkerImage string
 	}{
 		{
-			"Allowing and passing custom images for master and worker",
+			"Valid request, only test file",
+			10,
+			"team:kangal",
+			apisLoadTestV1.LoadTestTypeJMeter,
+			map[string]string{
+				"testFile": "testdata/valid/loadtest.jmx",
+			},
 			http.StatusCreated,
-			`{"type":"JMeter","distributedPods":1,"phase":"creating","tags":{"team":"kangal"},"hasEnvVars":false,"hasTestData":false}` + "\n",
+			`{"type":"JMeter","distributedPods":10,"phase":"creating","tags":{"team":"kangal"},"hasEnvVars":false,"hasTestData":false}` + "\n",
 			"application/json; charset=utf-8",
 			nil,
-			true,
-			"hellofresh/kangal-jmeter-master:5.4.1",
-			"hellofresh/kangal-jmeter-master:5.4.1",
-			"hellofresh/kangal-jmeter-master:5.4.1",
-			"hellofresh/kangal-jmeter-master:5.4.1",
+		},
+		{
+			"Valid request, all files",
+			10,
+			"",
+			apisLoadTestV1.LoadTestTypeFake,
+			map[string]string{
+				"testFile": "testdata/valid/loadtest.jmx",
+				"testData": "testdata/valid/testdata.csv",
+				"envVars":  "testdata/valid/envvars.csv",
+			},
+			http.StatusCreated,
+			`{"type":"Fake","distributedPods":10,"phase":"creating","tags":{},"hasEnvVars":true,"hasTestData":true}` + "\n",
+			"application/json; charset=utf-8",
+			nil,
+		},
+		{
+			"Error on creation",
+			10,
+			"",
+			apisLoadTestV1.LoadTestTypeFake,
+			map[string]string{
+				"testFile": "testdata/valid/loadtest.jmx",
+			},
+			http.StatusConflict,
+			`{"error":"test creation error"}` + "\n",
+			"application/json; charset=utf-8",
+			errors.New("test creation error"),
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
@@ -353,10 +382,10 @@ func TestProxyCreate(t *testing.T) {
 				backends.WithKangalClientSet(loadtestClientSet),
 			)
 
-			testProxyHandler := NewProxy(1, b, c, 50, tt.AllowedCustomImages)
+			testProxyHandler := NewProxy(1, b, c, 50, false)
 			handler := testProxyHandler.Create
 
-			requestWrap := createRequestWrapper(t, map[string]string, "1", string(apisLoadTestV1.LoadTestTypeJMeter), "team:kangal", false, tt.masterImage, tt.workerImage)
+			requestWrap := createRequestWrapper(t, tt.requestFiles, strconv.Itoa(tt.distributedPods), string(tt.loadTestType), tt.tagsString, false, "", "")
 
 			req := httptest.NewRequest("POST", "http://example.com/foo", requestWrap.body)
 			req.Header.Set("Content-Type", requestWrap.contentType)
