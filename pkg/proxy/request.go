@@ -42,7 +42,7 @@ func httpValidator(r *http.Request) url.Values {
 		"masterImage":     []string{"regex:^.*:.*$|^$"},
 		"workerImage":     []string{"regex:^.*:.*$|^$"},
 		"distributedPods": []string{"numeric_between:1,"},
-		"file:testFile":   []string{"ext:jmx,py"},
+		"file:testFile":   []string{"ext:jmx,py,json"},
 		"file:envVars":    []string{"ext:csv"},
 		"file:testData":   []string{"ext:csv"},
 		"targetURL":       []string{"http"},
