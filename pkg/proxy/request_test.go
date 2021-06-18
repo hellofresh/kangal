@@ -539,3 +539,100 @@ func TestGetImage(t *testing.T) {
 		})
 	}
 }
+
+func TestCustomImageFeatureFlag(t *testing.T) {
+	for _, ti := range []struct {
+		tag                     string
+		allowedCustomImages     bool
+		masterImage             string
+		workerImage             string
+		expectedMasterImageName string
+		expectedMasterImageTag  string
+		expectedWorkerImageName string
+		expectedWorkerImageTag  string
+		expectError             bool
+	}{
+		{
+			tag:                     "Allowed custom images, defined custom images",
+			allowedCustomImages:     true,
+			masterImage:             "fake/masterImage:v1",
+			workerImage:             "fake/workerImage:v1",
+			expectedMasterImageName: "fake/masterImage",
+			expectedMasterImageTag:  "v1",
+			expectedWorkerImageName: "fake/workerImage",
+			expectedWorkerImageTag:  "v1",
+			expectError:             false,
+		},
+		{
+			tag:                     "Disallowed custom images, defined custom images",
+			allowedCustomImages:     false,
+			masterImage:             "fake/masterImage:v1",
+			workerImage:             "fake/workerImage:v1",
+			expectedMasterImageName: "",
+			expectedMasterImageTag:  "",
+			expectedWorkerImageName: "",
+			expectedWorkerImageTag:  "",
+			expectError:             false,
+		},
+		{
+			tag:                     "Allowed custom images, undefined custom images",
+			allowedCustomImages:     true,
+			masterImage:             "",
+			workerImage:             "",
+			expectedMasterImageName: "",
+			expectedMasterImageTag:  "",
+			expectedWorkerImageName: "",
+			expectedWorkerImageTag:  "",
+			expectError:             false,
+		},
+		{
+			tag:                     "Wrong Image format",
+			allowedCustomImages:     true,
+			masterImage:             "this/is/not/a/correct/image:format",
+			workerImage:             "this/is/not/a/correct/image:format",
+			expectedMasterImageName: "",
+			expectedMasterImageTag:  "",
+			expectedWorkerImageName: "",
+			expectedWorkerImageTag:  "",
+			expectError:             false,
+		},
+		{
+			tag:                     "Allowed custom, only master defined",
+			allowedCustomImages:     true,
+			masterImage:             "fake/masterImage:v1",
+			workerImage:             "",
+			expectedMasterImageName: "fake/masterImage",
+			expectedMasterImageTag:  "v1",
+			expectedWorkerImageName: "",
+			expectedWorkerImageTag:  "",
+			expectError:             false,
+		},
+	} {
+
+		t.Run(ti.tag, func(t *testing.T) {
+			request := buildMocFormReq(t, map[string]string{}, "1", string(apisLoadTestV1.LoadTestTypeJMeter), "", ti.masterImage, ti.workerImage)
+
+			ltSpec, err := fromHTTPRequestToLoadTestSpec(request, zaptest.NewLogger(t), ti.allowedCustomImages)
+
+			if ti.expectError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+
+			if ti.expectError {
+				assert.NotEqual(t, ti.expectedMasterImageName, ltSpec.MasterConfig.Image)
+				assert.NotEqual(t, ti.expectedMasterImageTag, ltSpec.MasterConfig.Tag)
+				assert.NotEqual(t, ti.expectedWorkerImageName, ltSpec.WorkerConfig.Image)
+				assert.NotEqual(t, ti.expectedWorkerImageTag, ltSpec.WorkerConfig.Tag)
+			} else {
+				assert.Equal(t, ti.expectedMasterImageName, ltSpec.MasterConfig.Image)
+				assert.Equal(t, ti.expectedMasterImageTag, ltSpec.MasterConfig.Tag)
+				assert.Equal(t, ti.expectedWorkerImageName, ltSpec.WorkerConfig.Image)
+				assert.Equal(t, ti.expectedWorkerImageTag, ltSpec.WorkerConfig.Tag)
+			}
+
+		})
+
+	}
+}
