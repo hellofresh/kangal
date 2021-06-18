@@ -31,7 +31,7 @@ func RunServer(cfg Config, rr Runner) error {
 		backends.WithLogger(rr.Logger),
 	)
 
-	proxyHandler := NewProxy(cfg.MaxLoadTestsRun, registry, rr.KubeClient, cfg.MaxListLimit)
+	proxyHandler := NewProxy(cfg.MaxLoadTestsRun, registry, rr.KubeClient, cfg.MaxListLimit, cfg.AllowedCustomImages)
 
 	// Start instrumented server
 	r := chi.NewRouter()

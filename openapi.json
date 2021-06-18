@@ -445,7 +445,13 @@
 					},
 					"duration": {
 						"type": "string"
-					}
+					},
+                    "masterImage": {
+                      "type": "string"
+                    },
+                    "workerImage": {
+                      "type": "string"
+                    }
 				}
 			},
 			"LoadTestStatusPage": {

@@ -32,19 +32,21 @@ var (
 
 // Proxy handler
 type Proxy struct {
-	maxLoadTestsRun int
-	maxListLimit    int64
-	registry        backends.Registry
-	kubeClient      *kube.Client
+	maxLoadTestsRun     int
+	maxListLimit        int64
+	registry            backends.Registry
+	kubeClient          *kube.Client
+	allowedCustomImages bool
 }
 
 // NewProxy returns new Proxy handlers
-func NewProxy(maxLoadTestsRun int, registry backends.Registry, kubeClient *kube.Client, maxListLimit int64) *Proxy {
+func NewProxy(maxLoadTestsRun int, registry backends.Registry, kubeClient *kube.Client, maxListLimit int64, allowedCustomImages bool) *Proxy {
 	return &Proxy{
-		maxLoadTestsRun: maxLoadTestsRun,
-		registry:        registry,
-		kubeClient:      kubeClient,
-		maxListLimit:    maxListLimit,
+		maxLoadTestsRun:     maxLoadTestsRun,
+		registry:            registry,
+		kubeClient:          kubeClient,
+		maxListLimit:        maxListLimit,
+		allowedCustomImages: allowedCustomImages,
 	}
 }
 
@@ -121,7 +123,7 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 	logger := mPkg.GetLogger(ctx)
 
 	// Making valid LoadTestSpec based on HTTP request
-	ltSpec, err := fromHTTPRequestToLoadTestSpec(r, logger)
+	ltSpec, err := fromHTTPRequestToLoadTestSpec(r, logger, p.allowedCustomImages)
 	if err != nil {
 		render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest, err.Error()))
 		return

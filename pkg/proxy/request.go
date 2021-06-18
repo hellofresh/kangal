@@ -21,6 +21,8 @@ import (
 const (
 	backendType     = "type"
 	overwrite       = "overwrite"
+	masterImage     = "masterImage"
+	workerImage     = "workerImage"
 	distributedPods = "distributedPods"
 	tags            = "tags"
 	testFile        = "testFile"
@@ -37,6 +39,8 @@ func httpValidator(r *http.Request) url.Values {
 	rules := govalidator.MapData{
 		"type":            []string{"required"},
 		"overwrite":       []string{"in:1,True,true,t,T,TRUE,0,False,false,f,F,FALSE"},
+		"masterImage":     []string{"regex:^.*:.*$|^$"},
+		"workerImage":     []string{"regex:^.*:.*$|^$"},
 		"distributedPods": []string{"numeric_between:1,"},
 		"file:testFile":   []string{"ext:jmx,py,json"},
 		"file:envVars":    []string{"ext:csv"},
@@ -99,7 +103,7 @@ func fromHTTPRequestToListOptions(r *http.Request, maxListLimit int64) (*kuberne
 }
 
 // fromHTTPRequestToLoadTestSpec creates a load test spec from HTTP request
-func fromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger) (apisLoadTestV1.LoadTestSpec, error) {
+func fromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger, allowedCustomImages bool) (apisLoadTestV1.LoadTestSpec, error) {
 	if e := httpValidator(r); len(e) > 0 {
 		logger.Debug("User request validation failed", zap.Any("errors", e))
 		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf(e.Encode())
@@ -153,9 +157,24 @@ func fromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger) (apisLoa
 		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %q from request: %w", duration, err)
 	}
 
+	mi := apisLoadTestV1.ImageDetails{
+		Image: "",
+		Tag:   "",
+	}
+	wi := apisLoadTestV1.ImageDetails{
+		Image: "",
+		Tag:   "",
+	}
+	if allowedCustomImages {
+		mi = getImage(r, masterImage)
+		wi = getImage(r, workerImage)
+	}
+
 	return apisLoadTestV1.LoadTestSpec{
 		Type:            getLoadTestType(r),
 		Overwrite:       o,
+		MasterConfig:    mi,
+		WorkerConfig:    wi,
 		DistributedPods: &dp,
 		Tags:            tagList,
 		TestFile:        tf,
@@ -266,6 +285,71 @@ func getDuration(r *http.Request) (time.Duration, error) {
 	}
 
 	return time.ParseDuration(val)
+}
+
+func getImage(r *http.Request, role string) apisLoadTestV1.ImageDetails {
+
+	imageStr := r.FormValue(role)
+
+	imgName := ""
+	imgTag := ""
+
+	// Gen image url colon and slash struct
+	structImgChars := ":/"
+	structImgURI := ""
+	for _, c := range imageStr {
+
+		if strings.Contains(structImgChars, string(c)) {
+			structImgURI += string(c)
+		}
+	}
+
+	if structImgURI == "" {
+		// Format: image
+		imgName = imageStr
+		imgTag = ""
+	}
+
+	if structImgURI == ":" {
+		// Format: image:tag
+		imgName = strings.Split(imageStr, ":")[0]
+		imgTag = strings.Split(imageStr, ":")[1]
+	}
+
+	if structImgURI == "/" {
+		// Format: registry/image
+		imgName = imageStr
+		imgTag = ""
+	}
+
+	if structImgURI == "/:" {
+		// Format: registry/image:tag
+		imgName = strings.Split(imageStr, ":")[0]
+		imgTag = strings.Split(imageStr, ":")[1]
+	}
+
+	if structImgURI == "://" {
+		// Format: host:port/registry/image
+		imgName = imageStr
+		imgTag = ""
+	}
+
+	if structImgURI == "://:" {
+		// Format: host:port/registry/image:tag
+		imgName = strings.Split(imageStr, ":")[0] + ":" + strings.Split(imageStr, ":")[1]
+		imgTag = strings.Split(imageStr, ":")[2]
+	}
+
+	if structImgURI == "//:" {
+		// Format: host/registry/image:tag
+		imgName = strings.Split(imageStr, ":")[0]
+		imgTag = strings.Split(imageStr, ":")[1]
+	}
+
+	return apisLoadTestV1.ImageDetails{
+		Image: imgName,
+		Tag:   imgTag,
+	}
 }
 
 //fileToString converts file to string
