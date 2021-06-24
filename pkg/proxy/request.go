@@ -44,7 +44,7 @@ func httpValidator(r *http.Request) url.Values {
 		"distributedPods": []string{"numeric_between:1,"},
 		"file:testFile":   []string{"ext:jmx,py,json"},
 		"file:envVars":    []string{"ext:csv"},
-		"file:testData":   []string{"ext:csv"},
+		"file:testData":   []string{"ext:csv,protoset"},
 		"targetURL":       []string{"http"},
 		"duration":        []string{"duration"},
 	}
@@ -186,7 +186,7 @@ func fromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger, allowedC
 }
 
 func getEnvVars(r *http.Request) (map[string]string, error) {
-	stringEnv, err := getFileFromHTTP(r, envVars)
+	stringEnv, _, err := getFileFromHTTP(r, envVars)
 	if err != nil {
 		return nil, err
 	}
@@ -198,14 +198,16 @@ func getEnvVars(r *http.Request) (map[string]string, error) {
 }
 
 func getTestData(r *http.Request) (string, error) {
-	stringTestData, err := getFileFromHTTP(r, testData)
+	stringTestData, fileType, err := getFileFromHTTP(r, testData)
 	if err != nil {
 		return "", err
 	}
 
-	err = checkCsvFile(stringTestData)
-	if err != nil {
-		return "", err
+	if fileType == "csv" {
+		err = checkCsvFile(stringTestData)
+		if err != nil {
+			return "", err
+		}
 	}
 
 	return stringTestData, nil
@@ -226,26 +228,35 @@ func checkCsvFile(s string) error {
 }
 
 func getTestFile(r *http.Request) (string, error) {
-	return getFileFromHTTP(r, testFile)
+	content, _, err := getFileFromHTTP(r, testFile)
+	return content, err
 }
 
-func getFileFromHTTP(r *http.Request, file string) (string, error) {
-	td, _, err := r.FormFile(file)
+func getFileFromHTTP(r *http.Request, file string) (string, string, error) {
+	td, meta, err := r.FormFile(file)
 	if err != nil {
 		// this means there was no file specified and we should ignore the error
 		if err == http.ErrMissingFile {
-			return "", nil
+			return "", "", nil
 		}
 
-		return "", err
+		return "", "", err
 	}
 
 	stringTestData, err := fileToString(td)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	return stringTestData, nil
+	return stringTestData, getTypeFromName(meta.Filename), nil
+}
+
+func getTypeFromName(filename string) string {
+	parts := strings.Split(filename, ".")
+	if len(parts) < 2 {
+		return ""
+	}
+	return parts[len(parts)-1]
 }
 
 func getOverwrite(r *http.Request) (bool, error) {

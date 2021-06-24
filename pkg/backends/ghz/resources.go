@@ -1,7 +1,9 @@
 package ghz
 
 import (
+	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/hellofresh/kangal/pkg/backends"
 	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
@@ -15,7 +17,8 @@ const (
 	loadTestJobName           = "loadtest-job"
 	loadTestFileConfigMapName = "loadtest-testfile"
 
-	configFileName = "config.json"
+	configFileName   = "config.json"
+	testdataFileName = "testdata.protoset"
 )
 
 // NewTestFileConfigMap creates a new configmap containing ghz config file
@@ -35,7 +38,8 @@ func (b *Backend) NewTestFileConfigMap(loadTest loadTestV1.LoadTest) *coreV1.Con
 // NewJob creates a new job that runs ghz
 func (b *Backend) NewJob(
 	loadTest loadTestV1.LoadTest,
-	loadTestFileConfigMap *coreV1.ConfigMap,
+	volumes []coreV1.Volume,
+	mounts []coreV1.VolumeMount,
 	reportURL string,
 ) *batchV1.Job {
 	logger := b.logger.With(
@@ -83,18 +87,7 @@ func (b *Backend) NewJob(
 				},
 				Spec: coreV1.PodSpec{
 					RestartPolicy: "Never",
-					Volumes: []coreV1.Volume{
-						{
-							Name: "testfile",
-							VolumeSource: coreV1.VolumeSource{
-								ConfigMap: &coreV1.ConfigMapVolumeSource{
-									LocalObjectReference: coreV1.LocalObjectReference{
-										Name: loadTestFileConfigMap.GetName(),
-									},
-								},
-							},
-						},
-					},
+					Volumes:       volumes,
 					Containers: []coreV1.Container{
 						{
 							Name:      "ghz",
@@ -102,23 +95,63 @@ func (b *Backend) NewJob(
 							Env:       envVars,
 							Resources: backends.BuildResourceRequirements(b.resources),
 							Args: []string{
-								"--config=/data/config.json",
+								fmt.Sprintf("--config=/data/%s", configFileName),
 								"--output=/results",
 								"--format=html",
 							},
-							VolumeMounts: []coreV1.VolumeMount{
-								{
-									Name:      "testfile",
-									MountPath: "/data/config.json",
-									SubPath:   "config.json",
-								},
-							},
+							VolumeMounts: mounts,
 						},
 					},
 				},
 			},
 		},
 	}
+}
+
+// NewFileVolumeAndMount creates a new volume and volume mount for a configmap file
+func NewFileVolumeAndMount(name, cfg, filename string) (coreV1.Volume, coreV1.VolumeMount) {
+	v := coreV1.Volume{
+		Name: name,
+		VolumeSource: coreV1.VolumeSource{
+			ConfigMap: &coreV1.ConfigMapVolumeSource{
+				LocalObjectReference: coreV1.LocalObjectReference{
+					Name: cfg,
+				},
+			},
+		},
+	}
+
+	m := coreV1.VolumeMount{
+		Name:      name,
+		MountPath: fmt.Sprintf("/data/%s", filename),
+		SubPath:   filename,
+	}
+
+	return v, m
+}
+
+// NewFileConfigMap creates a configmap for the provided file information
+func NewFileConfigMap(cfgName, filename, content string) (*coreV1.ConfigMap, error) {
+	if strings.TrimSpace(cfgName) == "" {
+		return nil, errors.New("empty config name")
+	}
+
+	if strings.TrimSpace(filename) == "" {
+		return nil, fmt.Errorf("invalid name for configmap %s", cfgName)
+	}
+
+	if strings.TrimSpace(content) == "" {
+		return nil, fmt.Errorf("invalid file %s for configmap %s, empty content", filename, cfgName)
+	}
+
+	return &coreV1.ConfigMap{
+		ObjectMeta: metaV1.ObjectMeta{
+			Name: cfgName,
+		},
+		Data: map[string]string{
+			filename: content,
+		},
+	}, nil
 }
 
 // determineLoadTestStatusFromJobs reads existing job statuses and determines what the loadtest status should be

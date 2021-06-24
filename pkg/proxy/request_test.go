@@ -636,3 +636,37 @@ func TestCustomImageFeatureFlag(t *testing.T) {
 
 	}
 }
+
+func Test_getTypeFromName(t *testing.T) {
+	for _, ti := range []struct {
+		tag          string
+		filename     string
+		expectedType string
+	}{
+		{
+			tag:          "no filename provided",
+			filename:     "",
+			expectedType: "",
+		},
+		{
+			tag:          "filename with no extension",
+			filename:     "somefile",
+			expectedType: "",
+		},
+		{
+			tag:          "filename with extension",
+			filename:     "somefile.ext",
+			expectedType: "ext",
+		},
+		{
+			tag:          "filename with multiple extensions",
+			filename:     "somefile.tar.gz",
+			expectedType: "gz",
+		},
+	} {
+		t.Run(ti.tag, func(t *testing.T) {
+			ext := getTypeFromName(ti.filename)
+			assert.Equal(t, ti.expectedType, ext)
+		})
+	}
+}
