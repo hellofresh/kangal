@@ -7,9 +7,6 @@ Kangal supports `ghz` as a loadtest backend using a custom docker image: [`hello
 For more information, please check [ghz official website][`ghz`].
 
 ## Usage
-To start using `ghz`, you need to ensure that server reflection enabled on your grpc server.  
-_While `ghz` itself can work when a protobuf schema is supplied, Kangal currently only supports server reflection method._
-
 To create a loadtest, simply send a request to Kangal proxy with the `ghz` configuration in the `testFile` field in JSON:
 
 ```shell
@@ -41,7 +38,20 @@ Example `config.json`:
 }
 ```
 
-For the complete list of configuration parameter, please check [ghz documentation][ghz params].
+### Providing protobuf schema
+
+While `ghz` accepts `.proto` files to not depend on server reflection, Kangal currently only supports `.protoset` files.
+
+To do so, use the `testData` form field to provide the `.protoset` file and add the following key to your JSON configuration file:
+
+```json
+{
+  "protoset": "/data/testdata.protoset",
+  ...
+}
+```
+
+For information about how to create `.protoset` files and the complete list of configuration parameter, please check [ghz documentation][ghz params].
 
 Since `ghz` does not use master-worker pattern, `distributedPods` simply creates replicas of the load-generating pod.  
 This means `distributedPods` value of `5` would mean that it creates 5 identical pods, generating 5x the load with 5x concurrency, etc.
@@ -69,9 +79,8 @@ More information regarding resource limits and requests can be found in the foll
 
 
 ## Notes
-1. `ghz` can work without server reflection when protobuf schema is supplied, but this is currently not supported by Kangal
-2. `ghz` supports configuration file in `toml` format, but this is also currently not supported
-3. Kangal overrides the following options:
+1. `ghz` supports configuration file in `toml` format, but this is also currently not supported
+2. Kangal overrides the following options:
   * The output format is always set to html
   * Output directory is always set to `/results`
   * This is done so Kangal is able to pick up the results and persist the results.  

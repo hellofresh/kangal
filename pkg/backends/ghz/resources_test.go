@@ -104,3 +104,42 @@ func TestNewFileConfigMap(t *testing.T) {
 		})
 	}
 }
+
+func TestNewFileVolumeAndMount(t *testing.T) {
+	for _, tt := range []struct {
+		tag           string
+		name          string
+		cfg           string
+		filename      string
+		expectedVol   coreV1.Volume
+		expectedMount coreV1.VolumeMount
+	}{
+		{
+			tag:      "volume and mount are created with specified name, file and /data mount path",
+			name:     "load-test-volume",
+			cfg:      "test-configmap",
+			filename: "testfile.json",
+			expectedVol: coreV1.Volume{
+				Name: "load-test-volume",
+				VolumeSource: coreV1.VolumeSource{
+					ConfigMap: &coreV1.ConfigMapVolumeSource{
+						LocalObjectReference: coreV1.LocalObjectReference{
+							Name: "test-configmap",
+						},
+					},
+				},
+			},
+			expectedMount: coreV1.VolumeMount{
+				Name:      "load-test-volume",
+				MountPath: "/data/testfile.json",
+				SubPath:   "testfile.json",
+			},
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			v, m := NewFileVolumeAndMount(tt.name, tt.cfg, tt.filename)
+			assert.Equal(t, tt.expectedVol, v)
+			assert.Equal(t, tt.expectedMount, m)
+		})
+	}
+}
