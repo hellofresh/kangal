@@ -162,6 +162,7 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, report
 		}
 	}
 
+	// Prepare Volume and VolumeMount for job creation
 	var (
 		volumes = make([]coreV1.Volume, 1)
 		mounts  = make([]coreV1.VolumeMount, 1)
