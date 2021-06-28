@@ -51,7 +51,7 @@ To do so, use the `testData` form field to provide the `.protoset` file and add 
 }
 ```
 
-For information about how to create `.protoset` files and the complete list of configuration parameter, please check [ghz documentation][ghz params].
+For information about how to [create `.protoset` files][ghz protoset-example] and the complete list of configuration parameter, please check [ghz documentation][ghz params].
 
 Since `ghz` does not use master-worker pattern, `distributedPods` simply creates replicas of the load-generating pod.  
 This means `distributedPods` value of `5` would mean that it creates 5 identical pods, generating 5x the load with 5x concurrency, etc.
@@ -89,5 +89,6 @@ More information regarding resource limits and requests can be found in the foll
 
 [`ghz`]: https://ghz.sh/
 [ghz params]: https://ghz.sh/docs/options
+[ghz protoset-example]: https://ghz.sh/docs/options#--protoset
 [kangal-ghz]: https://github.com/hellofresh/kangal-ghz
 [dockerhub]: hub.docker.com/r/hellofresh/kangal-ghz/
