@@ -150,6 +150,7 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, report
 		configMaps = append(configMaps, tdCfgMap)
 	}
 
+	// Create testfile and testdata configmaps
 	for _, cfg := range configMaps {
 		_, err = b.kubeClientSet.
 			CoreV1().
