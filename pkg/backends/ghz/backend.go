@@ -140,7 +140,7 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, report
 	}
 	configMaps[0] = tfCfgMap
 
-	// Create testdata ConfigMap
+	// Prepare testdata ConfigMap
 	if loadTest.Spec.TestData != "" {
 		tdCfgMap, err = NewFileConfigMap(loadTestFileConfigMapName, configFileName, loadTest.Spec.TestData)
 		if err != nil {
