@@ -133,7 +133,8 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, report
 	)
 
 	// Create testfile ConfigMap
-	tfCfgMap, err := NewFileConfigMap(loadTestFileConfigMapName, configFileName, loadTest.Spec.TestFile)
+	configFile := fmt.Sprintf("%s.%s", configFileName, guessTypeFromContent(loadTest.Spec.TestFile))
+	tfCfgMap, err := NewFileConfigMap(loadTestFileConfigMapName, configFile, loadTest.Spec.TestFile)
 	if err != nil {
 		b.logger.Error("Error creating testfile configmap resource", zap.Error(err))
 		return err
@@ -142,7 +143,7 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, report
 
 	// Prepare testdata ConfigMap
 	if loadTest.Spec.TestData != "" {
-		tdCfgMap, err = NewFileConfigMap(loadTestFileConfigMapName, configFileName, loadTest.Spec.TestData)
+		tdCfgMap, err = NewFileConfigMap(loadTestFileConfigMapName, testdataFileName, loadTest.Spec.TestData)
 		if err != nil {
 			b.logger.Error("Error creating testdata configmap resource", zap.Error(err))
 			return err
@@ -168,7 +169,7 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, report
 		mounts  = make([]coreV1.VolumeMount, 1)
 	)
 
-	volumes[0], mounts[0] = NewFileVolumeAndMount("testfile", tfCfgMap.Name, configFileName)
+	volumes[0], mounts[0] = NewFileVolumeAndMount("testfile", tfCfgMap.Name, configFile)
 
 	if tdCfgMap != nil {
 		v, m := NewFileVolumeAndMount("testdata", tdCfgMap.Name, testdataFileName)
@@ -176,8 +177,15 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, report
 		mounts = append(mounts, m)
 	}
 
+	// Build job args
+	args, err := NewCommandArgs(configFile)
+	if err != nil {
+		b.logger.Error("Error creating job args", zap.String("configFile", configFile), zap.Error(err))
+		return err
+	}
+
 	// Create Job
-	job := b.NewJob(loadTest, volumes, mounts, reportURL)
+	job := b.NewJob(loadTest, volumes, mounts, args, reportURL)
 	_, err = b.kubeClientSet.
 		BatchV1().
 		Jobs(loadTest.Status.Namespace).

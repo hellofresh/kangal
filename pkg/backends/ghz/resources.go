@@ -1,6 +1,7 @@
 package ghz
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -17,9 +18,24 @@ const (
 	loadTestJobName           = "loadtest-job"
 	loadTestFileConfigMapName = "loadtest-testfile"
 
-	configFileName   = "config.json"
+	configFileName   = "config"
 	testdataFileName = "testdata.protoset"
 )
+
+var defaultArgs = []string{
+	"--output=/results",
+	"--format=html",
+}
+
+// NewCommandArgs create the command arguments for the Ghz job execution
+func NewCommandArgs(configFilename string) ([]string, error) {
+	if !acceptedConfigFile(configFilename) {
+		return nil, errors.New("invalid config file type, only json and toml are accepted")
+	}
+
+	configArg := fmt.Sprintf("--config=/data/%s", configFilename)
+	return append(defaultArgs, configArg), nil
+}
 
 // NewTestFileConfigMap creates a new configmap containing ghz config file
 func (b *Backend) NewTestFileConfigMap(loadTest loadTestV1.LoadTest) *coreV1.ConfigMap {
@@ -40,6 +56,7 @@ func (b *Backend) NewJob(
 	loadTest loadTestV1.LoadTest,
 	volumes []coreV1.Volume,
 	mounts []coreV1.VolumeMount,
+	args []string,
 	reportURL string,
 ) *batchV1.Job {
 	logger := b.logger.With(
@@ -90,15 +107,11 @@ func (b *Backend) NewJob(
 					Volumes:       volumes,
 					Containers: []coreV1.Container{
 						{
-							Name:      "ghz",
-							Image:     imageRef,
-							Env:       envVars,
-							Resources: backends.BuildResourceRequirements(b.resources),
-							Args: []string{
-								fmt.Sprintf("--config=/data/%s", configFileName),
-								"--output=/results",
-								"--format=html",
-							},
+							Name:         "ghz",
+							Image:        imageRef,
+							Env:          envVars,
+							Resources:    backends.BuildResourceRequirements(b.resources),
+							Args:         args,
 							VolumeMounts: mounts,
 						},
 					},
@@ -169,4 +182,18 @@ func determineLoadTestStatusFromJobs(job *batchV1.Job) loadTestV1.LoadTestPhase 
 	}
 
 	return loadTestV1.LoadTestFinished
+}
+
+func guessTypeFromContent(content string) string {
+	var target map[string]interface{}
+	err := json.Unmarshal([]byte(content), &target)
+	if err == nil {
+		return "json"
+	}
+
+	return "toml"
+}
+
+func acceptedConfigFile(filename string) bool {
+	return strings.HasSuffix(filename, ".json") || strings.HasSuffix(filename, ".toml")
 }

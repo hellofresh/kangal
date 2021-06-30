@@ -136,10 +136,54 @@ func TestNewFileVolumeAndMount(t *testing.T) {
 			},
 		},
 	} {
-		t.Run(tt.name, func(t *testing.T) {
+		t.Run(tt.tag, func(t *testing.T) {
 			v, m := NewFileVolumeAndMount(tt.name, tt.cfg, tt.filename)
 			assert.Equal(t, tt.expectedVol, v)
 			assert.Equal(t, tt.expectedMount, m)
+		})
+	}
+}
+
+func TestNewCommandArgs(t *testing.T) {
+	for _, tt := range []struct {
+		tag         string
+		cfgFilename string
+		expected    []string
+		shouldFail  bool
+	}{
+		{
+			tag:         "get command args with json",
+			cfgFilename: "config.json",
+			expected:    append(defaultArgs, "--config=/data/config.json"),
+			shouldFail:  false,
+		},
+		{
+			tag:         "get command args with toml",
+			cfgFilename: "config.toml",
+			expected:    append(defaultArgs, "--config=/data/config.toml"),
+			shouldFail:  false,
+		},
+		{
+			tag:         "config file with invalid type",
+			cfgFilename: "config.test",
+			shouldFail:  true,
+		},
+		{
+			tag:         "invalid config file with no type",
+			cfgFilename: "config",
+			shouldFail:  true,
+		},
+	} {
+		t.Run(tt.tag, func(t *testing.T) {
+			args, err := NewCommandArgs(tt.cfgFilename)
+
+			if tt.shouldFail {
+				assert.Error(t, err)
+				assert.Nil(t, args)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expected, args)
+			}
 		})
 	}
 }
