@@ -132,8 +132,6 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, report
 		configMaps = make([]*coreV1.ConfigMap, 1)
 	)
 
-	configFileName := fmt.Sprintf("config.%s", guessTypeFromContent(loadTest.Spec.TestFile))
-
 	// Create testfile ConfigMap
 	tfCfgMap, err := NewFileConfigMap(loadTestFileConfigMapName, configFileName, loadTest.Spec.TestFile)
 	if err != nil {

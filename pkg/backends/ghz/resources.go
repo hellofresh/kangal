@@ -1,7 +1,6 @@
 package ghz
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -21,24 +20,14 @@ const (
 	loadTestFileVolumeName    = "loadtest-testfile-volume"
 	loadTestDataVolumeName    = "loadtest-testdata-volume"
 
+	configFileName   = "config"
 	testdataFileName = "testdata.protoset"
 )
 
 var defaultArgs = []string{
+	"--config=/data/config",
 	"--output=/results",
 	"--format=html",
-}
-
-func buildArgs(volumeMounts ...coreV1.VolumeMount) []string {
-	var configFilepath = "/data/config.json"
-	for _, mount := range volumeMounts {
-		if mount.Name == loadTestFileVolumeName {
-			configFilepath = mount.MountPath
-		}
-	}
-
-	configArg := fmt.Sprintf("--config=%s", configFilepath)
-	return append(defaultArgs, configArg)
 }
 
 // NewJob creates a new job that runs ghz
@@ -100,7 +89,7 @@ func (b *Backend) NewJob(
 							Image:        imageRef,
 							Env:          envVars,
 							Resources:    backends.BuildResourceRequirements(b.resources),
-							Args:         buildArgs(mounts...),
+							Args:         defaultArgs,
 							VolumeMounts: mounts,
 						},
 					},
@@ -171,14 +160,4 @@ func determineLoadTestStatusFromJobs(job *batchV1.Job) loadTestV1.LoadTestPhase 
 	}
 
 	return loadTestV1.LoadTestFinished
-}
-
-func guessTypeFromContent(content string) string {
-	var target map[string]interface{}
-	err := json.Unmarshal([]byte(content), &target)
-	if err == nil {
-		return "json"
-	}
-
-	return "toml"
 }
