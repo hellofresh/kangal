@@ -7,7 +7,7 @@ export AWS_SECRET_ACCESS_KEY=""
 # Create a simple service to be called from the created loadTest
 # This service will log all the requests
 kubectl create ns test-busybox
-kubectl run --generator=run-pod/v1 busybox --namespace=test-busybox --port=8280 --image=busybox -- sh -c "echo 'Hello' > /var/www/index.html && httpd -f -p 8280 -h /var/www/ -vv"
+kubectl run busybox --namespace=test-busybox --port=8280 --image=busybox -- sh -c "echo 'Hello' > /var/www/index.html && httpd -f -p 8280 -h /var/www/ -vv"
 kubectl expose pod busybox --type=NodePort --namespace=test-busybox
 kubectl wait --for=condition=ready pod busybox -n test-busybox
 
@@ -20,7 +20,7 @@ sed -i "s/TEST_PORT/${NODE_PORT}/g" ./pkg/controller/testdata/valid/integration_
 
 # Run dummy grpc server to test ghz
 kubectl create ns test-ghz
-kubectl run --generator=run-pod/v1 greeter-server --namespace=test-ghz --port=50051 --image=greeter_server:local
+kubectl run greeter-server --namespace=test-ghz --port=50051 --image=greeter_server:local
 kubectl expose pod greeter-server --type=NodePort --namespace=test-ghz
 kubectl wait --for=condition=ready pod greeter-server -n test-ghz
 

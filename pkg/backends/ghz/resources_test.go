@@ -136,7 +136,7 @@ func TestNewFileVolumeAndMount(t *testing.T) {
 			},
 		},
 	} {
-		t.Run(tt.name, func(t *testing.T) {
+		t.Run(tt.tag, func(t *testing.T) {
 			v, m := NewFileVolumeAndMount(tt.name, tt.cfg, tt.filename)
 			assert.Equal(t, tt.expectedVol, v)
 			assert.Equal(t, tt.expectedMount, m)

@@ -142,7 +142,7 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, report
 
 	// Prepare testdata ConfigMap
 	if loadTest.Spec.TestData != "" {
-		tdCfgMap, err = NewFileConfigMap(loadTestFileConfigMapName, configFileName, loadTest.Spec.TestData)
+		tdCfgMap, err = NewFileConfigMap(loadTestDataConfigMapName, testdataFileName, loadTest.Spec.TestData)
 		if err != nil {
 			b.logger.Error("Error creating testdata configmap resource", zap.Error(err))
 			return err
@@ -168,10 +168,10 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, report
 		mounts  = make([]coreV1.VolumeMount, 1)
 	)
 
-	volumes[0], mounts[0] = NewFileVolumeAndMount("testfile", tfCfgMap.Name, configFileName)
+	volumes[0], mounts[0] = NewFileVolumeAndMount(loadTestFileVolumeName, tfCfgMap.Name, configFileName)
 
 	if tdCfgMap != nil {
-		v, m := NewFileVolumeAndMount("testdata", tdCfgMap.Name, testdataFileName)
+		v, m := NewFileVolumeAndMount(loadTestDataVolumeName, tdCfgMap.Name, testdataFileName)
 		volumes = append(volumes, v)
 		mounts = append(mounts, m)
 	}

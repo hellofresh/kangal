@@ -16,23 +16,18 @@ import (
 const (
 	loadTestJobName           = "loadtest-job"
 	loadTestFileConfigMapName = "loadtest-testfile"
+	loadTestDataConfigMapName = "loadtest-testdata"
+	loadTestFileVolumeName    = "loadtest-testfile-volume"
+	loadTestDataVolumeName    = "loadtest-testdata-volume"
 
-	configFileName   = "config.json"
+	configFileName   = "config"
 	testdataFileName = "testdata.protoset"
 )
 
-// NewTestFileConfigMap creates a new configmap containing ghz config file
-func (b *Backend) NewTestFileConfigMap(loadTest loadTestV1.LoadTest) *coreV1.ConfigMap {
-	testfile := loadTest.Spec.TestFile
-
-	return &coreV1.ConfigMap{
-		ObjectMeta: metaV1.ObjectMeta{
-			Name: loadTestFileConfigMapName,
-		},
-		Data: map[string]string{
-			configFileName: testfile,
-		},
-	}
+var defaultArgs = []string{
+	"--config=/data/config",
+	"--output=/results",
+	"--format=html",
 }
 
 // NewJob creates a new job that runs ghz
@@ -90,15 +85,11 @@ func (b *Backend) NewJob(
 					Volumes:       volumes,
 					Containers: []coreV1.Container{
 						{
-							Name:      "ghz",
-							Image:     imageRef,
-							Env:       envVars,
-							Resources: backends.BuildResourceRequirements(b.resources),
-							Args: []string{
-								fmt.Sprintf("--config=/data/%s", configFileName),
-								"--output=/results",
-								"--format=html",
-							},
+							Name:         "ghz",
+							Image:        imageRef,
+							Env:          envVars,
+							Resources:    backends.BuildResourceRequirements(b.resources),
+							Args:         defaultArgs,
 							VolumeMounts: mounts,
 						},
 					},

@@ -7,7 +7,7 @@ Kangal supports `ghz` as a loadtest backend using a custom docker image: [`hello
 For more information, please check [ghz official website][`ghz`].
 
 ## Usage
-To create a loadtest, simply send a request to Kangal proxy with the `ghz` configuration in the `testFile` field in JSON:
+To create a loadtest, simply send a request to Kangal proxy with the `ghz` configuration in the `testFile` field:
 
 ```shell
 $ curl -X POST http://${KANGAL_PROXY_ADDRESS}/load-test \
@@ -42,7 +42,7 @@ Example `config.json`:
 
 While `ghz` accepts `.proto` files to not depend on server reflection, Kangal currently only supports `.protoset` files.
 
-To do so, use the `testData` form field to provide the `.protoset` file and add the following key to your JSON configuration file:
+To do so, use the `testData` form field to provide the `.protoset` file and add the following key to your JSON/TOML configuration file:
 
 ```json
 {
@@ -79,12 +79,11 @@ More information regarding resource limits and requests can be found in the foll
 
 
 ## Notes
-1. `ghz` supports configuration file in `toml` format, but this is also currently not supported
-2. Kangal overrides the following options:
+Kangal overrides the following options:
   * The output format is always set to html
   * Output directory is always set to `/results`
   * This is done so Kangal is able to pick up the results and persist the results.  
-  * Because they are set as container arguments, this cannot be overridden with `config.json`.
+  * Because they are set as container arguments, this cannot be overridden with the configuration file.
 
 
 [`ghz`]: https://ghz.sh/
