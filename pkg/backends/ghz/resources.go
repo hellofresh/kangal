@@ -17,8 +17,10 @@ import (
 const (
 	loadTestJobName           = "loadtest-job"
 	loadTestFileConfigMapName = "loadtest-testfile"
+	loadTestDataConfigMapName = "loadtest-testdata"
+	loadTestFileVolumeName    = "loadtest-testfile-volume"
+	loadTestDataVolumeName    = "loadtest-testdata-volume"
 
-	configFileName   = "config"
 	testdataFileName = "testdata.protoset"
 )
 
@@ -27,28 +29,16 @@ var defaultArgs = []string{
 	"--format=html",
 }
 
-// NewCommandArgs create the command arguments for the Ghz job execution
-func NewCommandArgs(configFilename string) ([]string, error) {
-	if !acceptedConfigFile(configFilename) {
-		return nil, errors.New("invalid config file type, only json and toml are accepted")
+func buildArgs(volumeMounts ...coreV1.VolumeMount) []string {
+	var configFilepath = "/data/config.json"
+	for _, mount := range volumeMounts {
+		if mount.Name == loadTestFileVolumeName {
+			configFilepath = mount.MountPath
+		}
 	}
 
-	configArg := fmt.Sprintf("--config=/data/%s", configFilename)
-	return append(defaultArgs, configArg), nil
-}
-
-// NewTestFileConfigMap creates a new configmap containing ghz config file
-func (b *Backend) NewTestFileConfigMap(loadTest loadTestV1.LoadTest) *coreV1.ConfigMap {
-	testfile := loadTest.Spec.TestFile
-
-	return &coreV1.ConfigMap{
-		ObjectMeta: metaV1.ObjectMeta{
-			Name: loadTestFileConfigMapName,
-		},
-		Data: map[string]string{
-			configFileName: testfile,
-		},
-	}
+	configArg := fmt.Sprintf("--config=%s", configFilepath)
+	return append(defaultArgs, configArg)
 }
 
 // NewJob creates a new job that runs ghz
@@ -56,7 +46,6 @@ func (b *Backend) NewJob(
 	loadTest loadTestV1.LoadTest,
 	volumes []coreV1.Volume,
 	mounts []coreV1.VolumeMount,
-	args []string,
 	reportURL string,
 ) *batchV1.Job {
 	logger := b.logger.With(
@@ -111,7 +100,7 @@ func (b *Backend) NewJob(
 							Image:        imageRef,
 							Env:          envVars,
 							Resources:    backends.BuildResourceRequirements(b.resources),
-							Args:         args,
+							Args:         buildArgs(mounts...),
 							VolumeMounts: mounts,
 						},
 					},
@@ -192,8 +181,4 @@ func guessTypeFromContent(content string) string {
 	}
 
 	return "toml"
-}
-
-func acceptedConfigFile(filename string) bool {
-	return strings.HasSuffix(filename, ".json") || strings.HasSuffix(filename, ".toml")
 }

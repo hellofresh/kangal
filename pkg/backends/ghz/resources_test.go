@@ -144,46 +144,55 @@ func TestNewFileVolumeAndMount(t *testing.T) {
 	}
 }
 
-func TestNewCommandArgs(t *testing.T) {
+func Test_buildArgs(t *testing.T) {
 	for _, tt := range []struct {
-		tag         string
-		cfgFilename string
-		expected    []string
-		shouldFail  bool
+		tag      string
+		args     []coreV1.VolumeMount
+		expected []string
 	}{
 		{
-			tag:         "get command args with json",
-			cfgFilename: "config.json",
-			expected:    append(defaultArgs, "--config=/data/config.json"),
-			shouldFail:  false,
+			tag: "get command with mount toml",
+			args: []coreV1.VolumeMount{
+				{
+					Name:      loadTestFileVolumeName,
+					MountPath: "/data/config.toml",
+				},
+			},
+			expected: append(defaultArgs, "--config=/data/config.toml"),
 		},
 		{
-			tag:         "get command args with toml",
-			cfgFilename: "config.toml",
-			expected:    append(defaultArgs, "--config=/data/config.toml"),
-			shouldFail:  false,
+			tag: "get command with mount json",
+			args: []coreV1.VolumeMount{
+				{
+					Name:      loadTestFileVolumeName,
+					MountPath: "/data/config.json",
+				},
+			},
+			expected: append(defaultArgs, "--config=/data/config.json"),
 		},
 		{
-			tag:         "config file with invalid type",
-			cfgFilename: "config.test",
-			shouldFail:  true,
+			tag: "get command without config mount",
+			args: []coreV1.VolumeMount{
+				{
+					Name:      "testmount",
+					MountPath: "/data/other",
+				},
+			},
+			expected: append(defaultArgs, "--config=/data/config.json"),
 		},
 		{
-			tag:         "invalid config file with no type",
-			cfgFilename: "config",
-			shouldFail:  true,
+			tag:      "get command without mount",
+			expected: append(defaultArgs, "--config=/data/config.json"),
 		},
 	} {
 		t.Run(tt.tag, func(t *testing.T) {
-			args, err := NewCommandArgs(tt.cfgFilename)
-
-			if tt.shouldFail {
-				assert.Error(t, err)
-				assert.Nil(t, args)
+			var cmdArgs []string
+			if tt.args == nil {
+				cmdArgs = buildArgs()
 			} else {
-				assert.NoError(t, err)
-				assert.Equal(t, tt.expected, args)
+				cmdArgs = buildArgs(tt.args...)
 			}
+			assert.Equal(t, tt.expected, cmdArgs)
 		})
 	}
 }
