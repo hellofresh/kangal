@@ -76,7 +76,7 @@ proxy:
   env:
     # OpenAPI specification specific parameters
     OPEN_API_SERVER_DESCRIPTION: Kangal proxy default value
-    OPEN_API_SERVER_URL: https://kangal-proxy.example.com/openapi
+    OPEN_API_SERVER_URL: https://kangal-proxy.example.com
     OPEN_API_UI_URL: https://kangal-openapi-ui.example.com
 
 controller:
