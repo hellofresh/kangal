@@ -1,0 +1,21 @@
+site_name: 'Kangal'
+site_description: 'Kangal documentation and guides'
+
+plugins:
+  - techdocs-core
+
+markdown_extensions:
+  - admonition
+
+nav:
+  - Home: 'docs/README.md'
+  - Troubleshooting guide: 'docs/troubleshooting.md'
+  - User flow guide: 'docs/user-flow.md'
+  - JMeter load generator:
+      - About JMeter load generator: 'docs/jmeter/README.md'
+      - Reporting in JMeter: 'docs/jmeter/reporting.md'
+      - Writing tests: 'docs/jmeter/writing-tests.md'
+  - Locust load generator:
+      - About Locust load generator: 'docs/locust/README.md'
+  - Ghz load generator:
+      - About ghz load generator: 'docs/ghz/README.md'
