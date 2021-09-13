@@ -24,6 +24,7 @@ jobs:
       - name: Lint GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
+          version: latest
           args: --skip-publish --snapshot
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -41,84 +42,89 @@ jobs:
         with:
           python-version: 3.7
 
-      - name: Set up chart-testing
-        uses: helm/chart-testing-action@v2.0.1
+      - name: Run General Linting
+        uses: docker://ghcr.io/github/super-linter:slim-v4
+        env:
+          VALIDATE_ALL_CODEBASE: false
+          VALIDATE_GO: false
+          VALIDATE_JSCPD: false
+          VALIDATE_GITHUB_ACTIONS: false
+          VALIDATE_OPENAPI: true
+
+# need to be replaces
+#      - name: Set up chart-testing
+#        uses: helm/chart-testing-action@v2.0.1
 
       - name: Lint Helm
         run: ct lint --config .github/ct.yaml
 
-      - name: Run ShellCheck
-        uses: ludeeus/action-shellcheck@master
-        with:
-          ignore: tools
+#      - name: Run OpenAPI Test
+#        uses: mbowman100/swagger-validator-action@master
+#        with:
+#          files: |
+#            openapi.json
 
-      - name: Run OpenAPI Test
-        uses: mbowman100/swagger-validator-action@master
-        with:
-          files: |
-            openapi.json
-
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Setup Golang
-        uses: actions/setup-go@v2
-        with:
-          go-version: '^1.15'
-
-      - name: Run Unit tests
-        run: |
-          make test-unit
-
-      - name: Setup Kind
-        uses: engineerd/setup-kind@v0.5.0
-        with:
-          version: "v0.11.1"
-
-      - name: Install Kangal CRD
-        run: |
-          make apply-crd
-
-      - name: Build Kangal
-        run: |
-          go mod vendor
-          make build
-
-      - name: Build dummy gRPC server Docker image
-        uses: docker/build-push-action@v2
-        with:
-          tags: greeter_server:local
-          context: pkg/controller/testdata/ghz
-          file: pkg/controller/testdata/ghz/Dockerfile
-          push: false
-
-      - name: Load docker image into kind cluster
-        run: |
-          docker images
-          kind load docker-image greeter_server:local
-
-      - name: Run Integration Tests
-        env:
-          AWS_ENDPOINT_URL: "localhost:8081"
-          AWS_BUCKET_NAME: "kangal-test"
-        run: |
-          ./ci/integration-tests.sh
-
-      - name: Print Logs on Failure
-        if: failure()
-        run: |
-          echo "==> Printing Kangal Proxy Logs\n"
-          cat /tmp/kangal_proxy.log
-          echo "\n\n==> Printing Kangal Controller Logs\n"
-          cat /tmp/kangal_controller.log
-
-      - name: Upload codecov
-        uses: codecov/codecov-action@v1
-        if: success()
-        with:
-          file: ./coverage.txt
-          fail_ci_if_error: false
+#  test:
+#    name: Test
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v2
+#
+#      - name: Setup Golang
+#        uses: actions/setup-go@v2
+#        with:
+#          go-version: '^1.15'
+#
+#      - name: Run Unit tests
+#        run: |
+#          make test-unit
+#
+#      - name: Setup Kind
+#        uses: engineerd/setup-kind@v0.5.0
+#        with:
+#          version: "v0.11.1"
+#
+#      - name: Install Kangal CRD
+#        run: |
+#          make apply-crd
+#
+#      - name: Build Kangal
+#        run: |
+#          go mod vendor
+#          make build
+#
+#      - name: Build dummy gRPC server Docker image
+#        uses: docker/build-push-action@v2
+#        with:
+#          tags: greeter_server:local
+#          context: pkg/controller/testdata/ghz
+#          file: pkg/controller/testdata/ghz/Dockerfile
+#          push: false
+#
+#      - name: Load docker image into kind cluster
+#        run: |
+#          docker images
+#          kind load docker-image greeter_server:local
+#
+#      - name: Run Integration Tests
+#        env:
+#          AWS_ENDPOINT_URL: "localhost:8081"
+#          AWS_BUCKET_NAME: "kangal-test"
+#        run: |
+#          ./ci/integration-tests.sh
+#
+#      - name: Print Logs on Failure
+#        if: failure()
+#        run: |
+#          echo "==> Printing Kangal Proxy Logs\n"
+#          cat /tmp/kangal_proxy.log
+#          echo "\n\n==> Printing Kangal Controller Logs\n"
+#          cat /tmp/kangal_controller.log
+#
+#      - name: Upload codecov
+#        uses: codecov/codecov-action@v1
+#        if: success()
+#        with:
+#          file: ./coverage.txt
+#          fail_ci_if_error: false
