@@ -21,6 +21,15 @@ jobs:
         with:
           version: v1.33
 
+      - name: Run General Linting
+        uses: docker://ghcr.io/github/super-linter:slim-v4
+        env:
+          VALIDATE_ALL_CODEBASE: false
+          VALIDATE_GO: false
+          VALIDATE_JSCPD: false
+          VALIDATE_GITHUB_ACTIONS: false
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Lint GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
@@ -46,17 +55,6 @@ jobs:
 
       - name: Lint Helm
         run: ct lint --config .github/ct.yaml
-
-      - name: Run ShellCheck
-        uses: ludeeus/action-shellcheck@master
-        with:
-          ignore: tools
-
-      - name: Run OpenAPI Test
-        uses: mbowman100/swagger-validator-action@master
-        with:
-          files: |
-            openapi.json
 
   test:
     name: Test
