@@ -19,7 +19,7 @@ jobs:
       - name: Lint Go code
         uses: golangci/golangci-lint-action@v2
         with:
-          version: v1.33
+          version: v1.42.1
 
       - name: Run General Linting
         uses: docker://ghcr.io/github/super-linter:slim-v4
@@ -66,7 +66,7 @@ jobs:
       - name: Setup Golang
         uses: actions/setup-go@v2
         with:
-          go-version: '^1.15'
+          go-version: '^1.17'
 
       - name: Run Unit tests
         run: |
