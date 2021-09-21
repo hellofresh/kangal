@@ -42,4 +42,4 @@ apply-crd:
 
 dev-lint:
 	@printf "$(OK_COLOR)==> Linting code$(NO_COLOR)\n"
-	@docker run --rm -v $(CURDIR):/app -w /app golangci/golangci-lint:v1.33.0 golangci-lint run -v
+	@docker run --rm -v $(CURDIR):/app -w /app golangci/golangci-lint:v1.42.1 golangci-lint run -v

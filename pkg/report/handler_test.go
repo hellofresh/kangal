@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	"github.com/minio/minio-go/v6"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"

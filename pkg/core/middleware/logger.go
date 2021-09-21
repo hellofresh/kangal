@@ -3,7 +3,7 @@ package middleware
 import (
 	"net/http"
 
-	m "github.com/go-chi/chi/middleware"
+	m "github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
 )
 
