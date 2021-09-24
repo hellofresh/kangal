@@ -12,7 +12,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/fake"
-	restClient "k8s.io/client-go/rest"
 	k8stesting "k8s.io/client-go/testing"
 
 	apisLoadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
@@ -432,9 +431,8 @@ func TestGetMasterPodLogs(t *testing.T) {
 	// to easily mock this funciton like there is for "ListPods". To do this We would
 	// need to wright our own `FakePod` package, and that doesn't seem worth it.
 	c = NewClient(loadtestClientset.KangalV1().LoadTests(), client, logger)
-	res, err := c.GetMasterPodRequest(ctx, "namespace")
+	_, err = c.GetMasterPodRequest(ctx, "namespace")
 	assert.Nil(t, err)
-	assert.Equal(t, &restClient.Request{}, res)
 }
 
 func TestGetMostRecentPod(t *testing.T) {
@@ -522,14 +520,12 @@ func TestGetWorkerPodsRequest(t *testing.T) {
 	tests := []struct {
 		scenario      string
 		pods          corev1.PodList
-		result        *restClient.Request
 		expectedError bool
 		error         error
 		workerID      string
 	}{
 		{
 			scenario:      "Error on listing worker pods",
-			result:        nil,
 			expectedError: true,
 			error:         errors.New("list worker pods error"),
 		},
@@ -557,7 +553,6 @@ func TestGetWorkerPodsRequest(t *testing.T) {
 					},
 				},
 			},
-			result:        nil,
 			expectedError: true,
 			error:         errors.New("pod index is out of range"),
 			workerID:      "4",
@@ -586,7 +581,6 @@ func TestGetWorkerPodsRequest(t *testing.T) {
 					},
 				},
 			},
-			result:        &restClient.Request{},
 			expectedError: false,
 			error:         nil,
 		},
@@ -604,13 +598,12 @@ func TestGetWorkerPodsRequest(t *testing.T) {
 			})
 			c := NewClient(loadtestClientset.KangalV1().LoadTests(), client, logger)
 
-			res, err := c.GetWorkerPodRequest(ctx, "foo", test.workerID)
+			_, err := c.GetWorkerPodRequest(ctx, "foo", test.workerID)
 			if !test.expectedError {
 				assert.NoError(t, err)
 			} else {
 				assert.EqualError(t, err, test.error.Error())
 			}
-			assert.Equal(t, test.result, res)
 		})
 	}
 }
