@@ -4,7 +4,7 @@
 
 ## Live metrics report
 JMeter offers a possibility to send live metrics from the running test to InfluxDB (see [details in the related JMeter documentation](writing-tests.md#metrics-collector)).
-This will help you to monitor current behaviour of your test and the service under the test. 
+This will help you to monitor current behaviour of your test and the service under the test.
 InfluxDB installed in your cluster is required to enable this functionality.
 > Note: InfluxDB is not the part of Kangal, read more about it in [InfluxDB official documentation](https://github.com/influxdata/influxdb).
 
