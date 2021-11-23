@@ -15,3 +15,10 @@ You can use InfluxDB as a datasource for Grafana and create a set of useful grap
 JMeter also offers a functionality to generate HTML report dashboards after the end of the test. Read more about it [in official JMeter documentation](https://jmeter.apache.org/usermanual/generating-dashboard.html).
 
 The [hellofresh/kangal-jmeter](https://github.com/hellofresh/kangal-jmeter) docker image implements this functionality.
+
+### CSV Results
+The CSV file containing all requests will be persisted within the reports, you can get this file from the report using the following URL:
+
+> https://${KANGAL_PROXY_ADDRESS}/load-test/{loadtest-name}/report/results.csv
+
+To read more about the REST API, check [User Flow documentation](../user-flow.md)
