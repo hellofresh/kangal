@@ -19,7 +19,7 @@ ___
 - [Quickstart guide](#quickstart-guide)
     - [Installing using helm](#installing-using-helm)
     - [Creating first LoadTest](#creating-first-loadtest)
-- [Documentation](docs/README.md)
+- [Documentation](docs/index.md)
 - [Contributing](#contributing)
 - [Support](#support)
 
@@ -55,7 +55,7 @@ Currently, there are the following load generator types implemented for Kangal:
 - [**JMeter**](https://jmeter.apache.org/)
 - [**Locust**](https://locust.io/)
 
-Read more about each of them in [docs/README.md](docs/README.md).
+Read more about each of them in [docs/index.md](docs/index.md).
 
 ## Architectural diagram
 The diagram below illustrates the workflow for Kangal in Kubernetes infrastructure.
@@ -190,7 +190,7 @@ loadtest-worker-000     1/1     Running   0          22s
 ```
 
 ## Documentation
-Read more at [docs/README.md](docs/README.md).
+Read more at [docs/index.md](docs/index.md).
 
 ## Contributing
 To start contributing, please check [CONTRIBUTING.md](CONTRIBUTING.md).
