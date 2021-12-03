@@ -8,7 +8,7 @@ markdown_extensions:
   - admonition
 
 nav:
-  - Home: 'README.md'
+  - Home: 'index.md'
   - Troubleshooting guide: 'troubleshooting.md'
   - User flow guide: 'user-flow.md'
   - JMeter load generator:
