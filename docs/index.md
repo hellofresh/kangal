@@ -47,10 +47,10 @@ Kangal can be easily extended by adding different load generators as backends.
 1. Create a docker image that must contain an executable of a new load generator and all required scripts to run it. Docker image should exit once load test is finished and it should provide logs to stdout which will be used by Kangal Proxy.
 
 2. Create a new backend resource definition in Kangal source code:
- - [main.go](/main.go)
- - [pkg/backends/](/pkg/backends)
- - [charts/kangal/crds/loadtest.yaml](/charts/kangal/crds/loadtest.yaml#L43)
- - [openapi.json](/openapi.json#L280)
+- [main.go](/main.go)
+- [pkg/backends/](/pkg/backends)
+- [charts/kangal/crds/loadtest.yaml](/charts/kangal/crds/loadtest.yaml#L43)
+- [openapi.json](/openapi.json#L280)
 
 ## Reporting
 Reporting is an important part of load testing process. It basically contains in two parts:

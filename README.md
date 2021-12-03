@@ -13,12 +13,12 @@ ___
 - [Supported backends](#supported-backends)
 - [Architectural diagram](#architectural-diagram)
 - [Components](#components)
-    - [LoadTest Custom Resource](#loadtest-custom-resource)
-    - [Kangal Proxy](#kangal-proxy)
-    - [Kangal Controller](#kangal-controller)
+  - [LoadTest Custom Resource](#loadtest-custom-resource)
+  - [Kangal Proxy](#kangal-proxy)
+  - [Kangal Controller](#kangal-controller)
 - [Quickstart guide](#quickstart-guide)
-    - [Installing using helm](#installing-using-helm)
-    - [Creating first LoadTest](#creating-first-loadtest)
+  - [Installing using helm](#installing-using-helm)
+  - [Creating first LoadTest](#creating-first-loadtest)
 - [Documentation](docs/index.md)
 - [Contributing](#contributing)
 - [Support](#support)
@@ -43,10 +43,10 @@ LoadTest custom resource (CR) is a main working entity.
 LoadTest custom resource definition (CRD) can be found in [charts/kangal/crds/loadtest.yaml](charts/kangal/crds/loadtest.yaml).
 
 Kangal application contains two main parts:
- - **Proxy** to create, delete and check load tests and reports via REST API requests
- - **Controller** to operate with LoadTest custom resource and other Kubernetes entities.
+- **Proxy** to create, delete and check load tests and reports via REST API requests
+- **Controller** to operate with LoadTest custom resource and other Kubernetes entities.
 
-Kangal also uses S3 compatible storage to save test reports. 
+Kangal also uses S3 compatible storage to save test reports.
 
 ## Supported backends
 Currently, there are the following load generator types implemented for Kangal:
@@ -74,13 +74,13 @@ More info about the Custom Resources in [official Kubernetes documentation](http
 
 ### Kangal Proxy
 Provides the following HTTP methods for `/load-test` endpoint:
- - POST - allowing the user to create a new LoadTest
- - GET - allowing the user to see information (status/logs/report) for specific LoadTest and get an overview for all the currently existing loadtests
- - DELETE - allowing the user to stop and delete existing LoadTest
+- POST - allowing the user to create a new LoadTest
+- GET - allowing the user to see information (status/logs/report) for specific LoadTest and get an overview for all the currently existing loadtests
+- DELETE - allowing the user to stop and delete existing LoadTest
 
- The Kangal Proxy is documented using the [OpenAPI Spec](https://swagger.io/specification/).
+The Kangal Proxy is documented using the [OpenAPI Spec](https://swagger.io/specification/).
 
- If you prefer to use Postman you can also import [openapi.json](openapi.json) file into Postman to create a new collection.
+If you prefer to use Postman you can also import [openapi.json](openapi.json) file into Postman to create a new collection.
 
 ### Kangal Controller
 The component is responsible for managing all the aspects of the performance testing process.
@@ -92,13 +92,13 @@ This tutorial will guide through Kangal installation process and usage.
 First, add the repository to Helm:
 
 ```shell
-$ helm repo add kangal https://hellofresh.github.io/kangal
+helm repo add kangal https://hellofresh.github.io/kangal
 ```
 
 Now, install the chart using the following command:
 
 ```shell
-$ helm install kangal kangal/kangal
+helm install kangal kangal/kangal
 ```
 
 That's it, Kangal should be installed, check if is all correct by running:
@@ -158,8 +158,9 @@ Your first load test was created successfully, in this example with the name `lo
 Check the load status with:
 
 ```shell
-$ curl http://${KANGAL_PROXY_ADDRESS}/load-test/loadtest-dunking-hedgehog
+curl http://${KANGAL_PROXY_ADDRESS}/load-test/loadtest-dunking-hedgehog
 ```
+
 ```json
 {
     "type": "JMeter",
@@ -173,7 +174,7 @@ $ curl http://${KANGAL_PROXY_ADDRESS}/load-test/loadtest-dunking-hedgehog
 
 Kangal Controller will automatically create a namespace for your load test and deploy the backend (in this case JMeter), check that by running:
 
-```
+```shell
 $ kubectl get namespaces
 NAME                        STATUS   AGE
 ...
@@ -182,7 +183,7 @@ loadtest-dunking-hedgehog   Active   3s
 
 And you can check if the Pods started correctly using:
 
-```
+```shell
 $ kubectl get pods --namespace=loadtest-dunking-hedgehog
 NAME                    READY   STATUS    RESTARTS   AGE
 loadtest-master-f6xpb   1/1     Running   0          18s

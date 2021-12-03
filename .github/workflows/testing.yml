@@ -28,6 +28,7 @@ jobs:
           VALIDATE_GO: false
           VALIDATE_JSCPD: false
           VALIDATE_GITHUB_ACTIONS: false
+          VALIDATE_NATURAL_LANGUAGE: false
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Lint GoReleaser
