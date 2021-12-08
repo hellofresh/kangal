@@ -54,6 +54,7 @@ Currently, there are the following load generator types implemented for Kangal:
 - **Fake**
 - [**JMeter**](https://jmeter.apache.org/)
 - [**Locust**](https://locust.io/)
+- [**ghz**](https://ghz.sh/)
 
 Read more about each of them in [docs/index.md](docs/index.md).
 
