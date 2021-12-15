@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Lint Go code
         uses: golangci/golangci-lint-action@v2
@@ -38,9 +40,6 @@ jobs:
           args: --skip-publish --snapshot
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Fetch history for helm linter
-        run: git fetch --prune --unshallow
 
       - name: Set up Helm
         uses: azure/setup-helm@v1
