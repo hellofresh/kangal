@@ -19,7 +19,7 @@ Apache JMeter features include ability to create and run performance test for di
 * LDAP
 * and many more ...
 
-Kangal requires a jmx testfile describing the test. 
+Kangal requires a jmx testfile describing the test.
 To create and edit jmx files we recommend you to install JMeter locally.
 
 ## Installing JMeter for local test development
@@ -52,7 +52,7 @@ You can specify resource limits and requests for JMeter master and worker contai
 
 The following environment variables can be specified to configure this parameter:
 
-```
+```shell
 JMETER_MASTER_CPU_LIMITS
 JMETER_MASTER_CPU_REQUESTS
 JMETER_MASTER_MEMORY_LIMITS
