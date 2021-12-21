@@ -2,21 +2,22 @@
 
 - [Introduction](#introduction)
 - [General recommendations](#general-recommendations)
-    - [Tests with test data](#tests-with-test-data)
-    - [Tests with environment variables](#tests-with-environment-variables)
+  - [Tests with test data](#tests-with-test-data)
+  - [Tests with environment variables](#tests-with-environment-variables)
 - [Example Test 1: Linearly growing load](#example-test-1-linearly-growing-load)
-    - [Test Plan](#test-plan)
-    - [Create load profile with Throughput Shaping Timer](#create-load-profile-with-throughput-shaping-timer)
-    - [Add enough threads](#add-enough-threads)
-    - [Where to shoot](#where-to-shoot)
-    - [Request headers](#request-headers)
-    - [Metrics collector](#metrics-collector)
+  - [Test Plan](#test-plan)
+  - [Create load profile with Throughput Shaping Timer](#create-load-profile-with-throughput-shaping-timer)
+  - [Add enough threads](#add-enough-threads)
+  - [Where to shoot](#where-to-shoot)
+  - [Request headers](#request-headers)
+  - [Metrics collector](#metrics-collector)
 - [Example Test 2: Constant load](#example-test-2-constant-load)
-    - [Thread group](#thread-group)
+  - [Thread group](#thread-group)
 - [Test with CSV data](#test-with-csv-data)
 - [Test with environment variables](#test-with-environment-variables)
 
 ## Introduction
+
 Before starting with creation of JMeter tests for Kangal, you need to install JMeter locally following the [Quickstart guide](/README.md).
 
 [Kangal repository](https://github.com/hellofresh/kangal) has some simple tests examples that can help you with a quick start.
