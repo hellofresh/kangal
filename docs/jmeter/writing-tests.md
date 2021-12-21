@@ -1,5 +1,5 @@
 # How to write and understand a JMeter test
-## Quick links
+
 - [Introduction](#introduction)
 - [General recommendations](#general-recommendations)
     - [Tests with test data](#tests-with-test-data)
@@ -180,9 +180,8 @@ Kangal allows you to use a file with env vars saved in CSV format. Please config
 
 ### Test Plan
 Test Plan element is the root of the test. Inside it you can find all the nested required elements for test configuration.
-<p align="center">
-<img src="images/linear_test_plan.png" height="500">
-</p>
+
+![linear_test_plan dmg](images/linear_test_plan.png){ height=500 }
 
 ### Create load profile with Throughput Shaping Timer
 The first important element in the configuration is a **Throughput Shaping Timer**. More information about this element can be found in the [official docs](https://jmeter-plugins.org/wiki/ThroughputShapingTimer/?utm_source=jmeter&utm_medium=helplink&utm_campaign=ThroughputShapingTimer)
@@ -205,9 +204,7 @@ With this two values you can regulate the number of the threads created during t
 
 In this example we advise to use thread count growing up to 20 threads during the test time (same time specified in Throughput Shaping Timer element).
 
-<p align="center">
-<img src="images/linear_thread_group.png" height="500">
-</p>
+![linear_thread_group dmg](images/linear_thread_group.png){ height=500 }
 
 ### Where to shoot
 Next important element is [HTTP request](https://jmeter.apache.org/usermanual/component_reference.html#HTTP_Request_Defaults) itself.
@@ -365,14 +362,14 @@ Values to manipulate:
 
 With the values given in example test, you will get 2000 threads / 200 seconds = 10 threads/sec. With the loop count = 1 it will give us 10 RPS.
 
-<p align="center"><img src="images/constant_thread_group.png" height="500"></p>
+![constant_thread_group dmg](images/constant_thread_group.png){ height=500 }
 
 ## Test with CSV data
 Some test scenarios require unique request or at least some amount of varied data in requests. For this purposes JMeter allows you to use external data sets in a CSV format.
 
 This config element should be nested under HTTP request sampler. Read more about [CSV DataSetConfig](https://jmeter.apache.org/usermanual/component_reference.html#CSV_Data_Set_Config) in official JMeter documentation.
 
-<p align="center"><img src="images/dataset_config.png" height="500"></p>
+![dataset_config dmg](images/dataset_config.png){ height=500 }
 
 > **Important note!** In Kangal the path to the test data file is always the same **/testdata/testdata.csv**. Please specify this path in Filename field of your CSV Data Set Config. Otherwise the test run by Kangal will not see the the provided data.
 
@@ -381,6 +378,6 @@ Some tests may contain sensitive information like DB connection parameters, auth
 
 You don't need any special configuration elements to use environment variables in test. You only need to have the plugin [Custom JMeter Functions](https://jmeter-plugins.org/wiki/Functions/#envsupfont-color-gray-size-1-since-1-2-0-font-sup) installed. Check [Required JMeter plugins](README.md##required-jmeter-plugins) for details.
 
-<p align="center"><img src="images/http_auth_manager.png" height="500"></p>
+![http_auth_manager dmg](images/http_auth_manager.png){ height=500 }
 
 In the example above the environment variable AUTH_CLIENT_ID used in HTTP Authorization Manager.
