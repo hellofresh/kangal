@@ -188,6 +188,7 @@ Test Plan element is the root of the test. Inside it you can find all the nested
 The first important element in the configuration is a **Throughput Shaping Timer**. More information about this element can be found in the [official docs](https://jmeter-plugins.org/wiki/ThroughputShapingTimer/?utm_source=jmeter&utm_medium=helplink&utm_campaign=ThroughputShapingTimer)
 
 Values to manipulate:
+
 - Start RPS
 - End RPS
 - Duration
@@ -196,6 +197,7 @@ Values to manipulate:
 Second required element is **Concurrency Thread Group**. A [Thread Group](https://jmeter-plugins.org/wiki/ConcurrencyThreadGroup/) basically is a pool of virtual users that will execute a particular test case against your server. In our case - every thread will make a particular call to exact endpoint specified in HTTP request element.
 
 Values to manipulate:
+
 - Start Threads Count
 - Startup Time
 
@@ -211,6 +213,7 @@ In this example we advise to use thread count growing up to 20 threads during th
 Next important element is [HTTP request](https://jmeter.apache.org/usermanual/component_reference.html#HTTP_Request_Defaults) itself.
 
 Values to manipulate:
+
 - Protocol (http/https)
 - Server name or IP (e.g. 127.0.0.1)
 - Method (e.g. GET)
@@ -225,7 +228,8 @@ For some requests may be necessary to specify some headers. You can do it with H
 To send the metrics to JMeter Grafana dashboard we use [Backend Listener](https://jmeter.apache.org/usermanual/component_reference.html#Backend_Listener) element.
 
 Values to manipulate:
-- backend listener implementation (in out case it's **org.apache.jmeter.visualizers.backend.influxdb.HttpMetricsSender**)
+
+- backend listener implementation (in our case it's **org.apache.jmeter.visualizers.backend.influxdb.HttpMetricsSender**)
 - InfluxDB URL
 - application
 
@@ -357,6 +361,7 @@ There is not much difference between constant and linear load tests. You can sim
 With [thread group](https://jmeter.apache.org/usermanual/component_reference.html#Thread_Group) element you can define the duration of your test and a constant number of threads to perform the calls. JMeter runs the thread group until either the number of loops is reached or the duration/end-time is reached - whichever occurs first.
 
 Values to manipulate:
+
 - Number of Threads
 - Ramp-Up Period
 - Loop Count
