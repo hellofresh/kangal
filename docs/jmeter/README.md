@@ -9,7 +9,7 @@
 
 JMeter is one of the load generators used in Kangal. A powerful tool which can be used for different performance testing tasks.
 
-Currently Kangal uses the docker image [hellofresh/kangal-jmeter](https://github.com/hellofresh/kangal-jmeter) based on JMeter v5.0 r1840935.
+Currently Kangal uses the docker image [hellofresh/kangal-jmeter](https://github.com/hellofresh/kangal-jmeter) based on JMeter v5.4.1.
 
 Apache JMeter features include ability to create and run performance test for different applications/server/protocol types:
 

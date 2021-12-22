@@ -5,7 +5,7 @@ We expect users to communicate with Kangal by only using API, which is provided 
 
 Here is an example of requests users can send to Kangal API to manage their load test.
 
-## Create 
+## Create
 Create a new load test by making a POST request to Kangal Proxy.
 
 > **Note**: The sample CURL commands below use example test files, those files can be found in [Kangal repository](https://github.com/hellofresh/kangal/).
@@ -64,26 +64,24 @@ curl -X POST http://${KANGAL_PROXY_ADDRESS}/load-test \
   -F masterImage=hellofresh/kangal-jmeter-master:5.4.1 \
   -F workerImage=hellofresh/kangal-jmeter-worker:5.4.1
 ```
-**Note: ** For locust only master image will be taken into account!!
+**Note:** For locust only master image will be taken into account!!
 
-
-
-## Check 
+## Check
 Check the status of the load test.
 
-```
+```bash
 curl -X GET \
   http://${KANGAL_PROXY_ADDRESS}/load-test/loadtest-name
 ```
 
 ## Live monitoring
-Get logs and monitor your tests. 
+Get logs and monitor your tests.
 For the logs of the main load generator process use the following command:
-```
+```bash
 curl -X GET http://${KANGAL_PROXY_ADDRESS}/load-test/loadtest-name/logs
 ```
 ### Advanced logs monitoring
-For the logs of the worker pod use the index number of the worker. 
+For the logs of the worker pod use the index number of the worker.
 Index numbers are `0`, `1`, etc, according to the number of workers you created.
 ```bash
 curl -X GET http://${KANGAL_PROXY_ADDRESS}/load-test/loadtest-name/logs/0
@@ -93,17 +91,17 @@ You can also monitor the behavior of your service with your custom tools e.g. Gr
 
 Example of monitoring for JMeter is described at [docs/jmeter/reporting.md](jmeter/reporting.md).
 
-## Get static report. 
+## Get static report
 When the test is finished successfully the backend will save the report.
 
 The report for a particular test can be found by the link `https://${KANGAL_PROXY_ADDRESS}/load-test/loadtest-name/report/`.
 
 > Report persistence depends on the backend implementation.
 
-## Delete 
+## Delete
 Delete your finished load test.
 
-```
+```bash
 curl -X DELETE http://${KANGAL_PROXY_ADDRESS}/load-test/loadtest-name
 ```
 

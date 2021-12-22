@@ -47,6 +47,7 @@ Kangal can be easily extended by adding different load generators as backends.
 1. Create a docker image that must contain an executable of a new load generator and all required scripts to run it. Docker image should exit once load test is finished and it should provide logs to stdout which will be used by Kangal Proxy.
 
 2. Create a new backend resource definition in Kangal source code:
+
 - [main.go](/main.go)
 - [pkg/backends/](/pkg/backends)
 - [charts/kangal/crds/loadtest.yaml](/charts/kangal/crds/loadtest.yaml#L43)
@@ -102,7 +103,7 @@ or just use:
 make apply-crd
 ```
 
-### 3 Get project dependencies
+### 3. Get project dependencies
 
 ```bash
 go mod vendor
