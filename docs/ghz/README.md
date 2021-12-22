@@ -4,7 +4,7 @@
 
 Kangal supports `ghz` as a loadtest backend using a custom docker image: [`hellofresh/kangal-ghz`][kangal-ghz] published to [dockerhub].
 
-For more information, please check [ghz official website](https://ghz.sh/) [`ghz`].
+For more information, please check [ghz official website](https://ghz.sh/).
 
 ## Usage
 To create a loadtest, simply send a request to Kangal proxy with the `ghz` configuration in the `testFile` field:
@@ -86,10 +86,8 @@ Kangal overrides the following options:
 - This is done so Kangal is able to pick up the results and persist the results
 - Because they are set as container arguments, this cannot be overridden with the configuration file
 
-## Links
-
-- `[`ghz`]`: https://ghz.sh/
-- `[ghz params]`: https://ghz.sh/docs/options
-- `[ghz protoset-example]`: https://ghz.sh/docs/options#--protoset
-- `[kangal-ghz]`: https://github.com/hellofresh/kangal-ghz
-- `[dockerhub]`: https://hub.docker.com/r/hellofresh/kangal-ghz/
+[`ghz`]: https://ghz.sh/
+[ghz params]: https://ghz.sh/docs/options
+[ghz protoset-example]: https://ghz.sh/docs/options#--protoset
+[kangal-ghz]: https://github.com/hellofresh/kangal-ghz
+[dockerhub]: https://hub.docker.com/r/hellofresh/kangal-ghz/
