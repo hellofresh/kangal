@@ -64,7 +64,7 @@ You can specify resource limits and requests for the containers to ensure that w
 
 The following environment variables can be specified to configure this parameter:
 
-```
+```bash
 GHZ_CPU_LIMITS
 GHZ_CPU_REQUESTS
 GHZ_MEMORY_LIMITS

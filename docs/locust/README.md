@@ -46,6 +46,7 @@ Let's break it down the parameters:
 - `targetURL` is the host to be prefixed on all relative URLs in the locustfile
 
 > Note: If you don't specify `duration`, your tests will run infinitely.
+<!-- comment -->
 
 > Note: If you don't specify `targetURL`, be sure to use absolute URLs on your locustfile or your tests will fail.
 
@@ -79,7 +80,7 @@ You can specify resource limits and requests for Locust master and worker contai
 
 The following environment variables can be specified to configure this parameter:
 
-```
+```bash
 LOCUST_MASTER_CPU_LIMITS
 LOCUST_MASTER_CPU_REQUESTS
 LOCUST_MASTER_MEMORY_LIMITS
