@@ -9,7 +9,7 @@ InfluxDB installed in your cluster is required to enable this functionality.
 > Note: InfluxDB is not the part of Kangal, read more about it in [InfluxDB official documentation](https://github.com/influxdata/influxdb).
 
 You can use InfluxDB as a datasource for Grafana and create a set of useful graphs.
-<p align="center"><img src="images/grafana_example.png" height="500"></p>
+![grafana_example dmg](images/grafana_example.png) { height=500 }
 
 ## Static report
 JMeter also offers a functionality to generate HTML report dashboards after the end of the test. Read more about it [in official JMeter documentation](https://jmeter.apache.org/usermanual/generating-dashboard.html).
