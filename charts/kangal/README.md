@@ -9,7 +9,7 @@ This chart bootstraps a [kangal](https://github.com/hellofresh/kangal) deploymen
 - Kubernetes 1.12+
 
 ## Installing the Chart
-To add the the repository to Helm:
+To add the repository to Helm:
 ```shell
 $ helm repo add kangal https://hellofresh.github.io/kangal
 ```

@@ -19,3 +19,4 @@ nav:
       - About Locust load generator: 'locust/README.md'
   - Ghz load generator:
       - About ghz load generator: 'ghz/README.md'
+  - Kangal environment variables: 'env-vars.md'
