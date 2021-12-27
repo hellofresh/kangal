@@ -17,14 +17,14 @@
 | `WEB_HTTP_PORT`                 |                                                      | `8080`                                     |
 
 ## Controller
-| Parameter                       | Description                                       | Default                           |
-|---------------------------------|---------------------------------------------------|-----------------------------------|
-| `CLEANUP_THRESHOLD`             | Life time of a load test                          | `1h`                              |
+| Parameter                       | Description                                       | Default             |
+|---------------------------------|---------------------------------------------------|---------------------|
+| `CLEANUP_THRESHOLD`             | Life time of a load test                          | `1h`                |
 | `DEBUG`                         |        | |
-| `KANGAL_PROXY_URL`              | Endpoints used to store load test reports         | `""` |
-| `KUBE_CLIENT_TIMEOUT`           | Timeout for each operation done by kube client    | `5s` |
-| `SYNC_HANDLER_TIMEOUT`          | Time limit for each sync operation                | `60s`                            |
-| `WEB_HTTP_PORT`                 |                                                   | `8080`               |
+| `KANGAL_PROXY_URL`              | Endpoints used to store load test reports         | `""`                |
+| `KUBE_CLIENT_TIMEOUT`           | Timeout for each operation done by kube client    | `5s`                |
+| `SYNC_HANDLER_TIMEOUT`          | Time limit for each sync operation                | `60s`               |
+| `WEB_HTTP_PORT`                 |                                                   | `8080`              |
 
 ## Backend specific configuration
 ### JMeter
@@ -32,41 +32,41 @@
 |---------------------------------|--------------------------------------|-----------------------------------|
 | `JMETER_MASTER_IMAGE_NAME`      | JMeter master image name/repository  | `hellofresh/kangal-jmeter-master` |
 | `JMETER_MASTER_IMAGE_TAG`       | Tag of the JMeter master image above | `latest`                          |
-| `JMETER_MASTER_CPU_LIMIT`       | Master CPU limit                     | ``                                |
-| `JMETER_MASTER_CPU_REQUESTS`    | Master CPU requests                  | ``                                |
-| `JMETER_MASTER_MEMORY_LIMITS`   | Master memory limits                 | ``                                |
-| `JMETER_MASTER_MEMORY_REQUESTS` | Master memory requests               | ``                                |
+| `JMETER_MASTER_CPU_LIMIT`       | Master CPU limit                     |                                   |
+| `JMETER_MASTER_CPU_REQUESTS`    | Master CPU requests                  |                                   |
+| `JMETER_MASTER_MEMORY_LIMITS`   | Master memory limits                 |                                   |
+| `JMETER_MASTER_MEMORY_REQUESTS` | Master memory requests               |                                   |
 | `JMETER_WORKER_IMAGE_NAME`      | JMeter worker image name/repository  | `hellofresh/kangal-jmeter-worker` |
 | `JMETER_WORKER_IMAGE_TAG`       | Tag of the JMeter worker image above | `latest`                          |
-| `JMETER_WORKER_CPU_LIMITS`      | Worker container CPU limits          | ``                                |
-| `JMETER_WORKER_CPU_REQUESTS`    | Worker CPU requests                  | ``                                |
-| `JMETER_WORKER_MEMORY_LIMITS`   | Worker memory limits                 | ``                                |
-| `JMETER_WORKER_MEMORY_REQUESTS` | Worker memory requests               | ``                                |
+| `JMETER_WORKER_CPU_LIMITS`      | Worker container CPU limits          |                                   |
+| `JMETER_WORKER_CPU_REQUESTS`    | Worker CPU requests                  |                                   |
+| `JMETER_WORKER_MEMORY_LIMITS`   | Worker memory limits                 |                                   |
+| `JMETER_WORKER_MEMORY_REQUESTS` | Worker memory requests               |                                   |
 
 ### Locust
 | Parameter                       | Description                 | Default           |
 |---------------------------------|-----------------------------|-------------------|
-| `LOCUST_IMAGE`                  | Locust image                | ``                |
-| `LOCUST_IMAGE_NAME`             | Locust image name           | ``                |
-| `LOCUST_IMAGE_TAG`              | Locust image tag            | ``                |
-| `LOCUST_MASTER_CPU_LIMITS`      | Master container CPU limits | ``                |
-| `LOCUST_MASTER_CPU_REQUESTS`    | Master CPU requests         | ``                |
-| `LOCUST_MASTER_MEMORY_LIMITS`   | Master memory limits        | ``                |
-| `LOCUST_MASTER_MEMORY_REQUESTS` | Master memory requests      | ``                |
-| `LOCUST_WORKER_CPU_LIMITS`      | Master container CPU limits | ``                |
-| `LOCUST_WORKER_CPU_REQUESTS`    | Master CPU requests         | ``                |
-| `LOCUST_WORKER_MEMORY_LIMITS`   | Master memory limits        | ``                |
-| `LOCUST_WORKER_MEMORY_REQUESTS` | Master memory requests      | ``                |
+| `LOCUST_IMAGE`                  | Locust image                |                   |
+| `LOCUST_IMAGE_NAME`             | Locust image name           |                   |
+| `LOCUST_IMAGE_TAG`              | Locust image tag            |                   |
+| `LOCUST_MASTER_CPU_LIMITS`      | Master container CPU limits |                   |
+| `LOCUST_MASTER_CPU_REQUESTS`    | Master CPU requests         |                   |
+| `LOCUST_MASTER_MEMORY_LIMITS`   | Master memory limits        |                   |
+| `LOCUST_MASTER_MEMORY_REQUESTS` | Master memory requests      |                   |
+| `LOCUST_WORKER_CPU_LIMITS`      | Master container CPU limits |                   |
+| `LOCUST_WORKER_CPU_REQUESTS`    | Master CPU requests         |                   |
+| `LOCUST_WORKER_MEMORY_LIMITS`   | Master memory limits        |                   |
+| `LOCUST_WORKER_MEMORY_REQUESTS` | Master memory requests      |                   |
 
 ### `ghz`
 | Parameter                    | Description                         | Default                 |
 |------------------------------|-------------------------------------|-------------------------|
 | `GHZ_IMAGE_NAME`             | Default ghz image name/repository   | `hellofresh/kangal-ghz` |
 | `GHZ_IMAGE_TAG`              | Tag of the ghz image above          | `latest`                |
-| `GHZ_MASTER_CPU_LIMITS`      | CPU limits                          | ``                      |
-| `GHZ_MASTER_CPU_REQUESTS`    | CPU requests                        | ``                      |
-| `GHZ_MASTER_MEMORY_LIMITS`   | Memory limits                       | ``                      |
-| `GHZ_MASTER_MEMORY_REQUESTS` | Memory requests                     | ``                      |
+| `GHZ_MASTER_CPU_LIMITS`      | CPU limits                          |                         |
+| `GHZ_MASTER_CPU_REQUESTS`    | CPU requests                        |                         |
+| `GHZ_MASTER_MEMORY_LIMITS`   | Memory limits                       |                         |
+| `GHZ_MASTER_MEMORY_REQUESTS` | Memory requests                     |                         |
 
 ## Global config
 | Parameter                  | Description                                                  | Default                               |

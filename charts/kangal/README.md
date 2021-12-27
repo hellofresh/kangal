@@ -11,18 +11,18 @@ This chart bootstraps a [kangal](https://github.com/hellofresh/kangal) deploymen
 ## Installing the Chart
 To add the repository to Helm:
 ```shell
-$ helm repo add kangal https://hellofresh.github.io/kangal
+ helm repo add kangal https://hellofresh.github.io/kangal
 ```
 
 To install the chart with the release name `kangal`:
 ```shell
-$ helm install kangal kangal/kangal
+ helm install kangal kangal/kangal
 ```
 
 > **Tip**: You can provide values on the command line with `--set` or using the `values` file with `-f my-values-file.yaml`. Eg.:
 To set AWS credentials using command line you can use the following flags:
 
-```
+```shell
   --set secrets.AWS_ACCESS_KEY_ID="my-aws-key-id" \
   --set secrets.AWS_SECRET_ACCESS_KEY="my-aws-secret-access-key" \
 ```
@@ -37,7 +37,7 @@ secrets:
 
 To install the chart with the release name `kangal` and use an specific version:
 ```shell
-$ helm install \
+ helm install \
   --set proxy.image.tag=1.0.3 \
   --set controller.image.tag=1.0.3 \
   kangal kangal/kangal
@@ -52,7 +52,7 @@ It also applies the latest version of Custom Resource Definition (CRD) to the cl
 To uninstall/delete the `kangal` deployment:
 
 ```shell
-$ helm delete kangal
+ helm delete kangal
 ```
 
 > **Note:** Helm does not handle CRD deletion, so you have to manually remove it by running:
@@ -68,8 +68,8 @@ The following table lists the common configurable parameters for `Kangal` chart:
 | Parameter                            | Description                                                                                         | Default                               |
 |--------------------------------------|-----------------------------------------------------------------------------------------------------|---------------------------------------|
 | `environment`                        | The name that identifies the environment installation                                               | `dev`                                 |
-| `fullnameOverride`                   | String to fully override kangal.fullname template with a string                                     | ``                                    |
-| `nameOverride`                       | String to partially override kangal.fullname template with a string (will prepend the release name) | ``                                    |
+| `fullnameOverride`                   | String to fully override kangal.fullname template with a string                                     |                                       |
+| `nameOverride`                       | String to partially override kangal.fullname template with a string (will prepend the release name) |                                       |
 | `secrets.AWS_ACCESS_KEY_ID`          | AWS access key ID. If not defined report will not be stored                                         | `my-access-key-id`                    |
 | `secrets.AWS_SECRET_ACCESS_KEY`      | AWS secret access key                                                                               | `my-secret-access-key`                |
 | `configMap.AWS_BUCKET_NAME`          | The name of the bucket for saving reports                                                           | `my-bucket`                           |
@@ -158,31 +158,31 @@ Deployment specific configurations:
 ### Kangal Controller (JMeter specific)
 | Parameter                                      | Description                 | Default           |
 |------------------------------------------------|-----------------------------|-------------------|
-| `controller.env.JMETER_MASTER_CPU_LIMITS`      | Master container CPU limits | ``                |
-| `controller.env.JMETER_MASTER_CPU_REQUESTS`    | Master CPU requests         | ``                |
-| `controller.env.JMETER_MASTER_MEMORY_LIMITS`   | Master memory limits        | ``                |
-| `controller.env.JMETER_MASTER_MEMORY_REQUESTS` | Master memory requests      | ``                |
-| `controller.env.JMETER_WORKER_CPU_LIMITS`      | Master container CPU limits | ``                |
-| `controller.env.JMETER_WORKER_CPU_REQUESTS`    | Master CPU requests         | ``                |
-| `controller.env.JMETER_WORKER_MEMORY_LIMITS`   | Master memory limits        | ``                |
-| `controller.env.JMETER_WORKER_MEMORY_REQUESTS` | Master memory requests      | ``                |
+| `controller.env.JMETER_MASTER_CPU_LIMITS`      | Master container CPU limits |                   |
+| `controller.env.JMETER_MASTER_CPU_REQUESTS`    | Master CPU requests         |                   |
+| `controller.env.JMETER_MASTER_MEMORY_LIMITS`   | Master memory limits        |                   |
+| `controller.env.JMETER_MASTER_MEMORY_REQUESTS` | Master memory requests      |                   |
+| `controller.env.JMETER_WORKER_CPU_LIMITS`      | Master container CPU limits |                   |
+| `controller.env.JMETER_WORKER_CPU_REQUESTS`    | Master CPU requests         |                   |
+| `controller.env.JMETER_WORKER_MEMORY_LIMITS`   | Master memory limits        |                   |
+| `controller.env.JMETER_WORKER_MEMORY_REQUESTS` | Master memory requests      |                   |
 
 ### Kangal Controller (Locust specific)
 | Parameter                                      | Description                 | Default           |
 |------------------------------------------------|-----------------------------|-------------------|
-| `controller.env.LOCUST_MASTER_CPU_LIMITS`      | Master container CPU limits | ``                |
-| `controller.env.LOCUST_MASTER_CPU_REQUESTS`    | Master CPU requests         | ``                |
-| `controller.env.LOCUST_MASTER_MEMORY_LIMITS`   | Master memory limits        | ``                |
-| `controller.env.LOCUST_MASTER_MEMORY_REQUESTS` | Master memory requests      | ``                |
-| `controller.env.LOCUST_WORKER_CPU_LIMITS`      | Master container CPU limits | ``                |
-| `controller.env.LOCUST_WORKER_CPU_REQUESTS`    | Master CPU requests         | ``                |
-| `controller.env.LOCUST_WORKER_MEMORY_LIMITS`   | Master memory limits        | ``                |
-| `controller.env.LOCUST_WORKER_MEMORY_REQUESTS` | Master memory requests      | ``                |
+| `controller.env.LOCUST_MASTER_CPU_LIMITS`      | Master container CPU limits |                   |
+| `controller.env.LOCUST_MASTER_CPU_REQUESTS`    | Master CPU requests         |                   |
+| `controller.env.LOCUST_MASTER_MEMORY_LIMITS`   | Master memory limits        |                   |
+| `controller.env.LOCUST_MASTER_MEMORY_REQUESTS` | Master memory requests      |                   |
+| `controller.env.LOCUST_WORKER_CPU_LIMITS`      | Master container CPU limits |                   |
+| `controller.env.LOCUST_WORKER_CPU_REQUESTS`    | Master CPU requests         |                   |
+| `controller.env.LOCUST_WORKER_MEMORY_LIMITS`   | Master memory limits        |                   |
+| `controller.env.LOCUST_WORKER_MEMORY_REQUESTS` | Master memory requests      |                   |
 
 ### Kangal Controller (`ghz` specific)
 | Parameter                                   | Description     | Default           |
 |---------------------------------------------|-----------------|-------------------|
-| `controller.env.GHZ_MASTER_CPU_LIMITS`      | CPU limits      | ``                |
-| `controller.env.GHZ_MASTER_CPU_REQUESTS`    | CPU requests    | ``                |
-| `controller.env.GHZ_MASTER_MEMORY_LIMITS`   | Memory limits   | ``                |
-| `controller.env.GHZ_MASTER_MEMORY_REQUESTS` | Memory requests | ``                |
+| `controller.env.GHZ_MASTER_CPU_LIMITS`      | CPU limits      |                   |
+| `controller.env.GHZ_MASTER_CPU_REQUESTS`    | CPU requests    |                   |
+| `controller.env.GHZ_MASTER_MEMORY_LIMITS`   | Memory limits   |                   |
+| `controller.env.GHZ_MASTER_MEMORY_REQUESTS` | Memory requests |                   |
