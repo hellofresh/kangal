@@ -4,9 +4,8 @@
 | Parameter                       | Description                                          | Default                                    |
 |---------------------------------|------------------------------------------------------|--------------------------------------------|
 | `ALLOWED_CUSTOM_IMAGES`         | Allow custom Images to be defined in the request     | `false`                                    |
-| `DEBUG`                         |        | |
 | `KUBE_CLIENT_TIMEOUT`           | Timeout for each operation done by kube client       | `5s`                                       |
-| `MAX_LIST_LIMIT`                | Output of LIST endpoint                              | 50                                         |
+| `MAX_LIST_LIMIT`                | Output of LIST endpoint                              | `50`                                       |
 | `OPEN_API_SERVER_DESCRIPTION`   | Description to the OpenAPI server URL                | `Kangal proxy default value`               |
 | `OPEN_API_SERVER_URL`           | URL to the OpenAPI specification server              | `https://kangal-proxy.example.com/openapi` |
 | `OPEN_API_SPEC_PATH`            | Path to the openapi spec file                        | `/etc/kangal`                              |
@@ -20,7 +19,6 @@
 | Parameter                       | Description                                       | Default             |
 |---------------------------------|---------------------------------------------------|---------------------|
 | `CLEANUP_THRESHOLD`             | Life time of a load test                          | `1h`                |
-| `DEBUG`                         |        | |
 | `KANGAL_PROXY_URL`              | Endpoints used to store load test reports         | `""`                |
 | `KUBE_CLIENT_TIMEOUT`           | Timeout for each operation done by kube client    | `5s`                |
 | `SYNC_HANDLER_TIMEOUT`          | Time limit for each sync operation                | `60s`               |
@@ -71,7 +69,6 @@
 ## Global config
 | Parameter                  | Description                                                  | Default                               |
 |----------------------------|--------------------------------------------------------------|---------------------------------------|
-| `DEBUG`                    |   |                    |
 | `LOG_LEVEL`                | Log level                                                    | `info`                                |
 | `LOG_TYPE`                 | Log type                                                     | `kangal`                              |
 | `AWS_ACCESS_KEY_ID`        | AWS access key ID. If not defined report will not be stored  | `my-access-key-id`                    |

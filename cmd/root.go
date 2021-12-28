@@ -6,7 +6,6 @@ import (
 
 // GlobalConfig holds the config values that are common to all applications
 type GlobalConfig struct {
-	Debug bool `envconfig:"DEBUG"`
 	Log   LogConfig
 
 	// S3 compatible configuration access keys and endpoints needed to store load test reports

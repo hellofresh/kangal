@@ -8,7 +8,6 @@ import (
 
 // Config is the possible Kangal Controller configurations
 type Config struct {
-	Debug    bool `envconfig:"DEBUG"`
 	HTTPPort int  `envconfig:"WEB_HTTP_PORT" default:"8080"`
 	Logger   observability.LoggerConfig
 
