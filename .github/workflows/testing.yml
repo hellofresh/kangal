@@ -39,6 +39,8 @@ jobs:
           version: v1.2.2
           args: --skip-publish --snapshot
         env:
+          #dummy tag to test goreleaser
+          GORELEASER_CURRENT_TAG: 1.2.0
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Helm
