@@ -66,11 +66,15 @@
 | `GHZ_MASTER_MEMORY_LIMITS`   | Memory limits                       |                         |
 | `GHZ_MASTER_MEMORY_REQUESTS` | Memory requests                     |                         |
 
-## Global config
+## Logger config
 | Parameter                  | Description                                                  | Default                               |
 |----------------------------|--------------------------------------------------------------|---------------------------------------|
 | `LOG_LEVEL`                | Log level                                                    | `info`                                |
 | `LOG_TYPE`                 | Log type                                                     | `kangal`                              |
+
+## Global config
+| Parameter                  | Description                                                  | Default                               |
+|----------------------------|--------------------------------------------------------------|---------------------------------------|
 | `AWS_ACCESS_KEY_ID`        | AWS access key ID. If not defined report will not be stored  | `my-access-key-id`                    |
 | `AWS_BUCKET_NAME`          | The name of the bucket for saving reports                    | `my-bucket`                           |
 | `AWS_DEFAULT_REGION`       | Storage connection parameter                                 | `us-east-1`                           |
