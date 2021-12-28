@@ -72,20 +72,16 @@
 | `LOG_LEVEL`                | Log level                                                    | `info`                                |
 | `LOG_TYPE`                 | Log type                                                     | `kangal`                              |
 
-## Global config
-| Parameter                  | Description                                                  | Default                               |
-|----------------------------|--------------------------------------------------------------|---------------------------------------|
-| `AWS_ACCESS_KEY_ID`        | AWS access key ID. If not defined report will not be stored  | `my-access-key-id`                    |
-| `AWS_BUCKET_NAME`          | The name of the bucket for saving reports                    | `my-bucket`                           |
-| `AWS_DEFAULT_REGION`       | Storage connection parameter                                 | `us-east-1`                           |
-| `AWS_ENDPOINT_URL`         | Storage connection parameter                                 | `s3.us-east-1.amazonaws.com`          |
-| `AWS_SECRET_ACCESS_KEY`    | AWS secret access key                                        | `my-secret-access-key`                |
-
 ## Report config
-| Parameter                  | Description                        | Default                               |
-|----------------------------|------------------------------------|---------------------------------------|
-| `AWS_PRESIGNED_EXPIRES`    | Expiration time for Presigned URLs | `30m`                                 |
-| `AWS_USE_HTTPS`            | Set to "true" to use HTTPS         | `false`                               |
+| Parameter                  | Description                                                  | Default   |
+|----------------------------|--------------------------------------------------------------|-----------|
+| `AWS_ACCESS_KEY_ID`        | AWS access key ID. If not defined report will not be stored  |           |
+| `AWS_BUCKET_NAME`          | The name of the bucket for saving reports                    |           |
+| `AWS_DEFAULT_REGION`       | Storage connection parameter                                 |           |
+| `AWS_ENDPOINT_URL`         | Storage connection parameter                                 |           |
+| `AWS_PRESIGNED_EXPIRES`    | Expiration time for Presigned URLs                           |           |
+| `AWS_SECRET_ACCESS_KEY`    | AWS secret access key                                        |           |
+| `AWS_USE_HTTPS`            | Set to "true" to use HTTPS                                   | `false`   |
 
 ## Swagger
 | Parameter              | Description                              | Default                                    |
