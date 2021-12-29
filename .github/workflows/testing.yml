@@ -32,7 +32,7 @@ jobs:
           VALIDATE_GITHUB_ACTIONS: false
           VALIDATE_NATURAL_LANGUAGE: false
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          KUBERNETES_KUBEVAL_OPTIONS: "--ignore-missing-schemas"
+          VALIDATE_KUBERNETES_KUBEVAL: false
 
       - name: Get tag
         id: get_tag
