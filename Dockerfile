@@ -2,7 +2,9 @@ FROM ubuntu:20.04
 
 RUN apt-get update && \
     apt-get install --no-install-recommends -y ca-certificates=20210119 && \
-    mkdir -p /etc/kangal
+    mkdir -p /etc/kangal && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 COPY kangal /bin/kangal
 COPY openapi.json /etc/kangal/
