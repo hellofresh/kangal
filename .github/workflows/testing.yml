@@ -33,14 +33,24 @@ jobs:
           VALIDATE_NATURAL_LANGUAGE: false
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Get tag
+        id: get_tag
+        run: |
+          for ref in $(git for-each-ref --sort=-creatordate --format '%(refname)' refs/tags); do
+            tag="${ref#refs/tags/}"
+            if echo "${tag}" | grep -Eq '^v?([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+)?$'; then
+              latest_tag="${tag}"
+              break
+            fi
+          done
+
       - name: Lint GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
           version: v1.2.2
           args: --skip-publish --snapshot
         env:
-          #dummy tag to test goreleaser
-          GORELEASER_CURRENT_TAG: 1.2.0
+          GORELEASER_CURRENT_TAG: ${{ steps.get_tag.outputs.TAG }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Helm

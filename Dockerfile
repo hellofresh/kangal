@@ -4,8 +4,8 @@ RUN apt-get update && \
     apt-get install --no-install-recommends -y ca-certificates && \
     mkdir -p /etc/kangal
 
-ADD kangal /bin/kangal
-ADD openapi.json /etc/kangal/
+COPY kangal /bin/kangal
+COPY openapi.json /etc/kangal/
 
 RUN chmod a+x /bin/kangal && \
     chmod -R a+r /etc/kangal
