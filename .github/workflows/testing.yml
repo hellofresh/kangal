@@ -36,7 +36,8 @@ jobs:
       - name: Get tag
         id: get_tag
         run: |
-          echo "::set-output name=tag::$(./ci/get-latest-tag.sh)"
+          VERSION="$(git tag | grep -v kangal | sort -rV | head -n 1)"
+          echo "::set-output name=tag::$VERSION"
 
       - name: Lint GoReleaser
         uses: goreleaser/goreleaser-action@v2
