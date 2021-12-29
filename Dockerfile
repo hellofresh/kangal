@@ -1,11 +1,13 @@
-FROM ubuntu:20.10
+FROM ubuntu:20.04
 
 RUN apt-get update && \
-    apt-get install --no-install-recommends -y ca-certificates && \
-    mkdir -p /etc/kangal
+    apt-get install --no-install-recommends -y ca-certificates=20210119~20.04.2 && \
+    mkdir -p /etc/kangal && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-ADD kangal /bin/kangal
-ADD openapi.json /etc/kangal/
+COPY kangal /bin/kangal
+COPY openapi.json /etc/kangal/
 
 RUN chmod a+x /bin/kangal && \
     chmod -R a+r /etc/kangal
