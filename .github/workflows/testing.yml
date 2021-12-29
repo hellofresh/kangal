@@ -24,7 +24,7 @@ jobs:
           version: v1.42.1
 
       - name: Run General Linting
-        uses: docker://ghcr.io/github/super-linter:slim-v4
+        uses: docker://ghcr.io/github/super-linter:slim-v4.8.5
         env:
           VALIDATE_ALL_CODEBASE: false
           VALIDATE_GO: false
