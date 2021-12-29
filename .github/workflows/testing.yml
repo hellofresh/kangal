@@ -33,12 +33,19 @@ jobs:
           VALIDATE_NATURAL_LANGUAGE: false
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Get tag
+        id: get_tag
+        run: |
+          VERSION="$(git tag | grep -v kangal | sort -rV | head -n 1)"
+          echo "::set-output name=tag::$VERSION"
+
       - name: Lint GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
-          version: v0.179.0
+          version: v1.2.2
           args: --skip-publish --snapshot
         env:
+          GORELEASER_CURRENT_TAG: ${{ steps.get_tag.outputs.tag }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Helm
