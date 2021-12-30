@@ -9,8 +9,7 @@ import (
 
 // Config is the possible Proxy configurations
 type Config struct {
-	Debug               bool `envconfig:"DEBUG"`
-	HTTPPort            int  `envconfig:"WEB_HTTP_PORT" default:"8080"`
+	HTTPPort            int `envconfig:"WEB_HTTP_PORT" default:"8080"`
 	Logger              observability.LoggerConfig
 	OpenAPI             OpenAPIConfig
 	Report              report.Config

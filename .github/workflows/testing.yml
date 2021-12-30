@@ -24,7 +24,7 @@ jobs:
           version: v1.42.1
 
       - name: Run General Linting
-        uses: docker://ghcr.io/github/super-linter:slim-v4
+        uses: docker://ghcr.io/github/super-linter:slim-v4.8.5
         env:
           VALIDATE_ALL_CODEBASE: false
           VALIDATE_GO: false
@@ -32,6 +32,7 @@ jobs:
           VALIDATE_GITHUB_ACTIONS: false
           VALIDATE_NATURAL_LANGUAGE: false
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VALIDATE_KUBERNETES_KUBEVAL: false
 
       - name: Get tag
         id: get_tag

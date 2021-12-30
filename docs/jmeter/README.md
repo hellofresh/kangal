@@ -63,6 +63,8 @@ JMETER_WORKER_MEMORY_LIMITS
 JMETER_WORKER_MEMORY_REQUESTS
 ```
 
+For the full list of possible environment variables check [Kangal environment variables](../env-vars.md)
+
 More information regarding resource limits and requests can be found in the following page(s):
 - https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
 - https://cloud.google.com/blog/products/gcp/kubernetes-best-practices-resource-requests-and-limits

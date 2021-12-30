@@ -124,6 +124,8 @@ export AWS_DEFAULT_REGION=YOUR_AWS_REGION     # storage connection parameter
 export KANGAL_PROXY_URL=http://localhost:8080 # used to persist reports
 ```
 
+For the full list of possible environment variables check [Kangal environment variables](env-vars.md)
+
 ### 6. Run both Kangal proxy and controller
 
 ```bash
