@@ -62,16 +62,6 @@ func TestHTTPValidator(t *testing.T) {
 			"",
 		},
 		{
-			"Empty distributed pods",
-			"0",
-			"distributedPods",
-			"Fake",
-			map[string]string{
-				"testFile": "testdata/valid/loadtest.jmx",
-			},
-			"The distributedPods field value can not be less than 1",
-		},
-		{
 			"Invalid test file",
 			"1",
 			"testFile",
@@ -80,17 +70,6 @@ func TestHTTPValidator(t *testing.T) {
 				"testFile": "testdata/valid/testdata.csv",
 			},
 			"The testFile field file extension csv is invalid",
-		},
-		{
-			"Invalid envVars file",
-			"1",
-			"envVars",
-			"JMeter",
-			map[string]string{
-				"testFile": "testdata/valid/loadtest.jmx",
-				"envVars":  "testdata/valid/loadtest.jmx",
-			},
-			"The envVars field file extension jmx is invalid",
 		},
 		{
 			"Invalid testData file",

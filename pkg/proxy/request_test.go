@@ -164,6 +164,14 @@ func TestEnvVarFile(t *testing.T) {
 			expectError:      false,
 		},
 		{
+			tag: "invalid env vars file format",
+			requestFile: map[string]string{
+				envVars: "testdata/valid/loadtest.jmx",
+			},
+			expectedResponse: nil,
+			expectError:      true,
+		},
+		{
 			tag: "empty env vars file",
 			requestFile: map[string]string{
 				envVars: "testdata/invalid/empty.csv",
