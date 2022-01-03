@@ -112,49 +112,49 @@ func fromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger, allowedC
 	o, err := getOverwrite(r)
 	if err != nil {
 		logger.Debug("Bad value: ", zap.String("field", overwrite), zap.Bool("value", o), zap.Error(err))
-		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("bad %q value: should be bool", overwrite)
+		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("bad %s value: should be bool", overwrite)
 	}
 
 	dp, err := getDistributedPods(r)
 	if err != nil {
 		logger.Debug("Bad value: ", zap.String("field", "distributedPods"), zap.Int32("value", dp), zap.Error(err))
-		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("bad %q value: should be integer", distributedPods)
+		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("bad %s value: should be integer", distributedPods)
 	}
 
 	tagList, err := getTags(r)
 	if err != nil {
 		logger.Debug("Bad value: ", zap.String("field", "tags"), zap.String("tags", tags), zap.Error(err))
-		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %q from request: %w", tags, err)
+		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %s from request: %w", tags, err)
 	}
 
 	tf, err := getTestFile(r)
 	if err != nil {
 		logger.Debug("Could not get file from request", zap.String("file", testFile), zap.Error(err))
-		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %q from request: %w", testFile, err)
+		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %s from request: %w", testFile, err)
 	}
 
 	td, err := getTestData(r)
 	if err != nil {
 		logger.Debug("Could not get file from request", zap.String("file", testData), zap.Error(err))
-		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %q from request: %w", testData, err)
+		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %s from request: %w", testData, err)
 	}
 
 	ev, err := getEnvVars(r)
 	if err != nil {
 		logger.Debug("Could not get file from request", zap.String("file", envVars), zap.Error(err))
-		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %q from request: %w", envVars, err)
+		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %s from request: %w", envVars, err)
 	}
 
 	turl, err := getTargetURL(r)
 	if err != nil {
 		logger.Debug("Bad value", zap.String("field", targetURL), zap.Error(err))
-		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %q from request: %w", targetURL, err)
+		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %s from request: %w", targetURL, err)
 	}
 
 	dur, err := getDuration(r)
 	if err != nil {
 		logger.Debug("Bad value", zap.String("field", duration), zap.Error(err))
-		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %q from request: %w", duration, err)
+		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %s from request: %w", duration, err)
 	}
 
 	mi := apisLoadTestV1.ImageDetails{
