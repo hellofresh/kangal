@@ -37,7 +37,7 @@ func TestIntegrationJMeter(t *testing.T) {
 		t.Skip("skipping test in short mode")
 	}
 
-	if os.Getenv("SKIP_JMETER_INTEGRATION_TEST") != "" {
+	if _, ok := os.LookupEnv("SKIP_JMETER_INTEGRATION_TEST"); ok {
 		t.Skip("Skipping jmeter integration test!")
 	}
 

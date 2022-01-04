@@ -26,7 +26,7 @@ func TestIntegrationGhz(t *testing.T) {
 		t.Skip("skipping test in short mode")
 	}
 
-	if os.Getenv("SKIP_GHZ_INTEGRATION_TEST") != "" {
+	if _, ok := os.LookupEnv("SKIP_GHZ_INTEGRATION_TEST"); ok {
 		t.Skip("Skipping ghz integration test!")
 	}
 
