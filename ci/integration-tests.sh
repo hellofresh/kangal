@@ -86,11 +86,11 @@ function verify_ghz_integration_test {
 # Main
 # --------
 # Prepare environment for integration test
-if [[ "$SKIP_JMETER_INTEGRATION_TEST" != "" ]]; then
+if [[ "$SKIP_JMETER_INTEGRATION_TEST" != "1" ]]; then
   prepare_jmeter_integration_test
 fi
 
-if [[ "$SKIP_GHZ_INTEGRATION_TEST" != "" ]]; then
+if [[ "$SKIP_GHZ_INTEGRATION_TEST" != "1" ]]; then
   prepare_ghz_integration_test
 fi
 
