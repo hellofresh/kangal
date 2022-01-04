@@ -34,13 +34,14 @@ const (
 	workerPodID     = "worker"
 )
 
+var testFileFormats = []string{"jmx", "py", "json", "toml"}
+
 //httpValidator validates request body
 func httpValidator(r *http.Request) url.Values {
 	rules := govalidator.MapData{
 		"type":          []string{"required"},
 		"masterImage":   []string{"regex:^.*:.*$|^$"},
 		"workerImage":   []string{"regex:^.*:.*$|^$"},
-		"file:testFile": []string{"ext:jmx,py,json,toml"},
 		"file:testData": []string{"ext:csv,protoset"},
 		"targetURL":     []string{"http"},
 	}
@@ -224,8 +225,14 @@ func checkCsvFile(s string) error {
 }
 
 func getTestFile(r *http.Request) (string, error) {
-	content, _, err := getFileFromHTTP(r, testFile)
-	return content, err
+	content, fileType, err := getFileFromHTTP(r, testFile)
+
+	for _, f := range testFileFormats {
+		if fileType == f {
+			return content, err
+		}
+	}
+	return "", ErrWrongFileFormat
 }
 
 func getFileFromHTTP(r *http.Request, file string) (string, string, error) {

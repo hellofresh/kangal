@@ -62,16 +62,6 @@ func TestHTTPValidator(t *testing.T) {
 			"",
 		},
 		{
-			"Invalid test file",
-			"1",
-			"testFile",
-			"JMeter",
-			map[string]string{
-				"testFile": "testdata/valid/testdata.csv",
-			},
-			"The testFile field file extension csv is invalid",
-		},
-		{
 			"Invalid testData file",
 			"1",
 			"testData",

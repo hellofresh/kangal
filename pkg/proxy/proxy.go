@@ -28,6 +28,8 @@ const (
 var (
 	// ErrFileToStringEmpty is the error returned when the defined users file is empty
 	ErrFileToStringEmpty = errors.New("file is empty")
+	// ErrWrongFileFormat is the error returned when the defined users file is empty
+	ErrWrongFileFormat = errors.New("testfile format is not supported")
 )
 
 // Proxy handler

@@ -82,10 +82,10 @@ func TestTestFile(t *testing.T) {
 			expectError:      true,
 		},
 		{
-			tag:              "valid no test file",
+			tag:              "error when no test file",
 			requestFile:      map[string]string{},
 			expectedResponse: "",
-			expectError:      false,
+			expectError:      true,
 		},
 	} {
 		t.Run(ti.tag, func(t *testing.T) {
@@ -618,7 +618,7 @@ func TestCustomImageFeatureFlag(t *testing.T) {
 	} {
 
 		t.Run(ti.tag, func(t *testing.T) {
-			request := buildMocFormReq(t, map[string]string{}, "1", string(apisLoadTestV1.LoadTestTypeJMeter), "", ti.masterImage, ti.workerImage)
+			request := buildMocFormReq(t, map[string]string{testFile: "testdata/valid/loadtest.jmx"}, "1", string(apisLoadTestV1.LoadTestTypeJMeter), "", ti.masterImage, ti.workerImage)
 
 			ltSpec, err := fromHTTPRequestToLoadTestSpec(request, zaptest.NewLogger(t), ti.allowedCustomImages)
 
