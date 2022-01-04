@@ -34,7 +34,10 @@ const (
 	workerPodID     = "worker"
 )
 
-var testFileFormats = []string{"jmx", "py", "json", "toml"}
+var (
+	testFileFormats     = []string{"jmx", "py", "json", "toml"}
+	testDataFileFormats = []string{"csv", "protoset"}
+)
 
 //httpValidator validates request body
 func httpValidator(r *http.Request) url.Values {
@@ -226,6 +229,9 @@ func checkCsvFile(s string) error {
 
 func getTestFile(r *http.Request) (string, error) {
 	content, fileType, err := getFileFromHTTP(r, testFile)
+	if err != nil {
+		return "", err
+	}
 
 	for _, f := range testFileFormats {
 		if fileType == f {
