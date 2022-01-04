@@ -42,11 +42,10 @@ var (
 //httpValidator validates request body
 func httpValidator(r *http.Request) url.Values {
 	rules := govalidator.MapData{
-		"type":          []string{"required"},
-		"masterImage":   []string{"regex:^.*:.*$|^$"},
-		"workerImage":   []string{"regex:^.*:.*$|^$"},
-		"file:testData": []string{"ext:csv,protoset"},
-		"targetURL":     []string{"http"},
+		"type":        []string{"required"},
+		"masterImage": []string{"regex:^.*:.*$|^$"},
+		"workerImage": []string{"regex:^.*:.*$|^$"},
+		"targetURL":   []string{"http"},
 	}
 
 	opts := govalidator.Options{
@@ -188,6 +187,10 @@ func fromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger, allowedC
 func getEnvVars(r *http.Request) (map[string]string, error) {
 	stringEnv, _, err := getFileFromHTTP(r, envVars)
 	if err != nil {
+		//this means there was no envVars file specified and we can ignore this error because envVars is optional
+		if err == http.ErrMissingFile {
+			return nil, nil
+		}
 		return nil, err
 	}
 	s, err := ReadEnvs(stringEnv)
@@ -200,17 +203,26 @@ func getEnvVars(r *http.Request) (map[string]string, error) {
 func getTestData(r *http.Request) (string, error) {
 	stringTestData, fileType, err := getFileFromHTTP(r, testData)
 	if err != nil {
+		//this means there was no testData file specified and we can ignore this error because testData is optional
+		if err == http.ErrMissingFile {
+			return "", nil
+		}
 		return "", err
 	}
 
-	if fileType == "csv" {
-		err = checkCsvFile(stringTestData)
-		if err != nil {
-			return "", err
+	for _, f := range testDataFileFormats {
+		if fileType == f {
+			if fileType == "csv" {
+				err = checkCsvFile(stringTestData)
+				if err != nil {
+					return "", err
+				}
+			}
+			return stringTestData, nil
 		}
 	}
 
-	return stringTestData, nil
+	return "", ErrWrongFileFormat
 }
 
 func checkCsvFile(s string) error {
@@ -244,11 +256,6 @@ func getTestFile(r *http.Request) (string, error) {
 func getFileFromHTTP(r *http.Request, file string) (string, string, error) {
 	td, meta, err := r.FormFile(file)
 	if err != nil {
-		// this means there was no file specified and we should ignore the error
-		if err == http.ErrMissingFile {
-			return "", "", nil
-		}
-
 		return "", "", err
 	}
 

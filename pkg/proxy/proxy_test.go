@@ -61,17 +61,6 @@ func TestHTTPValidator(t *testing.T) {
 			},
 			"",
 		},
-		{
-			"Invalid testData file",
-			"1",
-			"testData",
-			"JMeter",
-			map[string]string{
-				"testFile": "testdata/valid/loadtest.jmx",
-				"testData": "testdata/valid/loadtest.jmx",
-			},
-			"The testData field file extension jmx is invalid",
-		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			request := buildMocFormReq(t, tt.requestFiles, tt.distributedPods, tt.loadTestType, "", "", "")
