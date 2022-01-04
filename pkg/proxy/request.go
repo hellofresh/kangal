@@ -42,7 +42,6 @@ var (
 //httpValidator validates request body
 func httpValidator(r *http.Request) url.Values {
 	rules := govalidator.MapData{
-		"type":        []string{"required"},
 		"masterImage": []string{"regex:^.*:.*$|^$"},
 		"workerImage": []string{"regex:^.*:.*$|^$"},
 	}

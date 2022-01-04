@@ -76,7 +76,6 @@ func TestCreateWithTimeout(t *testing.T) {
 		name             string
 		distributedPods  string
 		failingLine      string
-		loadTestType     string
 		requestFiles     map[string]string
 		expectedResponse string
 	}{
@@ -84,7 +83,6 @@ func TestCreateWithTimeout(t *testing.T) {
 			"Valid JMeter",
 			"1",
 			"",
-			"JMeter",
 			map[string]string{
 				"testFile": "testdata/valid/loadtest.jmx",
 			},
@@ -92,7 +90,7 @@ func TestCreateWithTimeout(t *testing.T) {
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			request := buildMocFormReq(t, tt.requestFiles, tt.distributedPods, tt.loadTestType, "", "", "")
+			request := buildMocFormReq(t, tt.requestFiles, tt.distributedPods, "JMeter", "", "", "")
 
 			// Pass a context with a timeout to tell a blocking function that it
 			// should abandon its work after the timeout elapses.
@@ -306,6 +304,19 @@ func TestProxyCreate(t *testing.T) {
 			`{"type":"Fake","distributedPods":10,"phase":"creating","tags":{},"hasEnvVars":true,"hasTestData":true}` + "\n",
 			"application/json; charset=utf-8",
 			nil,
+		},
+		{
+			"Invalid loadtest type",
+			10,
+			"",
+			"unknownType",
+			map[string]string{
+				"testFile": "testdata/valid/loadtest.jmx",
+			},
+			http.StatusBadRequest,
+			`{"error":"no backend registered for current loadtest type"}` + "\n",
+			"application/json; charset=utf-8",
+			errors.New("test creation error"),
 		},
 		{
 			"Error on creation",
@@ -781,10 +792,10 @@ func TestProxyGetLogs(t *testing.T) {
 
 }
 
-func buildMocFormReq(t *testing.T, requestFiles map[string]string, distributedPods, ltType, tagsString string, masterImate string, workerImage string) *http.Request {
+func buildMocFormReq(t *testing.T, requestFiles map[string]string, distributedPods, ltType, tagsString string, masterImage string, workerImage string) *http.Request {
 	t.Helper()
 
-	request := createRequestWrapper(t, requestFiles, distributedPods, ltType, tagsString, false, masterImate, workerImage)
+	request := createRequestWrapper(t, requestFiles, distributedPods, ltType, tagsString, false, masterImage, workerImage)
 
 	req, err := http.NewRequest("POST", "/load-test", request.body)
 	require.NoError(t, err)
