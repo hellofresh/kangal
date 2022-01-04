@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -24,6 +25,11 @@ func TestIntegrationGhz(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test in short mode")
 	}
+
+	if _, ok := os.LookupEnv("SKIP_GHZ_INTEGRATION_TEST"); ok {
+		t.Skip("Skipping ghz integration test!")
+	}
+
 	t.Log()
 
 	t.Cleanup(func() {

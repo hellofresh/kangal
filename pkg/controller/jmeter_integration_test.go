@@ -36,6 +36,11 @@ func TestIntegrationJMeter(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test in short mode")
 	}
+
+	if _, ok := os.LookupEnv("SKIP_JMETER_INTEGRATION_TEST"); ok {
+		t.Skip("Skipping jmeter integration test!")
+	}
+
 	t.Log()
 
 	distributedPods := int32(2)
