@@ -30,6 +30,8 @@ var (
 	ErrFileToStringEmpty = errors.New("file is empty")
 	// ErrWrongFileFormat is the error returned when the defined users file is empty
 	ErrWrongFileFormat = errors.New("file format is not supported")
+	// ErrWrongURLFormat is the error returned when the targetURL is not containing scheme
+	ErrWrongURLFormat = errors.New("invalid URL format")
 )
 
 // Proxy handler

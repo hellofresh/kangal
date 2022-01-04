@@ -45,7 +45,6 @@ func httpValidator(r *http.Request) url.Values {
 		"type":        []string{"required"},
 		"masterImage": []string{"regex:^.*:.*$|^$"},
 		"workerImage": []string{"regex:^.*:.*$|^$"},
-		"targetURL":   []string{"http"},
 	}
 
 	opts := govalidator.Options{
@@ -305,7 +304,21 @@ func getDistributedPods(r *http.Request) (int32, error) {
 }
 
 func getTargetURL(r *http.Request) (string, error) {
-	return r.FormValue(targetURL), nil
+	targetURL := r.FormValue(targetURL)
+
+	if targetURL == "" {
+		return "", nil
+	}
+
+	u, err := url.Parse(targetURL)
+	if err != nil {
+		return "", err
+	}
+
+	if u.Scheme == "" || u.Host == "" {
+		return "", ErrWrongURLFormat
+	}
+	return targetURL, nil
 }
 
 func getDuration(r *http.Request) (time.Duration, error) {
