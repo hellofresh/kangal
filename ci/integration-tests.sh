@@ -86,8 +86,6 @@ function verify_ghz_integration_test {
 # Main
 # --------
 # Prepare environment for integration test
-prepare_kangal
-
 if [[ "$SKIP_JMETER_INTEGRATION_TEST" != "" ]]; then
   prepare_jmeter_integration_test
 fi
@@ -95,6 +93,9 @@ fi
 if [[ "$SKIP_GHZ_INTEGRATION_TEST" != "" ]]; then
   prepare_ghz_integration_test
 fi
+
+prepare_kangal
+
 
 # Run the integration tests
 echo "Starting integration tests"
