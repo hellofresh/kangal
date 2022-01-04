@@ -185,7 +185,7 @@ func fromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger, allowedC
 }
 
 func getEnvVars(r *http.Request) (map[string]string, error) {
-	stringEnv, _, err := getFileFromHTTP(r, envVars)
+	stringEnv, fileType, err := getFileFromHTTP(r, envVars)
 	if err != nil {
 		//this means there was no envVars file specified and we can ignore this error because envVars is optional
 		if err == http.ErrMissingFile {
@@ -193,6 +193,10 @@ func getEnvVars(r *http.Request) (map[string]string, error) {
 		}
 		return nil, err
 	}
+	if fileType != "csv" {
+		return nil, ErrWrongFileFormat
+	}
+
 	s, err := ReadEnvs(stringEnv)
 	if err != nil {
 		return nil, err
