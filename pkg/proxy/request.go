@@ -47,8 +47,16 @@ var (
 	// ErrEmptyType is the error returned when there's no loadtest type provided
 	ErrEmptyType = errors.New("loadtest type is empty")
 
-	testFileFormats     = []string{"jmx", "py", "json", "toml"}
-	testDataFileFormats = []string{"csv", "protoset"}
+	testFileFormats = map[string]bool{
+		"jmx":  true,
+		"py":   true,
+		"json": true,
+		"toml": true,
+	}
+	testDataFileFormats = map[string]bool{
+		"csv":      true,
+		"protoset": true,
+	}
 
 	dockerImageRegexp = regexp.MustCompile("^.*:.*$|^$")
 )
@@ -101,7 +109,7 @@ func fromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger, allowedC
 	o, err := getOverwrite(r)
 	if err != nil {
 		logger.Debug("Bad value: ", zap.String("field", overwrite), zap.Bool("value", o), zap.Error(err))
-		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("bad %s value: should be bool", overwrite)
+		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("bad %s value: should be boolean", overwrite)
 	}
 
 	lt, err := getLoadTestType(r)
@@ -218,19 +226,17 @@ func getTestData(r *http.Request) (string, error) {
 		return "", err
 	}
 
-	for _, f := range testDataFileFormats {
-		if fileType == f {
-			if fileType == "csv" {
-				err = checkCsvFile(stringTestData)
-				if err != nil {
-					return "", err
-				}
-			}
-			return stringTestData, nil
-		}
+	if !testDataFileFormats[fileType] {
+		return "", ErrWrongFileFormat
 	}
 
-	return "", ErrWrongFileFormat
+	if fileType == "csv" {
+		err = checkCsvFile(stringTestData)
+		if err != nil {
+			return "", err
+		}
+	}
+	return stringTestData, nil
 }
 
 func checkCsvFile(s string) error {
@@ -253,12 +259,10 @@ func getTestFile(r *http.Request) (string, error) {
 		return "", err
 	}
 
-	for _, f := range testFileFormats {
-		if fileType == f {
-			return content, err
-		}
+	if !testFileFormats[fileType] {
+		return "", ErrWrongFileFormat
 	}
-	return "", ErrWrongFileFormat
+	return content, nil
 }
 
 func getFileFromHTTP(r *http.Request, file string) (string, string, error) {
