@@ -15,7 +15,6 @@ require (
 	github.com/spf13/cobra v1.2.1
 	github.com/stretchr/testify v1.7.0
 	github.com/technosophos/moniker v0.0.0-20210218184952-3ea787d3943b
-	github.com/thedevsaddam/govalidator v1.9.10
 	github.com/tidwall/sjson v1.2.2
 	go.opencensus.io v0.23.0
 	go.uber.org/zap v1.19.1
