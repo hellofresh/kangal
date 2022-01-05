@@ -102,10 +102,10 @@ echo "Starting integration tests"
 KUBECONFIG="$HOME/.kube/config" make test-integration
 
 # Verify results
-if [[ "$SKIP_JMETER_INTEGRATION_TEST" != "" ]]; then
+if [[ "$SKIP_JMETER_INTEGRATION_TEST" != "1" ]]; then
   verify_jmeter_integration_test
 fi
 
-if [[ "$SKIP_GHZ_INTEGRATION_TEST" != "" ]]; then
+if [[ "$SKIP_GHZ_INTEGRATION_TEST" != "1" ]]; then
   verify_ghz_integration_test
 fi
