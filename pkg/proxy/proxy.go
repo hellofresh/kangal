@@ -63,10 +63,6 @@ type LoadTestStatus struct {
 	HasTestData     bool                        `json:"hasTestData"`
 }
 
-func getLoadTestType(r *http.Request) apisLoadTestV1.LoadTestType {
-	return apisLoadTestV1.LoadTestType(r.FormValue(backendType))
-}
-
 // List lists all the load tests.
 func (p *Proxy) List(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()

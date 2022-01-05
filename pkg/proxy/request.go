@@ -44,6 +44,8 @@ var (
 	ErrWrongURLFormat = errors.New("invalid URL format")
 	// ErrWrongImageFormat is the error returned when the docker image is in wrong format
 	ErrWrongImageFormat = errors.New("invalid image format")
+	// ErrEmptyType is the error returned when there's no loadtest type provided
+	ErrEmptyType = errors.New("loadtest type is empty")
 
 	testFileFormats     = []string{"jmx", "py", "json", "toml"}
 	testDataFileFormats = []string{"csv", "protoset"}
@@ -100,15 +102,21 @@ func fromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger, allowedC
 		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("bad %s value: should be bool", overwrite)
 	}
 
+	lt, err := getLoadTestType(r)
+	if err != nil {
+		logger.Debug("Bad value: ", zap.String("field", backendType), zap.Error(err))
+		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %s from request: %w", backendType, err)
+	}
+
 	dp, err := getDistributedPods(r)
 	if err != nil {
-		logger.Debug("Bad value: ", zap.String("field", "distributedPods"), zap.Int32("value", dp), zap.Error(err))
+		logger.Debug("Bad value: ", zap.String("field", distributedPods), zap.Int32("value", dp), zap.Error(err))
 		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("bad %s value: should be integer", distributedPods)
 	}
 
 	tagList, err := getTags(r)
 	if err != nil {
-		logger.Debug("Bad value: ", zap.String("field", "tags"), zap.String("tags", tags), zap.Error(err))
+		logger.Debug("Bad value: ", zap.String("field", tags), zap.String("tags", tags), zap.Error(err))
 		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %s from request: %w", tags, err)
 	}
 
@@ -164,7 +172,7 @@ func fromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger, allowedC
 	}
 
 	return apisLoadTestV1.LoadTestSpec{
-		Type:            getLoadTestType(r),
+		Type:            lt,
 		Overwrite:       o,
 		MasterConfig:    mi,
 		WorkerConfig:    wi,
@@ -286,6 +294,15 @@ func getOverwrite(r *http.Request) (bool, error) {
 	}
 
 	return overwrite, nil
+}
+
+func getLoadTestType(r *http.Request) (apisLoadTestV1.LoadTestType, error) {
+	ltType := r.FormValue(backendType)
+	if ltType == "" {
+		return "", ErrEmptyType
+	}
+
+	return apisLoadTestV1.LoadTestType(ltType), nil
 }
 
 func getDistributedPods(r *http.Request) (int32, error) {

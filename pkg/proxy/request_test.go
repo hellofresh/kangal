@@ -23,6 +23,41 @@ func TestNewFakeFromHTTPLoadTest(t *testing.T) {
 	assert.Equal(t, apisLoadTestV1.LoadTestSpec{}, loadTest)
 }
 
+func TestBackendType(t *testing.T) {
+	for _, ti := range []struct {
+		tag              string
+		backendType      string
+		expectedResponse string
+		expectError      bool
+	}{
+		{
+			tag:              "valid backend type",
+			backendType:      "JMeter",
+			expectedResponse: "JMeter",
+			expectError:      false,
+		},
+		{
+			tag:              "empty backend type",
+			backendType:      "",
+			expectedResponse: "",
+			expectError:      true,
+		},
+	} {
+		t.Run(ti.tag, func(t *testing.T) {
+			request := buildMocFormReq(t, map[string]string{testFile: "testdata/valid/loadtest.jmx"}, "1", ti.backendType, "", "", "")
+
+			ltType, err := getLoadTestType(request)
+			assert.Equal(t, string(ltType), ti.expectedResponse)
+
+			if ti.expectError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
 func TestDistributedPods(t *testing.T) {
 	for _, ti := range []struct {
 		tag              string
