@@ -32,45 +32,6 @@ import (
 
 const shortDuration = 1 * time.Millisecond // a reasonable duration to block in an example
 
-func TestHTTPValidator(t *testing.T) {
-	for _, tt := range []struct {
-		name             string
-		distributedPods  string
-		failingLine      string
-		loadTestType     string
-		requestFiles     map[string]string
-		expectedResponse string
-	}{
-		{
-			"Valid JMeter",
-			"1",
-			"",
-			"JMeter",
-			map[string]string{
-				"testFile": "testdata/valid/loadtest.jmx",
-			},
-			"",
-		},
-		{
-			"Valid Fake",
-			"1",
-			"",
-			"Fake",
-			map[string]string{
-				"testFile": "testdata/valid/loadtest.jmx",
-			},
-			"",
-		},
-	} {
-		t.Run(tt.name, func(t *testing.T) {
-			request := buildMocFormReq(t, tt.requestFiles, tt.distributedPods, tt.loadTestType, "", "", "")
-
-			result := httpValidator(request)
-			assert.Equal(t, tt.expectedResponse, result.Get(tt.failingLine))
-		})
-	}
-}
-
 func TestCreateWithTimeout(t *testing.T) {
 	for _, tt := range []struct {
 		name             string

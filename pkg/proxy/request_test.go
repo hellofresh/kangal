@@ -585,11 +585,11 @@ func TestGetImage(t *testing.T) {
 
 			if ti.role == "masterImage" {
 				request := buildMocFormReq(t, map[string]string{testFile: "testdata/valid/loadtest.jmx"}, "1", string(apisLoadTestV1.LoadTestTypeJMeter), "", sentImage, "")
-				image = getImage(request, ti.role)
+				image, _ = getImage(request, ti.role)
 			}
 			if ti.role == "workerImage" {
 				request := buildMocFormReq(t, map[string]string{testFile: "testdata/valid/loadtest.jmx"}, "1", string(apisLoadTestV1.LoadTestTypeJMeter), "", "", sentImage)
-				image = getImage(request, ti.role)
+				image, _ = getImage(request, ti.role)
 			}
 
 			actualImage := ""

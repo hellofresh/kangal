@@ -7,11 +7,11 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/thedevsaddam/govalidator"
 	"go.uber.org/zap"
 
 	"github.com/hellofresh/kangal/pkg/kubernetes"
@@ -38,23 +38,6 @@ var (
 	testFileFormats     = []string{"jmx", "py", "json", "toml"}
 	testDataFileFormats = []string{"csv", "protoset"}
 )
-
-//httpValidator validates request body
-func httpValidator(r *http.Request) url.Values {
-	rules := govalidator.MapData{
-		"masterImage": []string{"regex:^.*:.*$|^$"},
-		"workerImage": []string{"regex:^.*:.*$|^$"},
-	}
-
-	opts := govalidator.Options{
-		Request:         r,     // request object
-		Rules:           rules, // rules map
-		RequiredDefault: false, // all the field to be pass the rules,
-	}
-
-	v := govalidator.New(opts)
-	return v.Validate()
-}
 
 func fromHTTPRequestToListOptions(r *http.Request, maxListLimit int64) (*kubernetes.ListOptions, error) {
 	opt := kubernetes.ListOptions{
@@ -101,11 +84,6 @@ func fromHTTPRequestToListOptions(r *http.Request, maxListLimit int64) (*kuberne
 
 // fromHTTPRequestToLoadTestSpec creates a load test spec from HTTP request
 func fromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger, allowedCustomImages bool) (apisLoadTestV1.LoadTestSpec, error) {
-	if e := httpValidator(r); len(e) > 0 {
-		logger.Debug("User request validation failed", zap.Any("errors", e))
-		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf(e.Encode())
-	}
-
 	o, err := getOverwrite(r)
 	if err != nil {
 		logger.Debug("Bad value: ", zap.String("field", overwrite), zap.Bool("value", o), zap.Error(err))
@@ -163,8 +141,16 @@ func fromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger, allowedC
 		Tag:   "",
 	}
 	if allowedCustomImages {
-		mi = getImage(r, masterImage)
-		wi = getImage(r, workerImage)
+		mi, err = getImage(r, masterImage)
+		if err != nil {
+			logger.Debug("Bad value", zap.String("field", masterImage), zap.Error(err))
+			return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %s from request: %w", masterImage, err)
+		}
+		wi, err = getImage(r, workerImage)
+		if err != nil {
+			logger.Debug("Bad value", zap.String("field", workerImage), zap.Error(err))
+			return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %s from request: %w", workerImage, err)
+		}
 	}
 
 	return apisLoadTestV1.LoadTestSpec{
@@ -330,9 +316,14 @@ func getDuration(r *http.Request) (time.Duration, error) {
 	return time.ParseDuration(val)
 }
 
-func getImage(r *http.Request, role string) apisLoadTestV1.ImageDetails {
-
+func getImage(r *http.Request, role string) (apisLoadTestV1.ImageDetails, error) {
 	imageStr := r.FormValue(role)
+
+	imageRegex := regexp.MustCompile("^.*:.*$|^$")
+	match := imageRegex.Match([]byte(imageStr))
+	if !match {
+		return apisLoadTestV1.ImageDetails{}, ErrWrongImageFormat
+	}
 
 	imgName := ""
 	imgTag := ""
@@ -341,7 +332,6 @@ func getImage(r *http.Request, role string) apisLoadTestV1.ImageDetails {
 	structImgChars := ":/"
 	structImgURI := ""
 	for _, c := range imageStr {
-
 		if strings.Contains(structImgChars, string(c)) {
 			structImgURI += string(c)
 		}
@@ -392,7 +382,7 @@ func getImage(r *http.Request, role string) apisLoadTestV1.ImageDetails {
 	return apisLoadTestV1.ImageDetails{
 		Image: imgName,
 		Tag:   imgTag,
-	}
+	}, nil
 }
 
 //fileToString converts file to string

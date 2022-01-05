@@ -32,6 +32,8 @@ var (
 	ErrWrongFileFormat = errors.New("file format is not supported")
 	// ErrWrongURLFormat is the error returned when the targetURL is not containing scheme
 	ErrWrongURLFormat = errors.New("invalid URL format")
+	// ErrWrongImageFormat is the error returned when the docker image is in wrong format
+	ErrWrongImageFormat = errors.New("invalid image format")
 )
 
 // Proxy handler
