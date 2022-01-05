@@ -447,6 +447,56 @@ func TestGetDuration(t *testing.T) {
 	}
 }
 
+func TestGetTargetURL(t *testing.T) {
+	for _, ti := range []struct {
+		tag         string
+		targetURL   string
+		expected    string
+		expectError bool
+	}{
+		{
+			tag:         "valid URL as targetURL",
+			targetURL:   "https://test-url.com/foo",
+			expected:    "https://test-url.com/foo",
+			expectError: false,
+		},
+		{
+			tag:         "invalid URL without scheme",
+			targetURL:   "someurls.com/foo-test",
+			expected:    "",
+			expectError: true,
+		},
+		{
+			tag:         "invalid URL without host",
+			targetURL:   "http://",
+			expected:    "",
+			expectError: true,
+		},
+	} {
+		t.Run(ti.tag, func(t *testing.T) {
+			req, err := http.NewRequest("POST", "/load-test", new(bytes.Buffer))
+			if err != nil {
+				t.Error(err)
+				t.FailNow()
+			}
+
+			req.Form = url.Values{"targetURL": []string{ti.targetURL}}
+			req.ParseForm()
+
+			actual, err := getTargetURL(req)
+
+			if ti.expectError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+
+			assert.Equal(t, ti.expected, actual)
+
+		})
+	}
+}
+
 func TestGetImage(t *testing.T) {
 	for _, ti := range []struct {
 		tag              string
