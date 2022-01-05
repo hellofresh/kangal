@@ -49,6 +49,8 @@ var (
 
 	testFileFormats     = []string{"jmx", "py", "json", "toml"}
 	testDataFileFormats = []string{"csv", "protoset"}
+
+	dockerImageRegexp = regexp.MustCompile("^.*:.*$|^$")
 )
 
 func fromHTTPRequestToListOptions(r *http.Request, maxListLimit int64) (*kubernetes.ListOptions, error) {
@@ -346,8 +348,7 @@ func getDuration(r *http.Request) (time.Duration, error) {
 func getImage(r *http.Request, role string) (apisLoadTestV1.ImageDetails, error) {
 	imageStr := r.FormValue(role)
 
-	imageRegex := regexp.MustCompile("^.*:.*$|^$")
-	match := imageRegex.Match([]byte(imageStr))
+	match := dockerImageRegexp.Match([]byte(imageStr))
 	if !match {
 		return apisLoadTestV1.ImageDetails{}, ErrWrongImageFormat
 	}
