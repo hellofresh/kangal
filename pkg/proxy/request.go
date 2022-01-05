@@ -3,6 +3,7 @@ package proxy
 import (
 	"bytes"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -35,6 +36,15 @@ const (
 )
 
 var (
+	// ErrFileToStringEmpty is the error returned when the defined users file is empty
+	ErrFileToStringEmpty = errors.New("file is empty")
+	// ErrWrongFileFormat is the error returned when the defined users file is empty
+	ErrWrongFileFormat = errors.New("file format is not supported")
+	// ErrWrongURLFormat is the error returned when the targetURL is not containing scheme
+	ErrWrongURLFormat = errors.New("invalid URL format")
+	// ErrWrongImageFormat is the error returned when the docker image is in wrong format
+	ErrWrongImageFormat = errors.New("invalid image format")
+
 	testFileFormats     = []string{"jmx", "py", "json", "toml"}
 	testDataFileFormats = []string{"csv", "protoset"}
 )

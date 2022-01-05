@@ -3,7 +3,6 @@ package proxy
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -23,17 +22,6 @@ import (
 
 const (
 	mimeJSON = "application/json; charset=utf-8"
-)
-
-var (
-	// ErrFileToStringEmpty is the error returned when the defined users file is empty
-	ErrFileToStringEmpty = errors.New("file is empty")
-	// ErrWrongFileFormat is the error returned when the defined users file is empty
-	ErrWrongFileFormat = errors.New("file format is not supported")
-	// ErrWrongURLFormat is the error returned when the targetURL is not containing scheme
-	ErrWrongURLFormat = errors.New("invalid URL format")
-	// ErrWrongImageFormat is the error returned when the docker image is in wrong format
-	ErrWrongImageFormat = errors.New("invalid image format")
 )
 
 // Proxy handler
