@@ -32,93 +32,11 @@ import (
 
 const shortDuration = 1 * time.Millisecond // a reasonable duration to block in an example
 
-func TestHTTPValidator(t *testing.T) {
-	for _, tt := range []struct {
-		name             string
-		distributedPods  string
-		failingLine      string
-		loadTestType     string
-		requestFiles     map[string]string
-		expectedResponse string
-	}{
-		{
-			"Valid JMeter",
-			"1",
-			"",
-			"JMeter",
-			map[string]string{
-				"testFile": "testdata/valid/loadtest.jmx",
-			},
-			"",
-		},
-		{
-			"Valid Fake",
-			"1",
-			"",
-			"Fake",
-			map[string]string{
-				"testFile": "testdata/valid/loadtest.jmx",
-			},
-			"",
-		},
-		{
-			"Empty distributed pods",
-			"0",
-			"distributedPods",
-			"Fake",
-			map[string]string{
-				"testFile": "testdata/valid/loadtest.jmx",
-			},
-			"The distributedPods field value can not be less than 1",
-		},
-		{
-			"Invalid test file",
-			"1",
-			"testFile",
-			"JMeter",
-			map[string]string{
-				"testFile": "testdata/valid/testdata.csv",
-			},
-			"The testFile field file extension csv is invalid",
-		},
-		{
-			"Invalid envVars file",
-			"1",
-			"envVars",
-			"JMeter",
-			map[string]string{
-				"testFile": "testdata/valid/loadtest.jmx",
-				"envVars":  "testdata/valid/loadtest.jmx",
-			},
-			"The envVars field file extension jmx is invalid",
-		},
-		{
-			"Invalid testData file",
-			"1",
-			"testData",
-			"JMeter",
-			map[string]string{
-				"testFile": "testdata/valid/loadtest.jmx",
-				"testData": "testdata/valid/loadtest.jmx",
-			},
-			"The testData field file extension jmx is invalid",
-		},
-	} {
-		t.Run(tt.name, func(t *testing.T) {
-			request := buildMocFormReq(t, tt.requestFiles, tt.distributedPods, tt.loadTestType, "", "", "")
-
-			result := httpValidator(request)
-			assert.Equal(t, tt.expectedResponse, result.Get(tt.failingLine))
-		})
-	}
-}
-
 func TestCreateWithTimeout(t *testing.T) {
 	for _, tt := range []struct {
 		name             string
 		distributedPods  string
 		failingLine      string
-		loadTestType     string
 		requestFiles     map[string]string
 		expectedResponse string
 	}{
@@ -126,7 +44,6 @@ func TestCreateWithTimeout(t *testing.T) {
 			"Valid JMeter",
 			"1",
 			"",
-			"JMeter",
 			map[string]string{
 				"testFile": "testdata/valid/loadtest.jmx",
 			},
@@ -134,7 +51,7 @@ func TestCreateWithTimeout(t *testing.T) {
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			request := buildMocFormReq(t, tt.requestFiles, tt.distributedPods, tt.loadTestType, "", "", "")
+			request := buildMocFormReq(t, tt.requestFiles, tt.distributedPods, "JMeter", "", "", "")
 
 			// Pass a context with a timeout to tell a blocking function that it
 			// should abandon its work after the timeout elapses.
@@ -348,6 +265,19 @@ func TestProxyCreate(t *testing.T) {
 			`{"type":"Fake","distributedPods":10,"phase":"creating","tags":{},"hasEnvVars":true,"hasTestData":true}` + "\n",
 			"application/json; charset=utf-8",
 			nil,
+		},
+		{
+			"Invalid loadtest type",
+			10,
+			"",
+			"unknownType",
+			map[string]string{
+				"testFile": "testdata/valid/loadtest.jmx",
+			},
+			http.StatusBadRequest,
+			`{"error":"no backend registered for current loadtest type"}` + "\n",
+			"application/json; charset=utf-8",
+			errors.New("test creation error"),
 		},
 		{
 			"Error on creation",
@@ -823,10 +753,10 @@ func TestProxyGetLogs(t *testing.T) {
 
 }
 
-func buildMocFormReq(t *testing.T, requestFiles map[string]string, distributedPods, ltType, tagsString string, masterImate string, workerImage string) *http.Request {
+func buildMocFormReq(t *testing.T, requestFiles map[string]string, distributedPods, ltType, tagsString string, masterImage string, workerImage string) *http.Request {
 	t.Helper()
 
-	request := createRequestWrapper(t, requestFiles, distributedPods, ltType, tagsString, false, masterImate, workerImage)
+	request := createRequestWrapper(t, requestFiles, distributedPods, ltType, tagsString, false, masterImage, workerImage)
 
 	req, err := http.NewRequest("POST", "/load-test", request.body)
 	require.NoError(t, err)

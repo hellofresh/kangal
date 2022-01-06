@@ -12,7 +12,7 @@ var (
 	// ErrBackendRegistered returned when try to register a backend twice
 	ErrBackendRegistered = errors.New("backend already registered")
 	// ErrNoBackendRegistered returned when no backend found for given type
-	ErrNoBackendRegistered = errors.New("no backend registered")
+	ErrNoBackendRegistered = errors.New("no backend registered for current loadtest type")
 )
 
 // defaultRegistry contains the list of available backends

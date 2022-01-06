@@ -428,8 +428,6 @@ github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/subosito/gotenv v1.2.0/go.mod h1:N0PQaV/YGNqwC0u51sEeR/aUtSLEXKX9iv69rRypqCw=
 github.com/technosophos/moniker v0.0.0-20210218184952-3ea787d3943b h1:fo0GUa0B+vxSZ8bgnL3fpCPHReM/QPlALdak9T/Zw5Y=
 github.com/technosophos/moniker v0.0.0-20210218184952-3ea787d3943b/go.mod h1:O1c8HleITsZqzNZDjSNzirUGsMT0oGu9LhHKoJrqO+A=
-github.com/thedevsaddam/govalidator v1.9.10 h1:m3dLRbSZ5Hts3VUWYe+vxLMG+FdyQuWOjzTeQRiMCvU=
-github.com/thedevsaddam/govalidator v1.9.10/go.mod h1:Ilx8u7cg5g3LXbSS943cx5kczyNuUn7LH/cK5MYuE90=
 github.com/tidwall/gjson v1.9.1 h1:wrrRk7TyL7MmKanNRck/Mcr3VU1sdMvJHvJXzqBIUNo=
 github.com/tidwall/gjson v1.9.1/go.mod h1:jydLKE7s8J0+1/5jC4eXcuFlzKizGrCKvLmBVX/5oXc=
 github.com/tidwall/match v1.0.3 h1:FQUVvBImDutD8wJLN6c5eMzWtjgONK9MwIBCOrUJKeE=

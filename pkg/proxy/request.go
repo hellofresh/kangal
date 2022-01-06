@@ -3,15 +3,16 @@ package proxy
 import (
 	"bytes"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/thedevsaddam/govalidator"
 	"go.uber.org/zap"
 
 	"github.com/hellofresh/kangal/pkg/kubernetes"
@@ -34,30 +35,31 @@ const (
 	workerPodID     = "worker"
 )
 
-//httpValidator validates request body
-func httpValidator(r *http.Request) url.Values {
-	rules := govalidator.MapData{
-		"type":            []string{"required"},
-		"overwrite":       []string{"in:1,True,true,t,T,TRUE,0,False,false,f,F,FALSE"},
-		"masterImage":     []string{"regex:^.*:.*$|^$"},
-		"workerImage":     []string{"regex:^.*:.*$|^$"},
-		"distributedPods": []string{"numeric_between:1,"},
-		"file:testFile":   []string{"ext:jmx,py,json,toml"},
-		"file:envVars":    []string{"ext:csv"},
-		"file:testData":   []string{"ext:csv,protoset"},
-		"targetURL":       []string{"http"},
-		"duration":        []string{"duration"},
+var (
+	// ErrFileToStringEmpty is the error returned when the defined users file is empty
+	ErrFileToStringEmpty = errors.New("file is empty")
+	// ErrWrongFileFormat is the error returned when the defined users file is empty
+	ErrWrongFileFormat = errors.New("file format is not supported")
+	// ErrWrongURLFormat is the error returned when the targetURL is not containing scheme
+	ErrWrongURLFormat = errors.New("invalid URL format")
+	// ErrWrongImageFormat is the error returned when the docker image is in wrong format
+	ErrWrongImageFormat = errors.New("invalid image format")
+	// ErrEmptyType is the error returned when there's no loadtest type provided
+	ErrEmptyType = errors.New("loadtest type is empty")
+
+	testFileFormats = map[string]bool{
+		"jmx":  true,
+		"py":   true,
+		"json": true,
+		"toml": true,
+	}
+	testDataFileFormats = map[string]bool{
+		"csv":      true,
+		"protoset": true,
 	}
 
-	opts := govalidator.Options{
-		Request:         r,     // request object
-		Rules:           rules, // rules map
-		RequiredDefault: false, // all the field to be pass the rules,
-	}
-
-	v := govalidator.New(opts)
-	return v.Validate()
-}
+	dockerImageRegexp = regexp.MustCompile("^.*:.*$|^$")
+)
 
 func fromHTTPRequestToListOptions(r *http.Request, maxListLimit int64) (*kubernetes.ListOptions, error) {
 	opt := kubernetes.ListOptions{
@@ -104,57 +106,58 @@ func fromHTTPRequestToListOptions(r *http.Request, maxListLimit int64) (*kuberne
 
 // fromHTTPRequestToLoadTestSpec creates a load test spec from HTTP request
 func fromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger, allowedCustomImages bool) (apisLoadTestV1.LoadTestSpec, error) {
-	if e := httpValidator(r); len(e) > 0 {
-		logger.Debug("User request validation failed", zap.Any("errors", e))
-		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf(e.Encode())
-	}
-
 	o, err := getOverwrite(r)
 	if err != nil {
 		logger.Debug("Bad value: ", zap.String("field", overwrite), zap.Bool("value", o), zap.Error(err))
-		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("bad %q value: should be bool", overwrite)
+		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("bad %s value: should be boolean", overwrite)
+	}
+
+	lt, err := getLoadTestType(r)
+	if err != nil {
+		logger.Debug("Bad value: ", zap.String("field", backendType), zap.Error(err))
+		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %s from request: %w", backendType, err)
 	}
 
 	dp, err := getDistributedPods(r)
 	if err != nil {
-		logger.Debug("Bad value: ", zap.String("field", "distributedPods"), zap.Int32("value", dp), zap.Error(err))
-		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("bad %q value: should be integer", distributedPods)
+		logger.Debug("Bad value: ", zap.String("field", distributedPods), zap.Int32("value", dp), zap.Error(err))
+		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("bad %s value: should be integer", distributedPods)
 	}
 
 	tagList, err := getTags(r)
 	if err != nil {
-		logger.Debug("Bad value: ", zap.String("field", "tags"), zap.String("tags", tags), zap.Error(err))
-		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %q from request: %w", tags, err)
+		logger.Debug("Bad value: ", zap.String("field", tags), zap.String("tags", tags), zap.Error(err))
+		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %s from request: %w", tags, err)
 	}
 
 	tf, err := getTestFile(r)
 	if err != nil {
 		logger.Debug("Could not get file from request", zap.String("file", testFile), zap.Error(err))
-		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %q from request: %w", testFile, err)
+		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %s from request: %w", testFile, err)
 	}
 
 	td, err := getTestData(r)
 	if err != nil {
 		logger.Debug("Could not get file from request", zap.String("file", testData), zap.Error(err))
-		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %q from request: %w", testData, err)
+		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %s from request: %w", testData, err)
 	}
 
 	ev, err := getEnvVars(r)
 	if err != nil {
 		logger.Debug("Could not get file from request", zap.String("file", envVars), zap.Error(err))
-		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %q from request: %w", envVars, err)
+		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %s from request: %w", envVars, err)
 	}
 
 	turl, err := getTargetURL(r)
 	if err != nil {
 		logger.Debug("Bad value", zap.String("field", targetURL), zap.Error(err))
-		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %q from request: %w", targetURL, err)
+		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %s from request: %w", targetURL, err)
 	}
 
 	dur, err := getDuration(r)
 	if err != nil {
 		logger.Debug("Bad value", zap.String("field", duration), zap.Error(err))
-		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %q from request: %w", duration, err)
+		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %s from request: %w", duration, err)
 	}
 
 	mi := apisLoadTestV1.ImageDetails{
@@ -166,12 +169,20 @@ func fromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger, allowedC
 		Tag:   "",
 	}
 	if allowedCustomImages {
-		mi = getImage(r, masterImage)
-		wi = getImage(r, workerImage)
+		mi, err = getImage(r, masterImage)
+		if err != nil {
+			logger.Debug("Bad value", zap.String("field", masterImage), zap.Error(err))
+			return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %s from request: %w", masterImage, err)
+		}
+		wi, err = getImage(r, workerImage)
+		if err != nil {
+			logger.Debug("Bad value", zap.String("field", workerImage), zap.Error(err))
+			return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %s from request: %w", workerImage, err)
+		}
 	}
 
 	return apisLoadTestV1.LoadTestSpec{
-		Type:            getLoadTestType(r),
+		Type:            lt,
 		Overwrite:       o,
 		MasterConfig:    mi,
 		WorkerConfig:    wi,
@@ -186,10 +197,18 @@ func fromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger, allowedC
 }
 
 func getEnvVars(r *http.Request) (map[string]string, error) {
-	stringEnv, _, err := getFileFromHTTP(r, envVars)
+	stringEnv, fileType, err := getFileFromHTTP(r, envVars)
 	if err != nil {
+		//this means there was no envVars file specified and we can ignore this error because envVars is optional
+		if err == http.ErrMissingFile {
+			return nil, nil
+		}
 		return nil, err
 	}
+	if fileType != "csv" {
+		return nil, ErrWrongFileFormat
+	}
+
 	s, err := ReadEnvs(stringEnv)
 	if err != nil {
 		return nil, err
@@ -200,7 +219,15 @@ func getEnvVars(r *http.Request) (map[string]string, error) {
 func getTestData(r *http.Request) (string, error) {
 	stringTestData, fileType, err := getFileFromHTTP(r, testData)
 	if err != nil {
+		//this means there was no testData file specified and we can ignore this error because testData is optional
+		if err == http.ErrMissingFile {
+			return "", nil
+		}
 		return "", err
+	}
+
+	if !testDataFileFormats[fileType] {
+		return "", ErrWrongFileFormat
 	}
 
 	if fileType == "csv" {
@@ -209,7 +236,6 @@ func getTestData(r *http.Request) (string, error) {
 			return "", err
 		}
 	}
-
 	return stringTestData, nil
 }
 
@@ -228,18 +254,20 @@ func checkCsvFile(s string) error {
 }
 
 func getTestFile(r *http.Request) (string, error) {
-	content, _, err := getFileFromHTTP(r, testFile)
-	return content, err
+	content, fileType, err := getFileFromHTTP(r, testFile)
+	if err != nil {
+		return "", err
+	}
+
+	if !testFileFormats[fileType] {
+		return "", ErrWrongFileFormat
+	}
+	return content, nil
 }
 
 func getFileFromHTTP(r *http.Request, file string) (string, string, error) {
 	td, meta, err := r.FormFile(file)
 	if err != nil {
-		// this means there was no file specified and we should ignore the error
-		if err == http.ErrMissingFile {
-			return "", "", nil
-		}
-
 		return "", "", err
 	}
 
@@ -274,6 +302,15 @@ func getOverwrite(r *http.Request) (bool, error) {
 	return overwrite, nil
 }
 
+func getLoadTestType(r *http.Request) (apisLoadTestV1.LoadTestType, error) {
+	ltType := r.FormValue(backendType)
+	if ltType == "" {
+		return "", ErrEmptyType
+	}
+
+	return apisLoadTestV1.LoadTestType(ltType), nil
+}
+
 func getDistributedPods(r *http.Request) (int32, error) {
 	nn := r.FormValue(distributedPods)
 	dn, err := strconv.ParseInt(nn, 10, 32)
@@ -285,7 +322,21 @@ func getDistributedPods(r *http.Request) (int32, error) {
 }
 
 func getTargetURL(r *http.Request) (string, error) {
-	return r.FormValue(targetURL), nil
+	targetURL := r.FormValue(targetURL)
+
+	if targetURL == "" {
+		return "", nil
+	}
+
+	u, err := url.Parse(targetURL)
+	if err != nil {
+		return "", err
+	}
+
+	if u.Scheme == "" || u.Host == "" {
+		return "", ErrWrongURLFormat
+	}
+	return targetURL, nil
 }
 
 func getDuration(r *http.Request) (time.Duration, error) {
@@ -298,9 +349,13 @@ func getDuration(r *http.Request) (time.Duration, error) {
 	return time.ParseDuration(val)
 }
 
-func getImage(r *http.Request, role string) apisLoadTestV1.ImageDetails {
-
+func getImage(r *http.Request, role string) (apisLoadTestV1.ImageDetails, error) {
 	imageStr := r.FormValue(role)
+
+	match := dockerImageRegexp.Match([]byte(imageStr))
+	if !match {
+		return apisLoadTestV1.ImageDetails{}, ErrWrongImageFormat
+	}
 
 	imgName := ""
 	imgTag := ""
@@ -309,7 +364,6 @@ func getImage(r *http.Request, role string) apisLoadTestV1.ImageDetails {
 	structImgChars := ":/"
 	structImgURI := ""
 	for _, c := range imageStr {
-
 		if strings.Contains(structImgChars, string(c)) {
 			structImgURI += string(c)
 		}
@@ -360,7 +414,7 @@ func getImage(r *http.Request, role string) apisLoadTestV1.ImageDetails {
 	return apisLoadTestV1.ImageDetails{
 		Image: imgName,
 		Tag:   imgTag,
-	}
+	}, nil
 }
 
 //fileToString converts file to string

@@ -16,11 +16,46 @@ import (
 
 func TestNewFakeFromHTTPLoadTest(t *testing.T) {
 	ltType := apisLoadTestV1.LoadTestTypeFake
-	r := buildMocFormReq(t, map[string]string{}, "", string(ltType), "", "", "")
+	r := buildMocFormReq(t, map[string]string{testFile: "testdata/valid/loadtest.jmx"}, "", string(ltType), "", "", "")
 
 	loadTest, err := fromHTTPRequestToLoadTestSpec(r, zaptest.NewLogger(t), false)
 	require.Error(t, err)
 	assert.Equal(t, apisLoadTestV1.LoadTestSpec{}, loadTest)
+}
+
+func TestBackendType(t *testing.T) {
+	for _, ti := range []struct {
+		tag              string
+		backendType      string
+		expectedResponse string
+		expectError      bool
+	}{
+		{
+			tag:              "valid backend type",
+			backendType:      "JMeter",
+			expectedResponse: "JMeter",
+			expectError:      false,
+		},
+		{
+			tag:              "empty backend type",
+			backendType:      "",
+			expectedResponse: "",
+			expectError:      true,
+		},
+	} {
+		t.Run(ti.tag, func(t *testing.T) {
+			request := buildMocFormReq(t, map[string]string{testFile: "testdata/valid/loadtest.jmx"}, "1", ti.backendType, "", "", "")
+
+			ltType, err := getLoadTestType(request)
+			assert.Equal(t, string(ltType), ti.expectedResponse)
+
+			if ti.expectError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
 }
 
 func TestDistributedPods(t *testing.T) {
@@ -44,7 +79,7 @@ func TestDistributedPods(t *testing.T) {
 		},
 	} {
 		t.Run(ti.tag, func(t *testing.T) {
-			request := buildMocFormReq(t, map[string]string{}, ti.distributedPods, string(apisLoadTestV1.LoadTestTypeJMeter), "", "", "")
+			request := buildMocFormReq(t, map[string]string{testFile: "testdata/valid/loadtest.jmx"}, ti.distributedPods, string(apisLoadTestV1.LoadTestTypeJMeter), "", "", "")
 
 			n, err := getDistributedPods(request)
 			assert.Equal(t, n, ti.expectedResponse)
@@ -82,10 +117,10 @@ func TestTestFile(t *testing.T) {
 			expectError:      true,
 		},
 		{
-			tag:              "valid no test file",
+			tag:              "error when no test file",
 			requestFile:      map[string]string{},
 			expectedResponse: "",
-			expectError:      false,
+			expectError:      true,
 		},
 	} {
 		t.Run(ti.tag, func(t *testing.T) {
@@ -113,6 +148,7 @@ func TestDataFile(t *testing.T) {
 		{
 			tag: "valid test data",
 			requestFile: map[string]string{
+				testFile: "testdata/valid/loadtest.jmx",
 				testData: "testdata/valid/testdata.csv",
 			},
 			expectedResponse: "test data 1\ntest data 2\n",
@@ -121,14 +157,17 @@ func TestDataFile(t *testing.T) {
 		{
 			tag: "empty test data file",
 			requestFile: map[string]string{
+				testFile: "testdata/valid/loadtest.jmx",
 				testData: "testdata/invalid/empty.csv",
 			},
 			expectedResponse: "",
 			expectError:      true,
 		},
 		{
-			tag:              "no test data file specified",
-			requestFile:      map[string]string{},
+			tag: "no test data file specified",
+			requestFile: map[string]string{
+				testFile: "testdata/valid/loadtest.jmx",
+			},
 			expectedResponse: "",
 			expectError:      false,
 		},
@@ -158,23 +197,36 @@ func TestEnvVarFile(t *testing.T) {
 		{
 			tag: "valid env vars file",
 			requestFile: map[string]string{
-				envVars: "testdata/valid/envvars.csv",
+				testFile: "testdata/valid/loadtest.jmx",
+				envVars:  "testdata/valid/envvars.csv",
 			},
 			expectedResponse: map[string]string{"envVar1": "value1", "envVar2": "value2"},
 			expectError:      false,
 		},
 		{
-			tag: "empty env vars file",
+			tag: "invalid env vars file format",
 			requestFile: map[string]string{
-				envVars: "testdata/invalid/empty.csv",
+				testFile: "testdata/valid/loadtest.jmx",
+				envVars:  "testdata/valid/loadtest.jmx",
 			},
 			expectedResponse: nil,
 			expectError:      true,
 		},
 		{
-			tag:              "no env vars file",
-			requestFile:      map[string]string{},
-			expectedResponse: map[string]string{},
+			tag: "empty env vars file",
+			requestFile: map[string]string{
+				testFile: "testdata/valid/loadtest.jmx",
+				envVars:  "testdata/invalid/empty.csv",
+			},
+			expectedResponse: nil,
+			expectError:      true,
+		},
+		{
+			tag: "no env vars file",
+			requestFile: map[string]string{
+				testFile: "testdata/valid/loadtest.jmx",
+			},
+			expectedResponse: map[string]string(nil),
 			expectError:      false,
 		},
 	} {
@@ -240,7 +292,7 @@ func TestTags(t *testing.T) {
 		t.Run(tc.scenario, func(t *testing.T) {
 			t.Parallel()
 
-			req := buildMocFormReq(t, nil, "1", string(apisLoadTestV1.LoadTestTypeJMeter), tc.input, "", "")
+			req := buildMocFormReq(t, map[string]string{testFile: "testdata/valid/loadtest.jmx"}, "1", string(apisLoadTestV1.LoadTestTypeJMeter), tc.input, "", "")
 
 			result, err := getTags(req)
 
@@ -430,6 +482,56 @@ func TestGetDuration(t *testing.T) {
 	}
 }
 
+func TestGetTargetURL(t *testing.T) {
+	for _, ti := range []struct {
+		tag         string
+		targetURL   string
+		expected    string
+		expectError bool
+	}{
+		{
+			tag:         "valid URL as targetURL",
+			targetURL:   "https://test-url.com/foo",
+			expected:    "https://test-url.com/foo",
+			expectError: false,
+		},
+		{
+			tag:         "invalid URL without scheme",
+			targetURL:   "someurls.com/foo-test",
+			expected:    "",
+			expectError: true,
+		},
+		{
+			tag:         "invalid URL without host",
+			targetURL:   "http://",
+			expected:    "",
+			expectError: true,
+		},
+	} {
+		t.Run(ti.tag, func(t *testing.T) {
+			req, err := http.NewRequest("POST", "/load-test", new(bytes.Buffer))
+			if err != nil {
+				t.Error(err)
+				t.FailNow()
+			}
+
+			req.Form = url.Values{"targetURL": []string{ti.targetURL}}
+			req.ParseForm()
+
+			actual, err := getTargetURL(req)
+
+			if ti.expectError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+
+			assert.Equal(t, ti.expected, actual)
+
+		})
+	}
+}
+
 func TestGetImage(t *testing.T) {
 	for _, ti := range []struct {
 		tag              string
@@ -517,12 +619,12 @@ func TestGetImage(t *testing.T) {
 			}
 
 			if ti.role == "masterImage" {
-				request := buildMocFormReq(t, map[string]string{}, "1", string(apisLoadTestV1.LoadTestTypeJMeter), "", sentImage, "")
-				image = getImage(request, ti.role)
+				request := buildMocFormReq(t, map[string]string{testFile: "testdata/valid/loadtest.jmx"}, "1", string(apisLoadTestV1.LoadTestTypeJMeter), "", sentImage, "")
+				image, _ = getImage(request, ti.role)
 			}
 			if ti.role == "workerImage" {
-				request := buildMocFormReq(t, map[string]string{}, "1", string(apisLoadTestV1.LoadTestTypeJMeter), "", "", sentImage)
-				image = getImage(request, ti.role)
+				request := buildMocFormReq(t, map[string]string{testFile: "testdata/valid/loadtest.jmx"}, "1", string(apisLoadTestV1.LoadTestTypeJMeter), "", "", sentImage)
+				image, _ = getImage(request, ti.role)
 			}
 
 			actualImage := ""
@@ -610,7 +712,7 @@ func TestCustomImageFeatureFlag(t *testing.T) {
 	} {
 
 		t.Run(ti.tag, func(t *testing.T) {
-			request := buildMocFormReq(t, map[string]string{}, "1", string(apisLoadTestV1.LoadTestTypeJMeter), "", ti.masterImage, ti.workerImage)
+			request := buildMocFormReq(t, map[string]string{testFile: "testdata/valid/loadtest.jmx"}, "1", string(apisLoadTestV1.LoadTestTypeJMeter), "", ti.masterImage, ti.workerImage)
 
 			ltSpec, err := fromHTTPRequestToLoadTestSpec(request, zaptest.NewLogger(t), ti.allowedCustomImages)
 

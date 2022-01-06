@@ -264,7 +264,7 @@ func TestIntegrationCreateLoadtestEmptyTestFile(t *testing.T) {
 		unmarshalErr := json.Unmarshal(respBody, &dat)
 		require.NoError(t, unmarshalErr, "Could not unmarshal response body")
 
-		expectedMessage := `error getting "testFile" from request: file is empty`
+		expectedMessage := `error getting testFile from request: file is empty`
 		gotMessage := dat["error"]
 
 		assert.Equal(t, expectedMessage, gotMessage)
@@ -310,7 +310,7 @@ func TestIntegrationCreateLoadtestEmptyTestDataFile(t *testing.T) {
 		unmarshalErr := json.Unmarshal(respbody, &dat)
 		require.NoError(t, unmarshalErr, "Could not unmarshal response body")
 
-		expectedMessage := `error getting "testData" from request: file is empty`
+		expectedMessage := `error getting testData from request: file is empty`
 		gotMessage := dat["error"]
 
 		assert.Equal(t, expectedMessage, gotMessage)

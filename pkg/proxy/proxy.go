@@ -3,7 +3,6 @@ package proxy
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -23,11 +22,6 @@ import (
 
 const (
 	mimeJSON = "application/json; charset=utf-8"
-)
-
-var (
-	// ErrFileToStringEmpty is the error returned when the defined users file is empty
-	ErrFileToStringEmpty = errors.New("file is empty")
 )
 
 // Proxy handler
@@ -67,10 +61,6 @@ type LoadTestStatus struct {
 	Tags            apisLoadTestV1.LoadTestTags `json:"tags"`
 	HasEnvVars      bool                        `json:"hasEnvVars"`
 	HasTestData     bool                        `json:"hasTestData"`
-}
-
-func getLoadTestType(r *http.Request) apisLoadTestV1.LoadTestType {
-	return apisLoadTestV1.LoadTestType(r.FormValue(backendType))
 }
 
 // List lists all the load tests.
