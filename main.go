@@ -7,6 +7,7 @@ import (
 	_ "github.com/hellofresh/kangal/pkg/backends/fake"
 	_ "github.com/hellofresh/kangal/pkg/backends/ghz"
 	_ "github.com/hellofresh/kangal/pkg/backends/jmeter"
+	_ "github.com/hellofresh/kangal/pkg/backends/k6"
 	_ "github.com/hellofresh/kangal/pkg/backends/locust"
 )
 

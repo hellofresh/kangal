@@ -128,6 +128,8 @@ const (
 	LoadTestTypeLocust LoadTestType = "Locust"
 	// LoadTestTypeGhz tells controller to use ghz provider
 	LoadTestTypeGhz LoadTestType = "Ghz"
+	// LoadTestTypeK6 tells controller to use k6 provider
+	LoadTestTypeK6 LoadTestType = "K6"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

@@ -55,6 +55,7 @@ Currently, there are the following load generator types implemented for Kangal:
 - [**JMeter**](https://jmeter.apache.org/)
 - [**Locust**](https://locust.io/)
 - [**ghz**](https://ghz.sh/)
+- [**k6**](https://k6.io/)
 
 Read more about each of them in [docs/index.md](docs/index.md).
 

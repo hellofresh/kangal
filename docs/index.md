@@ -21,6 +21,7 @@ Currently, there are the following load generator types implemented for Kangal:
 - **JMeter** - Kangal creates JMeter load test environments based on [hellofresh/kangal-jmeter](https://github.com/hellofresh/kangal-jmeter) docker image.
 - **Locust** - Kangal creates Locust load test environments based on official docker image [locustio/locust](https://hub.docker.com/r/locustio/locust).
 - **`ghz`** - Kangal creates `ghz` load test environments using [hellofresh/kangal-ghz](https://github.com/hellofresh/kangal-ghz) docker image.
+- **k6** - Kangal creates k6 load test environments based on official docker image [loadimpact/k6](https://hub.docker.com/r/loadimpact/k6).
 
 ### JMeter
 JMeter is a powerful tool which can be used for different performance testing tasks.
@@ -36,6 +37,12 @@ Please read [docs/locust/README.md](locust/README.md) for further details.
 `ghz` is a gRPC benchmarking and load testing tool.
 
 Please read [docs/ghz/README.md](ghz/README.md) for further details.
+
+### k6
+
+k6 is an open-source load testing tool that makes performance testing easy and productive for engineering teams. k6 is free, developer-centric, and extensible. You define the behaviour of your users in regular JavaScript code.
+
+Please read [docs/k6/README.md](k6/README.md) for further details.
 
 ## User flow
 Read more at [docs/user-flow.md](user-flow.md).

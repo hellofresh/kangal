@@ -85,6 +85,8 @@ The following table lists the common configurable parameters for `Kangal` chart:
 | `configMap.JMETER_WORKER_IMAGE_TAG`  | Tag of the JMeter worker image above                                                                | `latest`                              |
 | `configMap.LOCUST_IMAGE_NAME`        | Default Locust image name/repository if none is provided when creating a new loadtest               | `locustio/locust`                     |
 | `configMap.LOCUST_IMAGE_TAG`         | Tag of the Locust image above                                                                       | `1.3.0`                               |
+| `configMap.K6_IMAGE_NAME`        | Default k6 image name/repository if none is provided when creating a new loadtest               | `loadimpact/k6`                     |
+| `configMap.K6_IMAGE_TAG`         | Tag of the k6 image above                                                                       | `latest`                               |
 
 Deployment specific configurations:
 
@@ -186,3 +188,11 @@ Deployment specific configurations:
 | `controller.env.GHZ_MASTER_CPU_REQUESTS`    | CPU requests    |                   |
 | `controller.env.GHZ_MASTER_MEMORY_LIMITS`   | Memory limits   |                   |
 | `controller.env.GHZ_MASTER_MEMORY_REQUESTS` | Memory requests |                   |
+
+### Kangal Controller (`k6` specific)
+| Parameter                                   | Description     | Default           |
+|---------------------------------------------|-----------------|-------------------|
+| `controller.env.K6_CPU_LIMITS`      | CPU limits      |                   |
+| `controller.env.K6_CPU_REQUESTS`    | CPU requests    |                   |
+| `controller.env.K6_MEMORY_LIMITS`   | Memory limits   |                   |
+| `controller.env.K6_MEMORY_REQUESTS` | Memory requests |                   |
