@@ -119,6 +119,20 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	backend, err := p.registry.GetBackend(ltSpec.Type)
+	if err != nil {
+		logger.Error("could not get backend", zap.Error(err))
+		render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest, err.Error()))
+		return
+	}
+
+	err = backend.TransformLoadTestSpec(&ltSpec)
+	if err != nil {
+		logger.Error("could not transform LoadTest spec", zap.Error(err))
+		render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest, err.Error()))
+		return
+	}
+
 	// Building LoadTest based on specs
 	loadTest, err := apisLoadTestV1.BuildLoadTestObject(ltSpec)
 	if err != nil {
@@ -164,20 +178,6 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 	if activeLoadTests >= p.maxLoadTestsRun {
 		logger.Warn("number of active load tests reached limit", zap.Int("current", activeLoadTests), zap.Int("limit", p.maxLoadTestsRun))
 		render.Render(w, r, cHttp.ErrResponse(http.StatusTooManyRequests, "Number of active load tests reached limit"))
-		return
-	}
-
-	backend, err := p.registry.GetBackend(ltSpec.Type)
-	if err != nil {
-		logger.Error("could not get backend", zap.Error(err))
-		render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest, err.Error()))
-		return
-	}
-
-	err = backend.TransformLoadTestSpec(&ltSpec)
-	if err != nil {
-		logger.Error("could not transform LoadTest spec", zap.Error(err))
-		render.Render(w, r, cHttp.ErrResponse(http.StatusBadRequest, err.Error()))
 		return
 	}
 
