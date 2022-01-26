@@ -16,6 +16,7 @@ import (
 	batchV1 "k8s.io/api/batch/v1"
 	coreV1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -37,6 +38,8 @@ const (
 	loadTestWorkerServiceName = LoadTestLabel + "-workers"
 	// loadTestWorkerName is the base name of the worker pods
 	loadTestWorkerName = LoadTestLabel + "-worker"
+	// loadTestWorkerRemoteCustomDataVolumeSize is the default size of custom data volume
+	loadTestWorkerRemoteCustomDataVolumeSize = "1Gi"
 	// loadTestFile is the name of the config map that is used to hold testfile data
 	loadTestFile = LoadTestLabel + "-testfile"
 	// loadTestMasterJobLabelKey key we are using for the master job label
@@ -155,6 +158,31 @@ func (b *Backend) NewTestdataConfigMap(loadTest loadTestV1.LoadTest) ([]*coreV1.
 	return cMaps, nil
 }
 
+// NewPVC creates a new pvc for customdata
+func (b *Backend) NewPVC(loadTest loadTestV1.LoadTest, i int) *coreV1.PersistentVolumeClaim {
+	volumeSize := loadTestWorkerRemoteCustomDataVolumeSize
+	if val, ok := loadTest.Spec.EnvVars["JMETER_WORKER_REMOTE_CUSTOM_DATA_VOLUME_SIZE"]; ok {
+		volumeSize = val
+	}
+	return &coreV1.PersistentVolumeClaim{
+		ObjectMeta: metaV1.ObjectMeta{
+			Name:   fmt.Sprintf("pvc-%s", loadTestWorkerName),
+			Labels: loadTestWorkerPodLabels,
+			OwnerReferences: []metaV1.OwnerReference{
+				*metaV1.NewControllerRef(&loadTest, loadTestV1.SchemeGroupVersion.WithKind("LoadTest")),
+			},
+		},
+		Spec: coreV1.PersistentVolumeClaimSpec{
+			AccessModes: []coreV1.PersistentVolumeAccessMode{coreV1.ReadWriteMany},
+			Resources: coreV1.ResourceRequirements{
+				Requests: coreV1.ResourceList{
+					coreV1.ResourceName(coreV1.ResourceStorage): resource.MustParse(volumeSize),
+				},
+			},
+		},
+	}
+}
+
 // NewPod creates a new pod which mounts a configmap that contains jmeter testdata
 func (b *Backend) NewPod(loadTest loadTestV1.LoadTest, i int, configMap *coreV1.ConfigMap, podAnnotations map[string]string) *coreV1.Pod {
 	logger := b.logger.With(
@@ -170,7 +198,7 @@ func (b *Backend) NewPod(loadTest loadTestV1.LoadTest, i int, configMap *coreV1.
 		logger.Debug("Loadtest.Spec.WorkerConfig is empty; using worker image from config", zap.String("imageRef", imageRef))
 	}
 
-	return &coreV1.Pod{
+	pod := &coreV1.Pod{
 		ObjectMeta: metaV1.ObjectMeta{
 			Name:        fmt.Sprintf("%s-%03d", loadTestWorkerName, i),
 			Labels:      loadTestWorkerPodLabels,
@@ -246,6 +274,57 @@ func (b *Backend) NewPod(loadTest loadTestV1.LoadTest, i int, configMap *coreV1.
 			},
 		},
 	}
+
+	if _, ok := loadTest.Spec.EnvVars["JMETER_WORKER_REMOTE_CUSTOM_DATA_ENABLED"]; ok {
+		pod.Spec.Containers[0].VolumeMounts = append(pod.Spec.Containers[0].VolumeMounts, coreV1.VolumeMount{
+			Name:      "customdata",
+			MountPath: "/customdata",
+		})
+		pod.Spec.Volumes = append(pod.Spec.Volumes, []coreV1.Volume{
+			{
+				Name: "customdata",
+				VolumeSource: coreV1.VolumeSource{
+					PersistentVolumeClaim: &coreV1.PersistentVolumeClaimVolumeSource{
+						ClaimName: fmt.Sprintf("pvc-%s", loadTestWorkerName),
+					},
+				},
+			},
+			{
+				Name: "rclone-data",
+				VolumeSource: coreV1.VolumeSource{
+					EmptyDir: &coreV1.EmptyDirVolumeSource{},
+				},
+			}}...)
+		pod.Spec.InitContainers = []coreV1.Container{
+			{
+				Name:    "get-data",
+				Image:   "rclone/rclone:latest",
+				Command: []string{"/bin/sh"},
+				Args:    []string{"-c", "/usr/local/bin/rclone sync remotecustomdata:$(JMETER_WORKER_REMOTE_CUSTOM_DATA_BUCKET) /customdata || echo \"rsync failed\""},
+				VolumeMounts: []coreV1.VolumeMount{
+					{
+						Name:      "rclone-data",
+						MountPath: "/data",
+					},
+					{
+						Name:      "customdata",
+						MountPath: "/customdata",
+					},
+				},
+				EnvFrom: []coreV1.EnvFromSource{
+					{
+						SecretRef: &coreV1.SecretEnvSource{
+							LocalObjectReference: coreV1.LocalObjectReference{
+								Name: loadTestEnvVars,
+							},
+						},
+					},
+				},
+			},
+		}
+	}
+
+	return pod
 }
 
 // NewJMeterMasterJob creates a new job which runs the jmeter master pod
@@ -388,6 +467,26 @@ func (b *Backend) CreatePodsWithTestdata(ctx context.Context, configMaps []*core
 				logger.Error("unable to reload ConfigMap", zap.Error(err))
 				return err
 			}
+		}
+
+		if _, ok := loadTest.Spec.EnvVars["JMETER_WORKER_REMOTE_CUSTOM_DATA_ENABLED"]; ok {
+			logger.Info("Remote custom data enabled, creating PVC")
+
+			pvc := b.NewPVC(*loadTest, i)
+			_, err = b.kubeClientSet.CoreV1().PersistentVolumeClaims(namespace).Create(ctx, pvc, metaV1.CreateOptions{})
+			if err != nil && !kerrors.IsAlreadyExists(err) {
+				logger.Error("Error on creating pvc", zap.Error(err))
+				return err
+			}
+
+			watchObjPvc, err := b.kubeClientSet.CoreV1().PersistentVolumeClaims(namespace).Watch(ctx, metaV1.ListOptions{
+				FieldSelector: fmt.Sprintf("metadata.name=%s", pvc.ObjectMeta.Name),
+			})
+			if err != nil {
+				logger.Warn("unable to watch pvc state", zap.Error(err))
+				continue
+			}
+			waitfor.Resource(watchObjPvc, (waitfor.Condition{}).PvcReady, b.config.WaitForResourceTimeout)
 		}
 
 		pod := b.NewPod(*loadTest, i, configMap, b.podAnnotations)

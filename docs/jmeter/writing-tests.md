@@ -15,6 +15,7 @@
   - [Thread group](#thread-group)
 - [Test with CSV data](#test-with-csv-data)
 - [Test with environment variables](#test-with-environment-variables)
+- [Test with custom data](#test-with-custom-data)
 
 ## Introduction
 
@@ -389,3 +390,12 @@ You don't need any special configuration elements to use environment variables i
 ![http_auth_manager dmg](images/http_auth_manager.png){ height=500 }
 
 In the example above the environment variable AUTH_CLIENT_ID used in HTTP Authorization Manager.
+
+## Test with custom data
+Some tests require files as images, JAR files, etc. You can provide this from a S3 Bucket. If the environment variable JMETER_WORKER_REMOTE_CUSTOM_DATA_ENABLED is set to true, before pod creation, a PVC will be created asking the cluster for a volume of size defined in the environment variable JMETER_WORKER_REMOTE_CUSTOM_DATA_VOLUME_SIZE and access mode ReadWriteMany.
+
+The data will be cloned from the bucket to the volume using [Rclone](https://rclone.org/) and will be available to all the pods.
+
+For the full list of possible environment variables check [Kangal environment variables](env-vars.md)
+
+**Attention** The [Dynamic volume provisioning](https://kubernetes.io/docs/concepts/storage/dynamic-provisioning/) must be set on the cluster

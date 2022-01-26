@@ -33,6 +33,11 @@ func (Condition) PodRunning(event watch.Event) (bool, error) {
 	return false, nil
 }
 
+// PvcReady waits until is bound
+func (Condition) PvcReady(event watch.Event) (bool, error) {
+	return coreV1.ClaimBound == event.Object.(*coreV1.PersistentVolumeClaim).Status.Phase, nil
+}
+
 // LoadTestRunning waits until Loadtest are with status phase running
 func (Condition) LoadTestRunning(event watch.Event) (bool, error) {
 	if apisLoadTestV1.LoadTestRunning == event.Object.(*apisLoadTestV1.LoadTest).Status.Phase {
