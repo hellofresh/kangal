@@ -35,7 +35,7 @@
 						"schema": {
 							"$ref": "#/components/schemas/LoadTestPhase"
 						},
-						"example": "phase:running"
+						"example": "running"
 					},
 					{
 						"name": "limit",
@@ -44,7 +44,7 @@
 						"schema": {
 							"type": "integer"
 						},
-						"example": "500"
+						"example": 500
 					},
 					{
 						"name": "continue",
@@ -53,7 +53,7 @@
 						"schema": {
 							"type": "integer"
 						},
-						"example": "ENCODED_CONTINUE_TOKEN"
+						"example": 10000
 					}
 				],
 				"responses": {
