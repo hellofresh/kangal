@@ -19,4 +19,6 @@ nav:
       - About Locust load generator: 'locust/README.md'
   - Ghz load generator:
       - About ghz load generator: 'ghz/README.md'
+  - K6 load generator:
+      - About k6 load generator: 'k6/README.md'
   - Kangal environment variables: 'env-vars.md'
