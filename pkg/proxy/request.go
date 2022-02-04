@@ -52,6 +52,7 @@ var (
 		"py":   true,
 		"json": true,
 		"toml": true,
+		"js":   true,
 	}
 	testDataFileFormats = map[string]bool{
 		"csv":      true,

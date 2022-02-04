@@ -66,6 +66,16 @@
 | `GHZ_MASTER_MEMORY_LIMITS`   | Memory limits                       |                         |
 | `GHZ_MASTER_MEMORY_REQUESTS` | Memory requests                     |                         |
 
+### k6
+| Parameter            | Description     | Default         |
+|----------------------|-----------------|-----------------|
+| `K6_IMAGE_NAME`      | K6 image name   | `loadimpact/k6` |
+| `K6_IMAGE_TAG`       | K6 image tag    | `latest`        |
+| `K6_CPU_LIMITS`      | CPU limits      |                 |
+| `K6_CPU_REQUESTS`    | CPU requests    |                 |
+| `K6_MEMORY_LIMITS`   | Memory limits   |                 |
+| `K6_MEMORY_REQUESTS` | Memory requests |                 |
+
 ## Logger config
 | Parameter                  | Description                                                  | Default                               |
 |----------------------------|--------------------------------------------------------------|---------------------------------------|
