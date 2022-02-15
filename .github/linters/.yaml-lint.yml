@@ -1,5 +1,0 @@
-extends: default
-
-ignore: |
-  *deployment.yaml
-  *serviceaccount.yaml

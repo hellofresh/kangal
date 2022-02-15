@@ -33,6 +33,7 @@ jobs:
           VALIDATE_NATURAL_LANGUAGE: false
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VALIDATE_KUBERNETES_KUBEVAL: false
+          FILTER_REGEX_EXCLUDE: ".*/charts/kangal/templates/(serviceaccount|deployment).yaml"
 
       - name: Get tag
         id: get_tag
