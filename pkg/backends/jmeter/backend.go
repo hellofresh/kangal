@@ -1,7 +1,10 @@
 package jmeter
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"time"
@@ -154,6 +157,15 @@ func (b *Backend) TransformLoadTestSpec(spec *loadTestV1.LoadTestSpec) error {
 		spec.WorkerConfig.Tag = b.workerConfig.Tag
 	}
 
+	if spec.TestData != "" {
+		testDataBase64, err := generateBase64(spec.TestData)
+		if err != nil {
+			return err
+		}
+
+		spec.TestData = testDataBase64
+	}
+
 	return nil
 }
 
@@ -287,6 +299,24 @@ func (b *Backend) SyncStatus(ctx context.Context, loadTest loadTestV1.LoadTest, 
 	loadTestStatus.JobStatus = job.Status
 
 	return nil
+}
+
+func generateBase64(testData string) (string, error) {
+	var result string
+
+	var by bytes.Buffer
+	gz := gzip.NewWriter(&by)
+	if _, err := gz.Write([]byte(testData)); err != nil {
+		return result, err
+	}
+
+	if err := gz.Close(); err != nil {
+		return result, err
+	}
+
+	result = base64.RawStdEncoding.EncodeToString(by.Bytes())
+
+	return result, nil
 }
 
 func getLoadTestStatusPhaseByPod(pod coreV1.Pod) loadTestV1.LoadTestPhase {

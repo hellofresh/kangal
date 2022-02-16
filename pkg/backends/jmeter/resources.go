@@ -1,10 +1,14 @@
 package jmeter
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
+	"encoding/base64"
 	"encoding/csv"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"strings"
 
@@ -96,6 +100,19 @@ func (b *Backend) NewTestdataConfigMap(loadTest loadTestV1.LoadTest) ([]*coreV1.
 	)
 
 	testdata := loadTest.Spec.TestData
+	if len(testdata) > 0 {
+		testdataDecoded, _ := base64.RawStdEncoding.DecodeString(loadTest.Spec.TestData)
+		gz, err := gzip.NewReader(bytes.NewReader(testdataDecoded))
+		if err != nil {
+			return nil, err
+		}
+		result, err := ioutil.ReadAll(gz)
+		if err != nil {
+			return nil, err
+		}
+		testdata = string(result)
+	}
+
 	n := int(*loadTest.Spec.DistributedPods)
 
 	cMaps := make([]*coreV1.ConfigMap, n)
@@ -106,19 +123,24 @@ func (b *Backend) NewTestdataConfigMap(loadTest loadTestV1.LoadTest) ([]*coreV1.
 		return nil, err
 	}
 
-	stringWriter := new(strings.Builder)
+	var buf bytes.Buffer
+	gzipWriter := gzip.NewWriter(&buf)
 
 	for i := 0; i < n; i++ {
-		stringWriter.Reset()
-		csvWriter := csv.NewWriter(stringWriter)
+		csvWriter := csv.NewWriter(gzipWriter)
 		if err := csvWriter.WriteAll(chunks[i]); err != nil {
 			logger.Error("Error on writing csv test data to chunks", zap.Error(err))
 			return nil, err
 		}
+		gzipWriter.Close()
 
 		data := map[string]string{
-			"testdata.csv": stringWriter.String(),
+			"testdata.csv.gz": base64.RawStdEncoding.EncodeToString(buf.Bytes()),
 		}
+
+		buf.Reset()
+		buf = *new(bytes.Buffer)
+		gzipWriter.Reset(&buf)
 
 		cmName := fmt.Sprintf("%s-%03d", loadTestFile, i)
 
@@ -158,6 +180,24 @@ func (b *Backend) NewPod(loadTest loadTestV1.LoadTest, i int, configMap *coreV1.
 			},
 		},
 		Spec: coreV1.PodSpec{
+			InitContainers: []coreV1.Container{
+				{
+					Name:    "convert-data-back-to-csv",
+					Image:   "alpine:latest",
+					Command: []string{"/bin/sh"},
+					Args:    []string{"-c", "(ls /testdatatmp/testdata.csv.gz >/dev/null 2>&1 && cat /testdatatmp/testdata.csv.gz |base64 -d|zcat > /testdata/testdata.csv) || echo \"no testdata.csv.gz file\""},
+					VolumeMounts: []coreV1.VolumeMount{
+						{
+							Name:      "testdatatmp",
+							MountPath: "/testdatatmp",
+						},
+						{
+							Name:      "testdata",
+							MountPath: "/testdata",
+						},
+					},
+				},
+			},
 			Containers: []coreV1.Container{
 				{
 					Name:            loadTestWorkerName,
@@ -187,7 +227,7 @@ func (b *Backend) NewPod(loadTest loadTestV1.LoadTest, i int, configMap *coreV1.
 			},
 			Volumes: []coreV1.Volume{
 				{
-					Name: "testdata",
+					Name: "testdatatmp",
 					VolumeSource: coreV1.VolumeSource{
 						ConfigMap: &coreV1.ConfigMapVolumeSource{
 							LocalObjectReference: coreV1.LocalObjectReference{
@@ -195,6 +235,12 @@ func (b *Backend) NewPod(loadTest loadTestV1.LoadTest, i int, configMap *coreV1.
 							},
 							Optional: &optionalVolume,
 						},
+					},
+				},
+				{
+					Name: "testdata",
+					VolumeSource: coreV1.VolumeSource{
+						EmptyDir: &coreV1.EmptyDirVolumeSource{},
 					},
 				},
 			},
