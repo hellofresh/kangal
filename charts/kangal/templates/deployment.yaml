@@ -48,7 +48,11 @@ spec:
 {{- end }}
 {{- end }}
     spec:
-      serviceAccountName: {{ if $value.serviceAccountName }}{{ $value.serviceAccountName }}{{ else }}{{ template "<CHARTNAME>.fullname" $ }}-{{ $key }}{{ end }}
+      {{- if $value.serviceAccount }}
+      {{- if $value.serviceAccount.create }}
+      serviceAccountName: {{ template "<CHARTNAME>.fullname" $ }}-{{ $key }}
+      {{- end }}
+      {{- end }}
       dnsConfig:
         options:
           - name: ndots
