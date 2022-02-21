@@ -1,3 +1,5 @@
+{{- range $key, $value := .Values }}
+{{- if or (eq $key "proxy") (eq $key "openapi-ui") (eq $key "controller")}}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -10,4 +12,14 @@ roleRef:
 subjects:
 - apiGroup: rbac.authorization.k8s.io
   kind: User
+  {{- if $value.serviceAccount }}
+  {{- if $value.serviceAccount.create }}
+  name: system:serviceaccount:{{ $.Release.Namespace }}:{{ template "<CHARTNAME>.fullname" $ }}-{{ $key }}
+  {{- else }}
   name: system:serviceaccount:{{ $.Release.Namespace }}:default
+  {{- end }}
+  {{- else }}
+  name: system:serviceaccount:{{ $.Release.Namespace }}:default
+  {{- end }}
+{{- end }}
+{{- end }}

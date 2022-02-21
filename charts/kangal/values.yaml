@@ -57,8 +57,10 @@ proxy:
   # Annotations to be added to pod
   podAnnotations: {}
 
-  # Annotations to be added to service account
-  serviceAccountAnnotations: {}
+  # Create a new service account
+  serviceAccount:
+    create: false
+    annotations: {}
 
   # The ports that the container listens to
   containerPorts:
@@ -130,8 +132,10 @@ controller:
   env:
     KANGAL_PROXY_URL: https://kangal-proxy.example.com
 
-  # Annotations to be added to service account
-  serviceAccountAnnotations: {}
+  # Create a new service account
+  serviceAccount:
+    create: false
+    annotations: {}
 
 openapi-ui:
   enabled: true
@@ -160,8 +164,10 @@ openapi-ui:
   # Annotations to be added to pod
   podAnnotations: {}
 
-  # Annotations to be added to service account
-  serviceAccountAnnotations: {}
+  # Create a new service account
+  serviceAccount:
+    create: false
+    annotations: {}
 
   # The ports that the container listens to
   containerPorts:
