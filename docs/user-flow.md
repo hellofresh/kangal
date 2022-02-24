@@ -10,6 +10,8 @@ Create a new load test by making a POST request to Kangal Proxy.
 
 > **Note**: The sample CURL commands below use example test files, those files can be found in [Kangal repository](https://github.com/hellofresh/kangal/).
 
+**The test data will be equally divided between the number of pods set on distributedPods parameter**
+
 ### Using JMeter
 ```shell
 curl -X POST http://${KANGAL_PROXY_ADDRESS}/load-test \

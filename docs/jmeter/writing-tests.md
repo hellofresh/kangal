@@ -379,6 +379,8 @@ This config element should be nested under HTTP request sampler. Read more about
 
 > **Important note!** In Kangal the path to the test data file is always the same **/testdata/testdata.csv**. Please specify this path in Filename field of your CSV Data Set Config. Otherwise the test run by Kangal will not see the the provided data.
 
+**The test data will be equally divided between the number of pods set on distributedPods parameter**
+
 ## Test with environment variables
 Some tests may contain sensitive information like DB connection parameters, authorization tokens, etc. You can provide this information as environment variables which will be applied in load test environment before running test.
 
