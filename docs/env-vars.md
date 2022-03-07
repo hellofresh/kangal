@@ -40,6 +40,14 @@
 | `JMETER_WORKER_CPU_REQUESTS`    | Worker CPU requests                  |                                   |
 | `JMETER_WORKER_MEMORY_LIMITS`   | Worker memory limits                 |                                   |
 | `JMETER_WORKER_MEMORY_REQUESTS` | Worker memory requests               |                                   |
+| `JMETER_WORKER_REMOTE_CUSTOM_DATA_ENABLED` | Enable remote custom data | `false`                           |
+| `JMETER_WORKER_REMOTE_CUSTOM_DATA_BUCKET` | The name of the bucket where remote data is |                                   |
+| `JMETER_WORKER_REMOTE_CUSTOM_DATA_VOLUME_SIZE` | Volume size used by download remote data | `1Gi`                          |
+| `RCLONE_CONFIG_REMOTECUSTOMDATA_TYPE` | [Rclone](https://rclone.org/) environment variable for type |                           |
+| `RCLONE_CONFIG_REMOTECUSTOMDATA_ACCESS_KEY_ID` | [Rclone](https://rclone.org/) environment variable for access key ID |                          |
+| `RCLONE_CONFIG_REMOTECUSTOMDATA_SECRET_ACCESS_KEY` | [Rclone](https://rclone.org/) environment variable for secret access key |                          |
+| `RCLONE_CONFIG_REMOTECUSTOMDATA_REGION` | [Rclone](https://rclone.org/) environment variable for region |                          |
+| `RCLONE_CONFIG_REMOTECUSTOMDATA_ENDPOINT` | [Rclone](https://rclone.org/) environment variable for endpoint |                           |
 
 ### Locust
 | Parameter                       | Description                 | Default           |
