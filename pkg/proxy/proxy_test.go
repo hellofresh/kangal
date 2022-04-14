@@ -139,8 +139,8 @@ func TestProxy_List(t *testing.T) {
 							Type:            apisLoadTestV1.LoadTestTypeJMeter,
 							DistributedPods: &distributedPods,
 							Tags:            apisLoadTestV1.LoadTestTags{},
-							TestFile:        "file content\n",
-							TestData:        "test data\n",
+							TestFile:        []byte("file content\n"),
+							TestData:        []byte("test data\n"),
 						},
 						Status: apisLoadTestV1.LoadTestStatus{
 							Phase:     apisLoadTestV1.LoadTestRunning,
@@ -176,8 +176,8 @@ func TestProxy_List(t *testing.T) {
 							WorkerConfig:    apisLoadTestV1.ImageDetails{},
 							DistributedPods: &distributedPods,
 							Tags:            apisLoadTestV1.LoadTestTags{"department": "platform", "team": "kangal"},
-							TestFile:        "file content\n",
-							TestData:        "test data\n",
+							TestFile:        []byte("file content\n"),
+							TestData:        []byte("test data\n"),
 						},
 						Status: apisLoadTestV1.LoadTestStatus{
 							Phase:     apisLoadTestV1.LoadTestRunning,

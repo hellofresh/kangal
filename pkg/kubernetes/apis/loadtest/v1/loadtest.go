@@ -27,7 +27,7 @@ func BuildLoadTestObject(spec LoadTestSpec) (*LoadTest, error) {
 	name := "loadtest-" + generatedName
 
 	labels := map[string]string{
-		"test-file-hash": getHashFromString(spec.TestFile),
+		"test-file-hash": getHashFromBytes(spec.TestFile),
 	}
 
 	for tagName, tagValue := range spec.Tags {
@@ -112,8 +112,8 @@ func LoadTestPhaseFromString(phase string) (LoadTestPhase, error) {
 	return "", ErrUnknownLoadTestPhase
 }
 
-func getHashFromString(str string) string {
+func getHashFromBytes(b []byte) string {
 	h := sha1.New()
-	h.Write([]byte(str))
+	h.Write(b)
 	return hex.EncodeToString(h.Sum(nil))
 }

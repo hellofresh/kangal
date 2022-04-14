@@ -50,8 +50,8 @@ type LoadTestSpec struct {
 	WorkerConfig    ImageDetails      `json:"workerConfig"`
 	DistributedPods *int32            `json:"distributedPods"`
 	Tags            LoadTestTags      `json:"tags"`
-	TestFile        string            `json:"testFile"`
-	TestData        string            `json:"testData,omitempty"`
+	TestFile        []byte            `json:"testFile"`
+	TestData        []byte            `json:"testData,omitempty"`
 	EnvVars         map[string]string `json:"envVars,omitempty"`
 	TargetURL       string            `json:"targetURL,omitempty"`
 	Duration        time.Duration     `json:"duration,omitempty"`

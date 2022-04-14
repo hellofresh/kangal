@@ -216,7 +216,8 @@ func TestIntegrationCreateLoadtestFormPostOneFile(t *testing.T) {
 	t.Run("Checking if the loadtest testData is correct", func(t *testing.T) {
 		data, err := testHelper.GetLoadTestTestdata(clientSet, createdLoadTestName)
 		require.NoError(t, err)
-		assert.Equal(t, "", data)
+		var empty []byte
+		assert.Equal(t, empty, data)
 	})
 
 	t.Run("Checking if the loadtest envVars is correct", func(t *testing.T) {

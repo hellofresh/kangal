@@ -97,7 +97,7 @@ func (b *Backend) TransformLoadTestSpec(spec *loadTestV1.LoadTestSpec) error {
 		return ErrRequireMinOneDistributedPod
 	}
 
-	if spec.TestFile == "" {
+	if len(spec.TestFile) == 0 {
 		return ErrRequireTestFile
 	}
 
@@ -141,7 +141,7 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, report
 	configMaps[0] = tfCfgMap
 
 	// Prepare testdata ConfigMap
-	if loadTest.Spec.TestData != "" {
+	if len(loadTest.Spec.TestData) != 0 {
 		tdCfgMap, err = NewFileConfigMap(loadTestDataConfigMapName, testdataFileName, loadTest.Spec.TestData)
 		if err != nil {
 			b.logger.Error("Error creating testdata configmap resource", zap.Error(err))

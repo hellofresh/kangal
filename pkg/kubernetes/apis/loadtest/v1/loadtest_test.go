@@ -8,7 +8,7 @@ import (
 )
 
 func TestHash(t *testing.T) {
-	assert.Equal(t, "da39a3ee5e6b4b0d3255bfef95601890afd80709", getHashFromString(""))
+	assert.Equal(t, "da39a3ee5e6b4b0d3255bfef95601890afd80709", getHashFromBytes([]byte("")))
 }
 
 func TestBuildLoadTestObject(t *testing.T) {
@@ -19,8 +19,8 @@ func TestBuildLoadTestObject(t *testing.T) {
 		Type:            ltType,
 		DistributedPods: &expectedDP,
 		Tags:            map[string]string{"department": "platform", "team": "kangal"},
-		TestFile:        "load-test file\n",
-		TestData:        "test data 1\ntest data 2\n",
+		TestFile:        []byte("load-test file\n"),
+		TestData:        []byte("test data 1\ntest data 2\n"),
 		EnvVars:         map[string]string{"envVar1": "value1", "envVar2": "value2"},
 	}
 

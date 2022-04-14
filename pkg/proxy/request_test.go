@@ -97,7 +97,7 @@ func TestTestFile(t *testing.T) {
 	for _, ti := range []struct {
 		tag              string
 		requestFile      map[string]string
-		expectedResponse string
+		expectedResponse []byte
 		expectError      bool
 	}{
 		{
@@ -105,7 +105,7 @@ func TestTestFile(t *testing.T) {
 			requestFile: map[string]string{
 				testFile: "testdata/valid/loadtest.jmx",
 			},
-			expectedResponse: "load-test file\n",
+			expectedResponse: []byte("load-test file\n"),
 			expectError:      false,
 		},
 		{
@@ -113,13 +113,13 @@ func TestTestFile(t *testing.T) {
 			requestFile: map[string]string{
 				testFile: "testdata/invalid/empty.jmx",
 			},
-			expectedResponse: "",
+			expectedResponse: nil,
 			expectError:      true,
 		},
 		{
 			tag:              "error when no test file",
 			requestFile:      map[string]string{},
-			expectedResponse: "",
+			expectedResponse: nil,
 			expectError:      true,
 		},
 	} {
@@ -142,7 +142,7 @@ func TestDataFile(t *testing.T) {
 	for _, ti := range []struct {
 		tag              string
 		requestFile      map[string]string
-		expectedResponse string
+		expectedResponse []byte
 		expectError      bool
 	}{
 		{
@@ -151,7 +151,7 @@ func TestDataFile(t *testing.T) {
 				testFile: "testdata/valid/loadtest.jmx",
 				testData: "testdata/valid/testdata.csv",
 			},
-			expectedResponse: "test data 1\ntest data 2\n",
+			expectedResponse: []byte("test data 1\ntest data 2\n"),
 			expectError:      false,
 		},
 		{
@@ -160,7 +160,7 @@ func TestDataFile(t *testing.T) {
 				testFile: "testdata/valid/loadtest.jmx",
 				testData: "testdata/invalid/empty.csv",
 			},
-			expectedResponse: "",
+			expectedResponse: nil,
 			expectError:      true,
 		},
 		{
@@ -168,7 +168,7 @@ func TestDataFile(t *testing.T) {
 			requestFile: map[string]string{
 				testFile: "testdata/valid/loadtest.jmx",
 			},
-			expectedResponse: "",
+			expectedResponse: nil,
 			expectError:      false,
 		},
 	} {

@@ -30,7 +30,7 @@ func TestSync(t *testing.T) {
 		},
 		Spec: loadTestV1.LoadTestSpec{
 			DistributedPods: &distributedPods,
-			TestFile:        "test",
+			TestFile:        []byte("test"),
 		},
 		Status: loadTestV1.LoadTestStatus{
 			Phase:     "running",
@@ -74,7 +74,7 @@ func TestSyncStatus(t *testing.T) {
 		},
 		Spec: loadTestV1.LoadTestSpec{
 			DistributedPods: &distributedPods,
-			TestFile:        "test",
+			TestFile:        []byte("test"),
 		},
 		Status: loadTestV1.LoadTestStatus{
 			Namespace: namespace,
