@@ -122,7 +122,7 @@ func NewFileVolumeAndMount(name, cfg, filename string) (coreV1.Volume, coreV1.Vo
 }
 
 // NewFileConfigMap creates a configmap for the provided file information
-func NewFileConfigMap(cfgName, filename, content string) (*coreV1.ConfigMap, error) {
+func NewFileConfigMap(cfgName, filename string, content []byte) (*coreV1.ConfigMap, error) {
 	if strings.TrimSpace(cfgName) == "" {
 		return nil, errors.New("empty config name")
 	}
@@ -131,7 +131,7 @@ func NewFileConfigMap(cfgName, filename, content string) (*coreV1.ConfigMap, err
 		return nil, fmt.Errorf("invalid name for configmap %s", cfgName)
 	}
 
-	if strings.TrimSpace(content) == "" {
+	if len(content) == 0 {
 		return nil, fmt.Errorf("invalid file %s for configmap %s, empty content", filename, cfgName)
 	}
 
@@ -139,7 +139,7 @@ func NewFileConfigMap(cfgName, filename, content string) (*coreV1.ConfigMap, err
 		ObjectMeta: metaV1.ObjectMeta{
 			Name: cfgName,
 		},
-		Data: map[string]string{
+		BinaryData: map[string][]byte{
 			filename: content,
 		},
 	}, nil

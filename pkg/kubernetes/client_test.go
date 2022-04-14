@@ -212,8 +212,8 @@ func TestClient_ListLoadTest(t *testing.T) {
 							WorkerConfig:    apisLoadTestV1.ImageDetails{},
 							DistributedPods: &distributedPods,
 							Tags:            apisLoadTestV1.LoadTestTags{"team": "kangal"},
-							TestFile:        "file content\n",
-							TestData:        "test data\n",
+							TestFile:        []byte("file content\n"),
+							TestData:        []byte("test data\n"),
 						},
 						Status: apisLoadTestV1.LoadTestStatus{
 							Phase:     apisLoadTestV1.LoadTestStarting,
@@ -241,8 +241,8 @@ func TestClient_ListLoadTest(t *testing.T) {
 							WorkerConfig:    apisLoadTestV1.ImageDetails{},
 							DistributedPods: &distributedPods,
 							Tags:            apisLoadTestV1.LoadTestTags{"team": "kangal"},
-							TestFile:        "file content\n",
-							TestData:        "test data\n",
+							TestFile:        []byte("file content\n"),
+							TestData:        []byte("test data\n"),
 						},
 						Status: apisLoadTestV1.LoadTestStatus{
 							Phase:     apisLoadTestV1.LoadTestStarting,

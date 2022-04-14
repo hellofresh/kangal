@@ -208,7 +208,7 @@ func TestTransformLoadTestSpec(t *testing.T) {
 	t.Run("All valid", func(t *testing.T) {
 		distributedPods := int32(2)
 		spec.DistributedPods = &distributedPods
-		spec.TestFile = "my-test"
+		spec.TestFile = []byte("my-test")
 		err := jmeter.TransformLoadTestSpec(spec)
 		assert.NoError(t, err)
 		assert.Equal(t, spec.MasterConfig.Image, "master-image")

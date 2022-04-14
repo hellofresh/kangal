@@ -68,7 +68,7 @@ func (b *Backend) NewConfigMap(loadTest loadTestV1.LoadTest) *coreV1.ConfigMap {
 	testfile := loadTest.Spec.TestFile
 
 	data := map[string]string{
-		"testfile.jmx": testfile,
+		"testfile.jmx": string(testfile),
 	}
 
 	return &coreV1.ConfigMap{
@@ -104,7 +104,7 @@ func (b *Backend) NewTestdataConfigMap(loadTest loadTestV1.LoadTest) ([]*coreV1.
 
 	testdata := loadTest.Spec.TestData
 	if len(testdata) > 0 {
-		testdataDecoded, _ := base64.RawStdEncoding.DecodeString(loadTest.Spec.TestData)
+		testdataDecoded, _ := base64.RawStdEncoding.DecodeString(string(loadTest.Spec.TestData))
 		gz, err := gzip.NewReader(bytes.NewReader(testdataDecoded))
 		if err != nil {
 			return nil, err
@@ -113,14 +113,14 @@ func (b *Backend) NewTestdataConfigMap(loadTest loadTestV1.LoadTest) ([]*coreV1.
 		if err != nil {
 			return nil, err
 		}
-		testdata = string(result)
+		testdata = result
 	}
 
 	n := int(*loadTest.Spec.DistributedPods)
 
 	cMaps := make([]*coreV1.ConfigMap, n)
 
-	chunks, err := splitTestData(testdata, n, logger)
+	chunks, err := splitTestData(string(testdata), n, logger)
 	if err != nil {
 		logger.Error("Error on splitting csv test data", zap.Error(err))
 		return nil, err

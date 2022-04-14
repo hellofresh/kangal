@@ -26,13 +26,13 @@ const (
 
 // CreateLoadTest creates a load test CR
 func CreateLoadTest(clientSet clientSetV.Clientset, pods int32, name, testFile, testData string, envVars map[string]string, loadTestType apisLoadTestV1.LoadTestType) error {
-	var td = ""
-	tf, err := readFile(testFile)
+	var td []byte
+	tf, err := os.ReadFile(testFile)
 	if err != nil {
 		return err
 	}
 	if testData != "" {
-		td, err = readFile(testData)
+		td, err = os.ReadFile(testData)
 		if err != nil {
 			return err
 		}
@@ -50,7 +50,7 @@ func CreateLoadTest(clientSet clientSetV.Clientset, pods int32, name, testFile, 
 		Overwrite:       false,
 		DistributedPods: &pods,
 		Tags:            apisLoadTestV1.LoadTestTags{},
-		TestFile:        tf,
+		TestFile:        []byte(tf),
 		TestData:        td,
 		EnvVars:         envVars,
 		TargetURL:       "",
@@ -121,12 +121,12 @@ func GetLoadTest(clientSet clientSetV.Clientset, loadtestName string) (string, e
 }
 
 // GetLoadTestTestdata returns a load test name
-func GetLoadTestTestdata(clientSet clientSetV.Clientset, loadtestName string) (string, error) {
+func GetLoadTestTestdata(clientSet clientSetV.Clientset, loadtestName string) ([]byte, error) {
 	ctx := context.Background()
 
 	result, err := clientSet.KangalV1().LoadTests().Get(ctx, loadtestName, metaV1.GetOptions{})
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	return result.Spec.TestData, nil
 }
