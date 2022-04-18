@@ -108,6 +108,23 @@ func (b *Backend) NewJob(
 					Annotations: b.podAnnotations,
 				},
 				Spec: coreV1.PodSpec{
+					Affinity: &coreV1.Affinity{
+						PodAntiAffinity: &coreV1.PodAntiAffinity{
+							PreferredDuringSchedulingIgnoredDuringExecution: []coreV1.WeightedPodAffinityTerm{
+								{
+									Weight: 1,
+									PodAffinityTerm: coreV1.PodAffinityTerm{
+										LabelSelector: &metaV1.LabelSelector{
+											MatchLabels: map[string]string{
+												loadTestLabelKey: loadTestWorkerLabelValue,
+											},
+										},
+										TopologyKey: "kubernetes.io/hostname",
+									},
+								},
+							},
+						},
+					},
 					RestartPolicy: "Never",
 					Volumes:       volumes,
 					Containers: []coreV1.Container{

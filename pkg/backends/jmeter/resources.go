@@ -208,6 +208,21 @@ func (b *Backend) NewPod(loadTest loadTestV1.LoadTest, i int, configMap *coreV1.
 			},
 		},
 		Spec: coreV1.PodSpec{
+			Affinity: &coreV1.Affinity{
+				PodAntiAffinity: &coreV1.PodAntiAffinity{
+					PreferredDuringSchedulingIgnoredDuringExecution: []coreV1.WeightedPodAffinityTerm{
+						{
+							Weight: 1,
+							PodAffinityTerm: coreV1.PodAffinityTerm{
+								LabelSelector: &metaV1.LabelSelector{
+									MatchLabels: loadTestWorkerPodLabels,
+								},
+								TopologyKey: "kubernetes.io/hostname",
+							},
+						},
+					},
+				},
+			},
 			InitContainers: []coreV1.Container{
 				{
 					Name:    "convert-data-back-to-csv",
