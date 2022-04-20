@@ -106,11 +106,15 @@ func (b *Backend) NewTestdataConfigMap(loadTest loadTestV1.LoadTest) ([]*coreV1.
 	if len(testdata) > 0 {
 		testdataDecoded, _ := base64.RawStdEncoding.DecodeString(loadTest.Spec.TestData)
 		gz, err := gzip.NewReader(bytes.NewReader(testdataDecoded))
-		if err != nil {
+		if err != nil && err != io.EOF {
+			logger.Error("Error on gzip reader", zap.Error(err))
 			return nil, err
 		}
+		defer gz.Close()
+
 		result, err := ioutil.ReadAll(gz)
-		if err != nil {
+		if err != nil && err != io.EOF {
+			logger.Error("Error on ioutil reader", zap.Error(err))
 			return nil, err
 		}
 		testdata = string(result)

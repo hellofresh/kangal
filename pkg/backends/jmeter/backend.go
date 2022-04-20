@@ -310,6 +310,10 @@ func generateBase64(testData string) (string, error) {
 		return result, err
 	}
 
+	if err := gz.Flush(); err != nil {
+		return result, err
+	}
+
 	if err := gz.Close(); err != nil {
 		return result, err
 	}
