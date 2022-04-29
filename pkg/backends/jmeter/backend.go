@@ -157,6 +157,15 @@ func (b *Backend) TransformLoadTestSpec(spec *loadTestV1.LoadTestSpec) error {
 		spec.WorkerConfig.Tag = b.workerConfig.Tag
 	}
 
+	if len(spec.TestData) > 0 {
+		testDataBase64, err := generateBase64(string(spec.TestData))
+		if err != nil {
+			return err
+		}
+
+		spec.TestData = []byte(testDataBase64)
+	}
+
 	return nil
 }
 
