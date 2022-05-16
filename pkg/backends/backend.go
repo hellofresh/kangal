@@ -49,8 +49,15 @@ type BackendSetLogger interface {
 // BackendSetPodAnnotations interface can be implemented by backend to receive pod annotations
 // This method is called only by command Controller
 type BackendSetPodAnnotations interface {
-	// SetLogger gives backend a logger instance
+	// SetPodAnnotations gives backend annotations to be attached in loadtest pods
 	SetPodAnnotations(map[string]string)
+}
+
+// BackendSetPodNodeSelector interface can be implemented by backend to receive pod node selectors
+// This method is called only by command Controller
+type BackendSetPodNodeSelector interface {
+	// SetPodNodeSelector gives backend node selector to be attached in loadtest pods
+	SetPodNodeSelector(map[string]string)
 }
 
 // BackendSetKubeClientSet interface can be implemented by backend to receive an kubeClientSet
