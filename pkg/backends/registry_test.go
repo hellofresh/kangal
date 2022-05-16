@@ -3,13 +3,12 @@ package backends
 import (
 	"testing"
 
+	"github.com/golang/mock/gomock"
+	"go.uber.org/zap"
 	kubeFake "k8s.io/client-go/kubernetes/fake"
 
 	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	kangalFake "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned/fake"
-
-	"github.com/golang/mock/gomock"
-	"go.uber.org/zap"
 )
 
 func TestNew(t *testing.T) {
@@ -19,6 +18,7 @@ func TestNew(t *testing.T) {
 	tests := []struct {
 		name            string
 		podAnnotations  map[string]string
+		nodeSelector    map[string]string
 		logger          *zap.Logger
 		kangalClientSet *kangalFake.Clientset
 		kubeClientSet   *kubeFake.Clientset
@@ -29,6 +29,12 @@ func TestNew(t *testing.T) {
 		{
 			name: "pod-annotations",
 			podAnnotations: map[string]string{
+				"annotation1": "value1",
+			},
+		},
+		{
+			name: "pod-labels",
+			nodeSelector: map[string]string{
 				"label1": "value1",
 			},
 		},
@@ -62,6 +68,11 @@ func TestNew(t *testing.T) {
 			if len(tt.podAnnotations) > 0 {
 				opts = append(opts, WithPodAnnotations(tt.podAnnotations))
 				b.EXPECT().SetPodAnnotations(gomock.Eq(tt.podAnnotations))
+			}
+
+			if len(tt.nodeSelector) > 0 {
+				opts = append(opts, WithNodeSelector(tt.nodeSelector))
+				b.EXPECT().SetPodNodeSelector(gomock.Eq(tt.nodeSelector))
 			}
 
 			if nil != tt.logger {
