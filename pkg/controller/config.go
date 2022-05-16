@@ -28,4 +28,5 @@ type Config struct {
 	KubeConfig           string
 	NamespaceAnnotations map[string]string
 	PodAnnotations       map[string]string
+	NodeSelectors        map[string]string
 }

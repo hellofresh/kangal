@@ -22,9 +22,10 @@ type controllerCmdOptions struct {
 	masterURL            string
 	namespaceAnnotations []string
 	podAnnotations       []string
+	nodeSelectors        []string
 }
 
-// NewControllerCmd creates a new proxy command
+// NewControllerCmd creates a new controller command
 func NewControllerCmd() *cobra.Command {
 	opts := &controllerCmdOptions{}
 
@@ -94,6 +95,7 @@ func NewControllerCmd() *cobra.Command {
 	flags.StringVar(&opts.masterURL, "master-url", "", "The address of the Kubernetes API server. Overrides any value in kubeConfig. Only required if out-of-cluster.")
 	flags.StringSliceVar(&opts.namespaceAnnotations, "namespace-annotation", []string{}, "annotation will be attached to the loadtest namespace")
 	flags.StringSliceVar(&opts.podAnnotations, "pod-annotation", []string{}, "annotation will be attached to the loadtest pods")
+	flags.StringSliceVar(&opts.nodeSelectors, "node-selector", []string{}, "nodeSelector rules will be attached to the loadtest pods")
 
 	return cmd
 }
@@ -104,19 +106,23 @@ func populateCfgFromOpts(cfg controller.Config, opts *controllerCmdOptions) (con
 	cfg.MasterURL = opts.masterURL
 	cfg.KubeConfig = opts.kubeConfig
 
-	cfg.NamespaceAnnotations, err = convertAnnotationToMap(opts.namespaceAnnotations)
+	cfg.NamespaceAnnotations, err = convertKeyPairStringToMap(opts.namespaceAnnotations)
 	if err != nil {
 		return controller.Config{}, fmt.Errorf("failed to convert namepsace annotations: %w", err)
 	}
-	cfg.PodAnnotations, err = convertAnnotationToMap(opts.podAnnotations)
+	cfg.PodAnnotations, err = convertKeyPairStringToMap(opts.podAnnotations)
 	if err != nil {
 		return controller.Config{}, fmt.Errorf("failed to convert pod annotations: %w", err)
+	}
+	cfg.NodeSelectors, err = convertKeyPairStringToMap(opts.nodeSelectors)
+	if err != nil {
+		return controller.Config{}, fmt.Errorf("failed to convert node selectors: %w", err)
 	}
 	return cfg, nil
 }
 
-func convertAnnotationToMap(s []string) (map[string]string, error) {
-	m := map[string]string{}
+func convertKeyPairStringToMap(s []string) (map[string]string, error) {
+	m := make(map[string]string, len(s))
 	for _, a := range s {
 		// We need to split annotation string to key value map and remove special chars from it:
 		// Before string: iam.amazonaws.com/role: "arn:aws:iam::id:role/some-role"
