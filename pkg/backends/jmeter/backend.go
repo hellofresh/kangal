@@ -134,7 +134,7 @@ func (b *Backend) SetLogger(logger *zap.Logger) {
 	b.logger = logger
 }
 
-// Set receives a copy of pod node selectors
+// SetPodNodeSelector receives a copy of pod node selectors
 func (b *Backend) SetPodNodeSelector(nodeselector map[string]string) {
 	b.nodeSelector = nodeselector
 }
