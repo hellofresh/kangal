@@ -37,6 +37,7 @@ type Backend struct {
 	kubeClientSet  kubernetes.Interface
 	config         *Config
 	podAnnotations map[string]string
+	nodeSelector   map[string]string
 
 	// defined on SetDefaults
 	image           loadTestV1.ImageDetails
@@ -100,6 +101,11 @@ func (b *Backend) SetKubeClientSet(kubeClientSet kubernetes.Interface) {
 // SetLogger receives a copy of logger
 func (b *Backend) SetLogger(logger *zap.Logger) {
 	b.logger = logger
+}
+
+// Set receives a copy of pod node selectors
+func (b *Backend) SetPodNodeSelector(nodeselector map[string]string) {
+	b.nodeSelector = nodeselector
 }
 
 // TransformLoadTestSpec use given spec to validate and return a new one or error
@@ -170,7 +176,7 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, report
 		}
 	}
 
-	masterJob := newMasterJob(loadTest, configMap, secret, reportURL, b.masterResources, b.podAnnotations, b.image, b.logger)
+	masterJob := newMasterJob(loadTest, configMap, secret, reportURL, b.masterResources, b.podAnnotations, b.nodeSelector, b.image, b.logger)
 	_, err = b.kubeClientSet.
 		BatchV1().
 		Jobs(loadTest.Status.Namespace).
@@ -187,7 +193,7 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, report
 		return err
 	}
 
-	workerJob := newWorkerJob(loadTest, configMap, secret, masterService, b.workerResources, b.podAnnotations, b.image, b.logger)
+	workerJob := newWorkerJob(loadTest, configMap, secret, masterService, b.workerResources, b.podAnnotations, b.nodeSelector, b.image, b.logger)
 	_, err = b.kubeClientSet.
 		BatchV1().
 		Jobs(loadTest.Status.Namespace).

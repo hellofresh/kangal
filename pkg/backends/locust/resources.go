@@ -72,6 +72,7 @@ func newMasterJob(
 	reportURL string,
 	masterResources backends.Resources,
 	podAnnotations map[string]string,
+	nodeSelector map[string]string,
 	image loadTestV1.ImageDetails,
 	logger *zap.Logger,
 ) *batchV1.Job {
@@ -137,6 +138,7 @@ func newMasterJob(
 					Annotations: podAnnotations,
 				},
 				Spec: coreV1.PodSpec{
+					NodeSelector:  nodeSelector,
 					RestartPolicy: "Never",
 					Containers: []coreV1.Container{
 						{
@@ -214,6 +216,7 @@ func newWorkerJob(
 	masterService *coreV1.Service,
 	workerResources backends.Resources,
 	podAnnotations map[string]string,
+	nodeSelector map[string]string,
 	image loadTestV1.ImageDetails,
 	logger *zap.Logger,
 ) *batchV1.Job {
@@ -269,6 +272,7 @@ func newWorkerJob(
 					Annotations: podAnnotations,
 				},
 				Spec: coreV1.PodSpec{
+					NodeSelector:  nodeSelector,
 					RestartPolicy: "Never",
 					Containers: []coreV1.Container{
 						{
