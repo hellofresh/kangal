@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hellofresh/kangal/pkg/backends"
-	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	"go.uber.org/zap"
 	batchV1 "k8s.io/api/batch/v1"
 	coreV1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/hellofresh/kangal/pkg/backends"
+	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 )
 
 const (
@@ -81,6 +82,7 @@ func (b *Backend) NewJob(
 					Annotations: b.podAnnotations,
 				},
 				Spec: coreV1.PodSpec{
+					NodeSelector:  b.nodeSelector,
 					RestartPolicy: "Never",
 					Volumes:       volumes,
 					Containers: []coreV1.Container{

@@ -1,8 +1,9 @@
 package cmd
 
 import (
-	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/hellofresh/kangal/pkg/controller"
 )
@@ -13,6 +14,7 @@ func TestControllerPopulateCfgFromOpts(t *testing.T) {
 		masterURL            string
 		namespaceAnnotations []string
 		podAnnotations       []string
+		nodeSelectors        []string
 	}
 	tests := []struct {
 		name   string
@@ -25,6 +27,7 @@ func TestControllerPopulateCfgFromOpts(t *testing.T) {
 			want: controller.Config{
 				NamespaceAnnotations: map[string]string{},
 				PodAnnotations:       map[string]string{},
+				NodeSelectors:        map[string]string{},
 			},
 		},
 		{
@@ -36,6 +39,18 @@ func TestControllerPopulateCfgFromOpts(t *testing.T) {
 			want: controller.Config{
 				NamespaceAnnotations: map[string]string{"iam.amazonaws.com/permitted": ".*"},
 				PodAnnotations:       map[string]string{"iam.amazonaws.com/role": "arn:aws:iam::someid:role/some-role-name"},
+				NodeSelectors:        map[string]string{},
+			},
+		},
+		{
+			name: `test with node selectors`,
+			fields: fields{
+				nodeSelectors: []string{`nodelabel:"test"`},
+			},
+			want: controller.Config{
+				NamespaceAnnotations: map[string]string{},
+				PodAnnotations:       map[string]string{},
+				NodeSelectors:        map[string]string{"nodelabel": "test"},
 			},
 		},
 		{
@@ -47,6 +62,7 @@ func TestControllerPopulateCfgFromOpts(t *testing.T) {
 			want: controller.Config{
 				NamespaceAnnotations: map[string]string{"iam.amazonaws.com/permitted": ".*"},
 				PodAnnotations:       map[string]string{"iam.amazonaws.com/role": "arn:aws:iam::someid:role/some-role-name"},
+				NodeSelectors:        map[string]string{},
 			},
 		},
 	}
@@ -57,10 +73,10 @@ func TestControllerPopulateCfgFromOpts(t *testing.T) {
 				masterURL:            tt.fields.masterURL,
 				namespaceAnnotations: tt.fields.namespaceAnnotations,
 				podAnnotations:       tt.fields.podAnnotations,
+				nodeSelectors:        tt.fields.nodeSelectors,
 			}
-			if got, _ := populateCfgFromOpts(controller.Config{}, opts); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("populateCfgFromOpts() = %v, want %v", got, tt.want)
-			}
+			got, _ := populateCfgFromOpts(controller.Config{}, opts)
+			assert.EqualValues(t, tt.want, got)
 		})
 	}
 }

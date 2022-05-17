@@ -212,6 +212,7 @@ func (b *Backend) NewPod(loadTest loadTestV1.LoadTest, i int, configMap *coreV1.
 			},
 		},
 		Spec: coreV1.PodSpec{
+			NodeSelector: b.nodeSelector,
 			Affinity: &coreV1.Affinity{
 				PodAntiAffinity: &coreV1.PodAntiAffinity{
 					PreferredDuringSchedulingIgnoredDuringExecution: []coreV1.WeightedPodAffinityTerm{
@@ -401,6 +402,7 @@ func (b *Backend) NewJMeterMasterJob(loadTest loadTestV1.LoadTest, reportURL str
 				},
 
 				Spec: coreV1.PodSpec{
+					NodeSelector:  b.nodeSelector,
 					RestartPolicy: "Never",
 					Containers: []coreV1.Container{
 						{
