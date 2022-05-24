@@ -8,9 +8,9 @@ VERSION ?= "0.0.0-dev-$(shell git rev-parse --short HEAD)"
 GOHOSTOS=$(shell go env GOHOSTOS)
 GOHOSTARCH=$(shell go env GOHOSTARCH)
 
-.PHONY: all clean test-unit build
+.PHONY: all clean update-codegen verify-codegen test-unit build
 
-all: clean test-unit build
+all: clean update-codegen verify-codegen test-unit build
 
 # Cleans our project: deletes binaries
 clean:
@@ -43,3 +43,15 @@ apply-crd:
 dev-lint:
 	@printf "$(OK_COLOR)==> Linting code$(NO_COLOR)\n"
 	@docker run --rm -v $(CURDIR):/app -w /app golangci/golangci-lint:v1.42.1 golangci-lint run -v
+
+update-codegen:
+	@printf "$(OK_COLOR)==> Running codegen update$(NO_COLOR)\n"
+	@go mod vendor
+	@./hack/update-codegen.sh
+	@rm -rf _tmp
+
+verify-codegen:
+	@printf "$(OK_COLOR)==> Running codegen verification$(NO_COLOR)\n"
+	@go mod vendor
+	@./hack/verify-codegen.sh
+
