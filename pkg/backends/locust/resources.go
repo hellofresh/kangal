@@ -73,6 +73,7 @@ func newMasterJob(
 	masterResources backends.Resources,
 	podAnnotations map[string]string,
 	nodeSelector map[string]string,
+	podTolerations []coreV1.Toleration,
 	image loadTestV1.ImageDetails,
 	logger *zap.Logger,
 ) *batchV1.Job {
@@ -139,6 +140,7 @@ func newMasterJob(
 				},
 				Spec: coreV1.PodSpec{
 					NodeSelector:  nodeSelector,
+					Tolerations:   podTolerations,
 					RestartPolicy: "Never",
 					Containers: []coreV1.Container{
 						{
@@ -217,6 +219,7 @@ func newWorkerJob(
 	workerResources backends.Resources,
 	podAnnotations map[string]string,
 	nodeSelector map[string]string,
+	podTolerations []coreV1.Toleration,
 	image loadTestV1.ImageDetails,
 	logger *zap.Logger,
 ) *batchV1.Job {
@@ -273,6 +276,7 @@ func newWorkerJob(
 				},
 				Spec: coreV1.PodSpec{
 					NodeSelector:  nodeSelector,
+					Tolerations:   podTolerations,
 					RestartPolicy: "Never",
 					Containers: []coreV1.Container{
 						{
