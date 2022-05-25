@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"go.uber.org/zap"
+	kubeCoreV1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	coreListersV1 "k8s.io/client-go/listers/core/v1"
 
@@ -58,6 +59,13 @@ type BackendSetPodAnnotations interface {
 type BackendSetPodNodeSelector interface {
 	// SetPodNodeSelector gives backend node selector to be attached in loadtest pods
 	SetPodNodeSelector(map[string]string)
+}
+
+// BackendSetPodTolerations interface can be implemented by backend to receive pod tolerations
+// This method is called only by command Controller
+type BackendSetPodTolerations interface {
+	// SetPodNodeSelector gives backend node selector to be attached in loadtest pods
+	SetPodTolerations([]kubeCoreV1.Toleration)
 }
 
 // BackendSetKubeClientSet interface can be implemented by backend to receive an kubeClientSet

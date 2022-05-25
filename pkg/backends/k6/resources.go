@@ -110,6 +110,7 @@ func (b *Backend) NewJob(
 				},
 				Spec: coreV1.PodSpec{
 					NodeSelector: b.nodeSelector,
+					Tolerations:  b.podTolerations,
 					Affinity: &coreV1.Affinity{
 						PodAntiAffinity: &coreV1.PodAntiAffinity{
 							PreferredDuringSchedulingIgnoredDuringExecution: []coreV1.WeightedPodAffinityTerm{

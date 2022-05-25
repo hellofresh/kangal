@@ -23,6 +23,7 @@ type controllerCmdOptions struct {
 	namespaceAnnotations []string
 	podAnnotations       []string
 	nodeSelectors        []string
+	tolerations          []string
 }
 
 // NewControllerCmd creates a new controller command
@@ -96,6 +97,7 @@ func NewControllerCmd() *cobra.Command {
 	flags.StringSliceVar(&opts.namespaceAnnotations, "namespace-annotation", []string{}, "annotation will be attached to the loadtest namespace")
 	flags.StringSliceVar(&opts.podAnnotations, "pod-annotation", []string{}, "annotation will be attached to the loadtest pods")
 	flags.StringSliceVar(&opts.nodeSelectors, "node-selector", []string{}, "nodeSelector rules will be attached to the loadtest pods")
+	flags.StringSliceVar(&opts.tolerations, "tolerations", []string{}, "toleration rules to be applied to the loadtest pods")
 
 	return cmd
 }
@@ -115,6 +117,10 @@ func populateCfgFromOpts(cfg controller.Config, opts *controllerCmdOptions) (con
 		return controller.Config{}, fmt.Errorf("failed to convert pod annotations: %w", err)
 	}
 	cfg.NodeSelectors, err = convertKeyPairStringToMap(opts.nodeSelectors)
+	if err != nil {
+		return controller.Config{}, fmt.Errorf("failed to convert node selectors: %w", err)
+	}
+	cfg.Tolerations, err = kubernetes.ParseTolerations(opts.tolerations)
 	if err != nil {
 		return controller.Config{}, fmt.Errorf("failed to convert node selectors: %w", err)
 	}
