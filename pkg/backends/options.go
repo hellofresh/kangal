@@ -45,7 +45,7 @@ func WithNodeSelector(nodeSelector map[string]string) Option {
 	}
 }
 
-// WithNodeSelector adds given pod node selectors to each registered backend that implements BackendSetPodTolerations
+// WithTolerations adds given pod tolerations to each registered backend that implements BackendSetPodTolerations
 func WithTolerations(tolerations []kubeCoreV1.Toleration) Option {
 	return func(b *registry) {
 		for _, item := range b.registry {

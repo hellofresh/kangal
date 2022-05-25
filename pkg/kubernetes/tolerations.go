@@ -8,6 +8,7 @@ import (
 	kubeCoreV1 "k8s.io/api/core/v1"
 )
 
+// Toleration is a representation of the Kubernetes toleration
 type Toleration struct {
 	Key      string
 	Value    string
@@ -15,6 +16,7 @@ type Toleration struct {
 	Effect   string
 }
 
+// Tolerations is an alias to Toleration slice
 type Tolerations []Toleration
 
 // ParseToleration parses a pattern of key:value:Operation:Effect to Toleration
@@ -69,7 +71,7 @@ func (t Toleration) Validate() error {
 	return nil
 }
 
-// Validate validates the Toleration properties to be compatible with Kubenetes Tolerations
+// KubeToleration maps Tolerations to  Kubenetes Tolerations
 func (tolerations Tolerations) KubeToleration() []kubeCoreV1.Toleration {
 	kubeTolerations := make([]kubeCoreV1.Toleration, len(tolerations))
 	for i, toleration := range tolerations {
