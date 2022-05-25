@@ -36,6 +36,7 @@ func Run(cfg Config, rr Runner) error {
 		backends.WithNamespaceLister(rr.KubeInformer.Core().V1().Namespaces().Lister()),
 		backends.WithPodAnnotations(cfg.PodAnnotations),
 		backends.WithNodeSelector(cfg.NodeSelectors),
+		backends.WithTolerations(cfg.Tolerations.KubeToleration()),
 	)
 
 	c := NewController(cfg, rr.KubeClient, rr.KangalClient, rr.KubeInformer, rr.KangalInformer, rr.StatsReporter, registry, rr.Logger)

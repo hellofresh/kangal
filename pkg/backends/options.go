@@ -2,6 +2,7 @@ package backends
 
 import (
 	"go.uber.org/zap"
+	kubeCoreV1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	coreListersV1 "k8s.io/client-go/listers/core/v1"
 
@@ -39,6 +40,17 @@ func WithNodeSelector(nodeSelector map[string]string) Option {
 		for _, item := range b.registry {
 			if iface, ok := item.(BackendSetPodNodeSelector); ok {
 				iface.SetPodNodeSelector(nodeSelector)
+			}
+		}
+	}
+}
+
+// WithNodeSelector adds given pod node selectors to each registered backend that implements BackendSetPodTolerations
+func WithTolerations(tolerations []kubeCoreV1.Toleration) Option {
+	return func(b *registry) {
+		for _, item := range b.registry {
+			if iface, ok := item.(BackendSetPodTolerations); ok {
+				iface.SetPodTolerations(tolerations)
 			}
 		}
 	}
