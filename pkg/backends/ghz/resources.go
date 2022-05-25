@@ -85,6 +85,7 @@ func (b *Backend) NewJob(
 					NodeSelector:  b.nodeSelector,
 					RestartPolicy: "Never",
 					Volumes:       volumes,
+					Tolerations:   b.tolerations,
 					Containers: []coreV1.Container{
 						{
 							Name:         "ghz",
