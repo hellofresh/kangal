@@ -37,8 +37,9 @@ type Backend struct {
 	kubeClientSet  kubernetes.Interface
 	config         *Config
 	podAnnotations map[string]string
-	nodeSelector   map[string]string
+	podTolerations []coreV1.Toleration
 
+	nodeSelector map[string]string
 	// defined on SetDefaults
 	image     loadTestV1.ImageDetails
 	resources backends.Resources
@@ -77,6 +78,11 @@ func (b *Backend) SetDefaults() {
 // SetPodAnnotations receives a copy of pod annotations
 func (b *Backend) SetPodAnnotations(podAnnotations map[string]string) {
 	b.podAnnotations = podAnnotations
+}
+
+// SetPodTolerations receives a copy of pod tolerations
+func (b *Backend) SetPodTolerations(tolerations []coreV1.Toleration) {
+	b.podTolerations = tolerations
 }
 
 // SetKubeClientSet receives a copy of kubeClientSet
