@@ -125,7 +125,7 @@ jobs:
           cat /tmp/kangal_controller.log
 
       - name: Upload codecov
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v3
         if: success()
         with:
           file: ./coverage.txt
