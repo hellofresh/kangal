@@ -42,7 +42,7 @@ jobs:
           echo "::set-output name=tag::$VERSION"
 
       - name: Lint GoReleaser
-        uses: goreleaser/goreleaser-action@v2
+        uses: goreleaser/goreleaser-action@v3
         with:
           version: v1.2.2
           args: --skip-publish --snapshot
