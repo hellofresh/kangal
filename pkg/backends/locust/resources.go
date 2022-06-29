@@ -81,9 +81,9 @@ func newMasterJob(
 
 	ownerRef := metaV1.NewControllerRef(&loadTest, loadTestV1.SchemeGroupVersion.WithKind("LoadTest"))
 
-	imageRef := fmt.Sprintf("%s:%s", loadTest.Spec.MasterConfig.Image, loadTest.Spec.MasterConfig.Tag)
+	imageRef := fmt.Sprintf("%s:%s", image.Image, image.Tag)
 	if imageRef == ":" {
-		imageRef = fmt.Sprintf("%s:%s", image.Image, image.Tag)
+		imageRef = fmt.Sprintf("%s:%s", loadTest.Spec.MasterConfig.Image, loadTest.Spec.MasterConfig.Tag)
 		logger.Warn("Loadtest.Spec.MasterConfig is empty; using default image", zap.String("imageRef", imageRef))
 	}
 
@@ -227,9 +227,9 @@ func newWorkerJob(
 
 	ownerRef := metaV1.NewControllerRef(&loadTest, loadTestV1.SchemeGroupVersion.WithKind("LoadTest"))
 
-	imageRef := fmt.Sprintf("%s:%s", loadTest.Spec.MasterConfig.Image, loadTest.Spec.MasterConfig.Tag)
+	imageRef := fmt.Sprintf("%s:%s", image.Image, image.Tag)
 	if imageRef == ":" {
-		imageRef = fmt.Sprintf("%s:%s", image.Image, image.Tag)
+		imageRef = fmt.Sprintf("%s:%s", loadTest.Spec.MasterConfig.Image, loadTest.Spec.MasterConfig.Tag)
 		logger.Warn("Loadtest.Spec.MasterConfig is empty; using default image", zap.String("imageRef", imageRef))
 	}
 
