@@ -8,13 +8,13 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
 	"go.uber.org/zap"
 
+	"github.com/docker/distribution/reference"
 	"github.com/hellofresh/kangal/pkg/kubernetes"
 	apisLoadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 )
@@ -58,8 +58,6 @@ var (
 		"csv":      true,
 		"protoset": true,
 	}
-
-	dockerImageRegexp = regexp.MustCompile("^.*:.*$|^$")
 )
 
 func fromHTTPRequestToListOptions(r *http.Request, maxListLimit int64) (*kubernetes.ListOptions, error) {
@@ -353,68 +351,37 @@ func getDuration(r *http.Request) (time.Duration, error) {
 func getImage(r *http.Request, role string) (apisLoadTestV1.ImageDetails, error) {
 	imageStr := r.FormValue(role)
 
-	match := dockerImageRegexp.Match([]byte(imageStr))
-	if !match {
-		return apisLoadTestV1.ImageDetails{}, ErrWrongImageFormat
+	if imageStr == "" {
+		return apisLoadTestV1.ImageDetails{
+			Image: "",
+			Tag:   "",
+		}, nil
 	}
 
-	imgName := ""
-	imgTag := ""
-
-	// Gen image url colon and slash struct
-	structImgChars := ":/"
-	structImgURI := ""
-	for _, c := range imageStr {
-		if strings.Contains(structImgChars, string(c)) {
-			structImgURI += string(c)
-		}
+	ref, err := reference.Parse(imageStr)
+	if err != nil {
+		return apisLoadTestV1.ImageDetails{
+			Image: "",
+			Tag:   "",
+		}, ErrWrongImageFormat
 	}
 
-	if structImgURI == "" {
-		// Format: image
-		imgName = imageStr
-		imgTag = ""
-	}
-
-	if structImgURI == ":" {
-		// Format: image:tag
-		imgName = strings.Split(imageStr, ":")[0]
-		imgTag = strings.Split(imageStr, ":")[1]
-	}
-
-	if structImgURI == "/" {
-		// Format: registry/image
-		imgName = imageStr
-		imgTag = ""
-	}
-
-	if structImgURI == "/:" {
-		// Format: registry/image:tag
-		imgName = strings.Split(imageStr, ":")[0]
-		imgTag = strings.Split(imageStr, ":")[1]
-	}
-
-	if structImgURI == "://" {
-		// Format: host:port/registry/image
-		imgName = imageStr
-		imgTag = ""
-	}
-
-	if structImgURI == "://:" {
-		// Format: host:port/registry/image:tag
-		imgName = strings.Split(imageStr, ":")[0] + ":" + strings.Split(imageStr, ":")[1]
-		imgTag = strings.Split(imageStr, ":")[2]
-	}
-
-	if structImgURI == "//:" {
-		// Format: host/registry/image:tag
-		imgName = strings.Split(imageStr, ":")[0]
-		imgTag = strings.Split(imageStr, ":")[1]
+	switch r := ref.(type) {
+	case reference.NamedTagged:
+		return apisLoadTestV1.ImageDetails{
+			Image: r.Name(),
+			Tag:   r.Tag(),
+		}, nil
+	case reference.Named:
+		return apisLoadTestV1.ImageDetails{
+			Image: r.Name(),
+			Tag:   "",
+		}, nil
 	}
 
 	return apisLoadTestV1.ImageDetails{
-		Image: imgName,
-		Tag:   imgTag,
+		Image: "",
+		Tag:   "",
 	}, nil
 }
 
