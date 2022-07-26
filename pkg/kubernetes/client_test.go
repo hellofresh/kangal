@@ -208,8 +208,8 @@ func TestClient_ListLoadTest(t *testing.T) {
 						Spec: apisLoadTestV1.LoadTestSpec{
 							Type:            apisLoadTestV1.LoadTestTypeJMeter,
 							Overwrite:       false,
-							MasterConfig:    apisLoadTestV1.ImageDetails{},
-							WorkerConfig:    apisLoadTestV1.ImageDetails{},
+							MasterConfig:    apisLoadTestV1.ImageDetails(""),
+							WorkerConfig:    apisLoadTestV1.ImageDetails(""),
 							DistributedPods: &distributedPods,
 							Tags:            apisLoadTestV1.LoadTestTags{"team": "kangal"},
 							TestFile:        "file content\n",
@@ -237,8 +237,8 @@ func TestClient_ListLoadTest(t *testing.T) {
 						Spec: apisLoadTestV1.LoadTestSpec{
 							Type:            apisLoadTestV1.LoadTestTypeJMeter,
 							Overwrite:       false,
-							MasterConfig:    apisLoadTestV1.ImageDetails{},
-							WorkerConfig:    apisLoadTestV1.ImageDetails{},
+							MasterConfig:    apisLoadTestV1.ImageDetails(""),
+							WorkerConfig:    apisLoadTestV1.ImageDetails(""),
 							DistributedPods: &distributedPods,
 							Tags:            apisLoadTestV1.LoadTestTags{"team": "kangal"},
 							TestFile:        "file content\n",

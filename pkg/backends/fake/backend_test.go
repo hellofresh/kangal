@@ -2,6 +2,7 @@ package fake
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -285,6 +286,5 @@ func TestTransformLoadTestSpec(t *testing.T) {
 		t.FailNow()
 	}
 
-	assert.Equal(t, spec.MasterConfig.Image, imageName)
-	assert.Equal(t, spec.MasterConfig.Tag, imageTag)
+	assert.Equal(t, string(spec.MasterConfig), fmt.Sprintf("%s:%s", imageName, imageTag))
 }

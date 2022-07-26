@@ -161,14 +161,8 @@ func fromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger, allowedC
 		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %s from request: %w", duration, err)
 	}
 
-	mi := apisLoadTestV1.ImageDetails{
-		Image: "",
-		Tag:   "",
-	}
-	wi := apisLoadTestV1.ImageDetails{
-		Image: "",
-		Tag:   "",
-	}
+	mi := apisLoadTestV1.ImageDetails("")
+	wi := apisLoadTestV1.ImageDetails("")
 	if allowedCustomImages {
 		mi, err = getImage(r, masterImage)
 		if err != nil {
@@ -352,70 +346,7 @@ func getDuration(r *http.Request) (time.Duration, error) {
 
 func getImage(r *http.Request, role string) (apisLoadTestV1.ImageDetails, error) {
 	imageStr := r.FormValue(role)
-
-	match := dockerImageRegexp.Match([]byte(imageStr))
-	if !match {
-		return apisLoadTestV1.ImageDetails{}, ErrWrongImageFormat
-	}
-
-	imgName := ""
-	imgTag := ""
-
-	// Gen image url colon and slash struct
-	structImgChars := ":/"
-	structImgURI := ""
-	for _, c := range imageStr {
-		if strings.Contains(structImgChars, string(c)) {
-			structImgURI += string(c)
-		}
-	}
-
-	if structImgURI == "" {
-		// Format: image
-		imgName = imageStr
-		imgTag = ""
-	}
-
-	if structImgURI == ":" {
-		// Format: image:tag
-		imgName = strings.Split(imageStr, ":")[0]
-		imgTag = strings.Split(imageStr, ":")[1]
-	}
-
-	if structImgURI == "/" {
-		// Format: registry/image
-		imgName = imageStr
-		imgTag = ""
-	}
-
-	if structImgURI == "/:" {
-		// Format: registry/image:tag
-		imgName = strings.Split(imageStr, ":")[0]
-		imgTag = strings.Split(imageStr, ":")[1]
-	}
-
-	if structImgURI == "://" {
-		// Format: host:port/registry/image
-		imgName = imageStr
-		imgTag = ""
-	}
-
-	if structImgURI == "://:" {
-		// Format: host:port/registry/image:tag
-		imgName = strings.Split(imageStr, ":")[0] + ":" + strings.Split(imageStr, ":")[1]
-		imgTag = strings.Split(imageStr, ":")[2]
-	}
-
-	if structImgURI == "//:" {
-		// Format: host/registry/image:tag
-		imgName = strings.Split(imageStr, ":")[0]
-		imgTag = strings.Split(imageStr, ":")[1]
-	}
-
-	return apisLoadTestV1.ImageDetails{
-		Image: imgName,
-		Tag:   imgTag,
-	}, nil
+	return apisLoadTestV1.ImageDetails(imageStr), nil
 }
 
 //fileToString converts file to string

@@ -71,10 +71,7 @@ type WorkerConfig struct {
 }
 
 // ImageDetails is the image information for a resource
-type ImageDetails struct {
-	Image string `json:"image"`
-	Tag   string `json:"tag"`
-}
+type ImageDetails string
 
 // LoadTestStatus is the status for a LoadTest resource
 type LoadTestStatus struct {

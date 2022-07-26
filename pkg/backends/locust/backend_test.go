@@ -3,6 +3,7 @@ package locust
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -305,7 +306,7 @@ func TestTransformLoadTestSpec(t *testing.T) {
 				TestFile:        "something in the file",
 				EnvVars:         map[string]string{"my-key": "my-value"},
 				TargetURL:       "http://my-app.my-domain.com",
-				MasterConfig:    loadTestV1.ImageDetails{Image: defaultImageName, Tag: defaultImageTag},
+				MasterConfig:    loadTestV1.ImageDetails(fmt.Sprintf("%s:%s", defaultImageName, defaultImageTag)),
 			},
 			wantErr: false,
 		},

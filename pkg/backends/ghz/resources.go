@@ -45,10 +45,10 @@ func (b *Backend) NewJob(
 
 	ownerRef := metaV1.NewControllerRef(&loadTest, loadTestV1.SchemeGroupVersion.WithKind("LoadTest"))
 
-	imageRef := fmt.Sprintf("%s:%s", loadTest.Spec.MasterConfig.Image, loadTest.Spec.MasterConfig.Tag)
+	imageRef := loadTest.Spec.MasterConfig
 	if imageRef == ":" {
-		imageRef = fmt.Sprintf("%s:%s", b.image.Image, b.image.Tag)
-		logger.Warn("Loadtest.Spec.MasterConfig is empty; using default image", zap.String("imageRef", imageRef))
+		imageRef = b.image
+		logger.Warn("Loadtest.Spec.MasterConfig is empty; using default image", zap.String("imageRef", string(imageRef)))
 	}
 
 	envVars := []coreV1.EnvVar{}
@@ -89,7 +89,7 @@ func (b *Backend) NewJob(
 					Containers: []coreV1.Container{
 						{
 							Name:         "ghz",
-							Image:        imageRef,
+							Image:        string(imageRef),
 							Env:          envVars,
 							Resources:    backends.BuildResourceRequirements(b.resources),
 							Args:         defaultArgs,

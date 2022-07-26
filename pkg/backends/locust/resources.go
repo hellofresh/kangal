@@ -81,10 +81,10 @@ func newMasterJob(
 
 	ownerRef := metaV1.NewControllerRef(&loadTest, loadTestV1.SchemeGroupVersion.WithKind("LoadTest"))
 
-	imageRef := fmt.Sprintf("%s:%s", image.Image, image.Tag)
-	if imageRef == ":" {
-		imageRef = fmt.Sprintf("%s:%s", loadTest.Spec.MasterConfig.Image, loadTest.Spec.MasterConfig.Tag)
-		logger.Warn("Loadtest.Spec.MasterConfig is empty; using default image", zap.String("imageRef", imageRef))
+	imageRef := image
+	if imageRef == "" {
+		imageRef = loadTest.Spec.MasterConfig
+		logger.Warn("Loadtest.Spec.MasterConfig is empty; using default image", zap.String("imageRef", string(imageRef)))
 	}
 
 	envVars := []coreV1.EnvVar{
@@ -145,7 +145,7 @@ func newMasterJob(
 					Containers: []coreV1.Container{
 						{
 							Name:            "locust",
-							Image:           imageRef,
+							Image:           string(imageRef),
 							ImagePullPolicy: "Always",
 							Env:             envVars,
 							VolumeMounts: []coreV1.VolumeMount{
@@ -227,10 +227,10 @@ func newWorkerJob(
 
 	ownerRef := metaV1.NewControllerRef(&loadTest, loadTestV1.SchemeGroupVersion.WithKind("LoadTest"))
 
-	imageRef := fmt.Sprintf("%s:%s", image.Image, image.Tag)
-	if imageRef == ":" {
-		imageRef = fmt.Sprintf("%s:%s", loadTest.Spec.MasterConfig.Image, loadTest.Spec.MasterConfig.Tag)
-		logger.Warn("Loadtest.Spec.MasterConfig is empty; using default image", zap.String("imageRef", imageRef))
+	imageRef := image
+	if imageRef == "" {
+		imageRef = loadTest.Spec.MasterConfig
+		logger.Warn("Loadtest.Spec.MasterConfig is empty; using default image", zap.String("imageRef", string(imageRef)))
 	}
 
 	envVars := []coreV1.EnvVar{
@@ -281,7 +281,7 @@ func newWorkerJob(
 					Containers: []coreV1.Container{
 						{
 							Name:            "locust",
-							Image:           imageRef,
+							Image:           string(imageRef),
 							ImagePullPolicy: "Always",
 							Env:             envVars,
 							VolumeMounts: []coreV1.VolumeMount{

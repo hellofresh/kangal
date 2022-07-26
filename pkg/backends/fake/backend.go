@@ -38,10 +38,7 @@ func (*Backend) Type() loadTestV1.LoadTestType {
 
 // SetDefaults must set default values
 func (b *Backend) SetDefaults() {
-	b.config = loadTestV1.ImageDetails{
-		Image: imageName,
-		Tag:   imageTag,
-	}
+	b.config = loadTestV1.ImageDetails(fmt.Sprintf("%s:%s", imageName, imageTag))
 }
 
 // SetLogger receives a copy of logger
@@ -51,11 +48,8 @@ func (b *Backend) SetLogger(logger *zap.Logger) {
 
 // TransformLoadTestSpec use given spec to validate and return a new one or error
 func (*Backend) TransformLoadTestSpec(spec *loadTestV1.LoadTestSpec) error {
-	spec.MasterConfig.Image = imageName
-	spec.MasterConfig.Tag = imageTag
-
-	spec.WorkerConfig.Image = ""
-	spec.WorkerConfig.Tag = ""
+	spec.MasterConfig = loadTestV1.ImageDetails(fmt.Sprintf("%s:%s", imageName, imageTag))
+	spec.WorkerConfig = ""
 
 	return nil
 }
@@ -123,10 +117,10 @@ func (b *Backend) SyncStatus(ctx context.Context, _ loadTestV1.LoadTest, loadTes
 
 // newMasterJob creates a new job which runs the Fake master pod
 func (b *Backend) newMasterJob(loadTest loadTestV1.LoadTest) *batchV1.Job {
-	imageRef := fmt.Sprintf("%s:%s", loadTest.Spec.MasterConfig.Image, loadTest.Spec.MasterConfig.Tag)
-	if "" == loadTest.Spec.MasterConfig.Image || "" == loadTest.Spec.MasterConfig.Tag {
-		imageRef = fmt.Sprintf("%s:%s", b.config.Image, b.config.Tag)
-		b.logger.Warn("Loadtest.Spec.MasterConfig is empty; using default master image", zap.String("imageRef", imageRef))
+	imageRef := loadTest.Spec.MasterConfig
+	if loadTest.Spec.MasterConfig == "" {
+		imageRef = b.config
+		b.logger.Warn("Loadtest.Spec.MasterConfig is empty; using default master image", zap.String("imageRef", string(imageRef)))
 	}
 
 	// For fake provider we don't really create load test and just use alpine image with some sleep
@@ -153,7 +147,7 @@ func (b *Backend) newMasterJob(loadTest loadTestV1.LoadTest) *batchV1.Job {
 					Containers: []coreV1.Container{
 						{
 							Name:            "loadtest-master",
-							Image:           imageRef,
+							Image:           string(imageRef),
 							ImagePullPolicy: "Always",
 							Command:         []string{"/bin/sh", "-c", "--"},
 							Args:            []string{"sleep 10"},

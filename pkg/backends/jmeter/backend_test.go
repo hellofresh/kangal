@@ -2,6 +2,7 @@ package jmeter
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -137,14 +138,8 @@ func TestSync(t *testing.T) {
 		},
 		Spec: loadTestV1.LoadTestSpec{
 			DistributedPods: &distributedPodsNum,
-			MasterConfig: loadTestV1.ImageDetails{
-				Image: defaultMasterImageName,
-				Tag:   defaultMasterImageTag,
-			},
-			WorkerConfig: loadTestV1.ImageDetails{
-				Image: defaultWorkerImageName,
-				Tag:   defaultWorkerImageTag,
-			},
+			MasterConfig:    loadTestV1.ImageDetails(fmt.Sprintf("%s:%s", defaultMasterImageName, defaultMasterImageTag)),
+			WorkerConfig:    loadTestV1.ImageDetails(fmt.Sprintf("%s:%s", defaultWorkerImageName, defaultWorkerImageTag)),
 		},
 		Status: loadTestV1.LoadTestStatus{
 			Phase:     "",
@@ -174,14 +169,8 @@ func TestSync(t *testing.T) {
 
 func TestTransformLoadTestSpec(t *testing.T) {
 	jmeter := &Backend{
-		masterConfig: loadTestV1.ImageDetails{
-			Image: "master-image",
-			Tag:   "master-tag",
-		},
-		workerConfig: loadTestV1.ImageDetails{
-			Image: "worker-image",
-			Tag:   "worker-tag",
-		},
+		masterConfig: loadTestV1.ImageDetails("master-image:master-tag"),
+		workerConfig: loadTestV1.ImageDetails("worker-image:worker-tag"),
 	}
 
 	spec := &loadTestV1.LoadTestSpec{}
@@ -211,10 +200,8 @@ func TestTransformLoadTestSpec(t *testing.T) {
 		spec.TestFile = "my-test"
 		err := jmeter.TransformLoadTestSpec(spec)
 		assert.NoError(t, err)
-		assert.Equal(t, spec.MasterConfig.Image, "master-image")
-		assert.Equal(t, spec.MasterConfig.Tag, "master-tag")
-		assert.Equal(t, spec.WorkerConfig.Image, "worker-image")
-		assert.Equal(t, spec.WorkerConfig.Tag, "worker-tag")
+		assert.Equal(t, string(spec.MasterConfig), "master-image:master-tag")
+		assert.Equal(t, string(spec.WorkerConfig), "worker-image:worker-tag")
 	})
 }
 
@@ -230,10 +217,8 @@ func TestSetDefaults(t *testing.T) {
 		}
 		jmeter.SetDefaults()
 
-		assert.Equal(t, jmeter.workerConfig.Image, "my-worker-image-name")
-		assert.Equal(t, jmeter.workerConfig.Tag, "my-worker-image-tag")
-		assert.Equal(t, jmeter.masterConfig.Image, "my-master-image-name")
-		assert.Equal(t, jmeter.masterConfig.Tag, "my-master-image-tag")
+		assert.Equal(t, string(jmeter.workerConfig), "my-worker-image-name:my-worker-image-tag")
+		assert.Equal(t, string(jmeter.masterConfig), "my-master-image-name:my-master-image-tag")
 	})
 
 	t.Run("No default", func(t *testing.T) {
@@ -242,9 +227,7 @@ func TestSetDefaults(t *testing.T) {
 		}
 		jmeter.SetDefaults()
 
-		assert.Equal(t, jmeter.masterConfig.Image, defaultMasterImageName)
-		assert.Equal(t, jmeter.masterConfig.Tag, defaultMasterImageTag)
-		assert.Equal(t, jmeter.workerConfig.Image, defaultWorkerImageName)
-		assert.Equal(t, jmeter.workerConfig.Tag, defaultWorkerImageTag)
+		assert.Equal(t, string(jmeter.masterConfig), fmt.Sprintf("%s:%s", defaultMasterImageName, defaultMasterImageTag))
+		assert.Equal(t, string(jmeter.workerConfig), fmt.Sprintf("%s:%s", defaultWorkerImageName, defaultWorkerImageTag))
 	})
 }

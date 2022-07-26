@@ -1,6 +1,7 @@
 package jmeter
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -108,14 +109,8 @@ func TestGetNamespaceFromInvalidName(t *testing.T) {
 func TestPodResourceConfiguration(t *testing.T) {
 	lt := loadTestV1.LoadTest{
 		Spec: loadTestV1.LoadTestSpec{
-			MasterConfig: loadTestV1.ImageDetails{
-				Image: defaultMasterImageName,
-				Tag:   defaultMasterImageTag,
-			},
-			WorkerConfig: loadTestV1.ImageDetails{
-				Image: defaultWorkerImageName,
-				Tag:   defaultWorkerImageTag,
-			},
+			MasterConfig: loadTestV1.ImageDetails(fmt.Sprintf("%s:%s", defaultMasterImageName, defaultMasterImageTag)),
+			WorkerConfig: loadTestV1.ImageDetails(fmt.Sprintf("%s:%s", defaultWorkerImageName, defaultWorkerImageTag)),
 		},
 	}
 

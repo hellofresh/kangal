@@ -87,14 +87,8 @@ func (b *Backend) SetDefaults() {
 		b.config.WorkerImageTag = defaultWorkerImageTag
 	}
 
-	b.masterConfig = loadTestV1.ImageDetails{
-		Image: b.config.MasterImageName,
-		Tag:   b.config.MasterImageTag,
-	}
-	b.workerConfig = loadTestV1.ImageDetails{
-		Image: b.config.WorkerImageName,
-		Tag:   b.config.WorkerImageTag,
-	}
+	b.masterConfig = loadTestV1.ImageDetails(fmt.Sprintf("%s:%s", b.config.MasterImageName, b.config.MasterImageTag))
+	b.workerConfig = loadTestV1.ImageDetails(fmt.Sprintf("%s:%s", b.config.WorkerImageName, b.config.WorkerImageTag))
 
 	b.masterResources = backends.Resources{
 		CPULimits:      b.config.MasterCPULimits,
@@ -159,14 +153,12 @@ func (b *Backend) TransformLoadTestSpec(spec *loadTestV1.LoadTestSpec) error {
 		return ErrRequireTestFile
 	}
 
-	if spec.MasterConfig.Image == "" || spec.MasterConfig.Tag == "" {
-		spec.MasterConfig.Image = b.masterConfig.Image
-		spec.MasterConfig.Tag = b.masterConfig.Tag
+	if spec.MasterConfig == "" {
+		spec.MasterConfig = b.masterConfig
 	}
 
-	if spec.WorkerConfig.Image == "" || spec.WorkerConfig.Tag == "" {
-		spec.WorkerConfig.Image = b.workerConfig.Image
-		spec.WorkerConfig.Tag = b.workerConfig.Tag
+	if spec.WorkerConfig == "" {
+		spec.WorkerConfig = b.workerConfig
 	}
 
 	if spec.TestData != "" {
