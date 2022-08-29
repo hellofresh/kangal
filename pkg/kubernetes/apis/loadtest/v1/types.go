@@ -60,16 +60,6 @@ type LoadTestSpec struct {
 // LoadTestTags is a list of tags of a LoadTest resource.
 type LoadTestTags map[string]string
 
-// MasterConfig is the configuration information for each resource type
-type MasterConfig struct {
-	Master *ImageDetails
-}
-
-// WorkerConfig is the configuration information for each resource type
-type WorkerConfig struct {
-	Worker *ImageDetails
-}
-
 // ImageDetails is the image information for a resource
 type ImageDetails string
 

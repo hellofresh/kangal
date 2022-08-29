@@ -30,7 +30,7 @@ spec:
       # subresources describes the subresources for custom resources.
       subresources:
         # status enables the status subresource.
-        status: { }
+        status: {}
       schema:
         openAPIV3Schema:
           type: object
@@ -40,7 +40,7 @@ spec:
               properties:
                 type:
                   type: string
-                  enum: [ JMeter, Fake, Locust, Ghz, K6 ]
+                  enum: [JMeter, Fake, Locust, Ghz, K6]
                 distributedPods:
                   minimum: 1
                   type: integer
@@ -63,27 +63,17 @@ spec:
                 duration:
                   type: integer
                 masterConfig:
-                  type: object
-                  properties:
-                    image:
-                      type: string
-                    tag:
-                      type: string
+                  type: string
                 workerConfig:
-                  type: object
-                  properties:
-                    image:
-                      type: string
-                    tag:
-                      type: string
-              required: [ "distributedPods", "testFile", "type" ]
+                  type: string
+              required: ["distributedPods", "testFile", "type"]
             status:
               type: object
               properties:
                 phase:
                   type: string
                   nullable: false
-                  enum: [ creating, starting, running, finished, errored ]
+                  enum: [creating, starting, running, finished, errored]
                 namespace:
                   type: string
                 jobStatus:
