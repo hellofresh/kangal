@@ -182,7 +182,7 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, report
 		}
 	}
 
-	masterJob := newMasterJob(loadTest, configMap, secret, reportURL, b.masterResources, b.podAnnotations, b.nodeSelector, b.podTolerations, b.image, b.logger)
+	masterJob := newMasterJob(loadTest, configMap, secret, reportURL, b.masterResources, b.podAnnotations, b.nodeSelector, b.podTolerations, loadTest.Spec.MasterConfig, b.logger)
 	_, err = b.kubeClientSet.
 		BatchV1().
 		Jobs(loadTest.Status.Namespace).
@@ -199,7 +199,7 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, report
 		return err
 	}
 
-	workerJob := newWorkerJob(loadTest, configMap, secret, masterService, b.workerResources, b.podAnnotations, b.nodeSelector, b.podTolerations, b.image, b.logger)
+	workerJob := newWorkerJob(loadTest, configMap, secret, masterService, b.workerResources, b.podAnnotations, b.nodeSelector, b.podTolerations, loadTest.Spec.WorkerConfig, b.logger)
 	_, err = b.kubeClientSet.
 		BatchV1().
 		Jobs(loadTest.Status.Namespace).
