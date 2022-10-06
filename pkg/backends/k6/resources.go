@@ -1,8 +1,10 @@
 package k6
 
 import (
+	"encoding/csv"
 	"errors"
 	"fmt"
+	"io"
 	"strings"
 
 	"go.uber.org/zap"
@@ -191,6 +193,99 @@ func NewFileConfigMap(cfgName, filename string, content []byte) (*coreV1.ConfigM
 			filename: content,
 		},
 	}, nil
+}
+
+// NewTestdataConfigMaps
+func NewTestdataConfigMaps(cfgName, filename string, n int, content string) ([]*coreV1.ConfigMap, error) {
+	// TODO: split test data
+	if strings.TrimSpace(cfgName) == "" {
+		return nil, errors.New("empty config name")
+	}
+
+	if strings.TrimSpace(filename) == "" {
+		return nil, fmt.Errorf("invalid name for configmap %s", cfgName)
+	}
+
+	if strings.TrimSpace(content) == "" {
+		return nil, fmt.Errorf("invalid file %s for configmap %s, empty content", filename, cfgName)
+	}
+
+	cMaps := make([]*coreV1.ConfigMap, n)
+
+	chunks, err := splitTestData(content, n)
+	if err != nil {
+		return nil, err
+	}
+
+	stringWriter := new(strings.Builder)
+
+	for i := 0; i < n; i++ {
+		csvWriter := csv.NewWriter(stringWriter)
+		if err := csvWriter.WriteAll(chunks[i]); err != nil {
+			return nil, err
+		}
+
+		data := map[string]string{
+			"testdata.csv": stringWriter.String(),
+		}
+
+		stringWriter.Reset()
+
+		cmName := fmt.Sprintf("%s-%03d", filename, i)
+
+		cMaps[i] = &coreV1.ConfigMap{
+			ObjectMeta: metaV1.ObjectMeta{
+				Name: cmName,
+			},
+			Data: data,
+		}
+	}
+
+	return cMaps, nil
+}
+
+// splitTestData splits provided csv test data and returns the array of file chunks
+func splitTestData(testdata string, n int) ([][][]string, error) {
+	reader := csv.NewReader(strings.NewReader(testdata))
+
+	count := 0
+	for {
+		_, err := reader.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		count++
+	}
+
+	linesInChunk := count / n
+
+	chunk := 0
+	chunks := make([][][]string, n)
+	reader = csv.NewReader(strings.NewReader(testdata))
+	for line := 0; chunk < n; line++ {
+		rec, err := reader.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		if line >= linesInChunk {
+			chunk++
+			line = 0
+		}
+
+		if chunk >= n {
+			break
+		}
+
+		chunks[chunk] = append(chunks[chunk], rec)
+	}
+	return chunks, nil
 }
 
 func segmentArgs(index, total int32) []string {

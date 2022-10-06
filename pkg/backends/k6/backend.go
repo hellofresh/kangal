@@ -141,7 +141,8 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, report
 	}
 
 	var (
-		tdCfgMap   *coreV1.ConfigMap
+		tdCfgMaps []*coreV1.ConfigMap
+		// TODO: tamanho deve variar com numero de distributed pods
 		configMaps = make([]*coreV1.ConfigMap, 1)
 	)
 
@@ -155,12 +156,12 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, report
 
 	// Prepare testdata ConfigMap
 	if len(loadTest.Spec.TestData) != 0 {
-		tdCfgMap, err = NewFileConfigMap(loadTestDataConfigMapName, testdataFileName, loadTest.Spec.TestData)
+		tdCfgMaps, err = NewTestdataConfigMaps(loadTestDataConfigMapName, testdataFileName, int(*loadTest.Spec.DistributedPods), string(loadTest.Spec.TestData))
 		if err != nil {
 			b.logger.Error("Error creating testdata configmap resource", zap.Error(err))
 			return err
 		}
-		configMaps = append(configMaps, tdCfgMap)
+		configMaps = append(configMaps, tdCfgMaps...)
 	}
 
 	// Create testfile and testdata configmaps
@@ -173,20 +174,6 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, report
 			b.logger.Error("Error creating configmap", zap.String("configmap", cfg.GetName()), zap.Error(err))
 			return err
 		}
-	}
-
-	// Prepare Volume and VolumeMount for job creation
-	var (
-		volumes = make([]coreV1.Volume, 1)
-		mounts  = make([]coreV1.VolumeMount, 1)
-	)
-
-	volumes[0], mounts[0] = NewFileVolumeAndMount(loadTestFileVolumeName, tfCfgMap.Name, scriptTestFileName)
-
-	if tdCfgMap != nil {
-		v, m := NewFileVolumeAndMount(loadTestDataVolumeName, tdCfgMap.Name, testdataFileName)
-		volumes = append(volumes, v)
-		mounts = append(mounts, m)
 	}
 
 	var secret *coreV1.Secret
@@ -203,6 +190,19 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, report
 	}
 
 	for i := int32(0); i < *loadTest.Spec.DistributedPods; i++ {
+		// Prepare Volume and VolumeMount for job creation
+		var (
+			volumes = make([]coreV1.Volume, 1)
+			mounts  = make([]coreV1.VolumeMount, 1)
+		)
+
+		volumes[0], mounts[0] = NewFileVolumeAndMount(loadTestFileVolumeName, tfCfgMap.Name, scriptTestFileName)
+
+		if int32(len(tdCfgMaps)) > i {
+			v, m := NewFileVolumeAndMount(loadTestDataVolumeName, tdCfgMaps[i].Name, testdataFileName)
+			volumes = append(volumes, v)
+			mounts = append(mounts, m)
+		}
 		// Create Job
 		job := b.NewJob(loadTest, volumes, mounts, secret, reportURL, i)
 		_, err = b.kubeClientSet.
