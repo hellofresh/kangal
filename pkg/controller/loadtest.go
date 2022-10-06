@@ -489,7 +489,7 @@ func (c *Controller) updateLoadTestStatus(ctx context.Context, key string, loadT
 	}
 }
 
-// checkOrCreateNamespace checks if a namespace has been created and if not deletes it
+// checkOrCreateNamespace checks if a namespace has been created and if not creates it
 func (c *Controller) checkOrCreateNamespace(ctx context.Context, loadtest *loadTestV1.LoadTest) error {
 	if loadtest.Status.Namespace != "" {
 		return nil
