@@ -116,13 +116,27 @@ make apply-crd
 go mod vendor
 ```
 
-### 4. Build Kangal binary
+### 4. Verify changes in generated code
+
+```bash
+make verify-codegen
+```
+
+In case of message "is out of date", it's necessary to run:
+
+```bash
+make update-codegen
+```
+
+**Attention**: Changes to generated code could represent changes to CRDs and possible break backwards compatibility
+
+### 5. Build Kangal binary
 
 ```bash
 make build
 ```
 
-### 5. Set the environment variables
+### 6. Set the environment variables
 
 ``` bash
 export AWS_BUCKET_NAME=YOUR_BUCKET_NAME       # name of the bucket for saving reports
@@ -133,7 +147,7 @@ export KANGAL_PROXY_URL=http://localhost:8080 # used to persist reports
 
 For the full list of possible environment variables check [Kangal environment variables](env-vars.md)
 
-### 6. Run both Kangal proxy and controller
+### 7. Run both Kangal proxy and controller
 
 ```bash
 WEB_HTTP_PORT=8888 ./kangal controller --kubeconfig=$KUBECONFIG
