@@ -58,7 +58,7 @@ Kangal can be easily extended by adding different load generators as backends.
 - [main.go](https://github.com/hellofresh/kangal/blob/master/main.go)
 - [pkg/backends/](https://github.com/hellofresh/kangal/tree/master/pkg/backends)
 - [charts/kangal/crds/loadtest.yaml](https://github.com/hellofresh/kangal/blob/master/charts/kangal/crds/loadtest.yaml#L43)
-- [openapi.json](https://github.com/hellofresh/kangal/blob/79fa2b41704a7a4e79080b5912881063609da9ff/openapi.json#L411)
+- [openapi.json](https://github.com/hellofresh/kangal/blob/master/openapi.json#L411)
 
 ## Reporting
 Reporting is an important part of load testing process. It basically contains in two parts:
