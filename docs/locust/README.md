@@ -8,7 +8,7 @@
 
 Locust is one of the load generators implemented in Kangal. It uses the official docker image [locustio/locust](https://hub.docker.com/r/locustio/locust).
 
-Kangal requires a py testfile describing the test.
+Kangal requires a .py testfile describing the test.
 
 For more information, check [Locust official website](https://locust.io/).
 
@@ -39,6 +39,7 @@ $ curl -X POST http://${KANGAL_PROXY_ADDRESS}/load-test \
 ```
 
 Let's break it down the parameters:
+
 - `distributedPods` is the number of Locust workers desired
 - `testFile` is the locustfile containing your test
 - `type` is the backend you want to use, `Locust` in this case
@@ -91,7 +92,7 @@ LOCUST_WORKER_MEMORY_LIMITS
 LOCUST_WORKER_MEMORY_REQUESTS
 ```
 
-You have to specify these variables on Kangal Controller, read more at [charts/kangal/README.md](/charts/kangal/README.md#kangal-controller-locust-specific).
+You have to specify these variables on Kangal Controller, read more at [charts/kangal/README.md](https://github.com/hellofresh/kangal/blob/master/charts/kangal/README.md#kangal-controller-locust-specific).
 
 More information regarding resource limits and requests can be found in the following page(s):
 

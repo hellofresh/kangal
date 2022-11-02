@@ -1,6 +1,7 @@
 # Kangal
 
 ## Table of content
+- [Installation](#installation)
 - [Load generators types (aka backends)](#load-generator-types-aka-backends)
 - [User flow](user-flow.md)
 - [Adding a new load generator](#adding-a-new-load-generator)
@@ -9,15 +10,15 @@
 - [Troubleshooting](troubleshooting.md)
 
 Welcome to the Kangal - **K**ubernetes **an**d **G**o **A**utomatic **L**oader!
-
-For installation instructions, read the [Quickstart guide](/README.md#quickstart-guide) or the [Helm Chart](/charts/kangal/README.md).
-
 In this section you can find information about load generators and how to write tests.
+
+## Installation
+To install Kangal in your Kubernetes cluster follow the instructions from the [Helm Chart](https://github.com/hellofresh/kangal/blob/master/charts/kangal/README.md) page.
 
 ## Load generator types (aka backends)
 Currently, there are the following load generator types implemented for Kangal:
 
-- **Fake** - Mock up provider used for testing purpouses, not generating any load.
+- **Fake** - Mock up provider used for testing purposes, not generating any load.
 - **JMeter** - Kangal creates JMeter load test environments based on [hellofresh/kangal-jmeter](https://github.com/hellofresh/kangal-jmeter) docker image.
 - **Locust** - Kangal creates Locust load test environments based on official docker image [locustio/locust](https://hub.docker.com/r/locustio/locust).
 - **`ghz`** - Kangal creates `ghz` load test environments using [hellofresh/kangal-ghz](https://github.com/hellofresh/kangal-ghz) docker image.
@@ -73,7 +74,7 @@ Kangal Proxy provides an API endpoint that allows to retrieve persisted reports 
 ### Persisting reports
 Kangal generates a Pre-Signed URL and backend can use it to persist a report.
 
-> If the report contains multiple files it will be necessary to archieve/compress into a single file.
+> If the report contains multiple files it will be necessary to archive/compress into a single file.
 
 To allow Kangal to serve the report static files it is necessary to explicitly set the file as a `tar` archive with no compression and **no enclosing directory**, otherwise, the endpoint will just force the report download.
 
@@ -128,7 +129,7 @@ In case of message "is out of date", it's necessary to run:
 make update-codegen
 ```
 
-**Attention**: Changes to generated code could represent changes to CRDs and possible break backwards compatibility
+**Attention**: Changes to generated code could lead to the changes in CRDs and possibly break backwards compatibility
 
 ### 5. Build Kangal binary
 
