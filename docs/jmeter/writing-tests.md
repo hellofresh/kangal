@@ -399,6 +399,6 @@ The data will be cloned from the bucket to the volume using [Rclone](https://rcl
 
 For the full list of possible environment variables check [Kangal environment variables](../env-vars.md)
 
-**Attention** 
+**Attention**
 
 The [Dynamic volume provisioning](https://kubernetes.io/docs/concepts/storage/dynamic-provisioning/) must be set on the cluster

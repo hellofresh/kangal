@@ -43,7 +43,7 @@ List of external JMeter plugins used in Kangal setup:
 * jpgc-functions [Custom JMeter Functions](https://jmeter-plugins.org/wiki/Functions/)
 
 You can also use and modify example test files from [Kangal repository](https://github.com/hellofresh/kangal/tree/master/examples) as described at [docs/jmeter/writing-tests.md](writing-tests.md).
-Reading the [official documentation](https://jmeter.apache.org/usermanual/test_plan.html) is strongly recommend to understand major concepts.
+Reading the [official documentation](https://jmeter.apache.org/usermanual/test_plan.html) is strongly recommended to understand major concepts.
 
 ## Configuring JMeter resource requirements
 By default, Kangal does not specify resource requirements for loadtests run with JMeter as a backend.
@@ -67,8 +67,8 @@ For the full list of possible environment variables check [Kangal environment va
 
 More information regarding resource limits and requests can be found in the following pages:
 
-- [https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/](https://github.com/hellofresh/kangal/tree/master/examples)
-- [https://cloud.google.com/blog/products/gcp/kubernetes-best-practices-resource-requests-and-limits](https://github.com/hellofresh/kangal/tree/master/examples)
+- [Resource Management for Pods and Containers in Kubernetes](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/)
+- [Kubernetes best practices: Resource requests and limits](https://cloud.google.com/blog/products/gcp/kubernetes-best-practices-resource-requests-and-limits)
 
 ## Writing tests
 Read more at [docs/jmeter/writing-tests.md](writing-tests.md).
