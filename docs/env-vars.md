@@ -1,19 +1,19 @@
 # Kangal environment variables
 
 ## Proxy
-| Parameter                       | Description                                          | Default                                    |
-|---------------------------------|------------------------------------------------------|--------------------------------------------|
-| `ALLOWED_CUSTOM_IMAGES`         | Allow custom Images to be defined in the request     | `false`                                    |
-| `KUBE_CLIENT_TIMEOUT`           | Timeout for each operation done by kube client       | `5s`                                       |
-| `MAX_LIST_LIMIT`                | Output of LIST endpoint                              | `50`                                       |
-| `OPEN_API_SERVER_DESCRIPTION`   | Description to the OpenAPI server URL                | `Kangal proxy default value`               |
-| `OPEN_API_SERVER_URL`           | URL to the OpenAPI specification server              | `https://kangal-proxy.example.com/openapi` |
-| `OPEN_API_SPEC_PATH`            | Path to the openapi spec file                        | `/etc/kangal`                              |
-| `OPEN_API_SPEC_FILE`            | Name of the openapi spec file                        | `openapi.json`                             |
-| `OPEN_API_UI_URL`               | URL to the OpenAPI UI                                | `https://kangal-openapi-ui.example.com`    |
-| `OPEN_API_CORS_ALLOW_ORIGIN`    | List of origins a cross-domain request can be executed from                    | `*`              |
-| `OPEN_API_CORS_ALLOW_HEADERS`   | List of non simple headers client is allowed to use with cross-domain requests | `Content-Type,api_key,Authorization`    |
-| `WEB_HTTP_PORT`                 |                                                      | `8080`                                     |
+| Parameter                     | Description                                                                    | Default                                    |
+|-------------------------------|--------------------------------------------------------------------------------|--------------------------------------------|
+| `ALLOWED_CUSTOM_IMAGES`       | Allow custom Images to be defined in the request                               | `false`                                    |
+| `KUBE_CLIENT_TIMEOUT`         | Timeout for each operation done by kube client                                 | `5s`                                       |
+| `MAX_LIST_LIMIT`              | Output of LIST endpoint                                                        | `50`                                       |
+| `OPEN_API_SERVER_DESCRIPTION` | Description to the OpenAPI server URL                                          | `Kangal proxy default value`               |
+| `OPEN_API_SERVER_URL`         | URL to the OpenAPI specification server                                        | `https://kangal-proxy.example.com/openapi` |
+| `OPEN_API_SPEC_PATH`          | Path to the openapi spec file                                                  | `/etc/kangal`                              |
+| `OPEN_API_SPEC_FILE`          | Name of the openapi spec file                                                  | `openapi.json`                             |
+| `OPEN_API_UI_URL`             | URL to the OpenAPI UI                                                          | `https://kangal-openapi-ui.example.com`    |
+| `OPEN_API_CORS_ALLOW_ORIGIN`  | List of origins a cross-domain request can be executed from                    | `*`                                        |
+| `OPEN_API_CORS_ALLOW_HEADERS` | List of non simple headers client is allowed to use with cross-domain requests | `Content-Type,api_key,Authorization`       |
+| `WEB_HTTP_PORT`               |                                                                                | `8080`                                     |
 
 ## Controller
 | Parameter                       | Description                                       | Default             |
@@ -26,28 +26,28 @@
 
 ## Backend specific configuration
 ### JMeter
-| Parameter                       | Description                          | Default                           |
-|---------------------------------|--------------------------------------|-----------------------------------|
-| `JMETER_MASTER_IMAGE_NAME`      | JMeter master image name/repository  | `hellofresh/kangal-jmeter-master` |
-| `JMETER_MASTER_IMAGE_TAG`       | Tag of the JMeter master image above | `latest`                          |
-| `JMETER_MASTER_CPU_LIMIT`       | Master CPU limit                     |                                   |
-| `JMETER_MASTER_CPU_REQUESTS`    | Master CPU requests                  |                                   |
-| `JMETER_MASTER_MEMORY_LIMITS`   | Master memory limits                 |                                   |
-| `JMETER_MASTER_MEMORY_REQUESTS` | Master memory requests               |                                   |
-| `JMETER_WORKER_IMAGE_NAME`      | JMeter worker image name/repository  | `hellofresh/kangal-jmeter-worker` |
-| `JMETER_WORKER_IMAGE_TAG`       | Tag of the JMeter worker image above | `latest`                          |
-| `JMETER_WORKER_CPU_LIMITS`      | Worker container CPU limits          |                                   |
-| `JMETER_WORKER_CPU_REQUESTS`    | Worker CPU requests                  |                                   |
-| `JMETER_WORKER_MEMORY_LIMITS`   | Worker memory limits                 |                                   |
-| `JMETER_WORKER_MEMORY_REQUESTS` | Worker memory requests               |                                   |
-| `JMETER_WORKER_REMOTE_CUSTOM_DATA_ENABLED` | Enable remote custom data | `false`                           |
-| `JMETER_WORKER_REMOTE_CUSTOM_DATA_BUCKET` | The name of the bucket where remote data is |                                   |
-| `JMETER_WORKER_REMOTE_CUSTOM_DATA_VOLUME_SIZE` | Volume size used by download remote data | `1Gi`                          |
-| `RCLONE_CONFIG_REMOTECUSTOMDATA_TYPE` | [Rclone](https://rclone.org/) environment variable for type |                           |
-| `RCLONE_CONFIG_REMOTECUSTOMDATA_ACCESS_KEY_ID` | [Rclone](https://rclone.org/) environment variable for access key ID |                          |
-| `RCLONE_CONFIG_REMOTECUSTOMDATA_SECRET_ACCESS_KEY` | [Rclone](https://rclone.org/) environment variable for secret access key |                          |
-| `RCLONE_CONFIG_REMOTECUSTOMDATA_REGION` | [Rclone](https://rclone.org/) environment variable for region |                          |
-| `RCLONE_CONFIG_REMOTECUSTOMDATA_ENDPOINT` | [Rclone](https://rclone.org/) environment variable for endpoint |                           |
+| Parameter                                          | Description                                                              | Default                           |
+|----------------------------------------------------|--------------------------------------------------------------------------|-----------------------------------|
+| `JMETER_MASTER_IMAGE_NAME`                         | JMeter master image name/repository                                      | `hellofresh/kangal-jmeter-master` |
+| `JMETER_MASTER_IMAGE_TAG`                          | Tag of the JMeter master image above                                     | `latest`                          |
+| `JMETER_MASTER_CPU_LIMIT`                          | Master CPU limit                                                         |                                   |
+| `JMETER_MASTER_CPU_REQUESTS`                       | Master CPU requests                                                      |                                   |
+| `JMETER_MASTER_MEMORY_LIMITS`                      | Master memory limits                                                     |                                   |
+| `JMETER_MASTER_MEMORY_REQUESTS`                    | Master memory requests                                                   |                                   |
+| `JMETER_WORKER_IMAGE_NAME`                         | JMeter worker image name/repository                                      | `hellofresh/kangal-jmeter-worker` |
+| `JMETER_WORKER_IMAGE_TAG`                          | Tag of the JMeter worker image above                                     | `latest`                          |
+| `JMETER_WORKER_CPU_LIMITS`                         | Worker container CPU limits                                              |                                   |
+| `JMETER_WORKER_CPU_REQUESTS`                       | Worker CPU requests                                                      |                                   |
+| `JMETER_WORKER_MEMORY_LIMITS`                      | Worker memory limits                                                     |                                   |
+| `JMETER_WORKER_MEMORY_REQUESTS`                    | Worker memory requests                                                   |                                   |
+| `JMETER_WORKER_REMOTE_CUSTOM_DATA_ENABLED`         | Enable remote custom data                                                | `false`                           |
+| `JMETER_WORKER_REMOTE_CUSTOM_DATA_BUCKET`          | The name of the bucket where remote data is                              |                                   |
+| `JMETER_WORKER_REMOTE_CUSTOM_DATA_VOLUME_SIZE`     | Volume size used by download remote data                                 | `1Gi`                             |
+| `RCLONE_CONFIG_REMOTECUSTOMDATA_TYPE`              | [Rclone](https://rclone.org/) environment variable for type              |                                   |
+| `RCLONE_CONFIG_REMOTECUSTOMDATA_ACCESS_KEY_ID`     | [Rclone](https://rclone.org/) environment variable for access key ID     |                                   |
+| `RCLONE_CONFIG_REMOTECUSTOMDATA_SECRET_ACCESS_KEY` | [Rclone](https://rclone.org/) environment variable for secret access key |                                   |
+| `RCLONE_CONFIG_REMOTECUSTOMDATA_REGION`            | [Rclone](https://rclone.org/) environment variable for region            |                                   |
+| `RCLONE_CONFIG_REMOTECUSTOMDATA_ENDPOINT`          | [Rclone](https://rclone.org/) environment variable for endpoint          |                                   |
 
 ### Locust
 | Parameter                       | Description                 | Default           |

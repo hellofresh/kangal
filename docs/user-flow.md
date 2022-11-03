@@ -8,7 +8,7 @@ Here is an example of requests users can send to Kangal API to manage their load
 ## Create
 Create a new load test by making a POST request to Kangal Proxy.
 
-> **Note**: The sample CURL commands below use example test files, those files can be found in [Kangal repository](https://github.com/hellofresh/kangal/).
+> **Note**: The sample CURL commands below use example test files, those files can be found in Kangal repository [/artifacts](https://github.com/hellofresh/kangal/tree/master/artifacts/loadtests) and [/examples](https://github.com/hellofresh/kangal/tree/master/examples).
 
 **The test data will be equally divided between the number of pods set on distributedPods parameter**
 
@@ -83,7 +83,7 @@ curl -X GET http://${KANGAL_PROXY_ADDRESS}/load-test/loadtest-name/logs
 ```
 ### Advanced logs monitoring
 For the logs of the worker pod use the index number of the worker.
-Index numbers are `0`, `1`, etc, according to the number of workers you created.
+Index numbers are `0`, `1`, etc., according to the number of workers you created.
 ```bash
 curl -X GET http://${KANGAL_PROXY_ADDRESS}/load-test/loadtest-name/logs/0
 ```
