@@ -277,6 +277,7 @@ func (c *Controller) syncHandler(key string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), c.cfg.SyncHandlerTimeout)
 	defer cancel()
 
+	stats.Record(ctx, observability.MRunningLoadtestCountStat.M(c.countRunningLoadtests()))
 	logger := c.logger.With(
 		zap.String("loadtest", key),
 	)
@@ -383,6 +384,8 @@ func (c *Controller) handleObject(obj interface{}) {
 		}
 
 		c.logger.Debug("Processing object", zap.String("object-name", object.GetName()))
+		stats.Record(context.Background(), observability.MRunningLoadtestCountStat.M(c.countRunningLoadtests()))
+
 		foo, err := c.loadtestsLister.Get(ownerRef.Name)
 		if err != nil {
 			c.logger.Debug("ignoring orphaned object", zap.String("loadtest", object.GetSelfLink()),
@@ -509,6 +512,24 @@ func checkLoadTestLifeTimeExceeded(loadTest *loadTestV1.LoadTest, deleteThreshol
 	}
 
 	return false
+}
+
+func (c *Controller) countRunningLoadtests() int64 {
+	tt, err := c.kangalClientSet.KangalV1().LoadTests().List(context.Background(), metaV1.ListOptions{})
+	if err != nil {
+		c.logger.Error("Couldn't list existing loadtests", zap.Error(err))
+		return 0
+	}
+
+	var rt = 0
+	for _, loadTest := range tt.Items {
+		if loadTest.Status.Phase == loadTestV1.LoadTestRunning {
+			rt++
+		}
+	}
+
+	return int64(rt)
+
 }
 
 func (c *Controller) deleteLoadTest(ctx context.Context, key string, loadTest *loadTestV1.LoadTest) {
