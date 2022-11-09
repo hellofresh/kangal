@@ -524,7 +524,7 @@ func (c *Controller) countRunningLoadtests() int64 {
 	var rt = 0
 	for _, loadTest := range tt.Items {
 		if loadTest.Status.Phase == loadTestV1.LoadTestRunning {
-			rt += 1
+			rt++
 		}
 	}
 
