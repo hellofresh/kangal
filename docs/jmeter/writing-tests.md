@@ -396,7 +396,7 @@ In the example above the environment variable AUTH_CLIENT_ID used in HTTP Author
 Some tests require files as images, JAR files, etc. You can provide this from a S3 Bucket.
 If the environment variable JMETER_WORKER_REMOTE_CUSTOM_DATA_ENABLED is set to true, before pod creation,
 a PVC will be created asking the cluster for a volume of size defined in the environment variable
-JMETER_WORKER_REMOTE_CUSTOM_DATA_VOLUME_SIZE and access mode ReadWriteMany.
+JMETER_WORKER_REMOTE_CUSTOM_DATA_VOLUME_SIZE (defaults to 1GB) and access mode ReadWriteMany.
 
 !!! Warning
     This feature won't be available if your cluster does not support ReadWriteMany access mode.
