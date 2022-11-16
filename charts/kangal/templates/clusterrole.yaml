@@ -99,3 +99,13 @@ rules:
       - list
       - create
       - delete
+
+  - apiGroups:
+      - ""
+    resources:
+      - persistentvolumeclaims
+    verbs:
+      - get
+      - create
+      - list
+      - watch
