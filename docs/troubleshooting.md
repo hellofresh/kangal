@@ -22,3 +22,10 @@ curl -X GET 'http://${KANGAL_PROXY_ADDRESS}/load-test/loadtest-random-name/logs'
 ```bash
 curl -X GET 'http://${KANGAL_PROXY_ADDRESS}/load-test/loadtest-random-name/logs/0' 
 ```
+## How to prepare your service for load and performance testing
+We prepared this great [documentation](https://hellofresh.atlassian.net/l/cp/Fii0HScP) to help with some common questions:
+- Understanding your service
+- Test data
+- Test requirements
+- Monitoring
+- Planning and running
