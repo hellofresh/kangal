@@ -56,6 +56,8 @@ type Backend struct {
 	workerConfig    loadTestV1.ImageDetails
 	config          *Config
 	podAnnotations  map[string]string
+	nodeSelector    map[string]string
+	tolerations     []coreV1.Toleration
 }
 
 // Type returns backend type name
@@ -131,6 +133,16 @@ func (b *Backend) SetNamespaceLister(namespacesLister coreListersV1.NamespaceLis
 // SetLogger receives a copy of logger
 func (b *Backend) SetLogger(logger *zap.Logger) {
 	b.logger = logger
+}
+
+// SetPodNodeSelector receives a copy of pod node selectors
+func (b *Backend) SetPodNodeSelector(nodeselector map[string]string) {
+	b.nodeSelector = nodeselector
+}
+
+// SetPodTolerations receives a copy of pod tolerations
+func (b *Backend) SetPodTolerations(tolerations []coreV1.Toleration) {
+	b.tolerations = tolerations
 }
 
 // TransformLoadTestSpec use given spec to validate and return a new one or error

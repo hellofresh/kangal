@@ -1,6 +1,7 @@
 # Kangal
 
 ## Table of content
+- [Installation](#installation)
 - [Load generators types (aka backends)](#load-generator-types-aka-backends)
 - [User flow](user-flow.md)
 - [Adding a new load generator](#adding-a-new-load-generator)
@@ -9,15 +10,15 @@
 - [Troubleshooting](troubleshooting.md)
 
 Welcome to the Kangal - **K**ubernetes **an**d **G**o **A**utomatic **L**oader!
-
-For installation instructions, read the [Quickstart guide](/README.md#quickstart-guide) or the [Helm Chart](/charts/kangal/README.md).
-
 In this section you can find information about load generators and how to write tests.
+
+## Installation
+To install Kangal in your Kubernetes cluster follow the instructions from the [Helm Chart](https://github.com/hellofresh/kangal/blob/master/charts/kangal/README.md) page.
 
 ## Load generator types (aka backends)
 Currently, there are the following load generator types implemented for Kangal:
 
-- **Fake** - Mock up provider used for testing purpouses, not generating any load.
+- **Fake** - Mock up provider used for testing purposes, not generating any load.
 - **JMeter** - Kangal creates JMeter load test environments based on [hellofresh/kangal-jmeter](https://github.com/hellofresh/kangal-jmeter) docker image.
 - **Locust** - Kangal creates Locust load test environments based on official docker image [locustio/locust](https://hub.docker.com/r/locustio/locust).
 - **`ghz`** - Kangal creates `ghz` load test environments using [hellofresh/kangal-ghz](https://github.com/hellofresh/kangal-ghz) docker image.
@@ -55,10 +56,10 @@ Kangal can be easily extended by adding different load generators as backends.
 
 2. Create a new backend resource definition in Kangal source code:
 
-- [main.go](/main.go)
-- [pkg/backends/](/pkg/backends)
-- [charts/kangal/crds/loadtest.yaml](/charts/kangal/crds/loadtest.yaml#L43)
-- [openapi.json](/openapi.json#L280)
+- [main.go](https://github.com/hellofresh/kangal/blob/master/main.go)
+- [pkg/backends/](https://github.com/hellofresh/kangal/tree/master/pkg/backends)
+- [charts/kangal/crds/loadtest.yaml](https://github.com/hellofresh/kangal/blob/master/charts/kangal/crds/loadtest.yaml#L43)
+- [openapi.json](https://github.com/hellofresh/kangal/blob/master/openapi.json#L411)
 
 ## Reporting
 Reporting is an important part of load testing process. It basically contains in two parts:
@@ -73,7 +74,7 @@ Kangal Proxy provides an API endpoint that allows to retrieve persisted reports 
 ### Persisting reports
 Kangal generates a Pre-Signed URL and backend can use it to persist a report.
 
-> If the report contains multiple files it will be necessary to archieve/compress into a single file.
+> If the report contains multiple files it will be necessary to archive/compress into a single file.
 
 To allow Kangal to serve the report static files it is necessary to explicitly set the file as a `tar` archive with no compression and **no enclosing directory**, otherwise, the endpoint will just force the report download.
 
@@ -116,13 +117,27 @@ make apply-crd
 go mod vendor
 ```
 
-### 4. Build Kangal binary
+### 4. Verify changes in generated code
+
+```bash
+make verify-codegen
+```
+
+In case of message "is out of date", it's necessary to run:
+
+```bash
+make update-codegen
+```
+
+**Attention**: Changes to generated code could lead to the changes in CRDs and possibly break backwards compatibility
+
+### 5. Build Kangal binary
 
 ```bash
 make build
 ```
 
-### 5. Set the environment variables
+### 6. Set the environment variables
 
 ``` bash
 export AWS_BUCKET_NAME=YOUR_BUCKET_NAME       # name of the bucket for saving reports
@@ -133,7 +148,7 @@ export KANGAL_PROXY_URL=http://localhost:8080 # used to persist reports
 
 For the full list of possible environment variables check [Kangal environment variables](env-vars.md)
 
-### 6. Run both Kangal proxy and controller
+### 7. Run both Kangal proxy and controller
 
 ```bash
 WEB_HTTP_PORT=8888 ./kangal controller --kubeconfig=$KUBECONFIG

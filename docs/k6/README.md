@@ -51,6 +51,7 @@ $ curl -X POST http://${KANGAL_PROXY_ADDRESS}/load-test \
 ```
 
 Let's break it down the parameters:
+
 - `distributedPods` is the number of k6 workers desired
 - `testFile` is the javascript file containing your test
 - `type` is the backend you want to use, `K6` in this case
@@ -75,7 +76,7 @@ K6_MEMORY_LIMITS
 K6_MEMORY_REQUESTS
 ```
 
-You have to specify these variables on Kangal Controller, read more at [charts/kangal/README.md](/charts/kangal/README.md#kangal-controller-k6-specific).
+You have to specify these variables on Kangal Controller, read more at [charts/kangal/README.md](https://github.com/hellofresh/kangal/blob/master/charts/kangal/README.md#kangal-controller-k6-specific).
 
 More information regarding resource limits and requests can be found in the following page(s):
 

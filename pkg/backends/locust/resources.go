@@ -72,6 +72,8 @@ func newMasterJob(
 	reportURL string,
 	masterResources backends.Resources,
 	podAnnotations map[string]string,
+	nodeSelector map[string]string,
+	podTolerations []coreV1.Toleration,
 	image loadTestV1.ImageDetails,
 	logger *zap.Logger,
 ) *batchV1.Job {
@@ -79,9 +81,9 @@ func newMasterJob(
 
 	ownerRef := metaV1.NewControllerRef(&loadTest, loadTestV1.SchemeGroupVersion.WithKind("LoadTest"))
 
-	imageRef := fmt.Sprintf("%s:%s", loadTest.Spec.MasterConfig.Image, loadTest.Spec.MasterConfig.Tag)
+	imageRef := fmt.Sprintf("%s:%s", image.Image, image.Tag)
 	if imageRef == ":" {
-		imageRef = fmt.Sprintf("%s:%s", image.Image, image.Tag)
+		imageRef = fmt.Sprintf("%s:%s", loadTest.Spec.MasterConfig.Image, loadTest.Spec.MasterConfig.Tag)
 		logger.Warn("Loadtest.Spec.MasterConfig is empty; using default image", zap.String("imageRef", imageRef))
 	}
 
@@ -137,6 +139,8 @@ func newMasterJob(
 					Annotations: podAnnotations,
 				},
 				Spec: coreV1.PodSpec{
+					NodeSelector:  nodeSelector,
+					Tolerations:   podTolerations,
 					RestartPolicy: "Never",
 					Containers: []coreV1.Container{
 						{
@@ -214,6 +218,8 @@ func newWorkerJob(
 	masterService *coreV1.Service,
 	workerResources backends.Resources,
 	podAnnotations map[string]string,
+	nodeSelector map[string]string,
+	podTolerations []coreV1.Toleration,
 	image loadTestV1.ImageDetails,
 	logger *zap.Logger,
 ) *batchV1.Job {
@@ -221,9 +227,9 @@ func newWorkerJob(
 
 	ownerRef := metaV1.NewControllerRef(&loadTest, loadTestV1.SchemeGroupVersion.WithKind("LoadTest"))
 
-	imageRef := fmt.Sprintf("%s:%s", loadTest.Spec.MasterConfig.Image, loadTest.Spec.MasterConfig.Tag)
+	imageRef := fmt.Sprintf("%s:%s", image.Image, image.Tag)
 	if imageRef == ":" {
-		imageRef = fmt.Sprintf("%s:%s", image.Image, image.Tag)
+		imageRef = fmt.Sprintf("%s:%s", loadTest.Spec.MasterConfig.Image, loadTest.Spec.MasterConfig.Tag)
 		logger.Warn("Loadtest.Spec.MasterConfig is empty; using default image", zap.String("imageRef", imageRef))
 	}
 
@@ -269,6 +275,8 @@ func newWorkerJob(
 					Annotations: podAnnotations,
 				},
 				Spec: coreV1.PodSpec{
+					NodeSelector:  nodeSelector,
+					Tolerations:   podTolerations,
 					RestartPolicy: "Never",
 					Containers: []coreV1.Container{
 						{

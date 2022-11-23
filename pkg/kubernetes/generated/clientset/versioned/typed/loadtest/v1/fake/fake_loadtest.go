@@ -110,7 +110,7 @@ func (c *FakeLoadTests) UpdateStatus(ctx context.Context, loadTest *loadtestv1.L
 // Delete takes name of the loadTest and deletes it. Returns an error if one occurs.
 func (c *FakeLoadTests) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewRootDeleteAction(loadtestsResource, name), &loadtestv1.LoadTest{})
+		Invokes(testing.NewRootDeleteActionWithOptions(loadtestsResource, name, opts), &loadtestv1.LoadTest{})
 	return err
 }
 

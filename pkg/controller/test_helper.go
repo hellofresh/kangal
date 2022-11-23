@@ -103,10 +103,7 @@ func DeleteLoadTest(clientSet clientSetV.Clientset, loadtestName string, testnam
 	fmt.Printf("Deleting object %v for the test %v \n", loadtestName, testname)
 	ctx := context.Background()
 
-	if err := clientSet.KangalV1().LoadTests().Delete(ctx, loadtestName, metaV1.DeleteOptions{}); err != nil {
-		return err
-	}
-	return nil
+	return clientSet.KangalV1().LoadTests().Delete(ctx, loadtestName, metaV1.DeleteOptions{})
 }
 
 // GetLoadTest returns a load test name

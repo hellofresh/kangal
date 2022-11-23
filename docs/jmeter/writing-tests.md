@@ -19,15 +19,15 @@
 
 ## Introduction
 
-Before starting with creation of JMeter tests for Kangal, you need to install JMeter locally following the [Quickstart guide](/README.md).
+Before starting with creation of JMeter tests for Kangal, you need to install JMeter locally following the instructions from the [Helm Chart](https://github.com/hellofresh/kangal/blob/master/charts/kangal/README.md) page.
 
-[Kangal repository](https://github.com/hellofresh/kangal) has some simple tests examples that can help you with a quick start.
+[Kangal repository](https://github.com/hellofresh/kangal/tree/master/examples) has some simple tests examples that can help you with a quick start.
 
 Every element of the test can be modified, disabled or removed. You can also add new elements like Assertions, Timers, Listeners and Config elements. Please, follow the instructions from official [JMeter user manual](https://jmeter.apache.org/usermanual/component_reference.html#introduction).
 
 ## General recommendations
 ### Tests with test data
-Some test scenarios require unique request or at least some amount of varied data in requests. For this purposes JMeter allows you to use external data sets in a CSV format. Read more about [CSV DataSetConfig](https://jmeter.apache.org/usermanual/component_reference.html#CSV_Data_Set_Config) in official JMeter documentation.
+Some test scenarios require unique request or at least some amount of varied data in requests. For this purpose JMeter allows you to use external data sets in a CSV format. Read more about [CSV DataSetConfig](https://jmeter.apache.org/usermanual/component_reference.html#CSV_Data_Set_Config) in official JMeter documentation.
 
 1. Prepare your test data in CSV file
 2. Configure test script accordingly. Jump to section [Test with CSV Data](#test-with-csv-data)
@@ -39,6 +39,7 @@ Kangal will split the test data equally between all the distributed pods you req
 Some tests may contain sensitive information like DB connection parameters, authorization tokens, etc. You can provide this information as environment variables which will be applied in load test environment before running test.
 
 Kangal allows you to use a file with env vars saved in CSV format. Please configure your test script accordingly to use env vars. Read more about using env vars in official [JMeter-plugin documentation](https://jmeter-plugins.org/wiki/Functions/#envsupfont-color-gray-size-1-since-1-2-0-font-sup).
+
 1. Save your environment variables in CSV file
 2. Configure test script accordingly. Jump to section [Test with environment variables](#test-with-environment-variables)
 3. Add both files in POST request to Kangal API
@@ -181,7 +182,7 @@ Kangal allows you to use a file with env vars saved in CSV format. Please config
 ```
 
 ### Test Plan
-Test Plan element is the root of the test. Inside it you can find all the nested required elements for test configuration.
+Test Plan element is the root of the test. Inside it, you can find all the nested required elements for test configuration.
 
 ![linear_test_plan dmg](images/linear_test_plan.png){ height=500 }
 
@@ -202,7 +203,7 @@ Values to manipulate:
 - Start Threads Count
 - Startup Time
 
-With this two values you can regulate the number of the threads created during the tests. With other parameters you can change the thread creation profile but it's not needed in out example.
+With this two values you can regulate the number of the threads created during the tests. With other parameters you can change the thread creation profile, but it's not needed in our example.
 
 **The number of threads sufficient for every other test may differ and depend on test case.**
 
@@ -378,24 +379,33 @@ This config element should be nested under HTTP request sampler. Read more about
 
 ![dataset_config dmg](images/dataset_config.png){ height=500 }
 
-> **Important note!** In Kangal the path to the test data file is always the same **/testdata/testdata.csv**. Please specify this path in Filename field of your CSV Data Set Config. Otherwise the test run by Kangal will not see the the provided data.
+> **Important note!** In Kangal the path to the test data file is always the same **/testdata/testdata.csv**. Please specify this path in Filename field of your CSV Data Set Config. Otherwise, the test run by Kangal will not see the provided data.
 
 **The test data will be equally divided between the number of pods set on distributedPods parameter**
 
 ## Test with environment variables
 Some tests may contain sensitive information like DB connection parameters, authorization tokens, etc. You can provide this information as environment variables which will be applied in load test environment before running test.
 
-You don't need any special configuration elements to use environment variables in test. You only need to have the plugin [Custom JMeter Functions](https://jmeter-plugins.org/wiki/Functions/#envsupfont-color-gray-size-1-since-1-2-0-font-sup) installed. Check [Required JMeter plugins](README.md##required-jmeter-plugins) for details.
+You don't need any special configuration elements to use environment variables in test. You only need to have the plugin [Custom JMeter Functions](https://jmeter-plugins.org/wiki/Functions/#envsupfont-color-gray-size-1-since-1-2-0-font-sup) installed. Check [Required JMeter plugins](README.md#required-jmeter-plugins) for details.
 
 ![http_auth_manager dmg](images/http_auth_manager.png){ height=500 }
 
 In the example above the environment variable AUTH_CLIENT_ID used in HTTP Authorization Manager.
 
 ## Test with custom data
-Some tests require files as images, JAR files, etc. You can provide this from a S3 Bucket. If the environment variable JMETER_WORKER_REMOTE_CUSTOM_DATA_ENABLED is set to true, before pod creation, a PVC will be created asking the cluster for a volume of size defined in the environment variable JMETER_WORKER_REMOTE_CUSTOM_DATA_VOLUME_SIZE and access mode ReadWriteMany.
+Some tests require files as images, JAR files, etc. You can provide this from a S3 Bucket.
+If the environment variable JMETER_WORKER_REMOTE_CUSTOM_DATA_ENABLED is set to true, before pod creation,
+a PVC will be created asking the cluster for a volume of size defined in the environment variable
+JMETER_WORKER_REMOTE_CUSTOM_DATA_VOLUME_SIZE (defaults to 1GB) and access mode ReadWriteMany.
+
+!!! Warning
+    This feature won't be available if your cluster does not support ReadWriteMany access mode.
+    Please check with your local admins.
 
 The data will be cloned from the bucket to the volume using [Rclone](https://rclone.org/) and will be available to all the pods.
 
-For the full list of possible environment variables check [Kangal environment variables](env-vars.md)
+For the full list of possible environment variables check [Kangal environment variables](../env-vars.md)
 
-**Attention** The [Dynamic volume provisioning](https://kubernetes.io/docs/concepts/storage/dynamic-provisioning/) must be set on the cluster
+**Attention**
+
+The [Dynamic volume provisioning](https://kubernetes.io/docs/concepts/storage/dynamic-provisioning/) must be set on the cluster

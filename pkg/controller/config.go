@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/hellofresh/kangal/pkg/core/observability"
+	"github.com/hellofresh/kangal/pkg/kubernetes"
 )
 
 // Config is the possible Kangal Controller configurations
@@ -28,4 +29,6 @@ type Config struct {
 	KubeConfig           string
 	NamespaceAnnotations map[string]string
 	PodAnnotations       map[string]string
+	NodeSelectors        map[string]string
+	Tolerations          kubernetes.Tolerations
 }

@@ -5,13 +5,14 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/hellofresh/kangal/pkg/backends"
-	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	"go.uber.org/zap"
 	coreV1 "k8s.io/api/core/v1"
 	k8sAPIErrors "k8s.io/apimachinery/pkg/api/errors"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+
+	"github.com/hellofresh/kangal/pkg/backends"
+	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 )
 
 var (
@@ -36,7 +37,9 @@ type Backend struct {
 	kubeClientSet  kubernetes.Interface
 	config         *Config
 	podAnnotations map[string]string
+	podTolerations []coreV1.Toleration
 
+	nodeSelector map[string]string
 	// defined on SetDefaults
 	image     loadTestV1.ImageDetails
 	resources backends.Resources
@@ -77,6 +80,11 @@ func (b *Backend) SetPodAnnotations(podAnnotations map[string]string) {
 	b.podAnnotations = podAnnotations
 }
 
+// SetPodTolerations receives a copy of pod tolerations
+func (b *Backend) SetPodTolerations(tolerations []coreV1.Toleration) {
+	b.podTolerations = tolerations
+}
+
 // SetKubeClientSet receives a copy of kubeClientSet
 func (b *Backend) SetKubeClientSet(kubeClientSet kubernetes.Interface) {
 	b.kubeClientSet = kubeClientSet
@@ -85,6 +93,11 @@ func (b *Backend) SetKubeClientSet(kubeClientSet kubernetes.Interface) {
 // SetLogger receives a copy of logger
 func (b *Backend) SetLogger(logger *zap.Logger) {
 	b.logger = logger
+}
+
+// SetPodNodeSelector receives a copy of pod node selectors
+func (b *Backend) SetPodNodeSelector(nodeselector map[string]string) {
+	b.nodeSelector = nodeselector
 }
 
 // TransformLoadTestSpec use given spec to validate and return a new one or error
