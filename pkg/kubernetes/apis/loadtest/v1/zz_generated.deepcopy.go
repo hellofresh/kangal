@@ -145,6 +145,16 @@ func (in *LoadTestSpec) DeepCopyInto(out *LoadTestSpec) {
 			(*out)[key] = val
 		}
 	}
+	if in.TestFile != nil {
+		in, out := &in.TestFile, &out.TestFile
+		*out = make([]byte, len(*in))
+		copy(*out, *in)
+	}
+	if in.TestData != nil {
+		in, out := &in.TestData, &out.TestData
+		*out = make([]byte, len(*in))
+		copy(*out, *in)
+	}
 	if in.EnvVars != nil {
 		in, out := &in.EnvVars, &out.EnvVars
 		*out = make(map[string]string, len(*in))
