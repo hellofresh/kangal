@@ -197,7 +197,7 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 		Phase:           string(apisLoadTestV1.LoadTestCreating),
 		Tags:            loadTest.Spec.Tags,
 		HasEnvVars:      len(loadTest.Spec.EnvVars) != 0,
-		HasTestData:     loadTest.Spec.TestData != "",
+		HasTestData:     len(loadTest.Spec.TestData) != 0,
 	})
 }
 

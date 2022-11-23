@@ -124,7 +124,7 @@ func (b *Backend) TransformLoadTestSpec(spec *loadTestV1.LoadTestSpec) error {
 		return ErrRequireMinOneDistributedPod
 	}
 
-	if spec.TestFile == "" {
+	if len(spec.TestFile) == 0 {
 		return ErrRequireTestFile
 	}
 

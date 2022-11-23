@@ -53,6 +53,7 @@ var (
 		"json": true,
 		"toml": true,
 		"js":   true,
+		"tar":  true,
 	}
 	testDataFileFormats = map[string]bool{
 		"csv":      true,
@@ -217,27 +218,27 @@ func getEnvVars(r *http.Request) (map[string]string, error) {
 	return s, nil
 }
 
-func getTestData(r *http.Request) (string, error) {
-	stringTestData, fileType, err := getFileFromHTTP(r, testData)
+func getTestData(r *http.Request) ([]byte, error) {
+	testData, fileType, err := getBinaryFileFromHTTP(r, testData)
 	if err != nil {
 		//this means there was no testData file specified and we can ignore this error because testData is optional
 		if err == http.ErrMissingFile {
-			return "", nil
+			return nil, nil
 		}
-		return "", err
+		return nil, err
 	}
 
 	if !testDataFileFormats[fileType] {
-		return "", ErrWrongFileFormat
+		return nil, ErrWrongFileFormat
 	}
 
 	if fileType == "csv" {
-		err = checkCsvFile(stringTestData)
+		err = checkCsvFile(string(testData))
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 	}
-	return stringTestData, nil
+	return testData, nil
 }
 
 func checkCsvFile(s string) error {
@@ -254,16 +255,34 @@ func checkCsvFile(s string) error {
 	return nil
 }
 
-func getTestFile(r *http.Request) (string, error) {
-	content, fileType, err := getFileFromHTTP(r, testFile)
+func getTestFile(r *http.Request) ([]byte, error) {
+	content, fileType, err := getBinaryFileFromHTTP(r, testFile)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	if !testFileFormats[fileType] {
-		return "", ErrWrongFileFormat
+		return nil, ErrWrongFileFormat
 	}
 	return content, nil
+}
+
+func getBinaryFileFromHTTP(r *http.Request, file string) ([]byte, string, error) {
+	td, meta, err := r.FormFile(file)
+	if err != nil {
+		return nil, "", err
+	}
+
+	buf := new(bytes.Buffer)
+	if _, err := buf.ReadFrom(td); err != nil {
+		return nil, "", err
+	}
+
+	if buf.Len() == 0 {
+		return nil, "", ErrFileToStringEmpty
+	}
+
+	return buf.Bytes(), getTypeFromName(meta.Filename), nil
 }
 
 func getFileFromHTTP(r *http.Request, file string) (string, string, error) {

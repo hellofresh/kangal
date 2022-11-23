@@ -155,7 +155,7 @@ func (b *Backend) TransformLoadTestSpec(spec *loadTestV1.LoadTestSpec) error {
 		return ErrRequireMinOneDistributedPod
 	}
 
-	if spec.TestFile == "" {
+	if len(spec.TestFile) == 0 {
 		return ErrRequireTestFile
 	}
 
@@ -169,13 +169,13 @@ func (b *Backend) TransformLoadTestSpec(spec *loadTestV1.LoadTestSpec) error {
 		spec.WorkerConfig.Tag = b.workerConfig.Tag
 	}
 
-	if spec.TestData != "" {
-		testDataBase64, err := generateBase64(spec.TestData)
+	if len(spec.TestData) > 0 {
+		testDataBase64, err := generateBase64(string(spec.TestData))
 		if err != nil {
 			return err
 		}
 
-		spec.TestData = testDataBase64
+		spec.TestData = []byte(testDataBase64)
 	}
 
 	return nil

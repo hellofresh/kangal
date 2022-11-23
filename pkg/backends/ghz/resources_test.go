@@ -48,7 +48,7 @@ func TestNewFileConfigMap(t *testing.T) {
 		tag         string
 		cfgName     string
 		filename    string
-		content     string
+		content     []byte
 		expected    *coreV1.ConfigMap
 		expectError bool
 	}{
@@ -56,7 +56,7 @@ func TestNewFileConfigMap(t *testing.T) {
 			tag:         "no configmap name",
 			cfgName:     "",
 			filename:    "file",
-			content:     "file content",
+			content:     []byte("file content"),
 			expected:    nil,
 			expectError: true,
 		},
@@ -64,7 +64,7 @@ func TestNewFileConfigMap(t *testing.T) {
 			tag:         "no filename",
 			cfgName:     "test",
 			filename:    "",
-			content:     "file content",
+			content:     []byte("file content"),
 			expected:    nil,
 			expectError: true,
 		},
@@ -72,7 +72,7 @@ func TestNewFileConfigMap(t *testing.T) {
 			tag:         "no content",
 			cfgName:     "test",
 			filename:    "file",
-			content:     "",
+			content:     []byte{},
 			expected:    nil,
 			expectError: true,
 		},
@@ -80,13 +80,13 @@ func TestNewFileConfigMap(t *testing.T) {
 			tag:      "valid args",
 			cfgName:  "test",
 			filename: "file",
-			content:  "file content",
+			content:  []byte("file content"),
 			expected: &coreV1.ConfigMap{
 				ObjectMeta: metaV1.ObjectMeta{
 					Name: "test",
 				},
-				Data: map[string]string{
-					"file": "file content",
+				BinaryData: map[string][]byte{
+					"file": []byte("file content"),
 				},
 			},
 			expectError: false,

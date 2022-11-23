@@ -277,7 +277,7 @@ func TestTransformLoadTestSpec(t *testing.T) {
 		overwrite       bool
 		distributedPods int32
 		tags            loadTestV1.LoadTestTags
-		testFileStr     string
+		testFile        []byte
 		envVarsStr      map[string]string
 		targetURL       string
 		duration        time.Duration
@@ -294,7 +294,7 @@ func TestTransformLoadTestSpec(t *testing.T) {
 				overwrite:       true,
 				distributedPods: 3,
 				tags:            loadTestV1.LoadTestTags{"team": "kangal"},
-				testFileStr:     "something in the file",
+				testFile:        []byte("something in the file"),
 				envVarsStr:      map[string]string{"my-key": "my-value"},
 				targetURL:       "http://my-app.my-domain.com",
 			},
@@ -302,7 +302,7 @@ func TestTransformLoadTestSpec(t *testing.T) {
 				Overwrite:       true,
 				DistributedPods: &distributedPods,
 				Tags:            loadTestV1.LoadTestTags{"team": "kangal"},
-				TestFile:        "something in the file",
+				TestFile:        []byte("something in the file"),
 				EnvVars:         map[string]string{"my-key": "my-value"},
 				TargetURL:       "http://my-app.my-domain.com",
 				MasterConfig:    loadTestV1.ImageDetails{Image: defaultImageName, Tag: defaultImageTag},
@@ -332,7 +332,7 @@ func TestTransformLoadTestSpec(t *testing.T) {
 				Overwrite:       tt.args.overwrite,
 				DistributedPods: &tt.args.distributedPods,
 				Tags:            tt.args.tags,
-				TestFile:        tt.args.testFileStr,
+				TestFile:        tt.args.testFile,
 				EnvVars:         tt.args.envVarsStr,
 				TargetURL:       tt.args.targetURL,
 				Duration:        tt.args.duration,
