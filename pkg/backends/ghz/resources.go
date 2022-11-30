@@ -27,7 +27,7 @@ const (
 
 var defaultArgs = []string{
 	"--config=/data/config",
-	"--output=/results",
+	"--output=/results.html",
 	"--format=html",
 }
 
