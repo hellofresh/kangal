@@ -437,12 +437,6 @@ func (c *Controller) updateLoadTestStatus(ctx context.Context, key string, loadT
 
 		logger.Debug("Status updated", zap.Any("status", loadTest.Status))
 	}
-
-	// Compare phase change and update metrics
-	if loadTestFromCache.Status.Phase != loadTestV1.LoadTestFinished &&
-		loadTest.Status.Phase == loadTestV1.LoadTestFinished {
-		stats.Record(ctx, observability.MFinishedLoadtestCountStat.M(1))
-	}
 }
 
 // checkOrCreateNamespace checks if a namespace has been created and if not deletes it
@@ -468,7 +462,6 @@ func (c *Controller) checkOrCreateNamespace(ctx context.Context, loadtest *loadT
 		}
 		namespaceName = namespaceObj.GetName()
 		c.logger.Info("Created new namespace", zap.String("namespace", namespaceName), zap.String("loadtest", loadtest.GetName()))
-		stats.Record(ctx, observability.MCreatedLoadtestCountStat.M(1))
 	} else {
 		namespaceName = namespaces.Items[0].Name
 	}

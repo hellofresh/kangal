@@ -15,12 +15,6 @@ var (
 	reconcileCountStat   = stats.Int64("reconcile_count", "Number of reconcile operations", stats.UnitDimensionless)
 	reconcileLatencyStat = stats.Int64("reconcile_latency", "Latency of reconcile operations", stats.UnitMilliseconds)
 
-	// MCreatedLoadtestCountStat counts the number of loadtests created
-	MCreatedLoadtestCountStat = stats.Int64("created_loadtests_count", "Number of loadtests created", stats.UnitDimensionless)
-
-	// MFinishedLoadtestCountStat counts the number of finished loadtests
-	MFinishedLoadtestCountStat = stats.Int64("finished_loadtests_count", "Number of finished loadtests", stats.UnitDimensionless)
-
 	// MRunningLoadtestCountStat counts the number of running loadtests
 	MRunningLoadtestCountStat = stats.Int64("running_loadtests_count", "Number of running loadtests", stats.UnitDimensionless)
 
@@ -54,16 +48,6 @@ var ControllerViews = []*view.View{
 		Measure:     reconcileLatencyStat,
 		Aggregation: reconcileDistribution,
 		TagKeys:     []tag.Key{reconcilerTagKey, keyTagKey, successTagKey},
-	},
-	{
-		Description: MCreatedLoadtestCountStat.Description(),
-		Measure:     MCreatedLoadtestCountStat,
-		Aggregation: view.Count(),
-	},
-	{
-		Description: MFinishedLoadtestCountStat.Description(),
-		Measure:     MFinishedLoadtestCountStat,
-		Aggregation: view.Count(),
 	},
 	{
 		Description: MRunningLoadtestCountStat.Description(),
