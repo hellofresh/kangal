@@ -1,6 +1,6 @@
 module github.com/hellofresh/kangal
 
-go 1.17
+go 1.19
 
 require (
 	contrib.go.opencensus.io/exporter/prometheus v0.4.2
