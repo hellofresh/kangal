@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"go.opencensus.io/stats"
 	"go.uber.org/zap"
 	batchV1 "k8s.io/api/batch/v1"
 	coreV1 "k8s.io/api/core/v1"
@@ -62,7 +61,7 @@ type Controller struct {
 	// Kubernetes API.
 	recorder record.EventRecorder
 
-	statsClient observability.StatsReporter
+	statsClient observability.MetricsReporter
 
 	registry backends.Registry
 	logger   *zap.Logger
@@ -75,7 +74,7 @@ func NewController(
 	kangalClientSet clientSetV.Interface,
 	kubeInformerFactory informers.SharedInformerFactory,
 	kangalInformerFactory externalversions.SharedInformerFactory,
-	statsClient observability.StatsReporter,
+	statsClient observability.MetricsReporter,
 	registry backends.Registry,
 	logger *zap.Logger) *Controller {
 
@@ -209,9 +208,9 @@ func (c *Controller) processNextWorkItem() bool {
 	}
 
 	// Send the metrics for the current queue depth
-	c.statsClient.ReportQueueDepth(int64(c.workQueue.Len()))
+	//c.statsClient.ReportQueueDepth(int64(c.workQueue.Len()))
 
-	// We wrap this block in a func so we can defer c.workQueue.Done.
+	// We wrap this block in a func, so we can defer c.workQueue.Done.
 	err := func(obj interface{}) error {
 		startTime := time.Now()
 
@@ -277,7 +276,8 @@ func (c *Controller) syncHandler(key string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), c.cfg.SyncHandlerTimeout)
 	defer cancel()
 
-	stats.Record(ctx, observability.MRunningLoadtestCountStat.M(c.countRunningLoadtests()))
+	c.statsClient.AddRunningLTCounter(c.countRunningLoadtests())
+
 	logger := c.logger.With(
 		zap.String("loadtest", key),
 	)
@@ -384,7 +384,7 @@ func (c *Controller) handleObject(obj interface{}) {
 		}
 
 		c.logger.Debug("Processing object", zap.String("object-name", object.GetName()))
-		stats.Record(context.Background(), observability.MRunningLoadtestCountStat.M(c.countRunningLoadtests()))
+		c.statsClient.AddRunningLTCounter(c.countRunningLoadtests())
 
 		foo, err := c.loadtestsLister.Get(ownerRef.Name)
 		if err != nil {
