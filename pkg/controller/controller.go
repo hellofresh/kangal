@@ -2,6 +2,7 @@ package controller
 
 import (
 	"fmt"
+
 	"github.com/hellofresh/kangal/pkg/core/observability"
 	"go.uber.org/zap"
 	kubeInformers "k8s.io/client-go/informers"

@@ -1,8 +1,9 @@
 package observability
 
 import (
-	"go.opentelemetry.io/otel/exporters/prometheus"
 	"log"
+
+	"go.opentelemetry.io/otel/exporters/prometheus"
 )
 
 func NewOtelPromExporter() *prometheus.Exporter {

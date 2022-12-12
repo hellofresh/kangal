@@ -107,7 +107,7 @@ func (p *Proxy) List(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-//Create creates loadtest CR on POST request
+// Create creates loadtest CR on POST request
 func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	logger := mPkg.GetLogger(ctx)
@@ -201,7 +201,7 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-//Delete deletes load test CR
+// Delete deletes load test CR
 func (p *Proxy) Delete(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	logger := mPkg.GetLogger(ctx)
@@ -219,7 +219,7 @@ func (p *Proxy) Delete(w http.ResponseWriter, r *http.Request) {
 	render.NoContent(w, r)
 }
 
-//Get returns the loadtest CR info
+// Get returns the loadtest CR info
 func (p *Proxy) Get(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	logger := mPkg.GetLogger(ctx)
@@ -251,7 +251,7 @@ func (p *Proxy) Get(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-//GetLogs returns the loadtest logs from master or worker pods
+// GetLogs returns the loadtest logs from master or worker pods
 func (p *Proxy) GetLogs(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	logger := mPkg.GetLogger(ctx)
