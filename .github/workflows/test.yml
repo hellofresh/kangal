@@ -1,0 +1,17 @@
+name: "Test"
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: [ self-hosted, default ]
+    steps:
+      - name: Get tag
+        id: get_tag
+        run: |
+          VERSION="$(git tag | grep -v kangal | sort -rV | head -n 1)"
+          echo "tag=$VERSION" >> "$GITHUB_OUTPUT"
