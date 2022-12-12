@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"contrib.go.opencensus.io/exporter/prometheus"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opencensus.io/plugin/ochttp"
 	"go.uber.org/zap"
 
@@ -16,11 +16,12 @@ import (
 	mPkg "github.com/hellofresh/kangal/pkg/core/middleware"
 	kube "github.com/hellofresh/kangal/pkg/kubernetes"
 	"github.com/hellofresh/kangal/pkg/report"
+	otelPrometheus "go.opentelemetry.io/otel/exporters/prometheus"
 )
 
 // Runner encapsulates all Kangal Proxy API server dependencies
 type Runner struct {
-	Exporter   *prometheus.Exporter
+	Exporter   *otelPrometheus.Exporter
 	KubeClient *kube.Client
 	Logger     *zap.Logger
 }
@@ -45,7 +46,7 @@ func RunServer(cfg Config, rr Runner) error {
 	r.Use(OpenAPISpecCORSMiddleware(cfg.OpenAPI))
 
 	r.Get("/status", cHttp.LivenessHandler("Kangal Proxy"))
-	r.Handle("/metrics", rr.Exporter)
+	r.Handle("/metrics", promhttp.Handler())
 
 	// ---------------------------------------------------------------------- //
 	// LoadTest Proxy CRUD

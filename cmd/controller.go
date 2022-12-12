@@ -51,11 +51,7 @@ func NewControllerCmd() *cobra.Command {
 				return fmt.Errorf("could not build logger instance: %w", err)
 			}
 
-			//pe, err := observability.NewPrometheusExporter("kangal-controller", observability.ControllerViews)
 			pe := observability.NewOtelPromExporter()
-			//if err != nil {
-			//	return err
-			//}
 
 			kubeCfg, err := kubernetes.BuildClientConfig(cfg.MasterURL, cfg.KubeConfig, cfg.KubeClientTimeout)
 			if err != nil {

@@ -1,17 +1,17 @@
 package observability
 
 import (
-	otelPrometheus "go.opentelemetry.io/otel/exporters/prometheus"
+	"go.opentelemetry.io/otel/exporters/prometheus"
 	"log"
 )
 
-func NewOtelPromExporter() *otelPrometheus.Exporter {
-	exporter, err := otelPrometheus.New()
+func NewOtelPromExporter() *prometheus.Exporter {
+	exporter, err := prometheus.New()
 	if err != nil {
 		log.Fatal(err)
 		return nil
 	}
-	//global.SetMeterProvider(NewMeter())
+	//global.SetMeterProvider(NewMeterProvider())
 	//
 	//if err := runtime.Start(
 	//	runtime.WithMinimumReadMemStatsInterval(time.Second),

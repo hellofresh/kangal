@@ -42,10 +42,7 @@ func NewProxyCmd() *cobra.Command {
 				return fmt.Errorf("could not build logger instance: %w", err)
 			}
 
-			//pe, err := observability.NewPrometheusExporter("kangal-proxy", nil)
-			//if err != nil {
-			//	return fmt.Errorf("could not initialise Prometheus exporter: %w", err)
-			//}
+			pe := observability.NewOtelPromExporter()
 
 			k8sConfig, err := kubernetes.BuildClientConfig(opts.masterURL, opts.kubeConfig, cfg.KubeClientTimeout)
 			if err != nil {
@@ -74,7 +71,7 @@ func NewProxyCmd() *cobra.Command {
 			cfg.MasterURL = opts.masterURL
 
 			return proxy.RunServer(cfg, proxy.Runner{
-				Exporter:   nil,
+				Exporter:   pe,
 				KubeClient: kubeClient,
 				Logger:     logger,
 			})
