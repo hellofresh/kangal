@@ -231,7 +231,7 @@ func (c *Controller) processNextWorkItem() bool {
 			if err != nil {
 				status = falseString
 			}
-			c.statsClient.ReportReconcile(time.Now().Sub(startTime), key, status)
+			c.statsClient.ReportReconcile(time.Since(startTime), key, status)
 		}()
 
 		// We expect strings to come off the workQueue. These are of the

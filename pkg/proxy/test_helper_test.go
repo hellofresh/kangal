@@ -80,7 +80,7 @@ func kubeTestClient() clientSetV.Clientset {
 		log.Println("Skipping kube config builder, KUBECONFIG is missed")
 		return clientSetV.Clientset{}
 	}
-	config, err := testhelper.BuildConfig()
+	config, _ := testhelper.BuildConfig()
 
 	clientSet, err := clientSetV.NewForConfig(config)
 	if err != nil {
