@@ -3,12 +3,13 @@ package controller
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/metric/instrument"
 	"go.opentelemetry.io/otel/metric/instrument/syncint64"
 	"go.opentelemetry.io/otel/metric/unit"
-	"time"
 
 	"go.uber.org/zap"
 	batchV1 "k8s.io/api/batch/v1"

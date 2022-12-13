@@ -2,10 +2,11 @@ package cmd
 
 import (
 	"fmt"
-	"go.opentelemetry.io/otel/exporters/prometheus"
 	"log"
 	"strings"
 	"time"
+
+	"go.opentelemetry.io/otel/exporters/prometheus"
 
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/metric/aggregation"
