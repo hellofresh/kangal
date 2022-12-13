@@ -3,6 +3,9 @@ package cmd
 import (
 	"flag"
 	"fmt"
+	"log"
+
+	"go.opentelemetry.io/otel/exporters/prometheus"
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/spf13/cobra"
@@ -42,7 +45,11 @@ func NewProxyCmd() *cobra.Command {
 				return fmt.Errorf("could not build logger instance: %w", err)
 			}
 
-			pe := observability.NewOtelPromExporter()
+			pe, err := prometheus.New()
+			if err != nil {
+				log.Fatal(err)
+				return nil
+			}
 
 			k8sConfig, err := kubernetes.BuildClientConfig(opts.masterURL, opts.kubeConfig, cfg.KubeClientTimeout)
 			if err != nil {

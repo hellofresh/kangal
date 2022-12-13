@@ -3,7 +3,6 @@ package controller
 import (
 	"fmt"
 
-	"github.com/hellofresh/kangal/pkg/core/observability"
 	"go.uber.org/zap"
 	kubeInformers "k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
@@ -22,7 +21,7 @@ type Runner struct {
 	KangalClient   *clientSetV.Clientset
 	KubeInformer   kubeInformers.SharedInformerFactory
 	KangalInformer externalversions.SharedInformerFactory
-	StatsReporter  *observability.MetricsReporter
+	StatsReporter  *MetricsReporter
 }
 
 // Run runs an instance of kubernetes kubeController
