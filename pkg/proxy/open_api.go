@@ -1,7 +1,6 @@
 package proxy
 
 import (
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -41,7 +40,7 @@ func OpenAPISpecHandler(cfg OpenAPIConfig) func(w http.ResponseWriter, r *http.R
 		}
 	}
 
-	spec, err := ioutil.ReadFile(openAPISpec)
+	spec, err := os.ReadFile(openAPISpec)
 	if err != nil {
 		return func(w http.ResponseWriter, r *http.Request) {
 			mPkg.GetLogger(r.Context()).Error("Failed to read OpenAPI spec file", zap.Error(err), zap.String("path", openAPISpec))

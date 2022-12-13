@@ -48,9 +48,5 @@ func (m *RequestLogger) Handler(next http.Handler) http.Handler {
 
 // IsStatusRequest checks if the request is a health check request
 func IsStatusRequest(r *http.Request) bool {
-	if strings.HasSuffix(r.URL.Path, "status") {
-		return true
-	}
-
-	return false
+	return strings.HasSuffix(r.URL.Path, "status")
 }

@@ -14,7 +14,7 @@ import (
 	mPkg "github.com/hellofresh/kangal/pkg/core/middleware"
 )
 
-//RunMetricsServer starts Prometheus metrics server
+// RunMetricsServer starts Prometheus metrics server
 func RunMetricsServer(cfg Config, rr Runner, stopChan chan struct{}) error {
 	r := chi.NewRouter()
 	// Define Middleware

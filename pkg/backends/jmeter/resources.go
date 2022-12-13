@@ -8,7 +8,6 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -112,7 +111,7 @@ func (b *Backend) NewTestdataConfigMap(loadTest loadTestV1.LoadTest) ([]*coreV1.
 		}
 		defer gz.Close()
 
-		result, err := ioutil.ReadAll(gz)
+		result, err := io.ReadAll(gz)
 		if err != nil && err != io.EOF {
 			logger.Error("Error on ioutil reader", zap.Error(err))
 			return nil, err
@@ -197,7 +196,7 @@ func (b *Backend) NewPod(loadTest loadTestV1.LoadTest, i int, configMap *coreV1.
 	optionalVolume := true
 
 	imageRef := fmt.Sprintf("%s:%s", loadTest.Spec.WorkerConfig.Image, loadTest.Spec.WorkerConfig.Tag)
-	if "" == loadTest.Spec.WorkerConfig.Image || "" == loadTest.Spec.WorkerConfig.Tag {
+	if loadTest.Spec.WorkerConfig.Image == "" || loadTest.Spec.WorkerConfig.Tag == "" {
 		imageRef = fmt.Sprintf("%s:%s", b.workerConfig.Image, b.workerConfig.Tag)
 		logger.Debug("Loadtest.Spec.WorkerConfig is empty; using worker image from config", zap.String("imageRef", imageRef))
 	}
@@ -358,7 +357,7 @@ func (b *Backend) NewJMeterMasterJob(loadTest loadTestV1.LoadTest, reportURL str
 	var one int32 = 1
 
 	imageRef := fmt.Sprintf("%s:%s", loadTest.Spec.MasterConfig.Image, loadTest.Spec.MasterConfig.Tag)
-	if "" == loadTest.Spec.MasterConfig.Image || "" == loadTest.Spec.MasterConfig.Tag {
+	if loadTest.Spec.MasterConfig.Image == "" || loadTest.Spec.MasterConfig.Tag == "" {
 		imageRef = fmt.Sprintf("%s:%s", b.masterConfig.Image, b.masterConfig.Tag)
 		logger.Debug("Loadtest.Spec.MasterConfig is empty; using master image from config", zap.String("imageRef", imageRef))
 	}
@@ -374,7 +373,7 @@ func (b *Backend) NewJMeterMasterJob(loadTest loadTestV1.LoadTest, reportURL str
 		},
 	}
 
-	if "" != reportURL {
+	if reportURL != "" {
 		jMeterEnvVars = append(jMeterEnvVars, coreV1.EnvVar{
 			Name:  "REPORT_PRESIGNED_URL",
 			Value: reportURL,

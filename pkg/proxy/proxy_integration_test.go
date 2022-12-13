@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"testing"
@@ -173,7 +172,7 @@ func TestIntegrationCreateLoadtestReachMaxLimit(t *testing.T) {
 
 		resp, err := http.Post(fmt.Sprintf("http://localhost:%d/load-test", httpPort), request.contentType, request.body)
 		require.NoError(t, err, "Could not create POST request")
-		body, _ := ioutil.ReadAll(resp.Body)
+		body, _ := io.ReadAll(resp.Body)
 		t.Logf(string(body))
 		require.Equal(t, http.StatusTooManyRequests, resp.StatusCode)
 	})
@@ -259,7 +258,7 @@ func TestIntegrationCreateLoadtestEmptyTestFile(t *testing.T) {
 	t.Run("Expect loadtest bad request response", func(t *testing.T) {
 		var dat map[string]interface{}
 
-		respBody, err := ioutil.ReadAll(body)
+		respBody, err := io.ReadAll(body)
 		require.NoError(t, err, "Could not get response body")
 
 		unmarshalErr := json.Unmarshal(respBody, &dat)
@@ -305,7 +304,7 @@ func TestIntegrationCreateLoadtestEmptyTestDataFile(t *testing.T) {
 	t.Run("Check loadtest response", func(t *testing.T) {
 		var dat map[string]interface{}
 
-		respbody, err := ioutil.ReadAll(body)
+		respbody, err := io.ReadAll(body)
 		require.NoError(t, err, "Could not get response body")
 
 		unmarshalErr := json.Unmarshal(respbody, &dat)
@@ -405,7 +404,7 @@ func TestIntegrationGetLoadtest(t *testing.T) {
 
 		require.Equal(t, http.StatusOK, res.StatusCode)
 
-		httpBody, err = ioutil.ReadAll(res.Body)
+		httpBody, err = io.ReadAll(res.Body)
 		require.NoError(t, err, "Could not get response body")
 	})
 
@@ -481,7 +480,7 @@ func TestIntegrationGetLoadtestLogs(t *testing.T) {
 			assert.NoError(t, err)
 		}()
 
-		_, err = ioutil.ReadAll(res.Body)
+		_, err = io.ReadAll(res.Body)
 		require.NoError(t, err, "Could not get response body")
 	})
 }

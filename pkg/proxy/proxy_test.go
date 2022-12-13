@@ -3,7 +3,7 @@ package proxy
 import (
 	"context"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -217,7 +217,7 @@ func TestProxy_List(t *testing.T) {
 			testProxyHandler.List(w, req)
 
 			resp := w.Result()
-			respBody, _ := ioutil.ReadAll(resp.Body)
+			respBody, _ := io.ReadAll(resp.Body)
 
 			assert.Equal(t, tc.expectedCode, resp.StatusCode)
 			assert.Equal(t, resp.Header.Get("Content-Type"), tc.expectedContentType)
@@ -326,7 +326,7 @@ func TestProxyCreate(t *testing.T) {
 			handler(w, req)
 
 			resp := w.Result()
-			respBody, _ := ioutil.ReadAll(resp.Body)
+			respBody, _ := io.ReadAll(resp.Body)
 
 			assert.Equal(t, tt.expectedCode, resp.StatusCode)
 			assert.Equal(t, resp.Header.Get("Content-Type"), tt.expectedContentType)
@@ -420,7 +420,7 @@ func TestNewProxyRecreate(t *testing.T) {
 			testProxyHandler.Create(w, req)
 
 			resp := w.Result()
-			respBody, _ := ioutil.ReadAll(resp.Body)
+			respBody, _ := io.ReadAll(resp.Body)
 
 			assert.Equal(t, tt.expectedStatus, resp.StatusCode)
 			assert.Equal(t, tt.expectedResponse, string(respBody))
@@ -520,7 +520,7 @@ func TestProxyCreateWithErrors(t *testing.T) {
 			testProxyHandler.Create(w, req)
 
 			resp := w.Result()
-			respBody, _ := ioutil.ReadAll(resp.Body)
+			respBody, _ := io.ReadAll(resp.Body)
 
 			assert.Equal(t, tt.expectedStatus, resp.StatusCode)
 			assert.Equal(t, tt.expectedResponse, string(respBody))
@@ -594,7 +594,7 @@ func TestProxyGet(t *testing.T) {
 			testProxyHandler.Get(w, req)
 
 			resp := w.Result()
-			respBody, _ := ioutil.ReadAll(resp.Body)
+			respBody, _ := io.ReadAll(resp.Body)
 
 			assert.Equal(t, tt.expectedCode, resp.StatusCode)
 			assert.Equal(t, tt.expectedResponse, string(respBody))
@@ -644,7 +644,7 @@ func TestProxyDelete(t *testing.T) {
 			testProxyHandler.Delete(w, req)
 
 			resp := w.Result()
-			respBody, _ := ioutil.ReadAll(resp.Body)
+			respBody, _ := io.ReadAll(resp.Body)
 
 			assert.Equal(t, tt.expectedCode, resp.StatusCode)
 			assert.Equal(t, tt.expectedResponse, string(respBody))
@@ -744,7 +744,7 @@ func TestProxyGetLogs(t *testing.T) {
 			testProxyHandler.GetLogs(w, req.WithContext(ctx))
 
 			resp := w.Result()
-			respBody, _ := ioutil.ReadAll(resp.Body)
+			respBody, _ := io.ReadAll(resp.Body)
 
 			require.Equal(t, tt.expectedCode, resp.StatusCode)
 			assert.Equal(t, tt.expectedResponse, string(respBody))

@@ -3,7 +3,6 @@ package controller
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"time"
 
@@ -73,15 +72,6 @@ func CreateLoadTest(clientSet clientSetV.Clientset, pods int32, name, testFile, 
 		return err
 	}
 	return nil
-}
-
-func readFile(filename string) (string, error) {
-	b, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return "", err
-	}
-	str := string(b)
-	return str, nil
 }
 
 // WaitLoadTest waits until Loadtest resources exists
