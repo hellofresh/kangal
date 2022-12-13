@@ -71,7 +71,7 @@ func ShowHandler() func(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// serve uncompressed tar archive content
-		if "application/x-tar" == objStat.ContentType {
+		if objStat.ContentType == "application/x-tar" {
 			prefix := fmt.Sprintf("%s/%s", tmpDir, loadTestName)
 			err = untar(prefix, obj, afero.NewOsFs())
 			if nil != err {

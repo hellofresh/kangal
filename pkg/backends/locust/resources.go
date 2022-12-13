@@ -97,7 +97,7 @@ func newMasterJob(
 		{Name: "LOCUST_RUN_TIME", Value: loadTest.Spec.Duration.String()},
 	}
 
-	if "" != reportURL {
+	if reportURL != "" {
 		envVars = append(envVars, coreV1.EnvVar{
 			Name:  "REPORT_PRESIGNED_URL",
 			Value: reportURL,

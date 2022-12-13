@@ -124,7 +124,7 @@ func (b *Backend) SyncStatus(ctx context.Context, _ loadTestV1.LoadTest, loadTes
 // newMasterJob creates a new job which runs the Fake master pod
 func (b *Backend) newMasterJob(loadTest loadTestV1.LoadTest) *batchV1.Job {
 	imageRef := fmt.Sprintf("%s:%s", loadTest.Spec.MasterConfig.Image, loadTest.Spec.MasterConfig.Tag)
-	if "" == loadTest.Spec.MasterConfig.Image || "" == loadTest.Spec.MasterConfig.Tag {
+	if loadTest.Spec.MasterConfig.Image == "" || loadTest.Spec.MasterConfig.Tag == "" {
 		imageRef = fmt.Sprintf("%s:%s", b.config.Image, b.config.Tag)
 		b.logger.Warn("Loadtest.Spec.MasterConfig is empty; using default master image", zap.String("imageRef", imageRef))
 	}
