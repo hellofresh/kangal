@@ -23,7 +23,7 @@ type Tolerations []Toleration
 func ParseToleration(toleration string) (Toleration, error) {
 	tolerationParts := strings.Split(toleration, ":")
 	if len(tolerationParts) != 4 {
-		return Toleration{}, errors.New(`Failed to parse toleration, expected pattern "key:value:Operation:Effect"`)
+		return Toleration{}, errors.New(`failed to parse toleration, expected pattern "key:value:Operation:Effect"`)
 	}
 
 	t := Toleration{
@@ -59,13 +59,13 @@ func (t Toleration) Validate() error {
 	effect := kubeCoreV1.TaintEffect(t.Effect)
 
 	if op != kubeCoreV1.TolerationOpEqual && op != kubeCoreV1.TolerationOpExists {
-		return fmt.Errorf("Invalid operator type %q", op)
+		return fmt.Errorf("invalid operator type %q", op)
 	}
 
 	if effect != kubeCoreV1.TaintEffectNoExecute &&
 		effect != kubeCoreV1.TaintEffectNoSchedule &&
 		effect != kubeCoreV1.TaintEffectPreferNoSchedule {
-		return fmt.Errorf("Invalid effect type %q", effect)
+		return fmt.Errorf("invalid effect type %q", effect)
 	}
 
 	return nil
