@@ -6,6 +6,9 @@ import (
 	"log"
 
 	"go.opentelemetry.io/otel/exporters/prometheus"
+	"go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/sdk/resource"
+	semconv "go.opentelemetry.io/otel/semconv/v1.12.0"
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/spf13/cobra"
@@ -68,6 +71,12 @@ func NewProxyCmd() *cobra.Command {
 
 			loadTestClient := kangalClientSet.LoadTests()
 			kubeClient := kubernetes.NewClient(loadTestClient, kubeClientSet, logger)
+			provider := metric.NewMeterProvider(metric.WithReader(pe), metric.WithResource(
+				resource.NewSchemaless(semconv.ServiceNameKey.String("kangal-proxy"))))
+			statsReporter, err := proxy.NewMetricsReporter(provider.Meter("proxy"), kubeClient)
+			if err != nil {
+				return fmt.Errorf("error getting stats client:  %w", err)
+			}
 
 			err = report.InitObjectStorageClient(cfg.Report)
 			if err != nil {
@@ -78,9 +87,10 @@ func NewProxyCmd() *cobra.Command {
 			cfg.MasterURL = opts.masterURL
 
 			return proxy.RunServer(cfg, proxy.Runner{
-				Exporter:   pe,
-				KubeClient: kubeClient,
-				Logger:     logger,
+				Exporter:      pe,
+				KubeClient:    kubeClient,
+				Logger:        logger,
+				StatsReporter: statsReporter,
 			})
 		},
 	}

@@ -21,9 +21,10 @@ import (
 
 // Runner encapsulates all Kangal Proxy API server dependencies
 type Runner struct {
-	Exporter   *otelPrometheus.Exporter
-	KubeClient *kube.Client
-	Logger     *zap.Logger
+	Exporter      *otelPrometheus.Exporter
+	KubeClient    *kube.Client
+	Logger        *zap.Logger
+	StatsReporter *MetricsReporter
 }
 
 // RunServer runs Kangal proxy API

@@ -43,35 +43,13 @@ const (
 
 // MetricsReporter used to interface with the metrics configurations
 type MetricsReporter struct {
-	countRunningLoadtests syncint64.UpDownCounter
-	workQueueDepthStat    syncint64.UpDownCounter
-	reconcileCountStat    syncint64.UpDownCounter
-	reconcileLatencyStat  syncint64.Histogram
+	workQueueDepthStat   syncint64.UpDownCounter
+	reconcileCountStat   syncint64.UpDownCounter
+	reconcileLatencyStat syncint64.Histogram
 }
 
 // NewMetricsReporter contains loadtest metrics definition
 func NewMetricsReporter(meter metric.Meter) (*MetricsReporter, error) {
-	countRunningLoadtests, err := meter.SyncInt64().UpDownCounter(
-		"kangal_running_loadtests_count",
-		instrument.WithDescription("The number of currently running loadtests"),
-		instrument.WithUnit(unit.Dimensionless),
-	)
-	if err != nil {
-		fmt.Errorf("could not register countRunningLoadtests metric: %w", err)
-		return nil, err
-	}
-
-	//if err := meter.RegisterCallback(
-	//	[]instrument.Asynchronous{
-	//		countRunningLoadtests,
-	//	},
-	//	func(ctx context.Context) {
-	//		countRunningLoadtests.Observe(context.Background(), 1, attribute.String("loadtest", "running"))
-	//	},
-	//); err != nil {
-	//	panic(err)
-	//}
-
 	workQueueDepthStat, err := meter.SyncInt64().UpDownCounter(
 		"kangal_work_queue_depth",
 		instrument.WithDescription("Depth of the work queue"),
@@ -103,10 +81,9 @@ func NewMetricsReporter(meter metric.Meter) (*MetricsReporter, error) {
 	}
 
 	return &MetricsReporter{
-		countRunningLoadtests: countRunningLoadtests,
-		workQueueDepthStat:    workQueueDepthStat,
-		reconcileCountStat:    reconcileCountStat,
-		reconcileLatencyStat:  reconcileLatencyStat,
+		workQueueDepthStat:   workQueueDepthStat,
+		reconcileCountStat:   reconcileCountStat,
+		reconcileLatencyStat: reconcileLatencyStat,
 	}, nil
 }
 
@@ -352,8 +329,6 @@ func (c *Controller) syncHandler(key string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), c.cfg.SyncHandlerTimeout)
 	defer cancel()
 
-	c.statsClient.countRunningLoadtests.Add(context.Background(), c.countRunningLoadtests(), attribute.String("loadtest", "running"))
-
 	logger := c.logger.With(
 		zap.String("loadtest", key),
 	)
@@ -460,7 +435,6 @@ func (c *Controller) handleObject(obj interface{}) {
 		}
 
 		c.logger.Debug("Processing object", zap.String("object-name", object.GetName()))
-		c.statsClient.countRunningLoadtests.Add(context.Background(), c.countRunningLoadtests(), attribute.String("loadtest", "running"))
 
 		foo, err := c.loadtestsLister.Get(ownerRef.Name)
 		if err != nil {
@@ -581,24 +555,6 @@ func checkLoadTestLifeTimeExceeded(loadTest *loadTestV1.LoadTest, deleteThreshol
 	}
 
 	return false
-}
-
-func (c *Controller) countRunningLoadtests() int64 {
-	tt, err := c.kangalClientSet.KangalV1().LoadTests().List(context.Background(), metaV1.ListOptions{})
-	if err != nil {
-		c.logger.Error("Couldn't list existing loadtests", zap.Error(err))
-		return 0
-	}
-
-	var rt = 0
-	for _, loadTest := range tt.Items {
-		if loadTest.Status.Phase == loadTestV1.LoadTestRunning {
-			rt++
-		}
-	}
-
-	return int64(rt)
-
 }
 
 func (c *Controller) deleteLoadTest(ctx context.Context, key string, loadTest *loadTestV1.LoadTest) {

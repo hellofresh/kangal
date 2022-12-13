@@ -28,7 +28,7 @@ var (
 	gracePeriod = int64(0)
 )
 
-//Client manages calls to Kubernetes API
+// Client manages calls to Kubernetes API
 type Client struct {
 	ltClient   loadTestV1.LoadTestInterface
 	kubeClient kubernetes.Interface
@@ -47,7 +47,7 @@ type ListOptions struct {
 	Continue string
 }
 
-//NewClient creates new Kubernetes client
+// NewClient creates new Kubernetes client
 func NewClient(loadTestClient loadTestV1.LoadTestInterface, kubeClient kubernetes.Interface, logger *zap.Logger) *Client {
 	return &Client{
 		ltClient:   loadTestClient,
@@ -246,4 +246,22 @@ func BuildClientConfig(masterURL string, kubeConfigPath string, timeout time.Dur
 
 	kubeCfg.Timeout = timeout
 	return kubeCfg, nil
+}
+
+// CountRunningLoadtests used in metrics to report running loadtests
+func (c *Client) CountRunningLoadtests() int64 {
+	tt, err := c.ltClient.List(context.Background(), metaV1.ListOptions{})
+	if err != nil {
+		c.logger.Error("Couldn't list existing loadtests", zap.Error(err))
+		return 0
+	}
+
+	var rt = 0
+	for _, loadTest := range tt.Items {
+		if loadTest.Status.Phase == apisLoadTestV1.LoadTestRunning {
+			rt++
+		}
+	}
+
+	return int64(rt)
 }

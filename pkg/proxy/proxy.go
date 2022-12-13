@@ -4,6 +4,11 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/metric/instrument"
+	"go.opentelemetry.io/otel/metric/instrument/asyncint64"
+	"go.opentelemetry.io/otel/metric/unit"
 	"io"
 	"net/http"
 
@@ -31,6 +36,34 @@ type Proxy struct {
 	registry            backends.Registry
 	kubeClient          *kube.Client
 	allowedCustomImages bool
+}
+
+// MetricsReporter used to interface with the metrics configurations
+type MetricsReporter struct {
+	countRunningLoadtests asyncint64.UpDownCounter
+}
+
+// NewMetricsReporter contains loadtest metrics definition
+func NewMetricsReporter(meter metric.Meter, kubeClient *kube.Client) (*MetricsReporter, error) {
+	countRunningLoadtests, err := meter.AsyncInt64().UpDownCounter(
+		"kangal_running_loadtests_count",
+		instrument.WithDescription("The number of currently running loadtests"),
+		instrument.WithUnit(unit.Dimensionless),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("could not register countRunningLoadtests metric: %w", err)
+	}
+
+	if err := meter.RegisterCallback([]instrument.Asynchronous{countRunningLoadtests}, func(ctx context.Context) {
+		lt := kubeClient.CountRunningLoadtests()
+		countRunningLoadtests.Observe(ctx, lt, attribute.String("loadtest", "running"))
+	},
+	); err != nil {
+		return nil, err
+	}
+	return &MetricsReporter{
+			countRunningLoadtests: countRunningLoadtests},
+		nil
 }
 
 // NewProxy returns new Proxy handlers

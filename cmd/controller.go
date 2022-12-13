@@ -6,6 +6,9 @@ import (
 	"strings"
 	"time"
 
+	"go.opentelemetry.io/otel/sdk/resource"
+	semconv "go.opentelemetry.io/otel/semconv/v1.12.0"
+
 	"go.opentelemetry.io/otel/exporters/prometheus"
 
 	"go.opentelemetry.io/otel/sdk/metric"
@@ -82,12 +85,16 @@ func NewControllerCmd() *cobra.Command {
 				return fmt.Errorf("error building kangal clientSet: %w", err)
 			}
 
-			provider := metric.NewMeterProvider(metric.WithReader(pe), metric.WithView(metric.NewView(
-				metric.Instrument{Name: "kangal_reconcile_latency"},
-				metric.Stream{Aggregation: aggregation.ExplicitBucketHistogram{
-					Boundaries: reconcileDistribution,
-				}},
-			)))
+			provider := metric.NewMeterProvider(
+				metric.WithReader(pe),
+				metric.WithResource(
+					resource.NewSchemaless(semconv.ServiceNameKey.String("kangal-controller"))),
+				metric.WithView(metric.NewView(
+					metric.Instrument{Name: "kangal_reconcile_latency"},
+					metric.Stream{Aggregation: aggregation.ExplicitBucketHistogram{
+						Boundaries: reconcileDistribution,
+					}},
+				)))
 			statsReporter, err := controller.NewMetricsReporter(provider.Meter("controller"))
 			if err != nil {
 				return fmt.Errorf("error getting stats client:  %w", err)
