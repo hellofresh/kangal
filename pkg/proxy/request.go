@@ -362,7 +362,7 @@ func getTargetURL(r *http.Request) (string, error) {
 func getDuration(r *http.Request) (time.Duration, error) {
 	val := r.FormValue(duration)
 
-	if "" == val {
+	if val == "" {
 		return time.Duration(0), nil
 	}
 
@@ -437,7 +437,7 @@ func getImage(r *http.Request, role string) (apisLoadTestV1.ImageDetails, error)
 	}, nil
 }
 
-//fileToString converts file to string
+// fileToString converts file to string
 func fileToString(f io.ReadCloser) (string, error) {
 	buf := new(bytes.Buffer)
 	if _, err := buf.ReadFrom(f); err != nil {

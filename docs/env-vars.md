@@ -16,13 +16,13 @@
 | `WEB_HTTP_PORT`               |                                                                                | `8080`                                     |
 
 ## Controller
-| Parameter                       | Description                                       | Default             |
-|---------------------------------|---------------------------------------------------|---------------------|
-| `CLEANUP_THRESHOLD`             | Life time of a load test                          | `1h`                |
-| `KANGAL_PROXY_URL`              | Endpoints used to store load test reports         | `""`                |
-| `KUBE_CLIENT_TIMEOUT`           | Timeout for each operation done by kube client    | `5s`                |
-| `SYNC_HANDLER_TIMEOUT`          | Time limit for each sync operation                | `60s`               |
-| `WEB_HTTP_PORT`                 |                                                   | `8080`              |
+| Parameter                       | Description                                             | Default             |
+|---------------------------------|---------------------------------------------------------|---------------------|
+| `CLEANUP_THRESHOLD`             | Life time of a load test (disable by setting value to 0)| `1h`                |
+| `KANGAL_PROXY_URL`              | Endpoints used to store load test reports               | `""`                |
+| `KUBE_CLIENT_TIMEOUT`           | Timeout for each operation done by kube client          | `5s`                |
+| `SYNC_HANDLER_TIMEOUT`          | Time limit for each sync operation                      | `60s`               |
+| `WEB_HTTP_PORT`                 |                                                         | `8080`              |
 
 ## Backend specific configuration
 ### JMeter

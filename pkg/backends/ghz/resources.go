@@ -52,7 +52,7 @@ func (b *Backend) NewJob(
 	}
 
 	envVars := []coreV1.EnvVar{}
-	if "" != reportURL {
+	if reportURL != "" {
 		envVars = append(envVars, coreV1.EnvVar{
 			Name:  "REPORT_PRESIGNED_URL",
 			Value: reportURL,

@@ -14,7 +14,7 @@ const (
 	pathSeparator = "/"
 )
 
-//MinioFileSystem struct to work with MinioFileSystem lib backend as a http.Filesystem
+// MinioFileSystem struct to work with MinioFileSystem lib backend as a http.Filesystem
 type MinioFileSystem struct {
 	*minio.Client
 	Bucket string
@@ -34,7 +34,7 @@ func (m *MinioFileSystem) Open(name string) (http.File, error) {
 
 	name = strings.TrimPrefix(name, pathSeparator)
 	parts := strings.Split(name, "/")
-	if 1 == len(parts) {
+	if len(parts) == 1 {
 		parts = append(parts, "index.html")
 	}
 	name = strings.Join(parts, "/")
@@ -71,17 +71,17 @@ type objectInfo struct {
 	isDir  bool
 }
 
-//Name ...
+// Name ...
 func (o objectInfo) Name() string {
 	return o.ObjectInfo.Key
 }
 
-//Size ...
+// Size ...
 func (o objectInfo) Size() int64 {
 	return o.ObjectInfo.Size
 }
 
-//Mode ...
+// Mode ...
 func (o objectInfo) Mode() os.FileMode {
 	if o.isDir {
 		return os.ModeDir
@@ -89,17 +89,17 @@ func (o objectInfo) Mode() os.FileMode {
 	return os.FileMode(0644)
 }
 
-//ModTime ...
+// ModTime ...
 func (o objectInfo) ModTime() time.Time {
 	return o.ObjectInfo.LastModified
 }
 
-//IsDir ...
+// IsDir ...
 func (o objectInfo) IsDir() bool {
 	return o.isDir
 }
 
-//Sys ...
+// Sys ...
 func (o objectInfo) Sys() interface{} {
 	return &syscall.Stat_t{}
 }
@@ -114,22 +114,22 @@ type minioFile struct {
 	isDir  bool
 }
 
-//Close ...
+// Close ...
 func (h *minioFile) Close() error {
 	return h.object.Close()
 }
 
-//Read ...
+// Read ...
 func (h *minioFile) Read(p []byte) (n int, err error) {
 	return h.object.Read(p)
 }
 
-//Seek ...
+// Seek ...
 func (h *minioFile) Seek(offset int64, whence int) (int64, error) {
 	return h.object.Seek(offset, whence)
 }
 
-//Readdir ...
+// Readdir ...
 func (h *minioFile) Readdir(count int) ([]os.FileInfo, error) {
 	// List 'N' number of objects from a Bucket-name with a matching prefix.
 	listObjectsN := func(bucket, prefix string, count int) (objsInfo []minio.ObjectInfo, err error) {
@@ -179,7 +179,7 @@ func (h *minioFile) Readdir(count int) ([]os.FileInfo, error) {
 	return fileInfos, nil
 }
 
-//Stat ...
+// Stat ...
 func (h *minioFile) Stat() (os.FileInfo, error) {
 	if h.isDir {
 		return objectInfo{

@@ -333,7 +333,6 @@ func (p *Proxy) GetLogs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	io.WriteString(w, string(logs))
-	return
 }
 
 func doRequest(req *restClient.Request) ([]byte, error) {

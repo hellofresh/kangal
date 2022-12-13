@@ -4,7 +4,6 @@ import (
 	"archive/tar"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
@@ -25,7 +24,7 @@ var httpClient = &http.Client{
 	Timeout: 30 * time.Second,
 }
 
-//ShowHandler method returns response from file bucket in defined object storage
+// ShowHandler method returns response from file bucket in defined object storage
 func ShowHandler() func(w http.ResponseWriter, r *http.Request) {
 	if minioClient == nil {
 		panic("client was not initialized, please initialize object storage client")
@@ -72,7 +71,7 @@ func ShowHandler() func(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// serve uncompressed tar archive content
-		if "application/x-tar" == objStat.ContentType {
+		if objStat.ContentType == "application/x-tar" {
 			prefix := fmt.Sprintf("%s/%s", tmpDir, loadTestName)
 			err = untar(prefix, obj, afero.NewOsFs())
 			if nil != err {
@@ -129,7 +128,7 @@ func untar(prefix string, obj io.Reader, afs afero.Fs) error {
 	}
 }
 
-//PersistHandler method streams request to storage presigned URL
+// PersistHandler method streams request to storage presigned URL
 func PersistHandler(kubeClient *kk8s.Client, logger *zap.Logger) func(w http.ResponseWriter, r *http.Request) {
 	if minioClient == nil {
 		panic("client was not initialized, please initialize object storage client")
@@ -171,7 +170,7 @@ func PersistHandler(kubeClient *kk8s.Client, logger *zap.Logger) func(w http.Res
 		defer proxyResp.Body.Close()
 
 		if http.StatusOK != proxyResp.StatusCode {
-			b, _ := ioutil.ReadAll(proxyResp.Body)
+			b, _ := io.ReadAll(proxyResp.Body)
 			logger.Error("Failed to persist report", zap.ByteString("error", b), zap.String("loadtest", loadTestName))
 			render.Render(w, r, khttp.ErrResponse(proxyResp.StatusCode, string(b)))
 			return

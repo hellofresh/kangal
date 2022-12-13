@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"log"
 	"mime/multipart"
 	"net/http"
@@ -81,7 +80,7 @@ func kubeTestClient() clientSetV.Clientset {
 		log.Println("Skipping kube config builder, KUBECONFIG is missed")
 		return clientSetV.Clientset{}
 	}
-	config, err := testhelper.BuildConfig()
+	config, _ := testhelper.BuildConfig()
 
 	clientSet, err := clientSetV.NewForConfig(config)
 	if err != nil {
@@ -113,7 +112,7 @@ func parseBody(t *testing.T, res *http.Response) (createdLoadTestName string) {
 		assert.NoError(t, err)
 	}()
 
-	respBody, err := ioutil.ReadAll(res.Body)
+	respBody, err := io.ReadAll(res.Body)
 	require.NoError(t, err)
 
 	err = json.Unmarshal(respBody, &dat)

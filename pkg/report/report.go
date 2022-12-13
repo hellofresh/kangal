@@ -19,7 +19,7 @@ var (
 	expires     time.Duration
 )
 
-//InitObjectStorageClient inits new minio backend client to work with S3 compatible storages
+// InitObjectStorageClient inits new minio backend client to work with S3 compatible storages
 func InitObjectStorageClient(cfg Config) error {
 	// minio doesn't like http schema endpoints - dial tcp: too many colons in address
 	endpoint := strings.Replace(cfg.AWSEndpointURL, "https://", "", -1)
@@ -63,7 +63,7 @@ func InitObjectStorageClient(cfg Config) error {
 	// Init file system - in our case it is Minio client which exposes object storage bucket
 	fs = &report.MinioFileSystem{Client: minioClient, Bucket: bucketName}
 	// Init PreSigned URL expiration time
-	if "" == cfg.AWSPresignedExpires {
+	if cfg.AWSPresignedExpires == "" {
 		cfg.AWSPresignedExpires = "30m" // defaults to 30 minutes
 	}
 	expires, err = time.ParseDuration(cfg.AWSPresignedExpires)

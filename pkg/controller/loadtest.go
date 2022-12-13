@@ -393,7 +393,7 @@ func (c *Controller) syncHandler(key string) error {
 	}
 
 	// check and delete stale finished/errored loadtests
-	if checkLoadTestLifeTimeExceeded(loadTest, c.cfg.CleanUpThreshold) {
+	if c.cfg.CleanUpThreshold != 0 && checkLoadTestLifeTimeExceeded(loadTest, c.cfg.CleanUpThreshold) {
 		logger.Info("Deleting loadtest due to exceeded lifetime",
 			zap.String("phase", loadTest.Status.Phase.String()),
 		)
