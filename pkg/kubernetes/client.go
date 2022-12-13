@@ -28,7 +28,7 @@ var (
 	gracePeriod = int64(0)
 )
 
-//Client manages calls to Kubernetes API
+// Client manages calls to Kubernetes API
 type Client struct {
 	ltClient   loadTestV1.LoadTestInterface
 	kubeClient kubernetes.Interface
@@ -47,7 +47,7 @@ type ListOptions struct {
 	Continue string
 }
 
-//NewClient creates new Kubernetes client
+// NewClient creates new Kubernetes client
 func NewClient(loadTestClient loadTestV1.LoadTestInterface, kubeClient kubernetes.Interface, logger *zap.Logger) *Client {
 	return &Client{
 		ltClient:   loadTestClient,
