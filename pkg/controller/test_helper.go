@@ -74,15 +74,6 @@ func CreateLoadTest(clientSet clientSetV.Clientset, pods int32, name, testFile, 
 	return nil
 }
 
-func readFile(filename string) (string, error) {
-	b, err := os.ReadFile(filename)
-	if err != nil {
-		return "", err
-	}
-	str := string(b)
-	return str, nil
-}
-
 // WaitLoadTest waits until Loadtest resources exists
 func WaitLoadTest(clientSet clientSetV.Clientset, loadtestName string) error {
 	watchObj, err := clientSet.KangalV1().LoadTests().Watch(context.Background(), metaV1.ListOptions{
