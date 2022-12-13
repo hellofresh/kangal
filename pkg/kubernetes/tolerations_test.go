@@ -32,28 +32,28 @@ func TestParseToleration(t *testing.T) {
 			name:       "empty toleration",
 			toleration: "",
 			expect: expected{
-				err: `Failed to parse toleration, expected pattern "key:value:Operation:Effect"`,
+				err: `failed to parse toleration, expected pattern "key:value:Operation:Effect"`,
 			},
 		},
 		{
 			name:       "incomplete toleration",
 			toleration: "key:value:Equal",
 			expect: expected{
-				err: `Failed to parse toleration, expected pattern "key:value:Operation:Effect"`,
+				err: `failed to parse toleration, expected pattern "key:value:Operation:Effect"`,
 			},
 		},
 		{
 			name:       "invalid operator",
 			toleration: "key:value:Invalid:NoSchedule",
 			expect: expected{
-				err: `Invalid operator type "Invalid"`,
+				err: `invalid operator type "Invalid"`,
 			},
 		},
 		{
 			name:       "invalid effect",
 			toleration: "key:value:Equal:Invalid",
 			expect: expected{
-				err: `Invalid effect type "Invalid"`,
+				err: `invalid effect type "Invalid"`,
 			},
 		},
 	}
