@@ -3,7 +3,6 @@ package controller
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"time"
 
@@ -76,7 +75,7 @@ func CreateLoadTest(clientSet clientSetV.Clientset, pods int32, name, testFile, 
 }
 
 func readFile(filename string) (string, error) {
-	b, err := ioutil.ReadFile(filename)
+	b, err := os.ReadFile(filename)
 	if err != nil {
 		return "", err
 	}

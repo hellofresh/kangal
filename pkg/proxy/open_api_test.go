@@ -2,9 +2,10 @@ package proxy
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -15,7 +16,7 @@ import (
 )
 
 func TestOpenAPISpecHandler_static(t *testing.T) {
-	rawSpec, err := ioutil.ReadFile("../../openapi.json")
+	rawSpec, err := os.ReadFile("../../openapi.json")
 	require.NoError(t, err)
 
 	cfg := OpenAPIConfig{
@@ -36,7 +37,7 @@ func TestOpenAPISpecHandler_static(t *testing.T) {
 	staticHandler(w, rq.WithContext(ctx))
 	rs := w.Result()
 
-	rsBody, err := ioutil.ReadAll(rs.Body)
+	rsBody, err := io.ReadAll(rs.Body)
 	require.NoError(t, err)
 
 	assert.Equal(t, http.StatusOK, rs.StatusCode)
@@ -64,7 +65,7 @@ func TestOpenAPISpecHandler_custom(t *testing.T) {
 	staticHandler(w, rq.WithContext(ctx))
 	rs := w.Result()
 
-	rsBody, err := ioutil.ReadAll(rs.Body)
+	rsBody, err := io.ReadAll(rs.Body)
 	require.NoError(t, err)
 
 	assert.Equal(t, http.StatusOK, rs.StatusCode)

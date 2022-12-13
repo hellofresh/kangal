@@ -8,7 +8,6 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -112,7 +111,7 @@ func (b *Backend) NewTestdataConfigMap(loadTest loadTestV1.LoadTest) ([]*coreV1.
 		}
 		defer gz.Close()
 
-		result, err := ioutil.ReadAll(gz)
+		result, err := io.ReadAll(gz)
 		if err != nil && err != io.EOF {
 			logger.Error("Error on ioutil reader", zap.Error(err))
 			return nil, err
