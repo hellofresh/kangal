@@ -65,6 +65,10 @@ func (*Backend) Type() loadTestV1.LoadTestType {
 	return loadTestV1.LoadTestTypeJMeter
 }
 
+func (*Backend) UsesCSVTestData() bool {
+	return true
+}
+
 // GetEnvConfig must return config struct pointer
 func (b *Backend) GetEnvConfig() interface{} {
 	b.config = &Config{}
@@ -182,7 +186,7 @@ func (b *Backend) TransformLoadTestSpec(spec *loadTestV1.LoadTestSpec) error {
 }
 
 // Sync check if JMeter kubernetes resources have been create, if they have not been create them
-func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, reportURL string) error {
+func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, testfileConfigMapName string, testdataConfigMapNames []string, reportURL string) error {
 	logger := b.logger.With(
 		zap.String("loadtest", loadTest.GetName()),
 		zap.String("namespace", loadTest.Status.Namespace),
@@ -194,12 +198,6 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, report
 	}
 
 	if len(JMeterServices.Items) == 0 {
-		_, err = b.kubeClientSet.CoreV1().ConfigMaps(loadTest.Status.Namespace).Create(ctx, b.NewConfigMap(loadTest), metaV1.CreateOptions{})
-		if err != nil && !kerrors.IsAlreadyExists(err) {
-			logger.Error("Error on creating testfile configmap", zap.Error(err))
-			return err
-		}
-
 		secret, err := b.NewSecret(loadTest)
 		if err != nil {
 			logger.Error("Error on creating environment variables secret", zap.Error(err))
@@ -211,13 +209,7 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, report
 			return err
 		}
 
-		configMaps, err := b.NewTestdataConfigMap(loadTest)
-		if err != nil {
-			logger.Error("Error on creating testdata configMaps", zap.Error(err))
-			return err
-		}
-
-		err = b.CreatePodsWithTestdata(ctx, configMaps, &loadTest, loadTest.Status.Namespace)
+		err = b.CreatePodsWithTestdata(ctx, testdataConfigMapNames, &loadTest, loadTest.Status.Namespace)
 		if err != nil {
 			return err
 		}
@@ -234,7 +226,7 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, report
 			Jobs(loadTest.Status.Namespace).
 			Create(
 				ctx,
-				b.NewJMeterMasterJob(loadTest, reportURL, b.podAnnotations),
+				b.NewJMeterMasterJob(loadTest, testfileConfigMapName, reportURL, b.podAnnotations),
 				metaV1.CreateOptions{},
 			)
 		if err != nil && !kerrors.IsAlreadyExists(err) {

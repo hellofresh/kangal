@@ -1,9 +1,7 @@
 package ghz
 
 import (
-	"errors"
 	"fmt"
-	"strings"
 
 	"go.uber.org/zap"
 	batchV1 "k8s.io/api/batch/v1"
@@ -103,7 +101,7 @@ func (b *Backend) NewJob(
 }
 
 // NewFileVolumeAndMount creates a new volume and volume mount for a configmap file
-func NewFileVolumeAndMount(name, cfg, filename string) (coreV1.Volume, coreV1.VolumeMount) {
+func NewFileVolumeAndMount(name, cfg, filename, subpath string) (coreV1.Volume, coreV1.VolumeMount) {
 	v := coreV1.Volume{
 		Name: name,
 		VolumeSource: coreV1.VolumeSource{
@@ -118,34 +116,10 @@ func NewFileVolumeAndMount(name, cfg, filename string) (coreV1.Volume, coreV1.Vo
 	m := coreV1.VolumeMount{
 		Name:      name,
 		MountPath: fmt.Sprintf("/data/%s", filename),
-		SubPath:   filename,
+		SubPath:   subpath,
 	}
 
 	return v, m
-}
-
-// NewFileConfigMap creates a configmap for the provided file information
-func NewFileConfigMap(cfgName, filename string, content []byte) (*coreV1.ConfigMap, error) {
-	if strings.TrimSpace(cfgName) == "" {
-		return nil, errors.New("empty config name")
-	}
-
-	if strings.TrimSpace(filename) == "" {
-		return nil, fmt.Errorf("invalid name for configmap %s", cfgName)
-	}
-
-	if len(content) == 0 {
-		return nil, fmt.Errorf("invalid file %s for configmap %s, empty content", filename, cfgName)
-	}
-
-	return &coreV1.ConfigMap{
-		ObjectMeta: metaV1.ObjectMeta{
-			Name: cfgName,
-		},
-		BinaryData: map[string][]byte{
-			filename: content,
-		},
-	}, nil
 }
 
 // determineLoadTestStatusFromJobs reads existing job statuses and determines what the loadtest status should be

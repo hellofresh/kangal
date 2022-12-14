@@ -5,7 +5,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap/zaptest"
-	coreV1 "k8s.io/api/core/v1"
 
 	"github.com/hellofresh/kangal/pkg/backends"
 	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
@@ -135,13 +134,13 @@ func TestPodResourceConfiguration(t *testing.T) {
 		},
 	}
 
-	masterJob := c.NewJMeterMasterJob(lt, "http://kangal-proxy.local/load-test/loadtest-name/report", map[string]string{"": ""})
+	masterJob := c.NewJMeterMasterJob(lt, "load-test-script", "http://kangal-proxy.local/load-test/loadtest-name/report", map[string]string{"": ""})
 	assert.Equal(t, c.masterResources.CPULimits, masterJob.Spec.Template.Spec.Containers[0].Resources.Limits.Cpu().String())
 	assert.Equal(t, c.masterResources.CPURequests, masterJob.Spec.Template.Spec.Containers[0].Resources.Requests.Cpu().String())
 	assert.Equal(t, c.masterResources.MemoryLimits, masterJob.Spec.Template.Spec.Containers[0].Resources.Limits.Memory().String())
 	assert.Equal(t, c.masterResources.MemoryRequests, masterJob.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().String())
 
-	workerPod := c.NewPod(lt, 0, &coreV1.ConfigMap{}, map[string]string{"": ""})
+	workerPod := c.NewPod(lt, 0, "load-test-cm", map[string]string{"": ""})
 	assert.Equal(t, c.workerResources.CPULimits, workerPod.Spec.Containers[0].Resources.Limits.Cpu().String())
 	assert.Equal(t, c.workerResources.CPURequests, workerPod.Spec.Containers[0].Resources.Requests.Cpu().String())
 	assert.Equal(t, c.workerResources.MemoryLimits, workerPod.Spec.Containers[0].Resources.Limits.Memory().String())

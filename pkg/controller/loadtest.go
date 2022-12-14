@@ -2,7 +2,11 @@ package controller
 
 import (
 	"context"
+	"encoding/csv"
+	errs "errors"
 	"fmt"
+	"io"
+	"strings"
 	"time"
 
 	"go.opentelemetry.io/otel/attribute"
@@ -39,6 +43,10 @@ const (
 	controllerAgentName = "kangal"
 	falseString         = "false"
 	trueString          = "true"
+	// loadTestScriptConfigMap is the name of the config map that is used to hold testfile data
+	loadTestScriptConfigMap = backends.LoadTestLabel + "-testfile"
+	// loadTestDataConfigMap is the name of the config map that is used to hold auxiliary testdata
+	loadTestDataConfigMap = backends.LoadTestLabel + "-testdata"
 )
 
 // MetricsReporter used to interface with the metrics configurations
@@ -380,8 +388,14 @@ func (c *Controller) syncHandler(key string) error {
 		return err
 	}
 
+	// check or create configmaps
+	tfCfgMapName, tdCfgMapNames, err := c.checkOrCreateConfigMaps(ctx, backend, loadTest)
+	if err != nil {
+		return err
+	}
+
 	// sync backend resources
-	err = backend.Sync(ctx, *loadTest, reportURL)
+	err = backend.Sync(ctx, *loadTest, tfCfgMapName, tdCfgMapNames, reportURL)
 	if err != nil {
 		return err
 	}
@@ -520,6 +534,59 @@ func (c *Controller) checkOrCreateNamespace(ctx context.Context, loadtest *loadT
 	return nil
 }
 
+// checkOrCreateConfigMaps checks if the testfile and testdata configmaps have been created and if not creates them
+// and returns the name of the testfile configmap and a slice of names for the testdata configmaps containg the data
+// for each test worker
+func (c *Controller) checkOrCreateConfigMaps(ctx context.Context, backend backends.Backend, loadtest *loadTestV1.LoadTest) (string, []string, error) {
+	var (
+		tdCfgMaps  []*coreV1.ConfigMap
+		configMaps = make([]*coreV1.ConfigMap, 1)
+	)
+
+	// Create testfile ConfigMap
+	tfCfgMap, err := NewFileConfigMap(loadTestScriptConfigMap, backends.LoadTestScript, loadtest.Spec.TestFile)
+
+	if err != nil {
+		c.logger.Error("Error creating testfile configmap resource", zap.Error(err))
+		return "", []string{}, err
+	}
+	configMaps[0] = tfCfgMap
+	tfCfgMapName := tfCfgMap.Name
+
+	// Prepare testdata ConfigMaps
+	if len(loadtest.Spec.TestData) > 0 {
+		numCfgMaps := 1
+		if backend.UsesCSVTestData() {
+			numCfgMaps = int(*loadtest.Spec.DistributedPods)
+		}
+		tdCfgMaps, err = NewTestdataConfigMaps(loadTestDataConfigMap, backends.LoadTestData, numCfgMaps, loadtest.Spec.TestData, c.logger)
+		if err != nil {
+			c.logger.Error("Error creating testdata configmap resource", zap.Error(err))
+			return "", []string{}, err
+		}
+		configMaps = append(configMaps, tdCfgMaps...)
+	}
+
+	// Create testfile and testdata configmaps
+	tdCfgMapNames := make([]string, len(configMaps)-1)
+	for i, cfg := range configMaps {
+		_, err = c.kubeClientSet.
+			CoreV1().
+			ConfigMaps(loadtest.Status.Namespace).
+			Create(ctx, cfg, metaV1.CreateOptions{})
+		if err != nil && !errors.IsAlreadyExists(err) {
+			c.logger.Error("Error creating configmap", zap.String("configmap", cfg.GetName()), zap.Error(err))
+			return "", []string{}, err
+		}
+		c.logger.Info("Created new configmap", zap.String("configmap", cfg.Name), zap.String("namespace", loadtest.Status.Namespace), zap.String("loadtest", loadtest.GetName()))
+		if i > 0 {
+			tdCfgMapNames[i-1] = cfg.Name
+		}
+	}
+
+	return tfCfgMapName, tdCfgMapNames, nil
+}
+
 // newNamespace creates a new namespaces object with a random name
 func newNamespace(loadtest *loadTestV1.LoadTest, namespaceAnnotations map[string]string) (*coreV1.Namespace, error) {
 	labels := map[string]string{
@@ -569,4 +636,155 @@ func (c *Controller) deleteLoadTest(ctx context.Context, key string, loadTest *l
 		utilRuntime.HandleError(fmt.Errorf("there is a conflict with loadtest %q between datastore and cache. It might be because object has been removed or modified in the datastore", key))
 	}
 	c.logger.Error("Failed to delete loadtest:", zap.Error(err))
+}
+
+// NewFileConfigMap creates a configmap for the provided file information
+func NewFileConfigMap(cfgName, filename string, content []byte) (*coreV1.ConfigMap, error) {
+	if strings.TrimSpace(cfgName) == "" {
+		return nil, errs.New("empty config name")
+	}
+
+	if strings.TrimSpace(filename) == "" {
+		return nil, fmt.Errorf("empty filename for configmap %s", cfgName)
+	}
+
+	if len(content) == 0 {
+		return nil, fmt.Errorf("invalid file %s for configmap %s, empty content", filename, cfgName)
+	}
+
+	return &coreV1.ConfigMap{
+		ObjectMeta: metaV1.ObjectMeta{
+			Name: cfgName,
+		},
+		BinaryData: map[string][]byte{
+			filename: content,
+		},
+	}, nil
+}
+
+// NewTestdataConfigMaps splits the CSV content for n distributed pods and creates a configmap for each one
+func NewTestdataConfigMaps(cfgName, filename string, n int, content []byte, logger *zap.Logger) ([]*coreV1.ConfigMap, error) {
+	// TODO: split test data
+	if strings.TrimSpace(cfgName) == "" {
+		return nil, errs.New("empty config name")
+	}
+
+	if strings.TrimSpace(filename) == "" {
+		return nil, fmt.Errorf("empty filename for configmap %s", cfgName)
+	}
+
+	if n == 1 {
+		cMaps := make([]*coreV1.ConfigMap, 1)
+		cMaps[0] = &coreV1.ConfigMap{
+			ObjectMeta: metaV1.ObjectMeta{
+				Name: fmt.Sprintf("%s-000", filename),
+			},
+			BinaryData: map[string][]byte{
+				backends.LoadTestData: content,
+			},
+		}
+		return cMaps, nil
+	}
+
+	if strings.TrimSpace(string(content)) == "" {
+		return nil, fmt.Errorf("invalid file %s for configmap %s, empty content", filename, cfgName)
+	}
+
+	cMaps := make([]*coreV1.ConfigMap, n)
+
+	chunks, err := splitTestData(string(content), n, logger)
+	if err != nil {
+		return nil, err
+	}
+
+	stringWriter := new(strings.Builder)
+
+	for i := 0; i < n; i++ {
+		csvWriter := csv.NewWriter(stringWriter)
+		if err := csvWriter.WriteAll(chunks[i]); err != nil {
+			return nil, err
+		}
+
+		data := map[string][]byte{
+			backends.LoadTestData: []byte(stringWriter.String()),
+		}
+
+		stringWriter.Reset()
+
+		cmName := fmt.Sprintf("%s-%03d", filename, i)
+
+		cMaps[i] = &coreV1.ConfigMap{
+			ObjectMeta: metaV1.ObjectMeta{
+				Name: cmName,
+			},
+			BinaryData: data,
+		}
+	}
+
+	return cMaps, nil
+}
+
+// splitTestData splits provided csv test data and returns the array of file chunks
+func splitTestData(testdata string, n int, logger *zap.Logger) ([][][]string, error) {
+	reader := csv.NewReader(strings.NewReader(testdata))
+
+	count := 0
+	for {
+		_, err := reader.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		count++
+	}
+
+	linesInChunk := count / n
+
+	chunk := 0
+	chunks := make([][][]string, n)
+	reader = csv.NewReader(strings.NewReader(testdata))
+	for line := 0; chunk < n; line++ {
+		rec, err := reader.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		if line >= linesInChunk {
+			chunk++
+			line = 0
+		}
+
+		if chunk >= n {
+			break
+		}
+
+		chunks[chunk] = append(chunks[chunk], rec)
+	}
+	return chunks, nil
+}
+
+func segmentArgs(index, total int32) []string {
+	args := make([]string, 0)
+	args = append(args, "--execution-segment")
+	var segment strings.Builder
+	switch {
+	case index == 0:
+		segment.WriteString("0")
+	default:
+		segment.WriteString(fmt.Sprintf("%d/%d", index, total))
+	}
+	segment.WriteString(":")
+	index++
+	switch {
+	case index == total:
+		segment.WriteString("1")
+	default:
+		segment.WriteString(fmt.Sprintf("%d/%d", index, total))
+	}
+	return append(args, segment.String())
 }

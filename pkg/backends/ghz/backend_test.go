@@ -45,16 +45,12 @@ func TestSync(t *testing.T) {
 		kubeClientSet: kubeClient,
 	}
 
-	err := b.Sync(ctx, loadTest, reportURL)
+	err := b.Sync(ctx, loadTest, reportURL, []string{}, "")
 	require.NoError(t, err, "Error when CheckOrCreateResources")
 
 	jobs, err := kubeClient.BatchV1().Jobs(namespace).List(ctx, metaV1.ListOptions{})
 	require.NoError(t, err, "Error when listing jobs")
 	assert.NotEmpty(t, jobs.Items, "Expected job to be created but there's none")
-
-	configMaps, err := kubeClient.CoreV1().ConfigMaps(namespace).List(ctx, metaV1.ListOptions{})
-	require.NoError(t, err, "Error when listing configmaps")
-	assert.NotEmpty(t, configMaps.Items, "Expected configmap to be created but there's none")
 }
 
 func TestSyncStatus(t *testing.T) {
@@ -89,7 +85,7 @@ func TestSyncStatus(t *testing.T) {
 	}
 
 	// First sync should update status to creating
-	err := b.Sync(ctx, loadTest, reportURL)
+	err := b.Sync(ctx, loadTest, reportURL, []string{}, "")
 	require.NoError(t, err, "Sync error")
 
 	err = b.SyncStatus(ctx, loadTest, &loadTest.Status)

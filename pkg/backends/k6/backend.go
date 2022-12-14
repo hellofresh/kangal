@@ -50,6 +50,10 @@ func (*Backend) Type() loadTestV1.LoadTestType {
 	return loadTestV1.LoadTestTypeK6
 }
 
+func (*Backend) UsesCSVTestData() bool {
+	return false
+}
+
 // GetEnvConfig must return config struct pointer
 func (b *Backend) GetEnvConfig() interface{} {
 	b.config = &Config{}
@@ -123,7 +127,7 @@ func (b *Backend) TransformLoadTestSpec(spec *loadTestV1.LoadTestSpec) error {
 }
 
 // Sync checks if k6 kubernetes resources have been created, create them if they haven't
-func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, reportURL string) error {
+func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, testfileConfigMapName string, testdataConfigMapNames []string, reportURL string) error {
 	jobs, err := b.kubeClientSet.
 		BatchV1().
 		Jobs(loadTest.Status.Namespace).
@@ -138,42 +142,6 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, report
 	// Jobs already created, do nothing
 	if len(jobs.Items) > 0 {
 		return nil
-	}
-
-	var (
-		tdCfgMaps []*coreV1.ConfigMap
-		// TODO: tamanho deve variar com numero de distributed pods
-		configMaps = make([]*coreV1.ConfigMap, 1)
-	)
-
-	// Create testfile ConfigMap
-	tfCfgMap, err := NewFileConfigMap(loadTestFileConfigMapName, scriptTestFileName, loadTest.Spec.TestFile)
-	if err != nil {
-		b.logger.Error("Error creating testfile configmap resource", zap.Error(err))
-		return err
-	}
-	configMaps[0] = tfCfgMap
-
-	// Prepare testdata ConfigMap
-	if len(loadTest.Spec.TestData) != 0 {
-		tdCfgMaps, err = NewTestdataConfigMaps(loadTestDataConfigMapName, testdataFileName, int(*loadTest.Spec.DistributedPods), string(loadTest.Spec.TestData))
-		if err != nil {
-			b.logger.Error("Error creating testdata configmap resource", zap.Error(err))
-			return err
-		}
-		configMaps = append(configMaps, tdCfgMaps...)
-	}
-
-	// Create testfile and testdata configmaps
-	for _, cfg := range configMaps {
-		_, err = b.kubeClientSet.
-			CoreV1().
-			ConfigMaps(loadTest.Status.Namespace).
-			Create(ctx, cfg, metaV1.CreateOptions{})
-		if err != nil && !k8sAPIErrors.IsAlreadyExists(err) {
-			b.logger.Error("Error creating configmap", zap.String("configmap", cfg.GetName()), zap.Error(err))
-			return err
-		}
 	}
 
 	var secret *coreV1.Secret
@@ -196,10 +164,10 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, report
 			mounts  = make([]coreV1.VolumeMount, 1)
 		)
 
-		volumes[0], mounts[0] = NewFileVolumeAndMount(loadTestFileVolumeName, tfCfgMap.Name, scriptTestFileName)
+		volumes[0], mounts[0] = NewFileVolumeAndMount(loadTestFileVolumeName, testfileConfigMapName, backends.LoadTestScript, scriptTestFileName)
 
-		if int32(len(tdCfgMaps)) > i {
-			v, m := NewFileVolumeAndMount(loadTestDataVolumeName, tdCfgMaps[i].Name, testdataFileName)
+		if len(testdataConfigMapNames) > 0 {
+			v, m := NewFileVolumeAndMount(loadTestDataVolumeName, testdataConfigMapNames[i%int32(len(testdataConfigMapNames))], backends.LoadTestData, testdataFileName)
 			volumes = append(volumes, v)
 			mounts = append(mounts, m)
 		}

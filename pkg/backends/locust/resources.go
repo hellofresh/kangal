@@ -67,7 +67,7 @@ func newMasterJobName(loadTest loadTestV1.LoadTest) string {
 
 func newMasterJob(
 	loadTest loadTestV1.LoadTest,
-	testfileConfigMap *coreV1.ConfigMap,
+	testfileConfigMapName string,
 	envvarSecret *coreV1.Secret,
 	reportURL string,
 	masterResources backends.Resources,
@@ -152,7 +152,7 @@ func newMasterJob(
 								{
 									Name:      "testfile",
 									MountPath: "/data/locustfile.py",
-									SubPath:   "locustfile.py",
+									SubPath:   backends.LoadTestScript,
 								},
 							},
 							Resources: backends.BuildResourceRequirements(masterResources),
@@ -165,7 +165,7 @@ func newMasterJob(
 							VolumeSource: coreV1.VolumeSource{
 								ConfigMap: &coreV1.ConfigMapVolumeSource{
 									LocalObjectReference: coreV1.LocalObjectReference{
-										Name: testfileConfigMap.GetName(),
+										Name: testfileConfigMapName,
 									},
 								},
 							},
@@ -213,7 +213,7 @@ func newWorkerJobName(loadTest loadTestV1.LoadTest) string {
 
 func newWorkerJob(
 	loadTest loadTestV1.LoadTest,
-	testfileConfigMap *coreV1.ConfigMap,
+	testfileConfigMapName string,
 	envvarSecret *coreV1.Secret,
 	masterService *coreV1.Service,
 	workerResources backends.Resources,
@@ -288,7 +288,7 @@ func newWorkerJob(
 								{
 									Name:      "testfile",
 									MountPath: "/data/locustfile.py",
-									SubPath:   "locustfile.py",
+									SubPath:   backends.LoadTestScript,
 								},
 							},
 							Resources: backends.BuildResourceRequirements(workerResources),
@@ -301,7 +301,7 @@ func newWorkerJob(
 							VolumeSource: coreV1.VolumeSource{
 								ConfigMap: &coreV1.ConfigMapVolumeSource{
 									LocalObjectReference: coreV1.LocalObjectReference{
-										Name: testfileConfigMap.GetName(),
+										Name: testfileConfigMapName,
 									},
 								},
 							},
