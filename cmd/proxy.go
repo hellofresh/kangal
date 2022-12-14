@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 
+	"go.opentelemetry.io/otel/metric/global"
+
 	"go.opentelemetry.io/otel/exporters/prometheus"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
@@ -69,8 +71,11 @@ func NewProxyCmd() *cobra.Command {
 
 			loadTestClient := kangalClientSet.LoadTests()
 			kubeClient := kubernetes.NewClient(loadTestClient, kubeClientSet, logger)
+
 			provider := metric.NewMeterProvider(metric.WithReader(pe), metric.WithResource(
 				resource.NewSchemaless(semconv.ServiceNameKey.String("kangal-proxy"))))
+
+			global.SetMeterProvider(provider)
 
 			statsReporter, err := proxy.NewMetricsReporter(provider.Meter("proxy"), kubeClient)
 			if err != nil {

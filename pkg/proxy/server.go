@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"net/http"
 
+	"go.opentelemetry.io/otel/metric/global"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"go.opencensus.io/plugin/ochttp"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.uber.org/zap"
 
 	"github.com/hellofresh/kangal/pkg/backends"
@@ -57,22 +59,22 @@ func RunServer(cfg Config, rr Runner) error {
 
 	r.Method(http.MethodGet,
 		loadtestRoute,
-		ochttp.WithRouteTag(http.HandlerFunc(proxyHandler.List), loadtestRoute),
+		otelhttp.NewHandler(http.HandlerFunc(proxyHandler.List), loadtestRoute),
 	)
 
 	r.Method(http.MethodPost,
 		loadtestRoute,
-		ochttp.WithRouteTag(http.HandlerFunc(proxyHandler.Create), loadtestRoute),
+		otelhttp.NewHandler(http.HandlerFunc(proxyHandler.Create), loadtestRoute),
 	)
 
 	r.Method(http.MethodGet,
 		loadtestRouteWithID,
-		ochttp.WithRouteTag(http.HandlerFunc(proxyHandler.Get), loadtestRouteWithID),
+		otelhttp.NewHandler(http.HandlerFunc(proxyHandler.Get), loadtestRouteWithID),
 	)
 
 	r.Method(http.MethodDelete,
 		loadtestRouteWithID,
-		ochttp.WithRouteTag(http.HandlerFunc(proxyHandler.Delete), loadtestRouteWithID),
+		otelhttp.NewHandler(http.HandlerFunc(proxyHandler.Delete), loadtestRouteWithID),
 	)
 
 	// ---------------------------------------------------------------------- //
@@ -98,7 +100,7 @@ func RunServer(cfg Config, rr Runner) error {
 	rr.Logger.Info("Running HTTP server...", zap.String("address", address))
 
 	// Try and run http server, fail on error
-	err := http.ListenAndServe(address, &ochttp.Handler{Handler: r})
+	err := http.ListenAndServe(address, otelhttp.NewHandler(r, "kangal", otelhttp.WithMeterProvider(global.MeterProvider()), otelhttp.WithMessageEvents(otelhttp.ReadEvents, otelhttp.WriteEvents)))
 	if err != nil {
 		return fmt.Errorf("failed to run HTTP server: %w", err)
 	}
