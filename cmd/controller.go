@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -66,8 +65,7 @@ func NewControllerCmd() *cobra.Command {
 
 			pe, err := prometheus.New()
 			if err != nil {
-				log.Fatal(err)
-				return nil
+				return fmt.Errorf("could not build prometheus exporter: %w", err)
 			}
 
 			kubeCfg, err := kubernetes.BuildClientConfig(cfg.MasterURL, cfg.KubeConfig, cfg.KubeClientTimeout)

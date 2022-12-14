@@ -3,7 +3,6 @@ package cmd
 import (
 	"flag"
 	"fmt"
-	"log"
 
 	"go.opentelemetry.io/otel/exporters/prometheus"
 	"go.opentelemetry.io/otel/sdk/metric"
@@ -50,8 +49,7 @@ func NewProxyCmd() *cobra.Command {
 
 			pe, err := prometheus.New()
 			if err != nil {
-				log.Fatal(err)
-				return nil
+				return fmt.Errorf("could not build prometheus exporter: %w", err)
 			}
 
 			k8sConfig, err := kubernetes.BuildClientConfig(opts.masterURL, opts.kubeConfig, cfg.KubeClientTimeout)
@@ -73,6 +71,7 @@ func NewProxyCmd() *cobra.Command {
 			kubeClient := kubernetes.NewClient(loadTestClient, kubeClientSet, logger)
 			provider := metric.NewMeterProvider(metric.WithReader(pe), metric.WithResource(
 				resource.NewSchemaless(semconv.ServiceNameKey.String("kangal-proxy"))))
+
 			statsReporter, err := proxy.NewMetricsReporter(provider.Meter("proxy"), kubeClient)
 			if err != nil {
 				return fmt.Errorf("error getting stats client:  %w", err)
