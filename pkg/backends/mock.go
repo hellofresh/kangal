@@ -41,7 +41,7 @@ func (m *MockBackend) EXPECT() *MockBackendMockRecorder {
 }
 
 // Sync mocks base method.
-func (m *MockBackend) Sync(ctx context.Context, loadTest v1.LoadTest, reportURL string) error {
+func (m *MockBackend) Sync(ctx context.Context, loadTest v1.LoadTest, reportURL string, _ []string, _ string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Sync", ctx, loadTest, reportURL)
 	ret0, _ := ret[0].(error)
@@ -52,6 +52,20 @@ func (m *MockBackend) Sync(ctx context.Context, loadTest v1.LoadTest, reportURL 
 func (mr *MockBackendMockRecorder) Sync(ctx, loadTest, reportURL interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Sync", reflect.TypeOf((*MockBackend)(nil).Sync), ctx, loadTest, reportURL)
+}
+
+// UsesCSVTestData mocks base method.
+func (m *MockBackend) UsesCSVTestData() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UsesCSVTestData")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// UsesCSVTestData indicates an expected call of UsesCSVTestData.
+func (mr *MockBackendMockRecorder) UsesCSVTestData() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UsesCSVTestData", reflect.TypeOf((*MockBackend)(nil).UsesCSVTestData))
 }
 
 // SyncStatus mocks base method.

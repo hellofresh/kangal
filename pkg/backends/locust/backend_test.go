@@ -61,16 +61,12 @@ func TestSync(t *testing.T) {
 		kubeClientSet: kubeClient,
 	}
 
-	err := b.Sync(ctx, loadTest, reportURL)
+	err := b.Sync(ctx, loadTest, reportURL, []string{}, "")
 	require.NoError(t, err, "Error when CheckOrCreateResources")
 
 	services, err := kubeClient.CoreV1().Services(namespace).List(ctx, metaV1.ListOptions{})
 	require.NoError(t, err, "Error when listing services")
 	assert.NotEmpty(t, services.Items, "Expected non-zero services amount after CheckOrCreateResources but found zero")
-
-	configMaps, err := kubeClient.CoreV1().ConfigMaps(namespace).List(ctx, metaV1.ListOptions{})
-	require.NoError(t, err, "Error when listing services")
-	assert.NotEmpty(t, configMaps.Items, "Expected non-zero configMaps amount after CheckOrCreateResources but found zero")
 }
 
 func TestSyncStatus(t *testing.T) {

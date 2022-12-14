@@ -42,7 +42,7 @@ func TestSync(t *testing.T) {
 			kubeClient: client,
 			logger:     zaptest.NewLogger(t),
 		}
-		assert.NoError(t, backend.Sync(context.TODO(), lt, ""))
+		assert.NoError(t, backend.Sync(context.TODO(), lt, "", []string{}, ""))
 	})
 
 	t.Run("job exists", func(t *testing.T) {
@@ -64,7 +64,7 @@ func TestSync(t *testing.T) {
 			kubeClient: client,
 			logger:     zaptest.NewLogger(t),
 		}
-		assert.NoError(t, backend.Sync(context.TODO(), lt, ""))
+		assert.NoError(t, backend.Sync(context.TODO(), lt, "", []string{}, ""))
 	})
 
 	t.Run("job doesn't exist, creating", func(t *testing.T) {
@@ -87,7 +87,7 @@ func TestSync(t *testing.T) {
 			kubeClient: client,
 			logger:     zaptest.NewLogger(t),
 		}
-		assert.NoError(t, backend.Sync(context.TODO(), lt, ""))
+		assert.NoError(t, backend.Sync(context.TODO(), lt, "", []string{}, ""))
 	})
 }
 

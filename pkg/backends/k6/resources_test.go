@@ -111,6 +111,7 @@ func TestNewFileVolumeAndMount(t *testing.T) {
 		name          string
 		cfg           string
 		filename      string
+		subpath       string
 		expectedVol   coreV1.Volume
 		expectedMount coreV1.VolumeMount
 	}{
@@ -119,6 +120,7 @@ func TestNewFileVolumeAndMount(t *testing.T) {
 			name:     "load-test-volume",
 			cfg:      "test-configmap",
 			filename: "testfile.json",
+			subpath:  "load-test-script",
 			expectedVol: coreV1.Volume{
 				Name: "load-test-volume",
 				VolumeSource: coreV1.VolumeSource{
@@ -132,12 +134,12 @@ func TestNewFileVolumeAndMount(t *testing.T) {
 			expectedMount: coreV1.VolumeMount{
 				Name:      "load-test-volume",
 				MountPath: "/data/testfile.json",
-				SubPath:   "testfile.json",
+				SubPath:   "load-test-script",
 			},
 		},
 	} {
 		t.Run(tt.tag, func(t *testing.T) {
-			v, m := NewFileVolumeAndMount(tt.name, tt.cfg, tt.filename)
+			v, m := NewFileVolumeAndMount(tt.name, tt.cfg, tt.subpath, tt.filename)
 			assert.Equal(t, tt.expectedVol, v)
 			assert.Equal(t, tt.expectedMount, m)
 		})

@@ -36,6 +36,10 @@ func (*Backend) Type() loadTestV1.LoadTestType {
 	return loadTestV1.LoadTestTypeFake
 }
 
+func (*Backend) UsesCSVTestData() bool {
+	return false
+}
+
 // SetDefaults must set default values
 func (b *Backend) SetDefaults() {
 	b.config = loadTestV1.ImageDetails{
@@ -66,7 +70,7 @@ func (b *Backend) SetKubeClientSet(kubeClientSet kubernetes.Interface) {
 }
 
 // Sync check if Fake kubernetes resources have been create, if they have not been create them
-func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, _ string) error {
+func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, _ string, _ []string, _ string) error {
 	// Get the Namespace resource
 	namespace, err := b.kubeClient.CoreV1().Namespaces().Get(ctx, loadTest.Status.Namespace, metaV1.GetOptions{})
 	// The LoadTest resource may no longer exist, in which case we stop

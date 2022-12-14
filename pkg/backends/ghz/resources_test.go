@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	batchV1 "k8s.io/api/batch/v1"
 	coreV1 "k8s.io/api/core/v1"
-	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestGetLoadTestStatusFromJobs(t *testing.T) {
@@ -43,74 +42,13 @@ func TestGetLoadTestStatusFromJobs(t *testing.T) {
 	}
 }
 
-func TestNewFileConfigMap(t *testing.T) {
-	for _, ti := range []struct {
-		tag         string
-		cfgName     string
-		filename    string
-		content     []byte
-		expected    *coreV1.ConfigMap
-		expectError bool
-	}{
-		{
-			tag:         "no configmap name",
-			cfgName:     "",
-			filename:    "file",
-			content:     []byte("file content"),
-			expected:    nil,
-			expectError: true,
-		},
-		{
-			tag:         "no filename",
-			cfgName:     "test",
-			filename:    "",
-			content:     []byte("file content"),
-			expected:    nil,
-			expectError: true,
-		},
-		{
-			tag:         "no content",
-			cfgName:     "test",
-			filename:    "file",
-			content:     []byte{},
-			expected:    nil,
-			expectError: true,
-		},
-		{
-			tag:      "valid args",
-			cfgName:  "test",
-			filename: "file",
-			content:  []byte("file content"),
-			expected: &coreV1.ConfigMap{
-				ObjectMeta: metaV1.ObjectMeta{
-					Name: "test",
-				},
-				BinaryData: map[string][]byte{
-					"file": []byte("file content"),
-				},
-			},
-			expectError: false,
-		},
-	} {
-		t.Run(ti.tag, func(t *testing.T) {
-			cfgmap, err := NewFileConfigMap(ti.cfgName, ti.filename, ti.content)
-
-			assert.Equal(t, ti.expected, cfgmap)
-			if ti.expectError {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
-			}
-		})
-	}
-}
-
 func TestNewFileVolumeAndMount(t *testing.T) {
 	for _, tt := range []struct {
 		tag           string
 		name          string
 		cfg           string
 		filename      string
+		subpath       string
 		expectedVol   coreV1.Volume
 		expectedMount coreV1.VolumeMount
 	}{
@@ -119,6 +57,7 @@ func TestNewFileVolumeAndMount(t *testing.T) {
 			name:     "load-test-volume",
 			cfg:      "test-configmap",
 			filename: "testfile.json",
+			subpath:  "load-test-file",
 			expectedVol: coreV1.Volume{
 				Name: "load-test-volume",
 				VolumeSource: coreV1.VolumeSource{
@@ -132,12 +71,12 @@ func TestNewFileVolumeAndMount(t *testing.T) {
 			expectedMount: coreV1.VolumeMount{
 				Name:      "load-test-volume",
 				MountPath: "/data/testfile.json",
-				SubPath:   "testfile.json",
+				SubPath:   "load-test-file",
 			},
 		},
 	} {
 		t.Run(tt.tag, func(t *testing.T) {
-			v, m := NewFileVolumeAndMount(tt.name, tt.cfg, tt.filename)
+			v, m := NewFileVolumeAndMount(tt.name, tt.cfg, tt.filename, tt.subpath)
 			assert.Equal(t, tt.expectedVol, v)
 			assert.Equal(t, tt.expectedMount, m)
 		})

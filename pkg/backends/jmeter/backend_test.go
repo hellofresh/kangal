@@ -164,7 +164,7 @@ func TestSync(t *testing.T) {
 		},
 	}
 
-	err := b.Sync(ctx, loadTest, reportURL)
+	err := b.Sync(ctx, loadTest, reportURL, []string{}, "")
 	require.NoError(t, err, "Error when syncing")
 
 	services, err := kubeClient.CoreV1().Services(namespace).List(ctx, metaV1.ListOptions{})

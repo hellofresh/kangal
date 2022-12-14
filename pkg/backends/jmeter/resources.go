@@ -1,10 +1,7 @@
 package jmeter
 
 import (
-	"bytes"
-	"compress/gzip"
 	"context"
-	"encoding/base64"
 	"encoding/csv"
 	"fmt"
 	"io"
@@ -62,25 +59,6 @@ var (
 	}
 )
 
-// NewConfigMap creates a new configMap containing loadtest script
-func (b *Backend) NewConfigMap(loadTest loadTestV1.LoadTest) *coreV1.ConfigMap {
-	testfile := loadTest.Spec.TestFile
-
-	data := map[string]string{
-		"testfile.jmx": string(testfile),
-	}
-
-	return &coreV1.ConfigMap{
-		ObjectMeta: metaV1.ObjectMeta{
-			Name: loadTestFile,
-			Labels: map[string]string{
-				"app": "hf-jmeter",
-			},
-		},
-		Data: data,
-	}
-}
-
 // NewSecret creates a secret from file envVars
 func (b *Backend) NewSecret(loadTest loadTestV1.LoadTest) (*coreV1.Secret, error) {
 	secretMap := loadTest.Spec.EnvVars
@@ -92,73 +70,6 @@ func (b *Backend) NewSecret(loadTest loadTestV1.LoadTest) (*coreV1.Secret, error
 		},
 		StringData: secretMap,
 	}, nil
-}
-
-// NewTestdataConfigMap creates a new configMap containing testdata
-func (b *Backend) NewTestdataConfigMap(loadTest loadTestV1.LoadTest) ([]*coreV1.ConfigMap, error) {
-	logger := b.logger.With(
-		zap.String("loadtest", loadTest.GetName()),
-		zap.String("namespace", loadTest.Status.Namespace),
-	)
-
-	testdata := loadTest.Spec.TestData
-	if len(testdata) > 0 {
-		testdataDecoded, _ := base64.RawStdEncoding.DecodeString(string(loadTest.Spec.TestData))
-		gz, err := gzip.NewReader(bytes.NewReader(testdataDecoded))
-		if err != nil && err != io.EOF {
-			logger.Error("Error on gzip reader", zap.Error(err))
-			return nil, err
-		}
-		defer gz.Close()
-
-		result, err := io.ReadAll(gz)
-		if err != nil && err != io.EOF {
-			logger.Error("Error on ioutil reader", zap.Error(err))
-			return nil, err
-		}
-		testdata = result
-	}
-
-	n := int(*loadTest.Spec.DistributedPods)
-
-	cMaps := make([]*coreV1.ConfigMap, n)
-
-	chunks, err := splitTestData(string(testdata), n, logger)
-	if err != nil {
-		logger.Error("Error on splitting csv test data", zap.Error(err))
-		return nil, err
-	}
-
-	var buf bytes.Buffer
-	gzipWriter := gzip.NewWriter(&buf)
-
-	for i := 0; i < n; i++ {
-		csvWriter := csv.NewWriter(gzipWriter)
-		if err := csvWriter.WriteAll(chunks[i]); err != nil {
-			logger.Error("Error on writing csv test data to chunks", zap.Error(err))
-			return nil, err
-		}
-		gzipWriter.Close()
-
-		data := map[string]string{
-			"testdata.csv.gz": base64.RawStdEncoding.EncodeToString(buf.Bytes()),
-		}
-
-		buf.Reset()
-		buf = *new(bytes.Buffer)
-		gzipWriter.Reset(&buf)
-
-		cmName := fmt.Sprintf("%s-%03d", loadTestFile, i)
-
-		cMaps[i] = &coreV1.ConfigMap{
-			ObjectMeta: metaV1.ObjectMeta{
-				Name: cmName,
-			},
-			Data: data,
-		}
-	}
-
-	return cMaps, nil
 }
 
 // NewPVC creates a new pvc for customdata
@@ -187,7 +98,7 @@ func (b *Backend) NewPVC(loadTest loadTestV1.LoadTest, i int) *coreV1.Persistent
 }
 
 // NewPod creates a new pod which mounts a configmap that contains jmeter testdata
-func (b *Backend) NewPod(loadTest loadTestV1.LoadTest, i int, configMap *coreV1.ConfigMap, podAnnotations map[string]string) *coreV1.Pod {
+func (b *Backend) NewPod(loadTest loadTestV1.LoadTest, i int, configMapName string, podAnnotations map[string]string) *coreV1.Pod {
 	logger := b.logger.With(
 		zap.String("loadtest", loadTest.GetName()),
 		zap.String("namespace", loadTest.Status.Namespace),
@@ -199,6 +110,33 @@ func (b *Backend) NewPod(loadTest loadTestV1.LoadTest, i int, configMap *coreV1.
 	if loadTest.Spec.WorkerConfig.Image == "" || loadTest.Spec.WorkerConfig.Tag == "" {
 		imageRef = fmt.Sprintf("%s:%s", b.workerConfig.Image, b.workerConfig.Tag)
 		logger.Debug("Loadtest.Spec.WorkerConfig is empty; using worker image from config", zap.String("imageRef", imageRef))
+	}
+
+	volumeMounts := []coreV1.VolumeMount{}
+	volumes := []coreV1.Volume{}
+	if configMapName != "" {
+		volumeMounts = []coreV1.VolumeMount{
+			{
+				Name:      "testdata",
+				MountPath: "/testdata/testdata.csv",
+				SubPath:   backends.LoadTestData,
+			},
+		}
+
+		volumes = []coreV1.Volume{
+			{
+				Name: "testdata",
+				VolumeSource: coreV1.VolumeSource{
+					ConfigMap: &coreV1.ConfigMapVolumeSource{
+						LocalObjectReference: coreV1.LocalObjectReference{
+							Name: configMapName,
+						},
+						Optional: &optionalVolume,
+					},
+				},
+			},
+		}
+
 	}
 
 	pod := &coreV1.Pod{
@@ -228,24 +166,6 @@ func (b *Backend) NewPod(loadTest loadTestV1.LoadTest, i int, configMap *coreV1.
 					},
 				},
 			},
-			InitContainers: []coreV1.Container{
-				{
-					Name:    "convert-data-back-to-csv",
-					Image:   "alpine:latest",
-					Command: []string{"/bin/sh"},
-					Args:    []string{"-c", "(ls /testdatatmp/testdata.csv.gz >/dev/null 2>&1 && cat /testdatatmp/testdata.csv.gz |base64 -d|zcat > /testdata/testdata.csv) || echo \"no testdata.csv.gz file\""},
-					VolumeMounts: []coreV1.VolumeMount{
-						{
-							Name:      "testdatatmp",
-							MountPath: "/testdatatmp",
-						},
-						{
-							Name:      "testdata",
-							MountPath: "/testdata",
-						},
-					},
-				},
-			},
 			Containers: []coreV1.Container{
 				{
 					Name:            loadTestWorkerName,
@@ -255,13 +175,8 @@ func (b *Backend) NewPod(loadTest loadTestV1.LoadTest, i int, configMap *coreV1.
 						{ContainerPort: 1099},
 						{ContainerPort: 50000},
 					},
-					VolumeMounts: []coreV1.VolumeMount{
-						{
-							Name:      "testdata",
-							MountPath: "/testdata",
-						},
-					},
-					Resources: backends.BuildResourceRequirements(b.workerResources),
+					VolumeMounts: volumeMounts,
+					Resources:    backends.BuildResourceRequirements(b.workerResources),
 					EnvFrom: []coreV1.EnvFromSource{
 						{
 							SecretRef: &coreV1.SecretEnvSource{
@@ -273,25 +188,7 @@ func (b *Backend) NewPod(loadTest loadTestV1.LoadTest, i int, configMap *coreV1.
 					},
 				},
 			},
-			Volumes: []coreV1.Volume{
-				{
-					Name: "testdatatmp",
-					VolumeSource: coreV1.VolumeSource{
-						ConfigMap: &coreV1.ConfigMapVolumeSource{
-							LocalObjectReference: coreV1.LocalObjectReference{
-								Name: configMap.Name,
-							},
-							Optional: &optionalVolume,
-						},
-					},
-				},
-				{
-					Name: "testdata",
-					VolumeSource: coreV1.VolumeSource{
-						EmptyDir: &coreV1.EmptyDirVolumeSource{},
-					},
-				},
-			},
+			Volumes: volumes,
 		},
 	}
 
@@ -348,7 +245,7 @@ func (b *Backend) NewPod(loadTest loadTestV1.LoadTest, i int, configMap *coreV1.
 }
 
 // NewJMeterMasterJob creates a new job which runs the jmeter master pod
-func (b *Backend) NewJMeterMasterJob(loadTest loadTestV1.LoadTest, reportURL string, podAnnotations map[string]string) *batchV1.Job {
+func (b *Backend) NewJMeterMasterJob(loadTest loadTestV1.LoadTest, testfileConfigMapName string, reportURL string, podAnnotations map[string]string) *batchV1.Job {
 	logger := b.logger.With(
 		zap.String("loadtest", loadTest.GetName()),
 		zap.String("namespace", loadTest.Status.Namespace),
@@ -414,7 +311,8 @@ func (b *Backend) NewJMeterMasterJob(loadTest loadTestV1.LoadTest, reportURL str
 							VolumeMounts: []coreV1.VolumeMount{
 								{
 									Name:      "tests",
-									MountPath: "/tests",
+									MountPath: "/tests/testfile.jmx",
+									SubPath:   backends.LoadTestScript,
 								},
 							},
 							Resources: backends.BuildResourceRequirements(b.masterResources),
@@ -426,7 +324,7 @@ func (b *Backend) NewJMeterMasterJob(loadTest loadTestV1.LoadTest, reportURL str
 							VolumeSource: coreV1.VolumeSource{
 								ConfigMap: &coreV1.ConfigMapVolumeSource{
 									LocalObjectReference: coreV1.LocalObjectReference{
-										Name: loadTestFile,
+										Name: testfileConfigMapName,
 									},
 								},
 							},
@@ -471,31 +369,17 @@ func (b *Backend) NewJMeterService() *coreV1.Service {
 }
 
 // CreatePodsWithTestdata creates workers Pods
-func (b *Backend) CreatePodsWithTestdata(ctx context.Context, configMaps []*coreV1.ConfigMap, loadTest *loadTestV1.LoadTest, namespace string) error {
+func (b *Backend) CreatePodsWithTestdata(ctx context.Context, configMapNames []string, loadTest *loadTestV1.LoadTest, namespace string) error {
 	logger := b.logger.With(
 		zap.String("loadtest", loadTest.GetName()),
 		zap.String("namespace", loadTest.Status.Namespace),
 	)
-	for i, cm := range configMaps {
-		configMap, err := b.kubeClientSet.CoreV1().ConfigMaps(namespace).Create(ctx, cm, metaV1.CreateOptions{})
-		if err != nil && !kerrors.IsAlreadyExists(err) {
-			logger.Error("Error on creating testdata configMaps", zap.Error(err))
-			return err
-		}
-
-		if kerrors.IsAlreadyExists(err) {
-			configMap, err = b.kubeClientSet.CoreV1().ConfigMaps(namespace).Get(ctx, cm.Name, metaV1.GetOptions{})
-			if nil != err {
-				logger.Error("unable to reload ConfigMap", zap.Error(err))
-				return err
-			}
-		}
-
+	for i := 0; i < int(*loadTest.Spec.DistributedPods); i = i + 1 {
 		if _, ok := loadTest.Spec.EnvVars["JMETER_WORKER_REMOTE_CUSTOM_DATA_ENABLED"]; ok {
 			logger.Info("Remote custom data enabled, creating PVC")
 
 			pvc := b.NewPVC(*loadTest, i)
-			_, err = b.kubeClientSet.CoreV1().PersistentVolumeClaims(namespace).Create(ctx, pvc, metaV1.CreateOptions{})
+			_, err := b.kubeClientSet.CoreV1().PersistentVolumeClaims(namespace).Create(ctx, pvc, metaV1.CreateOptions{})
 			if err != nil && !kerrors.IsAlreadyExists(err) {
 				logger.Error("Error on creating pvc", zap.Error(err))
 				return err
@@ -511,8 +395,12 @@ func (b *Backend) CreatePodsWithTestdata(ctx context.Context, configMaps []*core
 			waitfor.Resource(watchObjPvc, (waitfor.Condition{}).PvcReady, b.config.WaitForResourceTimeout)
 		}
 
-		pod := b.NewPod(*loadTest, i, configMap, b.podAnnotations)
-		_, err = b.kubeClientSet.CoreV1().Pods(namespace).Create(ctx, pod, metaV1.CreateOptions{})
+		cmName := ""
+		if i < len(configMapNames) {
+			cmName = configMapNames[i]
+		}
+		pod := b.NewPod(*loadTest, i, cmName, b.podAnnotations)
+		_, err := b.kubeClientSet.CoreV1().Pods(namespace).Create(ctx, pod, metaV1.CreateOptions{})
 		if err != nil && !kerrors.IsAlreadyExists(err) {
 			logger.Error("Error on creating distributed pods", zap.Error(err))
 			return err

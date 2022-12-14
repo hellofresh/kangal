@@ -17,11 +17,15 @@ type Backend interface {
 	// Type must return backend unique type string, called by both Proxy and Controller
 	Type() loadTestV1.LoadTestType
 
+	// UsesCSVTestData must signal whether the testdata files can be assumed to be CSV
+	// This is used to determine if testdata should be split between workers
+	UsesCSVTestData() bool
+
 	// TransformLoadTestSpec should validate and transform LoadTestSpec, called by Proxy
 	TransformLoadTestSpec(spec *loadTestV1.LoadTestSpec) error
 
 	// Sync should create resources if not exists, called by Controller
-	Sync(ctx context.Context, loadTest loadTestV1.LoadTest, reportURL string) error
+	Sync(ctx context.Context, loadTest loadTestV1.LoadTest, testfileConfigMapName string, testdataConfigMapNames []string, reportURL string) error
 	// Sync should update status with current resource state, called by Controller
 	SyncStatus(ctx context.Context, loadTest loadTestV1.LoadTest, loadTestStatus *loadTestV1.LoadTestStatus) error
 }

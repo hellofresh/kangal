@@ -150,7 +150,7 @@ func (b *Backend) NewJob(
 }
 
 // NewFileVolumeAndMount creates a new volume and volume mount for a configmap file
-func NewFileVolumeAndMount(name, cfg, filename string) (coreV1.Volume, coreV1.VolumeMount) {
+func NewFileVolumeAndMount(name, cfg, subpath, filename string) (coreV1.Volume, coreV1.VolumeMount) {
 	v := coreV1.Volume{
 		Name: name,
 		VolumeSource: coreV1.VolumeSource{
@@ -165,7 +165,7 @@ func NewFileVolumeAndMount(name, cfg, filename string) (coreV1.Volume, coreV1.Vo
 	m := coreV1.VolumeMount{
 		Name:      name,
 		MountPath: fmt.Sprintf("/data/%s", filename),
-		SubPath:   filename,
+		SubPath:   subpath,
 	}
 
 	return v, m

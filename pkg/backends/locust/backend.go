@@ -51,6 +51,10 @@ func (*Backend) Type() loadTestV1.LoadTestType {
 	return loadTestV1.LoadTestTypeLocust
 }
 
+func (*Backend) UsesCSVTestData() bool {
+	return false
+}
+
 // GetEnvConfig must return config struct pointer
 func (b *Backend) GetEnvConfig() interface{} {
 	b.config = &Config{}
@@ -142,7 +146,7 @@ func (b *Backend) TransformLoadTestSpec(spec *loadTestV1.LoadTestSpec) error {
 }
 
 // Sync check if Backend kubernetes resources have been create, if they have not been create them
-func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, reportURL string) error {
+func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, testfileConfigMapName string, _ []string, reportURL string) error {
 	workerJobs, err := b.kubeClientSet.
 		BatchV1().
 		Jobs(loadTest.Status.Namespace).
@@ -156,16 +160,6 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, report
 
 	if len(workerJobs.Items) > 0 {
 		return nil
-	}
-
-	configMap := newConfigMap(loadTest)
-	_, err = b.kubeClientSet.
-		CoreV1().
-		ConfigMaps(loadTest.Status.Namespace).
-		Create(ctx, configMap, metaV1.CreateOptions{})
-	if err != nil && !k8sAPIErrors.IsAlreadyExists(err) {
-		b.logger.Error("Error on creating testfile configmap", zap.Error(err))
-		return err
 	}
 
 	var secret *coreV1.Secret
@@ -182,7 +176,7 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, report
 		}
 	}
 
-	masterJob := newMasterJob(loadTest, configMap, secret, reportURL, b.masterResources, b.podAnnotations, b.nodeSelector, b.podTolerations, loadTest.Spec.MasterConfig, b.logger)
+	masterJob := newMasterJob(loadTest, testfileConfigMapName, secret, reportURL, b.masterResources, b.podAnnotations, b.nodeSelector, b.podTolerations, loadTest.Spec.MasterConfig, b.logger)
 	_, err = b.kubeClientSet.
 		BatchV1().
 		Jobs(loadTest.Status.Namespace).
@@ -199,7 +193,7 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, report
 		return err
 	}
 
-	workerJob := newWorkerJob(loadTest, configMap, secret, masterService, b.workerResources, b.podAnnotations, b.nodeSelector, b.podTolerations, loadTest.Spec.WorkerConfig, b.logger)
+	workerJob := newWorkerJob(loadTest, testfileConfigMapName, secret, masterService, b.workerResources, b.podAnnotations, b.nodeSelector, b.podTolerations, loadTest.Spec.WorkerConfig, b.logger)
 	_, err = b.kubeClientSet.
 		BatchV1().
 		Jobs(loadTest.Status.Namespace).

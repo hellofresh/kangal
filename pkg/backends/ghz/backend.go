@@ -50,6 +50,10 @@ func (*Backend) Type() loadTestV1.LoadTestType {
 	return loadTestV1.LoadTestTypeGhz
 }
 
+func (*Backend) UsesCSVTestData() bool {
+	return false
+}
+
 // GetEnvConfig must return config struct pointer
 func (b *Backend) GetEnvConfig() interface{} {
 	b.config = &Config{}
@@ -123,7 +127,7 @@ func (b *Backend) TransformLoadTestSpec(spec *loadTestV1.LoadTestSpec) error {
 }
 
 // Sync checks if ghz kubernetes resources have been created, create them if they haven't
-func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, reportURL string) error {
+func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, testfileConfigMapName string, testdataConfigMapNames []string, reportURL string) error {
 	jobs, err := b.kubeClientSet.
 		BatchV1().
 		Jobs(loadTest.Status.Namespace).
@@ -140,54 +144,19 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, report
 		return nil
 	}
 
-	var (
-		tdCfgMap   *coreV1.ConfigMap
-		configMaps = make([]*coreV1.ConfigMap, 1)
-	)
-
-	// Create testfile ConfigMap
-	tfCfgMap, err := NewFileConfigMap(loadTestFileConfigMapName, configFileName, loadTest.Spec.TestFile)
-	if err != nil {
-		b.logger.Error("Error creating testfile configmap resource", zap.Error(err))
-		return err
-	}
-	configMaps[0] = tfCfgMap
-
-	// Prepare testdata ConfigMap
-	if len(loadTest.Spec.TestData) != 0 {
-		tdCfgMap, err = NewFileConfigMap(loadTestDataConfigMapName, testdataFileName, loadTest.Spec.TestData)
-		if err != nil {
-			b.logger.Error("Error creating testdata configmap resource", zap.Error(err))
-			return err
-		}
-		configMaps = append(configMaps, tdCfgMap)
-	}
-
-	// Create testfile and testdata configmaps
-	for _, cfg := range configMaps {
-		_, err = b.kubeClientSet.
-			CoreV1().
-			ConfigMaps(loadTest.Status.Namespace).
-			Create(ctx, cfg, metaV1.CreateOptions{})
-		if err != nil && !k8sAPIErrors.IsAlreadyExists(err) {
-			b.logger.Error("Error creating configmap", zap.String("configmap", cfg.GetName()), zap.Error(err))
-			return err
-		}
-	}
-
 	// Prepare Volume and VolumeMount for job creation
 	var (
 		volumes = make([]coreV1.Volume, 1)
 		mounts  = make([]coreV1.VolumeMount, 1)
 	)
 
-	volumes[0], mounts[0] = NewFileVolumeAndMount(loadTestFileVolumeName, tfCfgMap.Name, configFileName)
+	volumes[0], mounts[0] = NewFileVolumeAndMount(loadTestFileVolumeName, testfileConfigMapName, configFileName, backends.LoadTestScript)
 
-	if tdCfgMap != nil {
-		v, m := NewFileVolumeAndMount(loadTestDataVolumeName, tdCfgMap.Name, testdataFileName)
+	if len(testdataConfigMapNames) == 1 {
+		v, m := NewFileVolumeAndMount(loadTestDataVolumeName, testdataConfigMapNames[0], testdataFileName, backends.LoadTestData)
 		volumes = append(volumes, v)
 		mounts = append(mounts, m)
-	}
+	} // FIXME: else if len(testdataConfigMapNames) > 1
 
 	// Create Job
 	job := b.NewJob(loadTest, volumes, mounts, reportURL)
