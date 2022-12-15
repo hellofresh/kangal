@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
-	"go.opencensus.io/plugin/ochttp"
 	"go.uber.org/zap"
 
 	cHttp "github.com/hellofresh/kangal/pkg/core/http"
@@ -26,7 +27,7 @@ func RunMetricsServer(cfg Config, rr Runner, stopChan chan struct{}) error {
 	// Register Routes
 	r.Get("/", cHttp.LivenessHandler("Kangal Controller"))
 	r.Get("/status", cHttp.LivenessHandler("Kangal Controller"))
-	r.Handle("/metrics", rr.Exporter)
+	r.Handle("/metrics", promhttp.Handler())
 
 	// Run HTTP Server
 	address := fmt.Sprintf(":%d", cfg.HTTPPort)
@@ -34,7 +35,7 @@ func RunMetricsServer(cfg Config, rr Runner, stopChan chan struct{}) error {
 
 	go func() {
 		// Try and run http server, fail on error
-		if err := http.ListenAndServe(address, &ochttp.Handler{Handler: r}); err != nil {
+		if err := http.ListenAndServe(address, promhttp.Handler()); err != nil {
 			rr.Logger.Error("Failed to run HTTP server", zap.Error(err))
 			close(stopChan)
 		}

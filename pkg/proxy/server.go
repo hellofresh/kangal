@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"net/http"
 
-	"contrib.go.opencensus.io/exporter/prometheus"
+	"go.opentelemetry.io/otel/metric/global"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
-	"go.opencensus.io/plugin/ochttp"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.uber.org/zap"
 
 	"github.com/hellofresh/kangal/pkg/backends"
@@ -16,13 +18,15 @@ import (
 	mPkg "github.com/hellofresh/kangal/pkg/core/middleware"
 	kube "github.com/hellofresh/kangal/pkg/kubernetes"
 	"github.com/hellofresh/kangal/pkg/report"
+	otelPrometheus "go.opentelemetry.io/otel/exporters/prometheus"
 )
 
 // Runner encapsulates all Kangal Proxy API server dependencies
 type Runner struct {
-	Exporter   *prometheus.Exporter
-	KubeClient *kube.Client
-	Logger     *zap.Logger
+	Exporter      *otelPrometheus.Exporter
+	KubeClient    *kube.Client
+	Logger        *zap.Logger
+	StatsReporter *MetricsReporter
 }
 
 // RunServer runs Kangal proxy API
@@ -45,7 +49,7 @@ func RunServer(cfg Config, rr Runner) error {
 	r.Use(OpenAPISpecCORSMiddleware(cfg.OpenAPI))
 
 	r.Get("/status", cHttp.LivenessHandler("Kangal Proxy"))
-	r.Handle("/metrics", rr.Exporter)
+	r.Handle("/metrics", promhttp.Handler())
 
 	// ---------------------------------------------------------------------- //
 	// LoadTest Proxy CRUD
@@ -55,22 +59,22 @@ func RunServer(cfg Config, rr Runner) error {
 
 	r.Method(http.MethodGet,
 		loadtestRoute,
-		ochttp.WithRouteTag(http.HandlerFunc(proxyHandler.List), loadtestRoute),
+		otelhttp.NewHandler(http.HandlerFunc(proxyHandler.List), loadtestRoute),
 	)
 
 	r.Method(http.MethodPost,
 		loadtestRoute,
-		ochttp.WithRouteTag(http.HandlerFunc(proxyHandler.Create), loadtestRoute),
+		otelhttp.NewHandler(http.HandlerFunc(proxyHandler.Create), loadtestRoute),
 	)
 
 	r.Method(http.MethodGet,
 		loadtestRouteWithID,
-		ochttp.WithRouteTag(http.HandlerFunc(proxyHandler.Get), loadtestRouteWithID),
+		otelhttp.NewHandler(http.HandlerFunc(proxyHandler.Get), loadtestRouteWithID),
 	)
 
 	r.Method(http.MethodDelete,
 		loadtestRouteWithID,
-		ochttp.WithRouteTag(http.HandlerFunc(proxyHandler.Delete), loadtestRouteWithID),
+		otelhttp.NewHandler(http.HandlerFunc(proxyHandler.Delete), loadtestRouteWithID),
 	)
 
 	// ---------------------------------------------------------------------- //
@@ -96,7 +100,7 @@ func RunServer(cfg Config, rr Runner) error {
 	rr.Logger.Info("Running HTTP server...", zap.String("address", address))
 
 	// Try and run http server, fail on error
-	err := http.ListenAndServe(address, &ochttp.Handler{Handler: r})
+	err := http.ListenAndServe(address, otelhttp.NewHandler(r, "kangal", otelhttp.WithMeterProvider(global.MeterProvider()), otelhttp.WithMessageEvents(otelhttp.ReadEvents, otelhttp.WriteEvents)))
 	if err != nil {
 		return fmt.Errorf("failed to run HTTP server: %w", err)
 	}

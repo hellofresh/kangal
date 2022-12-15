@@ -4,6 +4,13 @@ import (
 	"flag"
 	"fmt"
 
+	"go.opentelemetry.io/otel/metric/global"
+
+	"go.opentelemetry.io/otel/exporters/prometheus"
+	"go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/sdk/resource"
+	semconv "go.opentelemetry.io/otel/semconv/v1.12.0"
+
 	"github.com/kelseyhightower/envconfig"
 	"github.com/spf13/cobra"
 	kubernetesClient "k8s.io/client-go/kubernetes"
@@ -42,9 +49,9 @@ func NewProxyCmd() *cobra.Command {
 				return fmt.Errorf("could not build logger instance: %w", err)
 			}
 
-			pe, err := observability.NewPrometheusExporter("kangal-proxy", nil)
+			pe, err := prometheus.New()
 			if err != nil {
-				return fmt.Errorf("could not initialise Prometheus exporter: %w", err)
+				return fmt.Errorf("could not build prometheus exporter: %w", err)
 			}
 
 			k8sConfig, err := kubernetes.BuildClientConfig(opts.masterURL, opts.kubeConfig, cfg.KubeClientTimeout)
@@ -65,6 +72,16 @@ func NewProxyCmd() *cobra.Command {
 			loadTestClient := kangalClientSet.LoadTests()
 			kubeClient := kubernetes.NewClient(loadTestClient, kubeClientSet, logger)
 
+			provider := metric.NewMeterProvider(metric.WithReader(pe), metric.WithResource(
+				resource.NewSchemaless(semconv.ServiceNameKey.String("kangal-proxy"))))
+
+			global.SetMeterProvider(provider)
+
+			statsReporter, err := proxy.NewMetricsReporter(provider.Meter("proxy"), kubeClient)
+			if err != nil {
+				return fmt.Errorf("error getting stats client:  %w", err)
+			}
+
 			err = report.InitObjectStorageClient(cfg.Report)
 			if err != nil {
 				return fmt.Errorf("building reportingClient client: %w", err)
@@ -74,9 +91,10 @@ func NewProxyCmd() *cobra.Command {
 			cfg.MasterURL = opts.masterURL
 
 			return proxy.RunServer(cfg, proxy.Runner{
-				Exporter:   pe,
-				KubeClient: kubeClient,
-				Logger:     logger,
+				Exporter:      pe,
+				KubeClient:    kubeClient,
+				Logger:        logger,
+				StatsReporter: statsReporter,
 			})
 		},
 	}

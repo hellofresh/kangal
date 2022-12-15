@@ -5,6 +5,14 @@ import (
 	"strings"
 	"time"
 
+	"go.opentelemetry.io/otel/sdk/resource"
+	semconv "go.opentelemetry.io/otel/semconv/v1.12.0"
+
+	"go.opentelemetry.io/otel/exporters/prometheus"
+
+	"go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/sdk/metric/aggregation"
+
 	"github.com/kelseyhightower/envconfig"
 	"github.com/spf13/cobra"
 	kubeInformers "k8s.io/client-go/informers"
@@ -16,6 +24,10 @@ import (
 	clientSet "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
 	informers "github.com/hellofresh/kangal/pkg/kubernetes/generated/informers/externalversions"
 )
+
+// reconcileDistribution defines the bucket boundaries for the histogram of reconcile latency metric
+// Bucket boundaries are 10ms, 100ms, 1s, 10s, 30s and 60s.
+var reconcileDistribution = []float64{10, 100, 1000, 10000, 30000, 60000}
 
 type controllerCmdOptions struct {
 	kubeConfig           string
@@ -51,9 +63,9 @@ func NewControllerCmd() *cobra.Command {
 				return fmt.Errorf("could not build logger instance: %w", err)
 			}
 
-			pe, err := observability.NewPrometheusExporter("kangal-controller", observability.ControllerViews)
+			pe, err := prometheus.New()
 			if err != nil {
-				return err
+				return fmt.Errorf("could not build prometheus exporter: %w", err)
 			}
 
 			kubeCfg, err := kubernetes.BuildClientConfig(cfg.MasterURL, cfg.KubeConfig, cfg.KubeClientTimeout)
@@ -71,7 +83,17 @@ func NewControllerCmd() *cobra.Command {
 				return fmt.Errorf("error building kangal clientSet: %w", err)
 			}
 
-			statsClient, err := observability.NewStatsReporter("kangal")
+			provider := metric.NewMeterProvider(
+				metric.WithReader(pe),
+				metric.WithResource(
+					resource.NewSchemaless(semconv.ServiceNameKey.String("kangal-controller"))),
+				metric.WithView(metric.NewView(
+					metric.Instrument{Name: "kangal_reconcile_latency"},
+					metric.Stream{Aggregation: aggregation.ExplicitBucketHistogram{
+						Boundaries: reconcileDistribution,
+					}},
+				)))
+			statsReporter, err := controller.NewMetricsReporter(provider.Meter("controller"))
 			if err != nil {
 				return fmt.Errorf("error getting stats client:  %w", err)
 			}
@@ -84,7 +106,7 @@ func NewControllerCmd() *cobra.Command {
 				Exporter:       pe,
 				KubeClient:     kubeClient,
 				KangalClient:   kangalClient,
-				StatsReporter:  statsClient,
+				StatsReporter:  statsReporter,
 				KubeInformer:   kubeInformerFactory,
 				KangalInformer: kangalInformerFactory,
 			})

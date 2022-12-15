@@ -5,7 +5,12 @@ import (
 	"fmt"
 	"time"
 
-	"go.opencensus.io/stats"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/metric/instrument"
+	"go.opentelemetry.io/otel/metric/instrument/syncint64"
+	"go.opentelemetry.io/otel/metric/unit"
+
 	"go.uber.org/zap"
 	batchV1 "k8s.io/api/batch/v1"
 	coreV1 "k8s.io/api/core/v1"
@@ -23,7 +28,6 @@ import (
 	"k8s.io/client-go/util/workqueue"
 
 	"github.com/hellofresh/kangal/pkg/backends"
-	"github.com/hellofresh/kangal/pkg/core/observability"
 	loadTestV1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
 	clientSetV "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned"
 	sampleScheme "github.com/hellofresh/kangal/pkg/kubernetes/generated/clientset/versioned/scheme"
@@ -36,6 +40,52 @@ const (
 	falseString         = "false"
 	trueString          = "true"
 )
+
+// MetricsReporter used to interface with the metrics configurations
+type MetricsReporter struct {
+	workQueueDepthStat   syncint64.UpDownCounter
+	reconcileCountStat   syncint64.UpDownCounter
+	reconcileLatencyStat syncint64.Histogram
+}
+
+// NewMetricsReporter contains loadtest metrics definition
+func NewMetricsReporter(meter metric.Meter) (*MetricsReporter, error) {
+	workQueueDepthStat, err := meter.SyncInt64().UpDownCounter(
+		"kangal_work_queue_depth",
+		instrument.WithDescription("Depth of the work queue"),
+		instrument.WithUnit(unit.Dimensionless),
+	)
+	if err != nil {
+		fmt.Errorf("could not register workQueueDepthStat metric: %w", err)
+		return nil, err
+	}
+
+	reconcileCountStat, err := meter.SyncInt64().UpDownCounter(
+		"kangal_reconcile_count",
+		instrument.WithDescription("Number of reconcile operations"),
+		instrument.WithUnit(unit.Dimensionless),
+	)
+	if err != nil {
+		fmt.Errorf("could not register reconcileCountStat metric: %w", err)
+		return nil, err
+	}
+
+	reconcileLatencyStat, err := meter.SyncInt64().Histogram(
+		"kangal_reconcile_latency",
+		instrument.WithDescription("Latency of reconcile operations"),
+		instrument.WithUnit(unit.Milliseconds),
+	)
+	if err != nil {
+		fmt.Errorf("could not register reconcileLatencyStat metric: %w", err)
+		return nil, err
+	}
+
+	return &MetricsReporter{
+		workQueueDepthStat:   workQueueDepthStat,
+		reconcileCountStat:   reconcileCountStat,
+		reconcileLatencyStat: reconcileLatencyStat,
+	}, nil
+}
 
 // Controller is the controller implementation for LoadTest resources
 type Controller struct {
@@ -62,7 +112,7 @@ type Controller struct {
 	// Kubernetes API.
 	recorder record.EventRecorder
 
-	statsClient observability.StatsReporter
+	statsClient MetricsReporter
 
 	registry backends.Registry
 	logger   *zap.Logger
@@ -75,7 +125,7 @@ func NewController(
 	kangalClientSet clientSetV.Interface,
 	kubeInformerFactory informers.SharedInformerFactory,
 	kangalInformerFactory externalversions.SharedInformerFactory,
-	statsClient observability.StatsReporter,
+	statsClient MetricsReporter,
 	registry backends.Registry,
 	logger *zap.Logger) *Controller {
 
@@ -209,9 +259,9 @@ func (c *Controller) processNextWorkItem() bool {
 	}
 
 	// Send the metrics for the current queue depth
-	c.statsClient.ReportQueueDepth(int64(c.workQueue.Len()))
+	c.statsClient.workQueueDepthStat.Add(context.Background(), int64(c.workQueue.Len()))
 
-	// We wrap this block in a func so we can defer c.workQueue.Done.
+	// We wrap this block in a func, so we can defer c.workQueue.Done.
 	err := func(obj interface{}) error {
 		startTime := time.Now()
 
@@ -231,7 +281,9 @@ func (c *Controller) processNextWorkItem() bool {
 			if err != nil {
 				status = falseString
 			}
-			c.statsClient.ReportReconcile(time.Since(startTime), key, status)
+
+			c.statsClient.reconcileCountStat.Add(context.Background(), 1, attribute.String("key", key), attribute.String("success", status))
+			c.statsClient.reconcileLatencyStat.Record(context.Background(), int64(time.Since(startTime)/time.Millisecond), attribute.String("key", key), attribute.String("success", status))
 		}()
 
 		// We expect strings to come off the workQueue. These are of the
@@ -277,7 +329,6 @@ func (c *Controller) syncHandler(key string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), c.cfg.SyncHandlerTimeout)
 	defer cancel()
 
-	stats.Record(ctx, observability.MRunningLoadtestCountStat.M(c.countRunningLoadtests()))
 	logger := c.logger.With(
 		zap.String("loadtest", key),
 	)
@@ -384,7 +435,6 @@ func (c *Controller) handleObject(obj interface{}) {
 		}
 
 		c.logger.Debug("Processing object", zap.String("object-name", object.GetName()))
-		stats.Record(context.Background(), observability.MRunningLoadtestCountStat.M(c.countRunningLoadtests()))
 
 		foo, err := c.loadtestsLister.Get(ownerRef.Name)
 		if err != nil {
@@ -505,24 +555,6 @@ func checkLoadTestLifeTimeExceeded(loadTest *loadTestV1.LoadTest, deleteThreshol
 	}
 
 	return false
-}
-
-func (c *Controller) countRunningLoadtests() int64 {
-	tt, err := c.kangalClientSet.KangalV1().LoadTests().List(context.Background(), metaV1.ListOptions{})
-	if err != nil {
-		c.logger.Error("Couldn't list existing loadtests", zap.Error(err))
-		return 0
-	}
-
-	var rt = 0
-	for _, loadTest := range tt.Items {
-		if loadTest.Status.Phase == loadTestV1.LoadTestRunning {
-			rt++
-		}
-	}
-
-	return int64(rt)
-
 }
 
 func (c *Controller) deleteLoadTest(ctx context.Context, key string, loadTest *loadTestV1.LoadTest) {
