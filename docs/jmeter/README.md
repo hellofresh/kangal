@@ -9,7 +9,7 @@
 
 JMeter is one of the load generators used in Kangal. A powerful tool which can be used for different performance testing tasks.
 
-Currently, Kangal uses the docker image [hellofresh/kangal-jmeter](https://github.com/hellofresh/kangal-jmeter) based on JMeter v5.4.1.
+Currently, Kangal uses the docker image [hellofresh/kangal-jmeter](https://github.com/hellofresh/kangal-jmeter) based on JMeter v5.5.
 
 Apache JMeter features include ability to create and run performance test for different applications/server/protocol types:
 
@@ -23,8 +23,8 @@ Kangal requires a jmx testfile describing the test.
 To create and edit jmx files we recommend you to install JMeter locally.
 
 ## Installing JMeter for local test development
-1. Install Java 11+ from [official Java website](https://www.java.com/de/download/).
-2. Install JMeter v5.4.1 from [official JMeter website](https://archive.apache.org/dist/jmeter/binaries/) or using [brew](https://stackoverflow.com/questions/22610316/how-do-i-install-jmeter-on-a-mac).
+1. Install Java 11+ from [official Java site](https://www.java.com/de/download/).
+2. Install JMeter v5.5 from [official JMeter site](https://archive.apache.org/dist/jmeter/binaries/) or using [brew](https://stackoverflow.com/questions/22610316/how-do-i-install-jmeter-on-a-mac).
 3. Run JMeter UI from your terminal by command `jmeter` or follow the [official documentation](https://jmeter.apache.org/usermanual/get-started.html#running).
 
 ## Required JMeter plugins
