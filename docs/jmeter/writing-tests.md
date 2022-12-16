@@ -462,4 +462,4 @@ catch (Exception e) {
     SampleResult.setResponseMessage("Something went wrong: " + e)
 }
 ```
-7. Save the test plan as a `jmx` file. You can the location of the file to Kangal via the `TEST_PATH` environment variable.
+7. Save the test plan as a `jmx` file. You can set the location of the file to Kangal via the `TEST_PATH` environment variable.
