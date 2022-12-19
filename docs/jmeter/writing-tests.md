@@ -216,7 +216,7 @@ Next important element is [HTTP request](https://jmeter.apache.org/usermanual/co
 
 Values to manipulate:
 
-- Protocol (http/https)
+- Protocol (HTTP/HTTPS)
 - Server name or IP (e.g. 127.0.0.1)
 - Method (e.g. GET)
 - Path (e.g. /info)
@@ -409,3 +409,57 @@ For the full list of possible environment variables check [Kangal environment va
 **Attention**
 
 The [Dynamic volume provisioning](https://kubernetes.io/docs/concepts/storage/dynamic-provisioning/) must be set on the cluster
+
+## Testing with MongoDB
+
+The `5.5` tag of the [`kangal-jmeter`](https://github.com/hellofresh/kangal-jmeter) Docker Image includes the [MongoDB Java Driver](https://github.com/mongodb/mongo-java-driver).
+This is the artifact that contains the `mongodb-driver-core` (the core library), the `mongodb-driver`, and the BSON library to enable testing / sampling to a MongoDB database using
+classes from the MongoDB driver that are not available in the default version of the JMeter installation.
+
+### Example
+
+In JMeter,
+
+1. Create a Test Plan
+2. In the Test Plan, add the following User Defined Variables (these are the variables that can be accessed in the sample script via `vars.get()`):
+   * `mongoHost`
+   * `mongoPort`
+   * `databaseName`
+   * `collectionName`
+3. In the Test Plan, add a Thread Group
+4. In the Thread Group, add a Sampler, and select the type: "JSR223 Sampler"
+5. Select _groovy_ as the language (the example script is provided in [groovy](https://groovy-lang.org/))
+6. Use the script below as an example. This script connects to MongoDB, inserts a document, reads it, and then deletes it:
+```groovy
+import com.mongodb.client.MongoClients
+import com.mongodb.MongoClientSettings
+import com.mongodb.ServerAddress
+import org.bson.Document
+
+import static com.mongodb.client.model.Filters.eq
+
+try {
+    def serverAddress = new ServerAddress(vars.get("mongoHost"), vars.get("mongoPort") as int)
+    def settings = MongoClientSettings.builder()
+            .applyToClusterSettings { builder -> builder.hosts(Arrays.asList(serverAddress)) }
+            .build()
+    def mongoClient = MongoClients.create(settings)
+    def database = mongoClient.getDatabase(vars.get("databaseName"))
+    def collection = database.getCollection(vars.get("collectionName"))
+    def document = new Document()
+            .append("firstName", "Donald")
+            .append("lastName", "Duck")
+    collection.insertOne(document)
+
+    def result = collection.find(eq("firstName", "Donald")).first()
+    collection.deleteOne(result)
+
+    return String.format("Document with id %s deleted", result.get("_id"))
+}
+catch (Exception e) {
+    SampleResult.setSuccessful(false)
+    SampleResult.setResponseCode("500")
+    SampleResult.setResponseMessage("Something went wrong: " + e)
+}
+```
+7. Save the test plan as a `jmx` file, and use it for your JMeter Performance Test.
