@@ -65,28 +65,28 @@ To install Kangal to your infrastructure you need 3 deployments: Kangal-Proxy, K
 
 The following table lists the common configurable parameters for `Kangal` chart:
 
-| Parameter                            | Description                                                                                         | Default                               |
-|--------------------------------------|-----------------------------------------------------------------------------------------------------|---------------------------------------|
-| `environment`                        | The name that identifies the environment installation                                               | `dev`                                 |
-| `fullnameOverride`                   | String to fully override kangal.fullname template with a string                                     |                                       |
-| `nameOverride`                       | String to partially override kangal.fullname template with a string (will prepend the release name) |                                       |
-| `secrets.AWS_ACCESS_KEY_ID`          | AWS access key ID. If not defined report will not be stored                                         | `my-access-key-id`                    |
-| `secrets.AWS_SECRET_ACCESS_KEY`      | AWS secret access key                                                                               | `my-secret-access-key`                |
-| `configMap.AWS_BUCKET_NAME`          | The name of the bucket for saving reports                                                           | `my-bucket`                           |
-| `configMap.AWS_ENDPOINT_URL`         | Storage connection parameter                                                                        | `s3.us-east-1.amazonaws.com`          |
-| `configMap.AWS_DEFAULT_REGION`       | Storage connection parameter                                                                        | `us-east-1`                           |
-| `configMap.AWS_USE_HTTPS`            | Set to "true" to use HTTPS                                                                          | `false`                               |
-| `configMap.AWS_PRESIGNED_EXPIRES`    | Expiration time for Presigned URLs                                                                  | `30m`                                 |
-| `configMap.GHZ_IMAGE_NAME`           | Default ghz image name/repository if none is provided when creating a new loadtest                  | `hellofresh/kangal-ghz`               |
-| `configMap.GHZ_IMAGE_TAG`            | Tag of the ghz image above                                                                          | `latest`                               |
-| `configMap.JMETER_MASTER_IMAGE_NAME` | Default JMeter master image name/repository if none is provided when creating a new loadtest        | `hellofresh/kangal-jmeter-master`     |
-| `configMap.JMETER_MASTER_IMAGE_TAG`  | Tag of the JMeter master image above                                                                | `latest`                              |
-| `configMap.JMETER_WORKER_IMAGE_NAME` | Default JMeter worker image name/repository if none is provided when creating a new loadtest        | `hellofresh/kangal-jmeter-worker`     |
-| `configMap.JMETER_WORKER_IMAGE_TAG`  | Tag of the JMeter worker image above                                                                | `latest`                              |
-| `configMap.LOCUST_IMAGE_NAME`        | Default Locust image name/repository if none is provided when creating a new loadtest               | `locustio/locust`                     |
-| `configMap.LOCUST_IMAGE_TAG`         | Tag of the Locust image above                                                                       | `1.3.0`                               |
-| `configMap.K6_IMAGE_NAME`        | Default k6 image name/repository if none is provided when creating a new loadtest               | `loadimpact/k6`                     |
-| `configMap.K6_IMAGE_TAG`         | Tag of the k6 image above                                                                       | `latest`                               |
+| Parameter                            | Description                                                                                         | Default                           |
+|--------------------------------------|-----------------------------------------------------------------------------------------------------|-----------------------------------|
+| `environment`                        | The name that identifies the environment installation                                               | `dev`                             |
+| `fullnameOverride`                   | String to fully override kangal.fullname template with a string                                     |                                   |
+| `nameOverride`                       | String to partially override kangal.fullname template with a string (will prepend the release name) |                                   |
+| `secrets.AWS_ACCESS_KEY_ID`          | AWS access key ID. If not defined report will not be stored                                         | `my-access-key-id`                |
+| `secrets.AWS_SECRET_ACCESS_KEY`      | AWS secret access key                                                                               | `my-secret-access-key`            |
+| `configMap.AWS_BUCKET_NAME`          | The name of the bucket for saving reports                                                           | `my-bucket`                       |
+| `configMap.AWS_ENDPOINT_URL`         | Storage connection parameter                                                                        | `s3.us-east-1.amazonaws.com`      |
+| `configMap.AWS_DEFAULT_REGION`       | Storage connection parameter                                                                        | `us-east-1`                       |
+| `configMap.AWS_USE_HTTPS`            | Set to "true" to use HTTPS                                                                          | `false`                           |
+| `configMap.AWS_PRESIGNED_EXPIRES`    | Expiration time for Presigned URLs                                                                  | `30m`                             |
+| `configMap.GHZ_IMAGE_NAME`           | Default ghz docker image name/repository if none is provided when creating a new loadtest           | `hellofresh/kangal-ghz`           |
+| `configMap.GHZ_IMAGE_TAG`            | Tag of the ghz docker image                                                                         | `latest`                          |
+| `configMap.JMETER_MASTER_IMAGE_NAME` | Default JMeter master docker image name/repository if none is provided when creating a new loadtest | `hellofresh/kangal-jmeter-master` |
+| `configMap.JMETER_MASTER_IMAGE_TAG`  | Tag of the JMeter master docker image                                                               | `latest`                          |
+| `configMap.JMETER_WORKER_IMAGE_NAME` | Default JMeter worker docker image name/repository if none is provided when creating a new loadtest | `hellofresh/kangal-jmeter-worker` |
+| `configMap.JMETER_WORKER_IMAGE_TAG`  | Tag of the JMeter worker docker image                                                               | `latest`                          |
+| `configMap.LOCUST_IMAGE_NAME`        | Default Locust docker image name/repository if none is provided when creating a new loadtest        | `locustio/locust`                 |
+| `configMap.LOCUST_IMAGE_TAG`         | Tag of the Locust docker image                                                                      | `1.3.0`                           |
+| `configMap.K6_IMAGE_NAME`            | Default k6 docker image name/repository if none is provided when creating a new loadtest            | `loadimpact/k6`                   |
+| `configMap.K6_IMAGE_TAG`             | Tag of the k6 docker image above                                                                    | `latest`                          |
 
 Deployment specific configurations:
 
@@ -115,7 +115,7 @@ Deployment specific configurations:
 | `proxy.env.OPEN_API_SERVER_DESCRIPTION` | *Required.* A Description to the OpenAPI server URL         | `Kangal proxy default value`               |
 | `proxy.env.OPEN_API_SERVER_URL`         | *Required.* A URL to the OpenAPI specification server       | `https://kangal-proxy.example.com/openapi` |
 | `proxy.env.OPEN_API_UI_URL`             | A URL to the OpenAPI UI                                     | `https://kangal-openapi-ui.example.com`    |
-| `proxy.env.ALLOWED_CUSTOM_IMAGES`       | Allow or not custom Images to be defined in the request     | `false`                                    |
+| `proxy.env.ALLOWED_CUSTOM_IMAGES`       | Allow to use custom backend images specified in the request | `false`                                    |
 
 ### OpenAPI UI
 | Parameter                             | Description                                     | Default                                    |
@@ -190,9 +190,9 @@ Deployment specific configurations:
 | `controller.env.GHZ_MASTER_MEMORY_REQUESTS` | Memory requests |                   |
 
 ### Kangal Controller (`k6` specific)
-| Parameter                                   | Description     | Default           |
-|---------------------------------------------|-----------------|-------------------|
-| `controller.env.K6_CPU_LIMITS`      | CPU limits      |                   |
-| `controller.env.K6_CPU_REQUESTS`    | CPU requests    |                   |
-| `controller.env.K6_MEMORY_LIMITS`   | Memory limits   |                   |
-| `controller.env.K6_MEMORY_REQUESTS` | Memory requests |                   |
+| Parameter                           | Description     | Default |
+|-------------------------------------|-----------------|---------|
+| `controller.env.K6_CPU_LIMITS`      | CPU limits      |         |
+| `controller.env.K6_CPU_REQUESTS`    | CPU requests    |         |
+| `controller.env.K6_MEMORY_LIMITS`   | Memory limits   |         |
+| `controller.env.K6_MEMORY_REQUESTS` | Memory requests |         |

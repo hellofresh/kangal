@@ -37,6 +37,7 @@ curl -X POST http://${KANGAL_PROXY_ADDRESS}/load-test \
   -F overwrite=true
 ```
 
+### Use tags
 You can also tag the load test so that you can find them later, the format is `tag1:value1,tag2:value2`
 
 ```bash
@@ -51,7 +52,8 @@ curl -X POST http://${KANGAL_PROXY_ADDRESS}/load-test \
   -F overwrite=true
 ```
 
-Or even select the container images to use for Master and Worker roles:
+### Use custom image
+Specify the container images to use for Master and Worker roles:
 
 ```bash
 curl -X POST http://${KANGAL_PROXY_ADDRESS}/load-test \

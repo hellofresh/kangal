@@ -3,7 +3,7 @@
 ## Proxy
 | Parameter                     | Description                                                                    | Default                                    |
 |-------------------------------|--------------------------------------------------------------------------------|--------------------------------------------|
-| `ALLOWED_CUSTOM_IMAGES`       | Allow custom Images to be defined in the request                               | `false`                                    |
+| `ALLOWED_CUSTOM_IMAGES`       | Allow to use custom backend images specified in the request                    | `false`                                    |
 | `KUBE_CLIENT_TIMEOUT`         | Timeout for each operation done by kube client                                 | `5s`                                       |
 | `MAX_LIST_LIMIT`              | Output of LIST endpoint                                                        | `50`                                       |
 | `OPEN_API_SERVER_DESCRIPTION` | Description to the OpenAPI server URL                                          | `Kangal proxy default value`               |
@@ -16,13 +16,13 @@
 | `WEB_HTTP_PORT`               |                                                                                | `8080`                                     |
 
 ## Controller
-| Parameter                       | Description                                             | Default             |
-|---------------------------------|---------------------------------------------------------|---------------------|
-| `CLEANUP_THRESHOLD`             | Life time of a load test (disable by setting value to 0)| `1h`                |
-| `KANGAL_PROXY_URL`              | Endpoints used to store load test reports               | `""`                |
-| `KUBE_CLIENT_TIMEOUT`           | Timeout for each operation done by kube client          | `5s`                |
-| `SYNC_HANDLER_TIMEOUT`          | Time limit for each sync operation                      | `60s`               |
-| `WEB_HTTP_PORT`                 |                                                         | `8080`              |
+| Parameter              | Description                                              | Default |
+|------------------------|----------------------------------------------------------|---------|
+| `CLEANUP_THRESHOLD`    | Life time of a load test (disable by setting value to 0) | `1h`    |
+| `KANGAL_PROXY_URL`     | Endpoints used to store load test reports                | `""`    |
+| `KUBE_CLIENT_TIMEOUT`  | Timeout for each operation done by kube client           | `5s`    |
+| `SYNC_HANDLER_TIMEOUT` | Time limit for each sync operation                       | `60s`   |
+| `WEB_HTTP_PORT`        |                                                          | `8080`  |
 
 ## Backend specific configuration
 ### JMeter
@@ -85,10 +85,10 @@
 | `K6_MEMORY_REQUESTS` | Memory requests |                 |
 
 ## Logger config
-| Parameter                  | Description                                                  | Default                               |
-|----------------------------|--------------------------------------------------------------|---------------------------------------|
-| `LOG_LEVEL`                | Log level                                                    | `info`                                |
-| `LOG_TYPE`                 | Log type                                                     | `kangal`                              |
+| Parameter                  | Description            | Default     |
+|----------------------------|------------------------|-------------|
+| `LOG_LEVEL`                | Log level              | `info`      |
+| `LOG_TYPE`                 | Log type               | `kangal`    |
 
 ## Report config
 | Parameter                  | Description                                                  | Default   |
