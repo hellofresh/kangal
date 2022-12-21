@@ -483,7 +483,7 @@ func TestCountExistingLoadTests(t *testing.T) {
 			} else {
 				assert.EqualError(t, err, tc.expectedError)
 			}
-			assert.Equal(t, types[apisLoadTestV1.LoadTestTypeK6.String()], tc.expectedTypes)
+			assert.Equal(t, types[apisLoadTestV1.LoadTestTypeK6], tc.expectedTypes)
 
 			total := states["running"] + states["creating"]
 			assert.Equal(t, tc.expectedResult, int(total))

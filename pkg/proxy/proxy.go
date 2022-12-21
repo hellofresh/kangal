@@ -48,7 +48,7 @@ type MetricsReporter struct {
 func NewMetricsReporter(meter metric.Meter, kubeClient *kube.Client) (*MetricsReporter, error) {
 	countRunningLoadtests, err := meter.AsyncInt64().UpDownCounter(
 		"kangal_loadtests_count",
-		instrument.WithDescription("The number of currently running loadtests"),
+		instrument.WithDescription("Current number of loadtests in cluster, grouped by type and phase"),
 		instrument.WithUnit(unit.Dimensionless),
 	)
 	if err != nil {
@@ -61,11 +61,11 @@ func NewMetricsReporter(meter metric.Meter, kubeClient *kube.Client) (*MetricsRe
 			fmt.Errorf("could not get metric data for CountExistingLoadtests: %w", err)
 		}
 		for k, v := range states {
-			countRunningLoadtests.Observe(ctx, v, attribute.String("phase", k))
+			countRunningLoadtests.Observe(ctx, v, attribute.String("phase", k.String()))
 		}
 
 		for k, v := range types {
-			countRunningLoadtests.Observe(ctx, v, attribute.String("type", k))
+			countRunningLoadtests.Observe(ctx, v, attribute.String("type", k.String()))
 		}
 	},
 	); err != nil {

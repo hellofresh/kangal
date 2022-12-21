@@ -232,33 +232,33 @@ func BuildClientConfig(masterURL string, kubeConfigPath string, timeout time.Dur
 }
 
 // CountExistingLoadtests used in metrics to report running loadtests
-func (c *Client) CountExistingLoadtests() (map[string]int64, map[string]int64, error) {
+func (c *Client) CountExistingLoadtests() (map[apisLoadTestV1.LoadTestPhase]int64, map[apisLoadTestV1.LoadTestType]int64, error) {
 	tt, err := c.ltClient.List(context.Background(), metaV1.ListOptions{})
 	if err != nil {
 		c.logger.Error("Couldn't list existing loadtests", zap.Error(err))
 		return nil, nil, err
 	}
 
-	var phaseCount = map[string]int64{
-		apisLoadTestV1.LoadTestRunning.String():  0,
-		apisLoadTestV1.LoadTestFinished.String(): 0,
-		apisLoadTestV1.LoadTestCreating.String(): 0,
-		apisLoadTestV1.LoadTestErrored.String():  0,
-		apisLoadTestV1.LoadTestStarting.String(): 0,
+	var phaseCount = map[apisLoadTestV1.LoadTestPhase]int64{
+		apisLoadTestV1.LoadTestRunning:  0,
+		apisLoadTestV1.LoadTestFinished: 0,
+		apisLoadTestV1.LoadTestCreating: 0,
+		apisLoadTestV1.LoadTestErrored:  0,
+		apisLoadTestV1.LoadTestStarting: 0,
 	}
 
-	var typeCount = map[string]int64{
-		apisLoadTestV1.LoadTestTypeK6.String():     0,
-		apisLoadTestV1.LoadTestTypeJMeter.String(): 0,
-		apisLoadTestV1.LoadTestTypeLocust.String(): 0,
-		apisLoadTestV1.LoadTestTypeGhz.String():    0,
+	var typeCount = map[apisLoadTestV1.LoadTestType]int64{
+		apisLoadTestV1.LoadTestTypeK6:     0,
+		apisLoadTestV1.LoadTestTypeJMeter: 0,
+		apisLoadTestV1.LoadTestTypeLocust: 0,
+		apisLoadTestV1.LoadTestTypeGhz:    0,
 	}
 
 	for _, loadTest := range tt.Items {
-		phaseString := loadTest.Status.Phase.String()
+		phaseString := loadTest.Status.Phase
 		phaseCount[phaseString]++
 
-		typeString := loadTest.Spec.Type.String()
+		typeString := loadTest.Spec.Type
 		typeCount[typeString]++
 	}
 
