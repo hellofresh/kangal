@@ -248,41 +248,18 @@ func (c *Client) CountExistingLoadtests() (map[string]int64, map[string]int64, e
 	}
 
 	var typeCount = map[string]int64{
-		"k6":     0,
-		"jmeter": 0,
-		"locust": 0,
-		"ghz":    0,
+		"K6":     0,
+		"JMeter": 0,
+		"Locust": 0,
+		"Ghz":    0,
 	}
 
 	for _, loadTest := range tt.Items {
-		if loadTest.Status.Phase.String() == "running" {
-			phaseCount["running"]++
-		}
-		if loadTest.Status.Phase.String() == "errored" {
-			phaseCount["errored"]++
-		}
-		if loadTest.Status.Phase.String() == "starting" {
-			phaseCount["starting"]++
-		}
-		if loadTest.Status.Phase.String() == "creating" {
-			phaseCount["creating"]++
-		}
-		if loadTest.Status.Phase.String() == "finished" {
-			phaseCount["finished"]++
-		}
+		phaseString := loadTest.Status.Phase.String()
+		phaseCount[phaseString]++
 
-		if loadTest.Spec.Type == apisLoadTestV1.LoadTestTypeK6 {
-			typeCount["k6"]++
-		}
-		if loadTest.Spec.Type == apisLoadTestV1.LoadTestTypeGhz {
-			typeCount["ghz"]++
-		}
-		if loadTest.Spec.Type == apisLoadTestV1.LoadTestTypeJMeter {
-			typeCount["jmeter"]++
-		}
-		if loadTest.Spec.Type == apisLoadTestV1.LoadTestTypeLocust {
-			typeCount["locust"]++
-		}
+		typeString := loadTest.Spec.Type.String()
+		typeCount[typeString]++
 	}
 
 	return phaseCount, typeCount, nil
