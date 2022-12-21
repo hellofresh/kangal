@@ -354,39 +354,141 @@ func TestClient_filterLoadTestsByPhase(t *testing.T) {
 	}
 }
 
-func TestCountActiveLoadTests(t *testing.T) {
-	ctx := context.Background()
-
-	loadtestClientset := fakeClientset.NewSimpleClientset()
-	kubeClientSet := fake.NewSimpleClientset()
-
-	loadtestClientset.Fake.PrependReactor("list", "loadtests", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
-		return true, &apisLoadTestV1.LoadTestList{
-			Items: []apisLoadTestV1.LoadTest{
-				{
-					Status: apisLoadTestV1.LoadTestStatus{
-						Phase: apisLoadTestV1.LoadTestRunning,
+func TestCountExistingLoadTests(t *testing.T) {
+	testCases := []struct {
+		scenario       string
+		opt            ListOptions
+		result         *apisLoadTestV1.LoadTestList
+		error          error
+		expectedResult int
+		expectedError  string
+		expectedTypes  int64
+	}{
+		{
+			scenario:       "error in client",
+			result:         &apisLoadTestV1.LoadTestList{},
+			error:          errors.New("client error"),
+			expectedError:  "client error",
+			expectedResult: 0,
+			expectedTypes:  0,
+		},
+		{
+			scenario: "unknown phase",
+			result: &apisLoadTestV1.LoadTestList{
+				Items: []apisLoadTestV1.LoadTest{
+					{
+						Status: apisLoadTestV1.LoadTestStatus{
+							Phase: "",
+						},
+						Spec: apisLoadTestV1.LoadTestSpec{
+							Type: apisLoadTestV1.LoadTestTypeK6,
+						},
 					},
-				},
-				{
-					Status: apisLoadTestV1.LoadTestStatus{
-						Phase: apisLoadTestV1.LoadTestCreating,
-					},
-				},
-				{
-					Status: apisLoadTestV1.LoadTestStatus{
-						Phase: apisLoadTestV1.LoadTestErrored,
+					{
+						Status: apisLoadTestV1.LoadTestStatus{
+							Phase: apisLoadTestV1.LoadTestFinished,
+						},
+						Spec: apisLoadTestV1.LoadTestSpec{
+							Type: apisLoadTestV1.LoadTestTypeK6,
+						},
 					},
 				},
 			},
-		}, nil
-	})
+			error:          nil,
+			expectedError:  "",
+			expectedResult: 0,
+			expectedTypes:  2,
+		},
+		{
+			scenario: "unknown type",
+			result: &apisLoadTestV1.LoadTestList{
+				Items: []apisLoadTestV1.LoadTest{
+					{
+						Status: apisLoadTestV1.LoadTestStatus{
+							Phase: apisLoadTestV1.LoadTestCreating,
+						},
+						Spec: apisLoadTestV1.LoadTestSpec{
+							Type: "foo",
+						},
+					},
+					{
+						Status: apisLoadTestV1.LoadTestStatus{
+							Phase: apisLoadTestV1.LoadTestFinished,
+						},
+						Spec: apisLoadTestV1.LoadTestSpec{
+							Type: "bar",
+						},
+					},
+				},
+			},
+			error:          nil,
+			expectedError:  "",
+			expectedResult: 1,
+			expectedTypes:  0,
+		},
+		{
+			scenario: "success",
+			result: &apisLoadTestV1.LoadTestList{
+				Items: []apisLoadTestV1.LoadTest{
+					{
+						Status: apisLoadTestV1.LoadTestStatus{
+							Phase: apisLoadTestV1.LoadTestRunning,
+						},
+						Spec: apisLoadTestV1.LoadTestSpec{
+							Type: apisLoadTestV1.LoadTestTypeK6,
+						},
+					},
+					{
+						Status: apisLoadTestV1.LoadTestStatus{
+							Phase: apisLoadTestV1.LoadTestCreating,
+						},
+						Spec: apisLoadTestV1.LoadTestSpec{
+							Type: apisLoadTestV1.LoadTestTypeGhz,
+						},
+					},
+					{
+						Status: apisLoadTestV1.LoadTestStatus{
+							Phase: apisLoadTestV1.LoadTestErrored,
+						},
+						Spec: apisLoadTestV1.LoadTestSpec{
+							Type: apisLoadTestV1.LoadTestTypeJMeter,
+						},
+					},
+				},
+			},
+			error:          nil,
+			expectedError:  "",
+			expectedResult: 2,
+			expectedTypes:  1,
+		},
+	}
 
-	logger := zap.NewNop()
-	c := NewClient(loadtestClientset.KangalV1().LoadTests(), kubeClientSet, logger)
-	counter, err := c.CountActiveLoadTests(ctx)
-	assert.NoError(t, err)
-	assert.Equal(t, 2, counter)
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.scenario, func(t *testing.T) {
+			t.Parallel()
+
+			loadtestClientset := fakeClientset.NewSimpleClientset()
+			kubeClientSet := fake.NewSimpleClientset()
+
+			loadtestClientset.Fake.PrependReactor("list", "loadtests", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+				return true, tc.result, tc.error
+			})
+
+			logger := zap.NewNop()
+			c := NewClient(loadtestClientset.KangalV1().LoadTests(), kubeClientSet, logger)
+			states, types, err := c.CountExistingLoadtests()
+			if tc.expectedError == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tc.expectedError)
+			}
+			assert.Equal(t, types[apisLoadTestV1.LoadTestTypeK6], tc.expectedTypes)
+
+			total := states["running"] + states["creating"]
+			assert.Equal(t, tc.expectedResult, int(total))
+		})
+	}
 }
 
 func TestGetLoadTestNoLoadTest(t *testing.T) {
