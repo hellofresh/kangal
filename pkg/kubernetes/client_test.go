@@ -355,8 +355,6 @@ func TestClient_filterLoadTestsByPhase(t *testing.T) {
 }
 
 func TestCountActiveLoadTests(t *testing.T) {
-	ctx := context.Background()
-
 	loadtestClientset := fakeClientset.NewSimpleClientset()
 	kubeClientSet := fake.NewSimpleClientset()
 
@@ -384,9 +382,10 @@ func TestCountActiveLoadTests(t *testing.T) {
 
 	logger := zap.NewNop()
 	c := NewClient(loadtestClientset.KangalV1().LoadTests(), kubeClientSet, logger)
-	counter, err := c.CountActiveLoadTests(ctx)
+	counter, _, err := c.CountExistingLoadtests()
 	assert.NoError(t, err)
-	assert.Equal(t, 2, counter)
+	total := counter["running"] + counter["creating"]
+	assert.Equal(t, 2, int(total))
 }
 
 func TestGetLoadTestNoLoadTest(t *testing.T) {

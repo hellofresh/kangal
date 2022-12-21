@@ -47,7 +47,7 @@ type MetricsReporter struct {
 // NewMetricsReporter contains loadtest metrics definition
 func NewMetricsReporter(meter metric.Meter, kubeClient *kube.Client) (*MetricsReporter, error) {
 	countRunningLoadtests, err := meter.AsyncInt64().UpDownCounter(
-		"kangal_running_loadtests_count",
+		"kangal_loadtests_count",
 		instrument.WithDescription("The number of currently running loadtests"),
 		instrument.WithUnit(unit.Dimensionless),
 	)
@@ -56,8 +56,17 @@ func NewMetricsReporter(meter metric.Meter, kubeClient *kube.Client) (*MetricsRe
 	}
 
 	if err := meter.RegisterCallback([]instrument.Asynchronous{countRunningLoadtests}, func(ctx context.Context) {
-		lt := kubeClient.CountRunningLoadtests()
-		countRunningLoadtests.Observe(ctx, lt, attribute.String("loadtest", "running"))
+		states, types, err := kubeClient.CountExistingLoadtests()
+		if err != nil {
+			fmt.Errorf("could not get metric data for CountExistingLoadtests: %w", err)
+		}
+		for k, v := range states {
+			countRunningLoadtests.Observe(ctx, v, attribute.String("phase", k))
+		}
+
+		for k, v := range types {
+			countRunningLoadtests.Observe(ctx, v, attribute.String("type", k))
+		}
 	},
 	); err != nil {
 		return nil, err
@@ -202,15 +211,16 @@ func (p *Proxy) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check the number of active loadtests currently running on the cluster
-	activeLoadTests, err := p.kubeClient.CountActiveLoadTests(ctx)
+	testsByPhase, _, err := p.kubeClient.CountExistingLoadtests()
 	if err != nil {
 		logger.Error("Could not count active load tests", zap.Error(err))
 		render.Render(w, r, cHttp.ErrResponse(http.StatusInternalServerError, "Could not count active load tests"))
 		return
 	}
+	activeLoadTests := testsByPhase["running"] + testsByPhase["creating"]
 
-	if activeLoadTests >= p.maxLoadTestsRun {
-		logger.Warn("number of active load tests reached limit", zap.Int("current", activeLoadTests), zap.Int("limit", p.maxLoadTestsRun))
+	if int(activeLoadTests) >= p.maxLoadTestsRun {
+		logger.Warn("number of active load tests reached limit", zap.Int("current", int(activeLoadTests)), zap.Int("limit", p.maxLoadTestsRun))
 		render.Render(w, r, cHttp.ErrResponse(http.StatusTooManyRequests, "Number of active load tests reached limit"))
 		return
 	}

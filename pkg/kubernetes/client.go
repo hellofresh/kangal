@@ -157,23 +157,6 @@ func (c *Client) filterLoadTestsByPhase(list *apisLoadTestV1.LoadTestList, phase
 	return &filteredList
 }
 
-// CountActiveLoadTests returns a number of currently running load tests
-func (c *Client) CountActiveLoadTests(ctx context.Context) (int, error) {
-	loadTests, err := c.ltClient.List(ctx, metaV1.ListOptions{})
-	if err != nil {
-		return 0, err
-	}
-	counter := 0
-
-	// CRD-s currently don't support custom field selectors, so we have to iterate via all load tests and check status phase
-	for _, loadTest := range loadTests.Items {
-		if loadTest.Status.Phase == apisLoadTestV1.LoadTestRunning || loadTest.Status.Phase == apisLoadTestV1.LoadTestCreating {
-			counter++
-		}
-	}
-	return counter, nil
-}
-
 // GetMasterPodRequest is making an assumptions that we only care about the logs
 // from the most recently created pod. It gets the pods associated with
 // the master job and returns the request that is used for getting the logs
@@ -248,20 +231,59 @@ func BuildClientConfig(masterURL string, kubeConfigPath string, timeout time.Dur
 	return kubeCfg, nil
 }
 
-// CountRunningLoadtests used in metrics to report running loadtests
-func (c *Client) CountRunningLoadtests() int64 {
+// CountExistingLoadtests used in metrics to report running loadtests
+func (c *Client) CountExistingLoadtests() (map[string]int64, map[string]int64, error) {
 	tt, err := c.ltClient.List(context.Background(), metaV1.ListOptions{})
 	if err != nil {
 		c.logger.Error("Couldn't list existing loadtests", zap.Error(err))
-		return 0
+		return nil, nil, err
 	}
 
-	var rt = 0
+	var phaseCount = map[string]int64{
+		"running":  0,
+		"finished": 0,
+		"creating": 0,
+		"errored":  0,
+		"starting": 0,
+	}
+
+	var typeCount = map[string]int64{
+		"k6":     0,
+		"jmeter": 0,
+		"locust": 0,
+		"ghz":    0,
+	}
+
 	for _, loadTest := range tt.Items {
-		if loadTest.Status.Phase == apisLoadTestV1.LoadTestRunning {
-			rt++
+		if loadTest.Status.Phase.String() == "running" {
+			phaseCount["running"]++
+		}
+		if loadTest.Status.Phase.String() == "errored" {
+			phaseCount["errored"]++
+		}
+		if loadTest.Status.Phase.String() == "starting" {
+			phaseCount["starting"]++
+		}
+		if loadTest.Status.Phase.String() == "creating" {
+			phaseCount["creating"]++
+		}
+		if loadTest.Status.Phase.String() == "finished" {
+			phaseCount["finished"]++
+		}
+
+		if loadTest.Spec.Type == apisLoadTestV1.LoadTestTypeK6 {
+			typeCount["k6"]++
+		}
+		if loadTest.Spec.Type == apisLoadTestV1.LoadTestTypeGhz {
+			typeCount["ghz"]++
+		}
+		if loadTest.Spec.Type == apisLoadTestV1.LoadTestTypeJMeter {
+			typeCount["jmeter"]++
+		}
+		if loadTest.Spec.Type == apisLoadTestV1.LoadTestTypeLocust {
+			typeCount["locust"]++
 		}
 	}
 
-	return int64(rt)
+	return phaseCount, typeCount, nil
 }
