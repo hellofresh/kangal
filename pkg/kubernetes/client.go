@@ -240,18 +240,18 @@ func (c *Client) CountExistingLoadtests() (map[string]int64, map[string]int64, e
 	}
 
 	var phaseCount = map[string]int64{
-		"running":  0,
-		"finished": 0,
-		"creating": 0,
-		"errored":  0,
-		"starting": 0,
+		apisLoadTestV1.LoadTestRunning.String():  0,
+		apisLoadTestV1.LoadTestFinished.String(): 0,
+		apisLoadTestV1.LoadTestCreating.String(): 0,
+		apisLoadTestV1.LoadTestErrored.String():  0,
+		apisLoadTestV1.LoadTestStarting.String(): 0,
 	}
 
 	var typeCount = map[string]int64{
-		"K6":     0,
-		"JMeter": 0,
-		"Locust": 0,
-		"Ghz":    0,
+		apisLoadTestV1.LoadTestTypeK6.String():     0,
+		apisLoadTestV1.LoadTestTypeJMeter.String(): 0,
+		apisLoadTestV1.LoadTestTypeLocust.String(): 0,
+		apisLoadTestV1.LoadTestTypeGhz.String():    0,
 	}
 
 	for _, loadTest := range tt.Items {
