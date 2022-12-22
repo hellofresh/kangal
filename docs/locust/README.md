@@ -10,7 +10,7 @@ Locust is one of the load generators implemented in Kangal. It uses the official
 
 Kangal requires a .py testfile describing the test.
 
-For more information, check [Locust official website](https://locust.io/).
+For more information, check the [Locust official site](https://locust.io/).
 
 ## How it works
 You can create Locust load tests using Kangal Proxy.
@@ -38,7 +38,7 @@ $ curl -X POST http://${KANGAL_PROXY_ADDRESS}/load-test \
   -F targetURL=http://my-app.example.com
 ```
 
-Let's break it down the parameters:
+Let's break the parameters down:
 
 - `distributedPods` is the number of Locust workers desired
 - `testFile` is the locustfile containing your test
@@ -72,7 +72,7 @@ $ curl -X POST http://${KANGAL_PROXY_ADDRESS}/load-test \
   -F type=Locust
 ```
 
-In this last example, the test will run infinitely and no `targetURL` were specified.
+In this last example, the test will run infinitely and no `targetURL` was specified.
 
 ## Configuring Locust resource requirements
 By default, Kangal does not specify resource requirements for loadtests run with Locust as a backend.
@@ -92,33 +92,36 @@ LOCUST_WORKER_MEMORY_LIMITS
 LOCUST_WORKER_MEMORY_REQUESTS
 ```
 
-You have to specify these variables on Kangal Controller, read more at [charts/kangal/README.md](https://github.com/hellofresh/kangal/blob/master/charts/kangal/README.md#kangal-controller-locust-specific).
+You have to specify these variables on the Kangal Controller, read more at [charts/kangal/README.md](https://github.com/hellofresh/kangal/blob/master/charts/kangal/README.md#kangal-controller-locust-specific).
 
 More information regarding resource limits and requests can be found in the following page(s):
 
-- https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
-- https://cloud.google.com/blog/products/gcp/kubernetes-best-practices-resource-requests-and-limits
+- <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/>
+- <https://cloud.google.com/blog/products/gcp/kubernetes-best-practices-resource-requests-and-limits>
 
 ## Writing tests
-It's recommended to read [official Locust documentation](https://docs.locust.io/en/stable/writing-a-locustfile.html).
+It's recommended to read the [official Locust documentation](https://docs.locust.io/en/stable/writing-a-locustfile.html).
 
 ## Reporting
 Locust can write test statistics in CSV format, to persist those files, put the code below into your locustfile.
 
-> Note: Kangal Locust implementation automatically exports reports to `/tmp/` folder.
+> Note: Kangal Locust implementation automatically exports reports to the `/tmp/` folder.
 
 ```python
-import glob, tarfile, requests, os
+import glob
+import os
+import requests
+import tarfile
 
-from locust import events, runners
+from locust import HttpUser, events
 from locust.runners import MasterRunner
 
 @events.quitting.add_listener
 def hook_quit(environment):
     presigned_url = os.environ.get('REPORT_PRESIGNED_URL')
-    if None == presigned_url:
+    if presigned_url is None:
         return
-    if False == isinstance(environment.runner, MasterRunner):
+    if not isinstance(environment.runner, MasterRunner):
         return
     report = '/home/locust/report.tar.gz'
     tar = tarfile.open(report, 'w:gz')
@@ -127,5 +130,5 @@ def hook_quit(environment):
         tar.add(item, arcname=os.path.basename(item))
     tar.close()
     request_headers = {'content-type': 'application/gzip'}
-    r = requests.put(presigned_url, data=open(report, 'rb'), headers=request_headers)
+    requests.put(presigned_url, data=open(report, 'rb'), headers=request_headers)
 ```
