@@ -1,9 +1,9 @@
 import glob
 import os
-import requests
 import tarfile
 
-from locust import HttpUser, task, between, events, runners
+import requests
+from locust import HttpUser, between, events, task
 from locust.runners import MasterRunner
 
 

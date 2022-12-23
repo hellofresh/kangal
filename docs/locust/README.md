@@ -110,9 +110,9 @@ Locust can write test statistics in CSV format, to persist those files, put the 
 ```python
 import glob
 import os
-import requests
 import tarfile
 
+import requests
 from locust import HttpUser, events
 from locust.runners import MasterRunner
 
