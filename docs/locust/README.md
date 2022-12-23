@@ -72,7 +72,7 @@ $ curl -X POST http://${KANGAL_PROXY_ADDRESS}/load-test \
   -F type=Locust
 ```
 
-In this last example, the test will run infinitely and no `targetURL` was specified.
+In this last example, the test will run infinitely and no `targetURL` is specified in the request, since it's set in the test code.
 
 ## Configuring Locust resource requirements
 By default, Kangal does not specify resource requirements for loadtests run with Locust as a backend.
