@@ -9,19 +9,19 @@ from locust.runners import MasterRunner
 
 @events.quitting.add_listener
 def hook_quit(environment):
-    presigned_url = os.environ.get('REPORT_PRESIGNED_URL')
+    presigned_url = os.environ.get("REPORT_PRESIGNED_URL")
     if presigned_url is None:
         return
     if not isinstance(environment.runner, MasterRunner):
         return
-    report = '/home/locust/report.tar.gz'
-    tar = tarfile.open(report, 'w:gz')
-    for item in glob.glob('/tmp/*.csv'):
-        print('Adding %s...' % item)
+    report = "/home/locust/report.tar.gz"
+    tar = tarfile.open(report, "w:gz")
+    for item in glob.glob("/tmp/*.csv"):
+        print("Adding %s..." % item)
         tar.add(item, arcname=os.path.basename(item))
     tar.close()
-    request_headers = {'content-type': 'application/gzip'}
-    requests.put(presigned_url, data=open(report, 'rb'), headers=request_headers)
+    request_headers = {"content-type": "application/gzip"}
+    requests.put(presigned_url, data=open(report, "rb"), headers=request_headers)
 
 
 class ExampleLoadTest(HttpUser):
@@ -29,4 +29,4 @@ class ExampleLoadTest(HttpUser):
 
     @task
     def example_page(self):
-        self.client.get('/example-page')
+        self.client.get("/example-page")
