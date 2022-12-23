@@ -31,7 +31,16 @@ Some test scenarios require unique request or at least some amount of varied dat
 
 1. Prepare your test data in CSV file
 2. Configure test script accordingly. Jump to section [Test with CSV Data](#test-with-csv-data)
-3. Add both files in POST request to Kangal API
+3. Add both files in the POST request to the Kangal API, using the `testFile` and `testData` fields respectively:
+
+```bash
+$ curl -X POST http://${KANGAL_PROXY_ADDRESS}/load-test \
+  -H 'Content-Type: multipart/form-data' \
+  -F distributedPods=1 \
+  -F testFile=@/path/to/test-file.jmx \
+  -F testData=@/path/to/test-data.csv \
+  -F type=JMeter
+```
 
 Kangal will split the test data equally between all the distributed pods you requested, so every pod will have a unique piece of your test data file and requests from different pods will not be duplicated. If you have only one distributed pod no data splitting will take place.
 
@@ -379,7 +388,7 @@ This config element should be nested under HTTP request sampler. Read more about
 
 ![dataset_config dmg](images/dataset_config.png){ height=500 }
 
-> **Important note!** In Kangal the path to the test data file is always the same **/testdata/testdata.csv**. Please specify this path in Filename field of your CSV Data Set Config. Otherwise, the test run by Kangal will not see the provided data.
+> **Important note!** In Kangal the path to the test data file is always the same **/testdata/testdata.csv**. Please specify this path in the Filename field of your CSV Data Set Config. Otherwise, the test run by Kangal will not see the provided data.
 
 **The test data will be equally divided between the number of pods set on distributedPods parameter**
 
