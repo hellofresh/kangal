@@ -102,6 +102,10 @@ More information regarding resource limits and requests can be found in the foll
 ## Writing tests
 It's recommended to read the [official Locust documentation](https://docs.locust.io/en/stable/writing-a-locustfile.html).
 
+### Tests with Test Data
+
+Using test data in load tests with Locust and Kangal is currently not supported.
+
 ## Reporting
 Locust can write test statistics in CSV format, to persist those files, put the code below into your locustfile.
 
