@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
 	"testing"
 
@@ -36,7 +38,7 @@ func TestShouldCreateConfigMaps(t *testing.T) {
 		Spec: loadTestV1.LoadTestSpec{
 			DistributedPods: &distributedPods,
 			TestFile:        []byte("test"),
-			TestData:        []byte("data"),
+			TestData:        gzipped([]byte("data")),
 		},
 		Status: loadTestV1.LoadTestStatus{
 			Namespace: namespace,
@@ -51,7 +53,7 @@ func TestShouldCreateConfigMaps(t *testing.T) {
 	require.NoError(t, err, "Error when listing config maps")
 	assert.Equal(t, 2, len(cms.Items))
 	assert.Equal(t, tdNames[0], cms.Items[0].Name)
-	assert.Equal(t, []byte("data"), cms.Items[0].BinaryData[backends.LoadTestData])
+	assert.Equal(t, gzipped([]byte("data")), cms.Items[0].BinaryData[backends.LoadTestData])
 	assert.Equal(t, tfName, cms.Items[1].Name)
 	assert.Equal(t, []byte("test"), cms.Items[1].BinaryData[backends.LoadTestScript])
 }
@@ -77,7 +79,7 @@ func TestShouldSplitCSVTestData(t *testing.T) {
 		Spec: loadTestV1.LoadTestSpec{
 			DistributedPods: &distributedPods,
 			TestFile:        []byte("test"),
-			TestData:        []byte("first line\nsecond line\nthird line\nfourth line"),
+			TestData:        gzipped([]byte("first line\nsecond line\nthird line\nfourth line")),
 		},
 		Status: loadTestV1.LoadTestStatus{
 			Namespace: namespace,
@@ -99,4 +101,14 @@ func TestShouldSplitCSVTestData(t *testing.T) {
 	assert.Equal(t, []byte("third line\n"), cms.Items[2].BinaryData[backends.LoadTestData])
 
 	assert.Equal(t, tfName, cms.Items[4].Name)
+}
+
+func gzipped(data []byte) []byte {
+	var by bytes.Buffer
+	gz := gzip.NewWriter(&by)
+	gz.Write(data)
+	gz.Flush()
+	gz.Close()
+
+	return by.Bytes()
 }

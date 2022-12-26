@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"bytes"
+	"compress/gzip"
 	"encoding/csv"
 	"errors"
 	"fmt"
@@ -142,6 +143,12 @@ func fromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger, allowedC
 	if err != nil {
 		logger.Debug("Could not get file from request", zap.String("file", testData), zap.Error(err))
 		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %s from request: %w", testData, err)
+	}
+
+	td, err = gzipped(td)
+	if err != nil {
+		logger.Debug("Could not gzip testdata", zap.String("file", testData), zap.Error(err))
+		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error gzipping request testdata: %w", err)
 	}
 
 	ev, err := getEnvVars(r)
@@ -456,4 +463,26 @@ func fileToString(f io.ReadCloser) (string, error) {
 
 func getTags(r *http.Request) (apisLoadTestV1.LoadTestTags, error) {
 	return apisLoadTestV1.LoadTestTagsFromString(r.FormValue(tags))
+}
+
+func gzipped(testData []byte) ([]byte, error) {
+	var result []byte
+
+	var by bytes.Buffer
+	gz := gzip.NewWriter(&by)
+	if _, err := gz.Write(testData); err != nil {
+		return result, err
+	}
+
+	if err := gz.Flush(); err != nil {
+		return result, err
+	}
+
+	if err := gz.Close(); err != nil {
+		return result, err
+	}
+
+	result = by.Bytes()
+
+	return result, nil
 }
