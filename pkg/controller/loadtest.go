@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
 	"encoding/csv"
 	errs "errors"
@@ -664,7 +666,6 @@ func NewFileConfigMap(cfgName, filename string, content []byte) (*coreV1.ConfigM
 
 // NewTestdataConfigMaps splits the CSV content for n distributed pods and creates a configmap for each one
 func NewTestdataConfigMaps(cfgName, filename string, n int, content []byte, logger *zap.Logger) ([]*coreV1.ConfigMap, error) {
-	// TODO: split test data
 	if strings.TrimSpace(cfgName) == "" {
 		return nil, errs.New("empty config name")
 	}
@@ -692,24 +693,21 @@ func NewTestdataConfigMaps(cfgName, filename string, n int, content []byte, logg
 
 	cMaps := make([]*coreV1.ConfigMap, n)
 
-	chunks, err := splitTestData(string(content), n, logger)
+	chunks, err := splitTestData(content, n, logger)
 	if err != nil {
 		return nil, err
 	}
 
-	stringWriter := new(strings.Builder)
-
 	for i := 0; i < n; i++ {
-		csvWriter := csv.NewWriter(stringWriter)
+		byteWriter := new(bytes.Buffer)
+		csvWriter := csv.NewWriter(byteWriter)
 		if err := csvWriter.WriteAll(chunks[i]); err != nil {
 			return nil, err
 		}
 
 		data := map[string][]byte{
-			backends.LoadTestData: []byte(stringWriter.String()),
+			backends.LoadTestData: byteWriter.Bytes(),
 		}
-
-		stringWriter.Reset()
 
 		cmName := fmt.Sprintf("%s-%03d", filename, i)
 
@@ -725,8 +723,12 @@ func NewTestdataConfigMaps(cfgName, filename string, n int, content []byte, logg
 }
 
 // splitTestData splits provided csv test data and returns the array of file chunks
-func splitTestData(testdata string, n int, logger *zap.Logger) ([][][]string, error) {
-	reader := csv.NewReader(strings.NewReader(testdata))
+func splitTestData(testdata []byte, n int, logger *zap.Logger) ([][][]string, error) {
+	gzReader, err := gzip.NewReader(bytes.NewReader(testdata))
+	if err != nil {
+		return nil, err
+	}
+	reader := csv.NewReader(gzReader)
 
 	count := 0
 	for {
@@ -744,7 +746,11 @@ func splitTestData(testdata string, n int, logger *zap.Logger) ([][][]string, er
 
 	chunk := 0
 	chunks := make([][][]string, n)
-	reader = csv.NewReader(strings.NewReader(testdata))
+	gzReader, err = gzip.NewReader(bytes.NewReader(testdata))
+	if err != nil {
+		return nil, err
+	}
+	reader = csv.NewReader(gzReader)
 	for line := 0; chunk < n; line++ {
 		rec, err := reader.Read()
 		if err == io.EOF {
