@@ -19,12 +19,14 @@ const (
 	loadTestFileVolumeName    = "loadtest-testfile-volume"
 	loadTestDataVolumeName    = "loadtest-testdata-volume"
 
-	configFileName   = "config"
-	testdataFileName = "testdata.protoset"
+	configFileName             = "/script/config"
+	compressedTestdataFileName = "/datatmp/testdata.protoset.gz"
+	testdataDir                = "/data"
+	testdataFileBaseName       = "testdata.protoset"
 )
 
 var defaultArgs = []string{
-	"--config=/data/config",
+	"--config=/script/config",
 	"--output=/results.html",
 	"--format=html",
 }
@@ -84,6 +86,15 @@ func (b *Backend) NewJob(
 					RestartPolicy: "Never",
 					Volumes:       volumes,
 					Tolerations:   b.tolerations,
+					InitContainers: []coreV1.Container{
+						{
+							Name:         "inflate-testdata",
+							Image:        "alpine:latest",
+							Command:      []string{"/bin/sh"},
+							Args:         []string{"-c", fmt.Sprintf("(ls %s >/dev/null 2>&1 && cat %s |zcat > %s) || echo \"no testdata.protoset.gz file\"", compressedTestdataFileName, compressedTestdataFileName, testdataDir+"/"+testdataFileBaseName)},
+							VolumeMounts: mounts,
+						},
+					},
 					Containers: []coreV1.Container{
 						{
 							Name:         "ghz",
@@ -115,7 +126,7 @@ func NewFileVolumeAndMount(name, cfg, filename, subpath string) (coreV1.Volume, 
 
 	m := coreV1.VolumeMount{
 		Name:      name,
-		MountPath: fmt.Sprintf("/data/%s", filename),
+		MountPath: filename,
 		SubPath:   subpath,
 	}
 

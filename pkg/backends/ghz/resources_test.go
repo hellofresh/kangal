@@ -56,7 +56,7 @@ func TestNewFileVolumeAndMount(t *testing.T) {
 			tag:      "volume and mount are created with specified name, file and /data mount path",
 			name:     "load-test-volume",
 			cfg:      "test-configmap",
-			filename: "testfile.json",
+			filename: "/data/testfile.json",
 			subpath:  "load-test-file",
 			expectedVol: coreV1.Volume{
 				Name: "load-test-volume",

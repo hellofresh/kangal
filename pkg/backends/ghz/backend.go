@@ -153,10 +153,18 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, testfi
 	volumes[0], mounts[0] = NewFileVolumeAndMount(loadTestFileVolumeName, testfileConfigMapName, configFileName, backends.LoadTestScript)
 
 	if len(testdataConfigMapNames) == 1 {
-		v, m := NewFileVolumeAndMount(loadTestDataVolumeName, testdataConfigMapNames[0], testdataFileName, backends.LoadTestData)
-		volumes = append(volumes, v)
-		mounts = append(mounts, m)
-	} // FIXME: else if len(testdataConfigMapNames) > 1
+		v, m := NewFileVolumeAndMount(loadTestDataVolumeName, testdataConfigMapNames[0], compressedTestdataFileName, backends.LoadTestData)
+		volumes = append(volumes, v, coreV1.Volume{
+			Name: "testdata",
+			VolumeSource: coreV1.VolumeSource{
+				EmptyDir: &coreV1.EmptyDirVolumeSource{},
+			},
+		})
+		mounts = append(mounts, m, coreV1.VolumeMount{
+			Name:      "testdata",
+			MountPath: testdataDir,
+		})
+	}
 
 	// Create Job
 	job := b.NewJob(loadTest, volumes, mounts, reportURL)
