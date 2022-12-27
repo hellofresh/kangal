@@ -10,9 +10,9 @@
 
 K6 is one of the load generators implemented in Kangal. It uses the official docker image [loadimpact/k6](https://hub.docker.com/r/loadimpact/k6).
 
-Kangal requires a javascript testfile describing the test.
+Kangal requires a JavaScript testfile describing the test.
 
-For more information, check [k6 official website](https://k6.io/).
+For more information, check [k6 official site](https://k6.io/).
 
 ## How it works
 You can create k6 load tests using Kangal Proxy.
@@ -53,7 +53,7 @@ $ curl -X POST http://${KANGAL_PROXY_ADDRESS}/load-test \
 Let's break it down the parameters:
 
 - `distributedPods` is the number of k6 workers desired
-- `testFile` is the javascript file containing your test
+- `testFile` is the JavaScript file containing your test
 - `type` is the backend you want to use, `K6` in this case
 - `duration` configures how long the load test will run for
 
@@ -80,11 +80,33 @@ You have to specify these variables on Kangal Controller, read more at [charts/k
 
 More information regarding resource limits and requests can be found in the following page(s):
 
-- https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
-- https://cloud.google.com/blog/products/gcp/kubernetes-best-practices-resource-requests-and-limits
+- <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/>
+- <https://cloud.google.com/blog/products/gcp/kubernetes-best-practices-resource-requests-and-limits>
 
 ## Writing tests
 It's recommended to read [official k6 documentation](https://k6.io/docs/).
+
+### Tests with Test Data
+
+K6 has support for Data Parameterization via the [k6-data module](https://k6.io/docs/javascript-api/#k6-data).
+See some examples on the usage of Data Parameterization in the [k6 examples](https://k6.io/docs/examples/data-parameterization/).
+
+Kangal also supports test data with K6, the supported format file is `.csv`.
+
+1. Prepare your test data in a `.csv` file
+2. Configure test script accordingly. See [the k6 data parameterization from a CSV file example](https://k6.io/docs/examples/data-parameterization/#from-a-csv-file).
+   * **Important**: _"k6 doesn't parse CSV files natively, but you can use an external library, [Papa Parse](https://www.papaparse.com/)."_
+3. Add the file in the `testData` field:
+
+```shell
+$ curl -X POST http://${KANGAL_PROXY_ADDRESS}/load-test \
+  -H 'Content-Type: multipart/form-data' \
+  -F distributedPods=1 \
+  -F testFile=@test.js \
+  -F testData=@/path/to/test-data.csv \
+  -F duration=10m \
+  -F type=K6
+```
 
 ## Reporting
 k6 can write test statistics in multiple formats using the `K6_OUT` environment variable. To persist the summary, put the code below into your testfile using the [handleSummary function](https://k6.io/docs/results-visualization/end-of-test-summary/#handlesummary-callback).
@@ -113,7 +135,7 @@ export function handleSummary(data) {
 }
 ```
 
-You can use https://github.com/benc-uk/k6-reporter to create an HTML Report.
+You can use <https://github.com/benc-uk/k6-reporter> to create an HTML Report.
 
 > Note: There aren't any concept of master/worker in k6. Metrics will not be automatically aggregated. To be able to aggregate your metrics and analyse them together, you’ll need to set K6_OUT env to send statics to another service (influxdb, prometheus, etc.).
 

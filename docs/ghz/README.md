@@ -4,7 +4,7 @@
 
 Kangal supports `ghz` as a loadtest backend using a custom docker image: [`hellofresh/kangal-ghz`][kangal-ghz] published to [dockerhub].
 
-For more information, please check [ghz official website](https://ghz.sh/).
+For more information, please check [ghz official site](https://ghz.sh/).
 
 ## Usage
 To create a loadtest, simply send a request to Kangal proxy with the `ghz` configuration in the `testFile` field:
@@ -38,11 +38,23 @@ Example `config.json`:
 }
 ```
 
-### Providing protobuf schema
+### Providing a protobuf schema
 
 While `ghz` accepts `.proto` files to not depend on server reflection, Kangal currently only supports `.protoset` files.
 
-To do so, use the `testData` form field to provide the `.protoset` file and add the following key to your JSON/TOML configuration file:
+To do so, use the `testData` form field to provide the `.protoset` file:
+
+```shell
+$ curl -X POST http://${KANGAL_PROXY_ADDRESS}/load-test \
+  -H 'Content-Type: multipart/form-data' \
+  -F distributedPods=1 \
+  -F testFile=@config.json \
+  -F testData=@/path/to/testdata.protoset \
+  -F type=Ghz \
+  -F targetURL=http://my-app.example.com
+```
+
+and add the following key to your JSON/TOML configuration file:
 
 ```json
 {
@@ -51,10 +63,10 @@ To do so, use the `testData` form field to provide the `.protoset` file and add 
 }
 ```
 
-For information about how to [create `.protoset` files][ghz protoset-example] and the complete list of configuration parameter, please check [ghz documentation][ghz params].
+For information about how to [create `.protoset` files][ghz protoset-example] and the complete list of configuration parameter, please check the [ghz documentation][ghz params].
 
-Since `ghz` does not use master-worker pattern, `distributedPods` simply creates replicas of the load-generating pod.  
-This means `distributedPods` value of `5` would mean that it creates 5 identical pods, generating 5x the load with 5x concurrency, etc.
+Since `ghz` does not use the master-worker pattern, `distributedPods` simply creates replicas of the load-generating pod.  
+This means that a `distributedPods` value of `5` would mean that it creates 5 identical pods, generating 5x the load with 5x concurrency, etc.
 
 
 ## Configuring resource limits and requirements
@@ -75,14 +87,14 @@ You have to specify these variables on Kangal Controller, read more at [charts/k
 
 More information regarding resource limits and requests can be found in the following pages:
 
-- https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
-- https://cloud.google.com/blog/products/gcp/kubernetes-best-practices-resource-requests-and-limits
+- <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/>
+- <https://cloud.google.com/blog/products/gcp/kubernetes-best-practices-resource-requests-and-limits>
 
 
 ## Notes
 Kangal overrides the following options:
 
-- The output format is always set to html
+- The output format is always set to HTML
 - Output directory is always set to `/results`
 - This is done so Kangal is able to pick up the results and persist the results
 - Because they are set as container arguments, this cannot be overridden with the configuration file
