@@ -117,15 +117,19 @@ func (b *Backend) NewPod(loadTest loadTestV1.LoadTest, i int, configMapName stri
 	if configMapName != "" {
 		volumeMounts = []coreV1.VolumeMount{
 			{
-				Name:      "testdata",
-				MountPath: "/testdata/testdata.csv",
+				Name:      "testdatatmp",
+				MountPath: "/testdatatmp/testdata.csv.gz",
 				SubPath:   backends.LoadTestData,
+			},
+			{
+				Name:      "testdata",
+				MountPath: "/testdata",
 			},
 		}
 
 		volumes = []coreV1.Volume{
 			{
-				Name: "testdata",
+				Name: "testdatatmp",
 				VolumeSource: coreV1.VolumeSource{
 					ConfigMap: &coreV1.ConfigMapVolumeSource{
 						LocalObjectReference: coreV1.LocalObjectReference{
@@ -133,6 +137,12 @@ func (b *Backend) NewPod(loadTest loadTestV1.LoadTest, i int, configMapName stri
 						},
 						Optional: &optionalVolume,
 					},
+				},
+			},
+			{
+				Name: "testdata",
+				VolumeSource: coreV1.VolumeSource{
+					EmptyDir: &coreV1.EmptyDirVolumeSource{},
 				},
 			},
 		}
@@ -164,6 +174,15 @@ func (b *Backend) NewPod(loadTest loadTestV1.LoadTest, i int, configMapName stri
 							},
 						},
 					},
+				},
+			},
+			InitContainers: []coreV1.Container{
+				{
+					Name:         "inflate-testdata",
+					Image:        "alpine:latest",
+					Command:      []string{"/bin/sh"},
+					Args:         []string{"-c", "(ls /testdatatmp/testdata.csv.gz >/dev/null 2>&1 && cat /testdatatmp/testdata.csv.gz |zcat > /testdata/testdata.csv) || echo \"no testdata.csv.gz file\""},
+					VolumeMounts: volumeMounts,
 				},
 			},
 			Containers: []coreV1.Container{
