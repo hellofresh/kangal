@@ -167,9 +167,17 @@ func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, testfi
 		volumes[0], mounts[0] = NewFileVolumeAndMount(loadTestFileVolumeName, testfileConfigMapName, backends.LoadTestScript, scriptTestFileName)
 
 		if len(testdataConfigMapNames) > 0 {
-			v, m := NewFileVolumeAndMount(loadTestDataVolumeName, testdataConfigMapNames[i%int32(len(testdataConfigMapNames))], backends.LoadTestData, testdataFileName)
-			volumes = append(volumes, v)
-			mounts = append(mounts, m)
+			v, m := NewFileVolumeAndMount(loadTestDataVolumeName, testdataConfigMapNames[i%int32(len(testdataConfigMapNames))], backends.LoadTestData, compressedTestdataFileName)
+			volumes = append(volumes, v, coreV1.Volume{
+				Name: "testdata",
+				VolumeSource: coreV1.VolumeSource{
+					EmptyDir: &coreV1.EmptyDirVolumeSource{},
+				},
+			})
+			mounts = append(mounts, m, coreV1.VolumeMount{
+				Name:      "testdata",
+				MountPath: testdataDir,
+			})
 		}
 		// Create Job
 		job := b.NewJob(loadTest, volumes, mounts, secret, reportURL, i)
