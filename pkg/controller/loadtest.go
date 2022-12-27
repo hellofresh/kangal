@@ -700,8 +700,16 @@ func NewTestdataConfigMaps(cfgName, filename string, n int, content []byte, logg
 
 	for i := 0; i < n; i++ {
 		byteWriter := new(bytes.Buffer)
-		csvWriter := csv.NewWriter(byteWriter)
+		gzipWriter := gzip.NewWriter(byteWriter)
+		csvWriter := csv.NewWriter(gzipWriter)
 		if err := csvWriter.WriteAll(chunks[i]); err != nil {
+			return nil, err
+		}
+
+		if err := gzipWriter.Flush(); err != nil {
+			return nil, err
+		}
+		if err := gzipWriter.Close(); err != nil {
 			return nil, err
 		}
 
