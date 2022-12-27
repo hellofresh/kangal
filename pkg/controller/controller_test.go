@@ -95,10 +95,10 @@ func TestShouldSplitCSVTestData(t *testing.T) {
 	assert.Equal(t, 5, len(cms.Items))
 
 	assert.Equal(t, tdNames[0], cms.Items[0].Name)
-	assert.Equal(t, []byte("first line\n"), cms.Items[0].BinaryData[backends.LoadTestData])
+	assert.Equal(t, gzipped([]byte("first line\n")), cms.Items[0].BinaryData[backends.LoadTestData])
 
 	assert.Equal(t, tdNames[2], cms.Items[2].Name)
-	assert.Equal(t, []byte("third line\n"), cms.Items[2].BinaryData[backends.LoadTestData])
+	assert.Equal(t, gzipped([]byte("third line\n")), cms.Items[2].BinaryData[backends.LoadTestData])
 
 	assert.Equal(t, tfName, cms.Items[4].Name)
 }
