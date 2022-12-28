@@ -145,10 +145,12 @@ func fromHTTPRequestToLoadTestSpec(r *http.Request, logger *zap.Logger, allowedC
 		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error getting %s from request: %w", testData, err)
 	}
 
-	td, err = gzipped(td)
-	if err != nil {
-		logger.Debug("Could not gzip testdata", zap.String("file", testData), zap.Error(err))
-		return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error gzipping request testdata: %w", err)
+	if len(td) > 0 {
+		td, err = gzipped(td)
+		if err != nil {
+			logger.Debug("Could not gzip testdata", zap.String("file", testData), zap.Error(err))
+			return apisLoadTestV1.LoadTestSpec{}, fmt.Errorf("error gzipping request testdata: %w", err)
+		}
 	}
 
 	ev, err := getEnvVars(r)
