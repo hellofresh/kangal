@@ -8,9 +8,9 @@ import (
 const (
 	// LoadTestLabel label used for test resources
 	LoadTestLabel = "loadtest"
-	// loadTestData is the prefix for the names of the testdata files inside the configmap/filesystem
+	// LoadTestData is the prefix for the names of the testdata files inside the configmap/filesystem
 	LoadTestData = LoadTestLabel + "-testdata"
-	// loadTestScript is the name of the testfile script inside the configmap/filesystem
+	// LoadTestScript is the name of the testfile script inside the configmap/filesystem
 	LoadTestScript = LoadTestLabel + "-script"
 )
 
