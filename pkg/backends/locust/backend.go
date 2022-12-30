@@ -51,6 +51,7 @@ func (*Backend) Type() loadTestV1.LoadTestType {
 	return loadTestV1.LoadTestTypeLocust
 }
 
+// UsesCSVTestData must signal whether the testdata files can be assumed to be CSV
 func (*Backend) UsesCSVTestData() bool {
 	return false
 }
