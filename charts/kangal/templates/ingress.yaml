@@ -17,11 +17,19 @@ metadata:
     chart: {{ template "<CHARTNAME>.chart" $ }}
     release: {{ $.Release.Name }}
     heritage: {{ $.Release.Service }}
-{{- with $value.ingress.annotations }}
+  {{- if or (regexMatch "^edge-stack-.*" (get $value.ingress "class")) ($value.annotations) }}
   annotations:
-{{ toYaml . | indent 4 }}
-{{- end }}
+    {{- if (regexMatch "^edge-stack-.*" (get $value.ingress "class")) }}
+    getambassador.io/ambassador-id: "{{ $value.ingress.class }}"
+    {{- end }}
+    {{- with $value.ingress.annotations }}
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- end }}
 spec:
+  {{- if (empty (get ($value.ingress.annotations) "kubernetes.io/ingress.class")) }}
+  ingressClassName: "{{- default "nginx" $value.ingress.class }}"
+  {{- end }}
   rules:
 {{- range $labelPort, $hostValue := $value.ingress.hosts }}
 {{- if kindIs "string"  $hostValue }}

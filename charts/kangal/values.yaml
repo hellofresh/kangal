@@ -27,8 +27,7 @@ proxy:
 
   ingress:
     enabled: true
-    annotations:
-      kubernetes.io/ingress.class: nginx
+    class: edge-stack-private
     path: /
     hosts:
       http: kangal-proxy.example.com
@@ -155,8 +154,7 @@ openapi-ui:
 
   ingress:
     enabled: true
-    annotations:
-      kubernetes.io/ingress.class: nginx
+    class: edge-stack-private
     path: /
     hosts:
       http: kangal-openapi-ui.example.com
