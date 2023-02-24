@@ -21,11 +21,16 @@ To read more about GitHub issues please address to the [official issue documenta
 - Describe the behavior you observe.
 - Describe the behavior you expect.
 
+#### Issue decision
+As a maintainers, we try to avoid introducing unnecessary complexity to the project codebase.
+We would like to see the strong use cases from the community and our internal users,
+to make sure that newly implemented features will be utilized.
+
 ### Create a PR
 Important: **Please wait for the reply of the maintaining team, before creating a PR.**
 
-#### Pull requests recommendations
-- Keep the PR short. We will ask you to split the big PRs to the several small PRs to reduce the cognitive load when reviewing it.
+#### Pull requests expectations
+- Keep the PR short. We will ask you to split the big PRs (with 10 files amd more) to the several small PRs to reduce the cognitive load when reviewing it.
 - Include unit tests covering your changes and new functionality.
 - Document the changes in the related [documentation files](https://github.com/hellofresh/kangal/tree/master/docs)
 - Follow the [Go](https://github.com/golang/go/wiki/CodeReviewComments) style guides.
