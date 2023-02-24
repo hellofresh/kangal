@@ -196,7 +196,7 @@ loadtest-worker-000     1/1     Running   0          22s
 Read more at [docs/index.md](docs/index.md).
 
 ## Contributing
-To start contributing, please check [CONTRIBUTING.md](CONTRIBUTING.md).
+Please check the [contribution guide](CONTRIBUTING.md) before opening a PR.
 
 ## Support
 If you need support, start with the [troubleshooting guide](docs/troubleshooting.md), and work your way through the process that we've outlined.
