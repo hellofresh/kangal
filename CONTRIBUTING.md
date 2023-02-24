@@ -22,9 +22,15 @@ To read more about GitHub issues please address to the [official issue documenta
 - Describe the behavior you expect.
 
 #### Issue decision
-As a maintainers, we try to avoid introducing unnecessary complexity to the project codebase.
-We would like to see the strong use cases from the community and our internal users,
-to make sure that newly implemented features will be utilized.
+As the maintainers, we are willing to accept issues that would:
+
+- Address bugs and security vulnerabilities, improve design and performance
+- Fulfil internal business needs
+- Fulfil strong use cases from the community
+
+We try to avoid introducing unnecessary complexity to the project codebase and want to make sure that newly implemented features will be utilized.
+
+In case of a dissent we reserve the right to have the final decision based on our project priorities.
 
 ### Create a PR
 Important: **Please wait for the reply of the maintaining team, before creating a PR.**
