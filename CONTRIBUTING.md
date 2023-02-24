@@ -6,7 +6,6 @@ The project is currently in the maintenance mode, which means we don't actively 
 We accept the external contribution after the discussions in [GitHub issues](https://github.com/hellofresh/kangal/issues).
 
 Kangal is currently maintained by [HelloFresh](https://github.com/hellofresh).
-You can also reach to us by email [engineering-experience@hellofresh.com](mailto:engineering-experience@hellofresh.com)
 
 ## Contribution options
 ### Create an issue
@@ -46,4 +45,3 @@ Important: **Please wait for the reply of the maintaining team, before creating 
 
 This project adheres to the Contributor Covenant [code of conduct](CODE_OF_CONDUCT.md).
 By participating, you are expected to uphold this code.
-Please report unacceptable behavior to [engineering-experience@hellofresh.com](mailto:engineering-experience@hellofresh.com).
