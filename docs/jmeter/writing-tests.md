@@ -411,6 +411,8 @@ JMETER_WORKER_REMOTE_CUSTOM_DATA_VOLUME_SIZE (defaults to 1GB) and access mode R
     This feature won't be available if your cluster does not support ReadWriteMany access mode.
     Please check with your local admins.
 
+You can set the StorageClass to be used for the PVC by setting the JMETER_WORKER_REMOTE_CUSTOM_DATA_STORAGECLASS environment variable to the name of the StorageClass you want to use.  If this environment variable is unset, Kangal will use the default StorageClass in your environment.
+
 The data will be cloned from the bucket to the volume using [Rclone](https://rclone.org/) and will be available to all the pods.
 
 For the full list of possible environment variables check [Kangal environment variables](../env-vars.md)

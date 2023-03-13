@@ -43,6 +43,7 @@
 | `JMETER_WORKER_REMOTE_CUSTOM_DATA_ENABLED`         | Enable remote custom data                                                | `false`                           |
 | `JMETER_WORKER_REMOTE_CUSTOM_DATA_BUCKET`          | The name of the bucket where remote data is                              |                                   |
 | `JMETER_WORKER_REMOTE_CUSTOM_DATA_VOLUME_SIZE`     | Volume size used by download remote data                                 | `1Gi`                             |
+| `JMETER_WORKER_REMOTE_CUSTOM_DATA_STORAGECLASS`    | StorageClass used for remote data PVC (ReadWriteMany required)       | kubernetes environment default |
 | `RCLONE_CONFIG_REMOTECUSTOMDATA_TYPE`              | [Rclone](https://rclone.org/) environment variable for type              |                                   |
 | `RCLONE_CONFIG_REMOTECUSTOMDATA_ACCESS_KEY_ID`     | [Rclone](https://rclone.org/) environment variable for access key ID     |                                   |
 | `RCLONE_CONFIG_REMOTECUSTOMDATA_SECRET_ACCESS_KEY` | [Rclone](https://rclone.org/) environment variable for secret access key |                                   |

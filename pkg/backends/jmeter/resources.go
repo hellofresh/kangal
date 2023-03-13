@@ -163,10 +163,17 @@ func (b *Backend) NewTestdataConfigMap(loadTest loadTestV1.LoadTest) ([]*coreV1.
 
 // NewPVC creates a new pvc for customdata
 func (b *Backend) NewPVC(loadTest loadTestV1.LoadTest, i int) *coreV1.PersistentVolumeClaim {
+
 	volumeSize := loadTestWorkerRemoteCustomDataVolumeSize
+	var storageClass *string
 	if val, ok := loadTest.Spec.EnvVars["JMETER_WORKER_REMOTE_CUSTOM_DATA_VOLUME_SIZE"]; ok {
 		volumeSize = val
 	}
+
+	if val, ok := loadTest.Spec.EnvVars["JMETER_WORKER_REMOTE_CUSTOM_DATA_STORAGECLASS"]; ok {
+		storageClass = &val
+	}
+
 	return &coreV1.PersistentVolumeClaim{
 		ObjectMeta: metaV1.ObjectMeta{
 			Name:   fmt.Sprintf("pvc-%s", loadTestWorkerName),
@@ -182,6 +189,7 @@ func (b *Backend) NewPVC(loadTest loadTestV1.LoadTest, i int) *coreV1.Persistent
 					coreV1.ResourceName(coreV1.ResourceStorage): resource.MustParse(volumeSize),
 				},
 			},
+			StorageClassName: storageClass,
 		},
 	}
 }
