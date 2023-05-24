@@ -1,6 +1,7 @@
 package report
 
 import (
+	"context"
 	"errors"
 	"net/url"
 )
@@ -14,5 +15,5 @@ func newPreSignedPutURL(loadTestName string) (*url.URL, error) {
 		return nil, ErrNoMinioClient
 	}
 
-	return minioClient.PresignedPutObject(bucketName, loadTestName, expires)
+	return minioClient.PresignedPutObject(context.Background(), bucketName, loadTestName, expires)
 }
