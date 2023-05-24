@@ -2,6 +2,7 @@ package report
 
 import (
 	"archive/tar"
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -11,7 +12,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
-	"github.com/minio/minio-go/v6"
+	"github.com/minio/minio-go/v7"
 	"github.com/spf13/afero"
 	"go.uber.org/zap"
 	k8sAPIErrors "k8s.io/apimachinery/pkg/api/errors"
@@ -26,6 +27,8 @@ var httpClient = &http.Client{
 
 // ShowHandler method returns response from file bucket in defined object storage
 func ShowHandler() func(w http.ResponseWriter, r *http.Request) {
+	ctx := context.Background()
+
 	if minioClient == nil {
 		panic("client was not initialized, please initialize object storage client")
 	}
@@ -52,7 +55,7 @@ func ShowHandler() func(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// first, try to handle uncompressed tar archive
-		obj, err := minioClient.GetObject(bucketName, loadTestName, minio.GetObjectOptions{})
+		obj, err := minioClient.GetObject(ctx, bucketName, loadTestName, minio.GetObjectOptions{})
 		if nil != err {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

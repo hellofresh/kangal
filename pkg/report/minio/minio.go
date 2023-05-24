@@ -1,13 +1,14 @@
 package report
 
 import (
+	"context"
 	"net/http"
 	"os"
 	"strings"
 	"syscall"
 	"time"
 
-	"github.com/minio/minio-go/v6"
+	"github.com/minio/minio-go/v7"
 )
 
 const (
@@ -39,7 +40,7 @@ func (m *MinioFileSystem) Open(name string) (http.File, error) {
 	}
 	name = strings.Join(parts, "/")
 
-	loadTestObj, err := getObject(m, name)
+	loadTestObj, err := getObject(context.Background(), m, name)
 	if err != nil {
 		return nil, os.ErrNotExist
 	}
@@ -53,8 +54,8 @@ func (m *MinioFileSystem) Open(name string) (http.File, error) {
 	}, nil
 }
 
-func getObject(m *MinioFileSystem, name string) (*minio.Object, error) {
-	obj, err := m.Client.GetObject(m.Bucket, name, minio.GetObjectOptions{})
+func getObject(ctx context.Context, m *MinioFileSystem, name string) (*minio.Object, error) {
+	obj, err := m.Client.GetObject(ctx, m.Bucket, name, minio.GetObjectOptions{})
 	if err == nil {
 		if _, err = obj.Stat(); err == nil {
 			return obj, nil
@@ -131,16 +132,17 @@ func (h *minioFile) Seek(offset int64, whence int) (int64, error) {
 
 // Readdir ...
 func (h *minioFile) Readdir(count int) ([]os.FileInfo, error) {
+	ctx := context.Background()
 	// List 'N' number of objects from a Bucket-name with a matching prefix.
 	listObjectsN := func(bucket, prefix string, count int) (objsInfo []minio.ObjectInfo, err error) {
-		// Create a done channel to control 'ListObjects' go routine.
-		doneCh := make(chan struct{})
 
-		// Free the channel upon return.
-		defer close(doneCh)
+		minioListOptions := minio.ListObjectsOptions{
+			Prefix: prefix,
+			Recursive: false,
+		}
 
 		i := 1
-		for object := range h.client.ListObjects(bucket, prefix, false, doneCh) {
+		for object := range h.client.ListObjects(ctx, bucket, minioListOptions) {
 			if object.Err != nil {
 				return nil, object.Err
 			}

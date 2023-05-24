@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/minio/minio-go/v6"
-	"github.com/minio/minio-go/v6/pkg/credentials"
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 
 	report "github.com/hellofresh/kangal/pkg/report/minio"
 )
@@ -55,8 +55,14 @@ func InitObjectStorageClient(cfg Config) error {
 	}
 	creds := credentials.NewChainCredentials(awsCredProviders)
 
+	minioOptions := minio.Options{
+		Creds: creds,
+		Secure: cfg.AWSUseHTTPS,
+		Region: cfg.AWSRegion,
+	}
+
 	// Init object storage (S3 compatible) client
-	minioClient, err = minio.NewWithCredentials(endpoint, creds, cfg.AWSUseHTTPS, cfg.AWSRegion)
+	minioClient, err = minio.New(endpoint, &minioOptions)
 	if err != nil {
 		return err
 	}
