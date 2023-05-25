@@ -56,7 +56,7 @@ func InitObjectStorageClient(cfg Config) error {
 	creds := credentials.NewChainCredentials(awsCredProviders)
 
 	minioOptions := minio.Options{
-		Creds: creds,
+		Creds:  creds,
 		Secure: cfg.AWSUseHTTPS,
 		Region: cfg.AWSRegion,
 	}

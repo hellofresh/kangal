@@ -137,7 +137,7 @@ func (h *minioFile) Readdir(count int) ([]os.FileInfo, error) {
 	listObjectsN := func(bucket, prefix string, count int) (objsInfo []minio.ObjectInfo, err error) {
 
 		minioListOptions := minio.ListObjectsOptions{
-			Prefix: prefix,
+			Prefix:    prefix,
 			Recursive: false,
 		}
 
