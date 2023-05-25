@@ -2,7 +2,6 @@ package report
 
 import (
 	"archive/tar"
-	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -27,7 +26,6 @@ var httpClient = &http.Client{
 
 // ShowHandler method returns response from file bucket in defined object storage
 func ShowHandler() func(w http.ResponseWriter, r *http.Request) {
-	ctx := context.Background()
 
 	if minioClient == nil {
 		panic("client was not initialized, please initialize object storage client")
@@ -46,6 +44,8 @@ func ShowHandler() func(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
 		loadTestName := chi.URLParam(r, "id")
 		file := chi.URLParam(r, "*")
 
@@ -150,7 +150,7 @@ func PersistHandler(kubeClient *kk8s.Client, logger *zap.Logger) func(w http.Res
 			return
 		}
 
-		url, err := newPreSignedPutURL(loadTestName)
+		url, err := newPreSignedPutURL(r.Context(), loadTestName)
 		if nil != err {
 			render.Render(w, r, khttp.ErrResponse(http.StatusInternalServerError, err.Error()))
 			return
