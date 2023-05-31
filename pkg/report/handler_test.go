@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/minio/minio-go/v6"
+	"github.com/minio/minio-go/v7"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
@@ -49,7 +49,10 @@ func TestShowHandler(t *testing.T) {
 	}
 
 	// init dependencies for report package
-	minioClient, _ = minio.New(srv.Listener.Addr().String(), "access-key", "secret-access-key", false)
+	minioOptions := minio.Options{
+		Secure: false,
+	}
+	minioClient, _ = minio.New(srv.Listener.Addr().String(), &minioOptions)
 	bucketName = "bucket-name"
 	fs = &fakeFS{}
 
@@ -120,7 +123,11 @@ func TestPersistHandler(t *testing.T) {
 	}
 
 	// init dependencies for report package
-	minioClient, _ = minio.NewWithRegion("localhost:80", "access-key", "secret-access-key", false, "us-east1")
+	minioOptions := minio.Options{
+		Secure: false,
+		Region: "us-east1",
+	}
+	minioClient, _ = minio.New("localhost:80", &minioOptions)
 	bucketName = "bucket-name"
 	expires = time.Second
 	logger := zap.NewNop()

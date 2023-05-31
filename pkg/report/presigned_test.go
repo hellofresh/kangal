@@ -1,6 +1,7 @@
 package report
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -17,7 +18,7 @@ func TestNewPreSignedPutURL(t *testing.T) {
 	assert.Nil(t, err)
 
 	loadTestName := "fake-loadtest"
-	url, err := newPreSignedPutURL(loadTestName)
+	url, err := newPreSignedPutURL(context.Background(), loadTestName)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, url)
@@ -27,7 +28,7 @@ func TestNewPreSignedPutURL(t *testing.T) {
 func TestNilClientNewPreSignedPutURL(t *testing.T) {
 	minioClient = nil
 	loadTestName := "fake-loadtest"
-	url, err := newPreSignedPutURL(loadTestName)
+	url, err := newPreSignedPutURL(context.Background(), loadTestName)
 	assert.EqualError(t, err, ErrNoMinioClient.Error())
 	assert.Nil(t, url)
 }

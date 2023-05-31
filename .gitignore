@@ -37,4 +37,5 @@ terraform.tfstate.backup
 
 .scannerwork/
 .idea
+.vscode
 dist

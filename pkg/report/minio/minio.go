@@ -1,13 +1,14 @@
 package report
 
 import (
+	"context"
 	"net/http"
 	"os"
 	"strings"
 	"syscall"
 	"time"
 
-	"github.com/minio/minio-go/v6"
+	"github.com/minio/minio-go/v7"
 )
 
 const (
@@ -22,13 +23,15 @@ type MinioFileSystem struct {
 
 // Open - implements http.Filesystem implementation.
 func (m *MinioFileSystem) Open(name string) (http.File, error) {
+	ctx := context.Background()
 	if strings.HasSuffix(name, pathSeparator) {
 		return &minioFile{
-			client: m.Client,
-			object: nil,
-			isDir:  true,
-			bucket: m.Bucket,
-			prefix: strings.TrimSuffix(name, pathSeparator),
+			context: ctx,
+			client:  m.Client,
+			object:  nil,
+			isDir:   true,
+			bucket:  m.Bucket,
+			prefix:  strings.TrimSuffix(name, pathSeparator),
 		}, nil
 	}
 
@@ -39,22 +42,23 @@ func (m *MinioFileSystem) Open(name string) (http.File, error) {
 	}
 	name = strings.Join(parts, "/")
 
-	loadTestObj, err := getObject(m, name)
+	loadTestObj, err := getObject(ctx, m, name)
 	if err != nil {
 		return nil, os.ErrNotExist
 	}
 
 	return &minioFile{
-		client: m.Client,
-		object: loadTestObj,
-		isDir:  false,
-		bucket: m.Bucket,
-		prefix: name,
+		context: ctx,
+		client:  m.Client,
+		object:  loadTestObj,
+		isDir:   false,
+		bucket:  m.Bucket,
+		prefix:  name,
 	}, nil
 }
 
-func getObject(m *MinioFileSystem, name string) (*minio.Object, error) {
-	obj, err := m.Client.GetObject(m.Bucket, name, minio.GetObjectOptions{})
+func getObject(ctx context.Context, m *MinioFileSystem, name string) (*minio.Object, error) {
+	obj, err := m.Client.GetObject(ctx, m.Bucket, name, minio.GetObjectOptions{})
 	if err == nil {
 		if _, err = obj.Stat(); err == nil {
 			return obj, nil
@@ -107,11 +111,12 @@ func (o objectInfo) Sys() interface{} {
 // A minioFile implements http.File interface, returned by a MinioFileSystem
 // Open method and can be served by the FileServer implementation.
 type minioFile struct {
-	client *minio.Client
-	object *minio.Object
-	bucket string
-	prefix string
-	isDir  bool
+	context context.Context
+	client  *minio.Client
+	object  *minio.Object
+	bucket  string
+	prefix  string
+	isDir   bool
 }
 
 // Close ...
@@ -133,14 +138,14 @@ func (h *minioFile) Seek(offset int64, whence int) (int64, error) {
 func (h *minioFile) Readdir(count int) ([]os.FileInfo, error) {
 	// List 'N' number of objects from a Bucket-name with a matching prefix.
 	listObjectsN := func(bucket, prefix string, count int) (objsInfo []minio.ObjectInfo, err error) {
-		// Create a done channel to control 'ListObjects' go routine.
-		doneCh := make(chan struct{})
 
-		// Free the channel upon return.
-		defer close(doneCh)
+		minioListOptions := minio.ListObjectsOptions{
+			Prefix:    prefix,
+			Recursive: false,
+		}
 
 		i := 1
-		for object := range h.client.ListObjects(bucket, prefix, false, doneCh) {
+		for object := range h.client.ListObjects(h.context, bucket, minioListOptions) {
 			if object.Err != nil {
 				return nil, object.Err
 			}
