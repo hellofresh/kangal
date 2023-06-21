@@ -1,0 +1,12 @@
+version: 2
+updates:
+  - package-ecosystem: "gomod"
+    directory: "/"
+    rebase-strategy: "disabled"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "gomod"
+    directory: "pkg/controller/testdata/ghz/"
+    rebase-strategy: "disabled"
+    schedule:
+      interval: "daily"
