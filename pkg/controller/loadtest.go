@@ -8,8 +8,6 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/metric/instrument"
-	"go.opentelemetry.io/otel/metric/instrument/syncint64"
-	"go.opentelemetry.io/otel/metric/unit"
 
 	"go.uber.org/zap"
 	batchV1 "k8s.io/api/batch/v1"
@@ -43,37 +41,35 @@ const (
 
 // MetricsReporter used to interface with the metrics configurations
 type MetricsReporter struct {
-	workQueueDepthStat   syncint64.UpDownCounter
-	reconcileCountStat   syncint64.UpDownCounter
-	reconcileLatencyStat syncint64.Histogram
+	workQueueDepthStat   instrument.Int64UpDownCounter
+	reconcileCountStat   instrument.Int64UpDownCounter
+	reconcileLatencyStat instrument.Int64Histogram
 }
 
 // NewMetricsReporter contains loadtest metrics definition
 func NewMetricsReporter(meter metric.Meter) (*MetricsReporter, error) {
-	workQueueDepthStat, err := meter.SyncInt64().UpDownCounter(
+	workQueueDepthStat, err := meter.Int64UpDownCounter(
 		"kangal_work_queue_depth",
 		instrument.WithDescription("Depth of the work queue"),
-		instrument.WithUnit(unit.Dimensionless),
 	)
 	if err != nil {
 		fmt.Errorf("could not register workQueueDepthStat metric: %w", err)
 		return nil, err
 	}
 
-	reconcileCountStat, err := meter.SyncInt64().UpDownCounter(
+	reconcileCountStat, err := meter.Int64UpDownCounter(
 		"kangal_reconcile_count",
 		instrument.WithDescription("Number of reconcile operations"),
-		instrument.WithUnit(unit.Dimensionless),
 	)
 	if err != nil {
 		fmt.Errorf("could not register reconcileCountStat metric: %w", err)
 		return nil, err
 	}
 
-	reconcileLatencyStat, err := meter.SyncInt64().Histogram(
+	reconcileLatencyStat, err := meter.Int64Histogram(
 		"kangal_reconcile_latency",
 		instrument.WithDescription("Latency of reconcile operations"),
-		instrument.WithUnit(unit.Milliseconds),
+		instrument.WithUnit("ms"),
 	)
 	if err != nil {
 		fmt.Errorf("could not register reconcileLatencyStat metric: %w", err)
@@ -127,8 +123,8 @@ func NewController(
 	kangalInformerFactory externalversions.SharedInformerFactory,
 	statsClient MetricsReporter,
 	registry backends.Registry,
-	logger *zap.Logger) *Controller {
-
+	logger *zap.Logger,
+) *Controller {
 	namespaceInformer := kubeInformerFactory.Core().V1().Namespaces()
 	podInformer := kubeInformerFactory.Core().V1().Pods()
 	jobInformer := kubeInformerFactory.Batch().V1().Jobs()
@@ -313,7 +309,6 @@ func (c *Controller) processNextWorkItem() bool {
 		c.logger.Debug("Successfully synced", zap.String("loadtest", key))
 		return nil
 	}(obj)
-
 	if err != nil {
 		utilRuntime.HandleError(err)
 		return true
