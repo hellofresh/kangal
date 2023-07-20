@@ -10,8 +10,6 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/metric/instrument"
-	"go.opentelemetry.io/otel/metric/instrument/asyncint64"
-	"go.opentelemetry.io/otel/metric/unit"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
@@ -41,38 +39,37 @@ type Proxy struct {
 
 // MetricsReporter used to interface with the metrics configurations
 type MetricsReporter struct {
-	countRunningLoadtests asyncint64.UpDownCounter
+	countRunningLoadtests instrument.Int64ObservableUpDownCounter
 }
 
 // NewMetricsReporter contains loadtest metrics definition
 func NewMetricsReporter(meter metric.Meter, kubeClient *kube.Client) (*MetricsReporter, error) {
-	countRunningLoadtests, err := meter.AsyncInt64().UpDownCounter(
+	countRunningLoadtests, err := meter.Int64ObservableUpDownCounter(
 		"kangal_loadtests_count",
 		instrument.WithDescription("Current number of loadtests in cluster, grouped by type and phase"),
-		instrument.WithUnit(unit.Dimensionless),
+		instrument.WithInt64Callback(func(ctx context.Context, io instrument.Int64Observer) error {
+			states, types, err := kubeClient.CountExistingLoadtests()
+			if err != nil {
+				fmt.Errorf("could not get metric data for CountExistingLoadtests: %w", err)
+				return err
+			}
+			for k, v := range states {
+				io.Observe(v, attribute.String("phase", k.String()))
+			}
+
+			for k, v := range types {
+				io.Observe(v, attribute.String("type", k.String()))
+			}
+			return nil
+		}),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("could not register countRunningLoadtests metric: %w", err)
 	}
 
-	if err := meter.RegisterCallback([]instrument.Asynchronous{countRunningLoadtests}, func(ctx context.Context) {
-		states, types, err := kubeClient.CountExistingLoadtests()
-		if err != nil {
-			fmt.Errorf("could not get metric data for CountExistingLoadtests: %w", err)
-		}
-		for k, v := range states {
-			countRunningLoadtests.Observe(ctx, v, attribute.String("phase", k.String()))
-		}
-
-		for k, v := range types {
-			countRunningLoadtests.Observe(ctx, v, attribute.String("type", k.String()))
-		}
-	},
-	); err != nil {
-		return nil, err
-	}
 	return &MetricsReporter{
-			countRunningLoadtests: countRunningLoadtests},
+			countRunningLoadtests: countRunningLoadtests,
+		},
 		nil
 }
 
