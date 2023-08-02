@@ -38,6 +38,11 @@ spec:
         release: {{ $.Release.Name }}
         environment: {{ $.Values.environment }}
         version: "{{ if $value.tag }}{{ $value.tag }}{{ else if $.Values.tag }}{{ $.Values.tag }}{{ else }}{{ $.Chart.AppVersion }}{{ end }}"
+{{- if $.Values.labels }}
+{{- with $.Values.labels }}
+{{ toYaml . | indent 8 }}
+{{- end }}
+{{- end }}
 {{- if or ($.Values.podAnnotations) ($value.podAnnotations) }}
       annotations:
 {{- with $.Values.podAnnotations }}

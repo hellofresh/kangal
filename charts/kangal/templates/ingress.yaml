@@ -17,6 +17,11 @@ metadata:
     chart: {{ template "<CHARTNAME>.chart" $ }}
     release: {{ $.Release.Name }}
     heritage: {{ $.Release.Service }}
+{{- if $.Values.labels }}
+{{- with $.Values.labels }}
+{{ toYaml . | indent 4 }}
+{{- end }}
+{{- end }}
 {{- with $value.ingress.annotations }}
   annotations:
 {{ toYaml . | indent 4 }}

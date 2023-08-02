@@ -11,6 +11,11 @@ metadata:
     release: {{ $.Release.Name }}
     heritage: {{ $.Release.Service }}
     prometheus: kube-prometheus
+{{- if $.Values.labels }}
+{{- with $.Values.labels }}
+{{ toYaml . | indent 4 }}
+{{- end }}
+{{- end }}
   name: {{ template "<CHARTNAME>.fullname" $ }}-{{ $key }}
 spec:
   endpoints:

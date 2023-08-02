@@ -1,9 +1,14 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
+  name: system-controller-kangal-controller-{{ $.Release.Namespace }}
   labels:
     kubernetes.io/bootstrapping: rbac-defaults
-  name: system-controller-kangal-controller-{{ $.Release.Namespace }}
+{{- if $.Values.labels }}
+{{- with $.Values.labels }}
+{{ toYaml . | indent 4 }}
+{{- end }}
+{{- end }}
 rules:
 
   - apiGroups:
