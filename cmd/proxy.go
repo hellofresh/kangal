@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/prometheus"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
@@ -72,7 +73,22 @@ func NewProxyCmd() *cobra.Command {
 			kubeClient := kubernetes.NewClient(loadTestClient, kubeClientSet, logger)
 
 			provider := metric.NewMeterProvider(metric.WithReader(pe), metric.WithResource(
-				resource.NewSchemaless(semconv.ServiceNameKey.String("kangal-proxy"))))
+				resource.NewSchemaless(semconv.ServiceNameKey.String("kangal-proxy"))),
+				metric.WithView(metric.NewView(
+					metric.Instrument{Name: "http.server*"},
+					metric.Stream{
+						AttributeFilter: func(kv attribute.KeyValue) bool {
+							return !map[attribute.Key]bool{
+								semconv.HTTPClientIPKey:  true,
+								semconv.HTTPUserAgentKey: true,
+								semconv.NetPeerNameKey:   true,
+								semconv.NetPeerPortKey:   true,
+								semconv.NetHostPortKey:   true,
+							}[kv.Key]
+						},
+					},
+				)),
+			)
 
 			otel.SetMeterProvider(provider)
 
