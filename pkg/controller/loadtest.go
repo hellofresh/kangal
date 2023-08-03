@@ -7,7 +7,6 @@ import (
 
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
-	"go.opentelemetry.io/otel/metric/instrument"
 
 	"go.uber.org/zap"
 	batchV1 "k8s.io/api/batch/v1"
@@ -41,16 +40,16 @@ const (
 
 // MetricsReporter used to interface with the metrics configurations
 type MetricsReporter struct {
-	workQueueDepthStat   instrument.Int64UpDownCounter
-	reconcileCountStat   instrument.Int64UpDownCounter
-	reconcileLatencyStat instrument.Int64Histogram
+	workQueueDepthStat   metric.Int64UpDownCounter
+	reconcileCountStat   metric.Int64UpDownCounter
+	reconcileLatencyStat metric.Int64Histogram
 }
 
 // NewMetricsReporter contains loadtest metrics definition
 func NewMetricsReporter(meter metric.Meter) (*MetricsReporter, error) {
 	workQueueDepthStat, err := meter.Int64UpDownCounter(
 		"kangal_work_queue_depth",
-		instrument.WithDescription("Depth of the work queue"),
+		metric.WithDescription("Depth of the work queue"),
 	)
 	if err != nil {
 		fmt.Errorf("could not register workQueueDepthStat metric: %w", err)
@@ -59,7 +58,7 @@ func NewMetricsReporter(meter metric.Meter) (*MetricsReporter, error) {
 
 	reconcileCountStat, err := meter.Int64UpDownCounter(
 		"kangal_reconcile_count",
-		instrument.WithDescription("Number of reconcile operations"),
+		metric.WithDescription("Number of reconcile operations"),
 	)
 	if err != nil {
 		fmt.Errorf("could not register reconcileCountStat metric: %w", err)
@@ -68,8 +67,8 @@ func NewMetricsReporter(meter metric.Meter) (*MetricsReporter, error) {
 
 	reconcileLatencyStat, err := meter.Int64Histogram(
 		"kangal_reconcile_latency",
-		instrument.WithDescription("Latency of reconcile operations"),
-		instrument.WithUnit("ms"),
+		metric.WithDescription("Latency of reconcile operations"),
+		metric.WithUnit("ms"),
 	)
 	if err != nil {
 		fmt.Errorf("could not register reconcileLatencyStat metric: %w", err)
@@ -278,8 +277,8 @@ func (c *Controller) processNextWorkItem() bool {
 				status = falseString
 			}
 
-			c.statsClient.reconcileCountStat.Add(context.Background(), 1, attribute.String("key", key), attribute.String("success", status))
-			c.statsClient.reconcileLatencyStat.Record(context.Background(), int64(time.Since(startTime)/time.Millisecond), attribute.String("key", key), attribute.String("success", status))
+			c.statsClient.reconcileCountStat.Add(context.Background(), 1, metric.WithAttributes(attribute.String("key", key), attribute.String("success", status)))
+			c.statsClient.reconcileLatencyStat.Record(context.Background(), int64(time.Since(startTime)/time.Millisecond), metric.WithAttributes(attribute.String("key", key), attribute.String("success", status)))
 		}()
 
 		// We expect strings to come off the workQueue. These are of the

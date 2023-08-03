@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"go.opentelemetry.io/otel/metric/global"
+	"go.opentelemetry.io/otel"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -100,7 +100,7 @@ func RunServer(cfg Config, rr Runner) error {
 	rr.Logger.Info("Running HTTP server...", zap.String("address", address))
 
 	// Try and run http server, fail on error
-	err := http.ListenAndServe(address, otelhttp.NewHandler(r, "kangal", otelhttp.WithMeterProvider(global.MeterProvider()), otelhttp.WithMessageEvents(otelhttp.ReadEvents, otelhttp.WriteEvents)))
+	err := http.ListenAndServe(address, otelhttp.NewHandler(r, "kangal", otelhttp.WithMeterProvider(otel.GetMeterProvider()), otelhttp.WithMessageEvents(otelhttp.ReadEvents, otelhttp.WriteEvents)))
 	if err != nil {
 		return fmt.Errorf("failed to run HTTP server: %w", err)
 	}
