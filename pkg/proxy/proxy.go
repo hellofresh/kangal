@@ -49,8 +49,7 @@ func NewMetricsReporter(meter metric.Meter, kubeClient *kube.Client) (*MetricsRe
 		metric.WithInt64Callback(func(ctx context.Context, io metric.Int64Observer) error {
 			states, types, err := kubeClient.CountExistingLoadtests()
 			if err != nil {
-				fmt.Errorf("could not get metric data for CountExistingLoadtests: %w", err)
-				return err
+				return fmt.Errorf("could not get metric data for CountExistingLoadtests: %w", err)
 			}
 			for k, v := range states {
 				io.Observe(v, metric.WithAttributes(attribute.String("phase", k.String())))

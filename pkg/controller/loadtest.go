@@ -52,8 +52,7 @@ func NewMetricsReporter(meter metric.Meter) (*MetricsReporter, error) {
 		metric.WithDescription("Depth of the work queue"),
 	)
 	if err != nil {
-		fmt.Errorf("could not register workQueueDepthStat metric: %w", err)
-		return nil, err
+		return nil, fmt.Errorf("could not register workQueueDepthStat metric: %w", err)
 	}
 
 	reconcileCountStat, err := meter.Int64UpDownCounter(
@@ -61,8 +60,7 @@ func NewMetricsReporter(meter metric.Meter) (*MetricsReporter, error) {
 		metric.WithDescription("Number of reconcile operations"),
 	)
 	if err != nil {
-		fmt.Errorf("could not register reconcileCountStat metric: %w", err)
-		return nil, err
+		return nil, fmt.Errorf("could not register reconcileCountStat metric: %w", err)
 	}
 
 	reconcileLatencyStat, err := meter.Int64Histogram(
@@ -71,8 +69,7 @@ func NewMetricsReporter(meter metric.Meter) (*MetricsReporter, error) {
 		metric.WithUnit("ms"),
 	)
 	if err != nil {
-		fmt.Errorf("could not register reconcileLatencyStat metric: %w", err)
-		return nil, err
+		return nil, fmt.Errorf("could not register reconcileLatencyStat metric: %w", err)
 	}
 
 	return &MetricsReporter{
