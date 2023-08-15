@@ -75,15 +75,18 @@ func NewProxyCmd() *cobra.Command {
 			provider := metric.NewMeterProvider(metric.WithReader(pe), metric.WithResource(
 				resource.NewSchemaless(semconv.ServiceNameKey.String("kangal-proxy"))),
 				metric.WithView(metric.NewView(
-					metric.Instrument{Name: "http.server*"},
+					metric.Instrument{Name: "http.server.*"},
 					metric.Stream{
 						AttributeFilter: func(kv attribute.KeyValue) bool {
 							return !map[attribute.Key]bool{
-								semconv.HTTPClientIPKey:  true,
-								semconv.HTTPUserAgentKey: true,
-								semconv.NetPeerNameKey:   true,
-								semconv.NetPeerPortKey:   true,
-								semconv.NetHostPortKey:   true,
+								semconv.HTTPClientIPKey:    true,
+								semconv.HTTPUserAgentKey:   true,
+								semconv.NetSockPeerAddrKey: true,
+								semconv.NetSockPeerPortKey: true,
+								semconv.NetPeerNameKey:     true,
+								semconv.NetPeerPortKey:     true,
+								semconv.NetHostNameKey:     true,
+								semconv.NetHostPortKey:     true,
 							}[kv.Key]
 						},
 					},
