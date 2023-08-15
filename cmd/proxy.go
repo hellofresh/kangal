@@ -4,12 +4,12 @@ import (
 	"flag"
 	"fmt"
 
-	"go.opentelemetry.io/otel/metric/global"
-
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/prometheus"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
-	semconv "go.opentelemetry.io/otel/semconv/v1.12.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.18.0"
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/spf13/cobra"
@@ -73,9 +73,27 @@ func NewProxyCmd() *cobra.Command {
 			kubeClient := kubernetes.NewClient(loadTestClient, kubeClientSet, logger)
 
 			provider := metric.NewMeterProvider(metric.WithReader(pe), metric.WithResource(
-				resource.NewSchemaless(semconv.ServiceNameKey.String("kangal-proxy"))))
+				resource.NewSchemaless(semconv.ServiceNameKey.String("kangal-proxy"))),
+				metric.WithView(metric.NewView(
+					metric.Instrument{Name: "http.server.*"},
+					metric.Stream{
+						AttributeFilter: func(kv attribute.KeyValue) bool {
+							return !map[attribute.Key]bool{
+								semconv.HTTPClientIPKey:    true,
+								semconv.HTTPUserAgentKey:   true,
+								semconv.NetSockPeerAddrKey: true,
+								semconv.NetSockPeerPortKey: true,
+								semconv.NetPeerNameKey:     true,
+								semconv.NetPeerPortKey:     true,
+								semconv.NetHostNameKey:     true,
+								semconv.NetHostPortKey:     true,
+							}[kv.Key]
+						},
+					},
+				)),
+			)
 
-			global.SetMeterProvider(provider)
+			otel.SetMeterProvider(provider)
 
 			statsReporter, err := proxy.NewMetricsReporter(provider.Meter("proxy"), kubeClient)
 			if err != nil {

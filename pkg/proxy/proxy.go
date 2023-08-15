@@ -9,7 +9,6 @@ import (
 
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
-	"go.opentelemetry.io/otel/metric/instrument"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
@@ -39,26 +38,25 @@ type Proxy struct {
 
 // MetricsReporter used to interface with the metrics configurations
 type MetricsReporter struct {
-	countRunningLoadtests instrument.Int64ObservableUpDownCounter
+	countRunningLoadtests metric.Int64ObservableUpDownCounter
 }
 
 // NewMetricsReporter contains loadtest metrics definition
 func NewMetricsReporter(meter metric.Meter, kubeClient *kube.Client) (*MetricsReporter, error) {
 	countRunningLoadtests, err := meter.Int64ObservableUpDownCounter(
 		"kangal_loadtests_count",
-		instrument.WithDescription("Current number of loadtests in cluster, grouped by type and phase"),
-		instrument.WithInt64Callback(func(ctx context.Context, io instrument.Int64Observer) error {
+		metric.WithDescription("Current number of loadtests in cluster, grouped by type and phase"),
+		metric.WithInt64Callback(func(ctx context.Context, io metric.Int64Observer) error {
 			states, types, err := kubeClient.CountExistingLoadtests()
 			if err != nil {
-				fmt.Errorf("could not get metric data for CountExistingLoadtests: %w", err)
-				return err
+				return fmt.Errorf("could not get metric data for CountExistingLoadtests: %w", err)
 			}
 			for k, v := range states {
-				io.Observe(v, attribute.String("phase", k.String()))
+				io.Observe(v, metric.WithAttributes(attribute.String("phase", k.String())))
 			}
 
 			for k, v := range types {
-				io.Observe(v, attribute.String("type", k.String()))
+				io.Observe(v, metric.WithAttributes(attribute.String("type", k.String())))
 			}
 			return nil
 		}),

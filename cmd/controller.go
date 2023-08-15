@@ -5,13 +5,11 @@ import (
 	"strings"
 	"time"
 
-	"go.opentelemetry.io/otel/sdk/resource"
-	semconv "go.opentelemetry.io/otel/semconv/v1.12.0"
-
 	"go.opentelemetry.io/otel/exporters/prometheus"
-
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/metric/aggregation"
+	"go.opentelemetry.io/otel/sdk/resource"
+	semconv "go.opentelemetry.io/otel/semconv/v1.18.0"
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/spf13/cobra"
