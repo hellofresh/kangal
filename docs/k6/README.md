@@ -8,7 +8,7 @@
 - [Logs](#logs)
 - [Using k6 extensions](#using-k6-extensions)
 
-K6 is one of the load generators implemented in Kangal. It uses the official docker image [loadimpact/k6](https://hub.docker.com/r/loadimpact/k6).
+K6 is one of the load generators implemented in Kangal. It uses the official docker image [grafana/k6](https://hub.docker.com/r/grafana/k6).
 
 Kangal requires a JavaScript testfile describing the test.
 
@@ -152,7 +152,7 @@ curl -X GET http://${KANGAL_PROXY_ADDRESS}/load-test/loadtest-name/logs/0
 
 ## Using k6 extensions
 
-By default, kangal will use loadimpact/k6:latest as the container image for the test jobs. If you want to use extensions built with **xk6** you'll need to create your own image. Example:
+By default, kangal will use grafana/k6:latest as the container image for the test jobs. If you want to use extensions built with **xk6** you'll need to create your own image. Example:
 
 ```Dockerfile
 # Build the k6 binary with the extension
@@ -162,6 +162,6 @@ RUN go install go.k6.io/xk6/cmd/xk6@latest
 RUN xk6 build --output /k6 --with github.com/walterwanderley/xk6-stomp@latest
 
 # Use the official base image and override the k6 binary
-FROM loadimpact/k6:latest
+FROM grafana/k6:latest
 COPY --from=builder /k6 /usr/bin/k6
 ```

@@ -23,7 +23,7 @@ var (
 )
 
 const (
-	defaultImageName = "loadimpact/k6"
+	defaultImageName = "grafana/k6"
 	defaultImageTag  = "latest"
 )
 

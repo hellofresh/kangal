@@ -78,7 +78,7 @@
 ### k6
 | Parameter            | Description     | Default         |
 |----------------------|-----------------|-----------------|
-| `K6_IMAGE_NAME`      | K6 image name   | `loadimpact/k6` |
+| `K6_IMAGE_NAME`      | K6 image name   | `grafana/k6` |
 | `K6_IMAGE_TAG`       | K6 image tag    | `latest`        |
 | `K6_CPU_LIMITS`      | CPU limits      |                 |
 | `K6_CPU_REQUESTS`    | CPU requests    |                 |
