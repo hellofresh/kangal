@@ -239,7 +239,7 @@ func (b *Backend) NewPod(loadTest loadTestV1.LoadTest, i int, configMap *coreV1.
 			InitContainers: []coreV1.Container{
 				{
 					Name:    "convert-data-back-to-csv",
-					Image:   "alpine:latest",
+					Image:   b.config.TestDataDecompressImage,
 					Command: []string{"/bin/sh"},
 					Args:    []string{"-c", "(ls /testdatatmp/testdata.csv.gz >/dev/null 2>&1 && cat /testdatatmp/testdata.csv.gz |base64 -d|zcat > /testdata/testdata.csv) || echo \"no testdata.csv.gz file\""},
 					VolumeMounts: []coreV1.VolumeMount{
@@ -326,7 +326,7 @@ func (b *Backend) NewPod(loadTest loadTestV1.LoadTest, i int, configMap *coreV1.
 		pod.Spec.InitContainers = []coreV1.Container{
 			{
 				Name:    "get-data",
-				Image:   "rclone/rclone:latest",
+				Image:   b.config.RemoteCustomDataImage,
 				Command: []string{"/bin/sh"},
 				Args:    []string{"-c", "/usr/local/bin/rclone sync remotecustomdata:$(JMETER_WORKER_REMOTE_CUSTOM_DATA_BUCKET) /customdata || echo \"rsync failed\""},
 				VolumeMounts: []coreV1.VolumeMount{
