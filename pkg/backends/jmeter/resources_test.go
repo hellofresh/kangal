@@ -133,6 +133,7 @@ func TestPodResourceConfiguration(t *testing.T) {
 			MemoryLimits:   "300Mi",
 			MemoryRequests: "400Mi",
 		},
+		config: &Config{},
 	}
 
 	masterJob := c.NewJMeterMasterJob(lt, "http://kangal-proxy.local/load-test/loadtest-name/report", map[string]string{"": ""})

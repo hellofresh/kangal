@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/kelseyhightower/envconfig"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
@@ -338,8 +339,10 @@ func TestTransformLoadTestSpec(t *testing.T) {
 				Duration:        tt.args.duration,
 			}
 
+			cfg := Config{}
+			envconfig.MustProcess("", &cfg)
 			b := Backend{
-				config: &Config{},
+				config: &cfg,
 			}
 			b.SetDefaults()
 
