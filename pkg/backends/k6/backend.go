@@ -22,11 +22,6 @@ var (
 	ErrRequireTestFile = errors.New("LoadTest TestFile is required")
 )
 
-const (
-	defaultImageName = "grafana/k6"
-	defaultImageTag  = "latest"
-)
-
 func init() {
 	backends.Register(&Backend{})
 }
@@ -58,10 +53,6 @@ func (b *Backend) GetEnvConfig() interface{} {
 
 // SetDefaults must set default values
 func (b *Backend) SetDefaults() {
-	if b.config.ImageName == "" || b.config.ImageTag == "" {
-		b.config.ImageName = defaultImageName
-		b.config.ImageTag = defaultImageTag
-	}
 	b.image = loadTestV1.ImageDetails{
 		Image: b.config.ImageName,
 		Tag:   b.config.ImageTag,

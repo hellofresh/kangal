@@ -49,13 +49,15 @@
 | `RCLONE_CONFIG_REMOTECUSTOMDATA_SECRET_ACCESS_KEY` | [Rclone](https://rclone.org/) environment variable for secret access key |                                   |
 | `RCLONE_CONFIG_REMOTECUSTOMDATA_REGION`            | [Rclone](https://rclone.org/) environment variable for region            |                                   |
 | `RCLONE_CONFIG_REMOTECUSTOMDATA_ENDPOINT`          | [Rclone](https://rclone.org/) environment variable for endpoint          |                                   |
+| `JMETER_TESTDATA_DECOMPRESS_IMAGE`                 | Image used to decompress the testdata.                                   | `alpine:latest`                   |
+| `JMETER_WORKER_REMOTE_CUSTOM_DATA_IMAGE`           | Image used to sync remote custom data.                                   | `rclone/rclone:latest`            |
 
 ### Locust
 | Parameter                       | Description                 | Default           |
 |---------------------------------|-----------------------------|-------------------|
 | `LOCUST_IMAGE`                  | Locust image                |                   |
-| `LOCUST_IMAGE_NAME`             | Locust image name           |                   |
-| `LOCUST_IMAGE_TAG`              | Locust image tag            |                   |
+| `LOCUST_IMAGE_NAME`             | Locust image name           | `locustio/locust` |
+| `LOCUST_IMAGE_TAG`              | Locust image tag            | `latest`          |
 | `LOCUST_MASTER_CPU_LIMITS`      | Master container CPU limits |                   |
 | `LOCUST_MASTER_CPU_REQUESTS`    | Master CPU requests         |                   |
 | `LOCUST_MASTER_MEMORY_LIMITS`   | Master memory limits        |                   |

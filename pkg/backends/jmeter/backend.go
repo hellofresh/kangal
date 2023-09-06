@@ -73,20 +73,6 @@ func (b *Backend) GetEnvConfig() interface{} {
 
 // SetDefaults must set default values
 func (b *Backend) SetDefaults() {
-	if b.config.MasterImageName == "" {
-		b.config.MasterImageName = defaultMasterImageName
-	}
-	if b.config.MasterImageTag == "" {
-		b.config.MasterImageTag = defaultMasterImageTag
-	}
-
-	if b.config.WorkerImageName == "" {
-		b.config.WorkerImageName = defaultWorkerImageName
-	}
-	if b.config.WorkerImageTag == "" {
-		b.config.WorkerImageTag = defaultWorkerImageTag
-	}
-
 	b.masterConfig = loadTestV1.ImageDetails{
 		Image: b.config.MasterImageName,
 		Tag:   b.config.MasterImageTag,

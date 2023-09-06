@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/kelseyhightower/envconfig"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
@@ -305,7 +306,7 @@ func TestTransformLoadTestSpec(t *testing.T) {
 				TestFile:        []byte("something in the file"),
 				EnvVars:         map[string]string{"my-key": "my-value"},
 				TargetURL:       "http://my-app.my-domain.com",
-				MasterConfig:    loadTestV1.ImageDetails{Image: defaultImageName, Tag: defaultImageTag},
+				MasterConfig:    loadTestV1.ImageDetails{Image: "locustio/locust", Tag: "latest"},
 			},
 			wantErr: false,
 		},
@@ -338,8 +339,10 @@ func TestTransformLoadTestSpec(t *testing.T) {
 				Duration:        tt.args.duration,
 			}
 
+			cfg := Config{}
+			envconfig.MustProcess("", &cfg)
 			b := Backend{
-				config: &Config{},
+				config: &cfg,
 			}
 			b.SetDefaults()
 

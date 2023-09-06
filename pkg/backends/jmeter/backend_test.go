@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/kelseyhightower/envconfig"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
@@ -237,8 +238,10 @@ func TestSetDefaults(t *testing.T) {
 	})
 
 	t.Run("No default", func(t *testing.T) {
+		cfg := Config{}
+		envconfig.MustProcess("", &cfg)
 		jmeter := &Backend{
-			config: &Config{},
+			config: &cfg,
 		}
 		jmeter.SetDefaults()
 

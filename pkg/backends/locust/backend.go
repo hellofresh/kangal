@@ -16,11 +16,6 @@ import (
 )
 
 var (
-	defaultImageName = "locustio/locust"
-	defaultImageTag  = "latest"
-)
-
-var (
 	// ErrRequireMinOneDistributedPod spec requires 1 or more DistributedPods
 	ErrRequireMinOneDistributedPod = errors.New("LoadTest must specify 1 or more DistributedPods")
 	// ErrRequireTestFile the TestFile filed is required to not be an empty string
@@ -60,13 +55,8 @@ func (b *Backend) GetEnvConfig() interface{} {
 // SetDefaults must set default values
 func (b *Backend) SetDefaults() {
 	// this ensure backward compatibility
-	if b.config.ImageName == "" && b.config.Image != "" {
+	if b.config.Image != "" {
 		b.config.ImageName = b.config.Image
-	}
-
-	if b.config.ImageName == "" || b.config.ImageTag == "" {
-		b.config.ImageName = defaultImageName
-		b.config.ImageTag = defaultImageTag
 	}
 
 	b.image = loadTestV1.ImageDetails{
