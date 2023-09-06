@@ -85,7 +85,7 @@ The following table lists the common configurable parameters for `Kangal` chart:
 | `configMap.JMETER_WORKER_IMAGE_TAG`  | Tag of the JMeter worker docker image                                                               | `latest`                          |
 | `configMap.LOCUST_IMAGE_NAME`        | Default Locust docker image name/repository if none is provided when creating a new loadtest        | `locustio/locust`                 |
 | `configMap.LOCUST_IMAGE_TAG`         | Tag of the Locust docker image                                                                      | `1.3.0`                           |
-| `configMap.K6_IMAGE_NAME`            | Default k6 docker image name/repository if none is provided when creating a new loadtest            | `loadimpact/k6`                   |
+| `configMap.K6_IMAGE_NAME`            | Default k6 docker image name/repository if none is provided when creating a new loadtest            | `grafana/k6`                   |
 | `configMap.K6_IMAGE_TAG`             | Tag of the k6 docker image above                                                                    | `latest`                          |
 
 Deployment specific configurations:
