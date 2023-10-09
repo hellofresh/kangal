@@ -110,11 +110,11 @@ func TestPodResourceConfiguration(t *testing.T) {
 		Spec: loadTestV1.LoadTestSpec{
 			MasterConfig: loadTestV1.ImageDetails{
 				Image: defaultMasterImageName,
-				Tag:   defaultMasterImageTag,
+				Tag:   defaultImageTag,
 			},
 			WorkerConfig: loadTestV1.ImageDetails{
 				Image: defaultWorkerImageName,
-				Tag:   defaultWorkerImageTag,
+				Tag:   defaultImageTag,
 			},
 		},
 	}

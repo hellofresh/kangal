@@ -140,11 +140,11 @@ func TestSync(t *testing.T) {
 			DistributedPods: &distributedPodsNum,
 			MasterConfig: loadTestV1.ImageDetails{
 				Image: defaultMasterImageName,
-				Tag:   defaultMasterImageTag,
+				Tag:   defaultImageTag,
 			},
 			WorkerConfig: loadTestV1.ImageDetails{
 				Image: defaultWorkerImageName,
-				Tag:   defaultWorkerImageTag,
+				Tag:   defaultImageTag,
 			},
 		},
 		Status: loadTestV1.LoadTestStatus{
@@ -215,7 +215,7 @@ func TestTransformLoadTestSpec(t *testing.T) {
 		assert.Equal(t, spec.MasterConfig.Image, "master-image")
 		assert.Equal(t, spec.MasterConfig.Tag, "master-tag")
 		assert.Equal(t, spec.WorkerConfig.Image, "worker-image")
-		assert.Equal(t, spec.WorkerConfig.Tag, "worker-tag")
+		assert.Equal(t, spec.MasterConfig.Tag, spec.WorkerConfig.Tag)
 	})
 }
 
@@ -224,17 +224,16 @@ func TestSetDefaults(t *testing.T) {
 		jmeter := &Backend{
 			config: &Config{
 				MasterImageName: "my-master-image-name",
-				MasterImageTag:  "my-master-image-tag",
 				WorkerImageName: "my-worker-image-name",
-				WorkerImageTag:  "my-worker-image-tag",
+				ImageTag:        "my-image-tag",
 			},
 		}
 		jmeter.SetDefaults()
 
 		assert.Equal(t, jmeter.workerConfig.Image, "my-worker-image-name")
-		assert.Equal(t, jmeter.workerConfig.Tag, "my-worker-image-tag")
+		assert.Equal(t, jmeter.workerConfig.Tag, "my-image-tag")
 		assert.Equal(t, jmeter.masterConfig.Image, "my-master-image-name")
-		assert.Equal(t, jmeter.masterConfig.Tag, "my-master-image-tag")
+		assert.Equal(t, jmeter.masterConfig.Tag, "my-image-tag")
 	})
 
 	t.Run("No default", func(t *testing.T) {
@@ -246,8 +245,8 @@ func TestSetDefaults(t *testing.T) {
 		jmeter.SetDefaults()
 
 		assert.Equal(t, jmeter.masterConfig.Image, defaultMasterImageName)
-		assert.Equal(t, jmeter.masterConfig.Tag, defaultMasterImageTag)
+		assert.Equal(t, jmeter.masterConfig.Tag, defaultImageTag)
 		assert.Equal(t, jmeter.workerConfig.Image, defaultWorkerImageName)
-		assert.Equal(t, jmeter.workerConfig.Tag, defaultWorkerImageTag)
+		assert.Equal(t, jmeter.workerConfig.Tag, defaultImageTag)
 	})
 }

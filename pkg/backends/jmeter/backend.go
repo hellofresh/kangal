@@ -36,8 +36,7 @@ var (
 const (
 	defaultMasterImageName = "hellofresh/kangal-jmeter-master"
 	defaultWorkerImageName = "hellofresh/kangal-jmeter-worker"
-	defaultMasterImageTag  = "latest"
-	defaultWorkerImageTag  = "latest"
+	defaultImageTag        = "latest"
 )
 
 func init() {
@@ -75,11 +74,11 @@ func (b *Backend) GetEnvConfig() interface{} {
 func (b *Backend) SetDefaults() {
 	b.masterConfig = loadTestV1.ImageDetails{
 		Image: b.config.MasterImageName,
-		Tag:   b.config.MasterImageTag,
+		Tag:   b.config.ImageTag,
 	}
 	b.workerConfig = loadTestV1.ImageDetails{
 		Image: b.config.WorkerImageName,
-		Tag:   b.config.WorkerImageTag,
+		Tag:   b.config.ImageTag,
 	}
 
 	b.masterResources = backends.Resources{
@@ -145,15 +144,21 @@ func (b *Backend) TransformLoadTestSpec(spec *loadTestV1.LoadTestSpec) error {
 		return ErrRequireTestFile
 	}
 
-	if spec.MasterConfig.Image == "" || spec.MasterConfig.Tag == "" {
+	if spec.MasterConfig.Image == "" {
 		spec.MasterConfig.Image = b.masterConfig.Image
+	}
+
+	if spec.MasterConfig.Tag == "" {
 		spec.MasterConfig.Tag = b.masterConfig.Tag
 	}
 
-	if spec.WorkerConfig.Image == "" || spec.WorkerConfig.Tag == "" {
+	if spec.WorkerConfig.Image == "" {
 		spec.WorkerConfig.Image = b.workerConfig.Image
-		spec.WorkerConfig.Tag = b.workerConfig.Tag
 	}
+
+	//this condition guarantees to use the same image version for master and worker.
+	//different versions of JMeter images may be incompatible with each other
+	spec.WorkerConfig.Tag = spec.MasterConfig.Tag
 
 	if len(spec.TestData) > 0 {
 		testDataBase64, err := generateBase64(string(spec.TestData))
@@ -167,7 +172,7 @@ func (b *Backend) TransformLoadTestSpec(spec *loadTestV1.LoadTestSpec) error {
 	return nil
 }
 
-// Sync check if JMeter kubernetes resources have been create, if they have not been create them
+// Sync check if JMeter kubernetes resources have been created, if they have not been it creates them
 func (b *Backend) Sync(ctx context.Context, loadTest loadTestV1.LoadTest, reportURL string) error {
 	logger := b.logger.With(
 		zap.String("loadtest", loadTest.GetName()),
