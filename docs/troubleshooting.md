@@ -29,11 +29,12 @@ If you want to use a custom docker image for your load tests, as describe here, 
 - you have `ALLOWED_CUSTOM_IMAGES=true` environment variable set for your Kangal Proxy deployment. If not - no custom images are allowed
 
 The default images and tags are specified as constants in `/pkg/backends/your_backend_name/backend.go` files. You can find
-an example of K6 [here](https://github.com/hellofresh/kangal/blob/master/pkg/backends/k6/backend.go#L26).
+an example of K6 [here](https://github.com/hellofresh/kangal/blob/master/pkg/backends/k6/config.go#L5).
 
 If you want to redefine the default images and tags - use deployment [environment variables](https://github.com/hellofresh/kangal/blob/master/docs/env-vars.md#backend-specific-configuration) for Proxy and Controller.
 
-- `JMETER_MASTER_IMAGE_NAME` and `JMETER_MASTER_IMAGE_TAG` for JMeter master pods and `JMETER_WORKER_IMAGE_NAME` and `JMETER_WORKER_IMAGE_TAG` for JMeter worker pods
+- `JMETER_MASTER_IMAGE_NAME` for JMeter master pods and `JMETER_WORKER_IMAGE_NAME` for JMeter worker pods
+- `JMETER_IMAGE_TAG` for the Docker image tag for JMeter. The tag is the same for master and worker pods, to avoid incompatibility of different JMeter version.
 - `LOCUST_IMAGE_NAME` and `LOCUST_IMAGE_TAG` for Locust
 - `GHZ_IMAGE_NAME` and `GHZ_IMAGE_TAG` for Ghz
 - `K6_IMAGE_NAME` and `K6_IMAGE_TAG` for K6

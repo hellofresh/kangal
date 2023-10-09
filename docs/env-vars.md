@@ -28,14 +28,13 @@
 ### JMeter
 | Parameter                                          | Description                                                              | Default                           |
 |----------------------------------------------------|--------------------------------------------------------------------------|-----------------------------------|
+| `JMETER_IMAGE_TAG`                                 | Tag of the JMeter images                                                 | `latest`                          |
 | `JMETER_MASTER_IMAGE_NAME`                         | JMeter master image name/repository                                      | `hellofresh/kangal-jmeter-master` |
-| `JMETER_MASTER_IMAGE_TAG`                          | Tag of the JMeter master image above                                     | `latest`                          |
 | `JMETER_MASTER_CPU_LIMIT`                          | Master CPU limit                                                         |                                   |
 | `JMETER_MASTER_CPU_REQUESTS`                       | Master CPU requests                                                      |                                   |
 | `JMETER_MASTER_MEMORY_LIMITS`                      | Master memory limits                                                     |                                   |
 | `JMETER_MASTER_MEMORY_REQUESTS`                    | Master memory requests                                                   |                                   |
 | `JMETER_WORKER_IMAGE_NAME`                         | JMeter worker image name/repository                                      | `hellofresh/kangal-jmeter-worker` |
-| `JMETER_WORKER_IMAGE_TAG`                          | Tag of the JMeter worker image above                                     | `latest`                          |
 | `JMETER_WORKER_CPU_LIMITS`                         | Worker container CPU limits                                              |                                   |
 | `JMETER_WORKER_CPU_REQUESTS`                       | Worker CPU requests                                                      |                                   |
 | `JMETER_WORKER_MEMORY_LIMITS`                      | Worker memory limits                                                     |                                   |
@@ -43,7 +42,7 @@
 | `JMETER_WORKER_REMOTE_CUSTOM_DATA_ENABLED`         | Enable remote custom data                                                | `false`                           |
 | `JMETER_WORKER_REMOTE_CUSTOM_DATA_BUCKET`          | The name of the bucket where remote data is                              |                                   |
 | `JMETER_WORKER_REMOTE_CUSTOM_DATA_VOLUME_SIZE`     | Volume size used by download remote data                                 | `1Gi`                             |
-| `JMETER_WORKER_REMOTE_CUSTOM_DATA_STORAGECLASS`    | StorageClass used for remote data PVC (ReadWriteMany required)       | kubernetes environment default |
+| `JMETER_WORKER_REMOTE_CUSTOM_DATA_STORAGECLASS`    | StorageClass used for remote data PVC (ReadWriteMany required)           | kubernetes environment default    |
 | `RCLONE_CONFIG_REMOTECUSTOMDATA_TYPE`              | [Rclone](https://rclone.org/) environment variable for type              |                                   |
 | `RCLONE_CONFIG_REMOTECUSTOMDATA_ACCESS_KEY_ID`     | [Rclone](https://rclone.org/) environment variable for access key ID     |                                   |
 | `RCLONE_CONFIG_REMOTECUSTOMDATA_SECRET_ACCESS_KEY` | [Rclone](https://rclone.org/) environment variable for secret access key |                                   |
