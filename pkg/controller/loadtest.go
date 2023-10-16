@@ -486,6 +486,11 @@ func (c *Controller) checkOrCreateNamespace(ctx context.Context, loadtest *loadT
 		return nil
 	}
 
+	logger := c.logger.With(zap.String("loadtest", loadtest.GetName()))
+	for k, v := range loadtest.Spec.Tags {
+		logger = logger.With(zap.String(k, v))
+	}
+
 	namespaces, err := c.kubeClientSet.CoreV1().Namespaces().List(ctx, metaV1.ListOptions{LabelSelector: "controller=" + loadtest.Name})
 	if err != nil {
 		return err
@@ -502,7 +507,7 @@ func (c *Controller) checkOrCreateNamespace(ctx context.Context, loadtest *loadT
 			return err
 		}
 		namespaceName = namespaceObj.GetName()
-		c.logger.Info("Created new namespace", zap.String("namespace", namespaceName), zap.String("loadtest", loadtest.GetName()))
+		logger.Info("Created new namespace", zap.String("namespace", namespaceName))
 	} else {
 		namespaceName = namespaces.Items[0].Name
 	}
