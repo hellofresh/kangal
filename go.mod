@@ -3,7 +3,7 @@ module github.com/hellofresh/kangal
 go 1.19
 
 require (
-	github.com/felixge/httpsnoop v1.0.3
+	github.com/felixge/httpsnoop v1.0.4
 	github.com/go-chi/chi/v5 v5.0.7
 	github.com/go-chi/render v1.0.2
 	github.com/golang/mock v1.6.0
