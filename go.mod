@@ -11,7 +11,7 @@ require (
 	github.com/minio/minio-go/v7 v7.0.22
 	github.com/prometheus/client_golang v1.17.0
 	github.com/rs/cors v1.8.2
-	github.com/spf13/afero v1.9.3
+	github.com/spf13/afero v1.10.0
 	github.com/spf13/cobra v1.5.0
 	github.com/stretchr/testify v1.8.4
 	github.com/technosophos/moniker v0.0.0-20210218184952-3ea787d3943b
