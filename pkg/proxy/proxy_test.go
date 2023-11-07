@@ -90,7 +90,7 @@ func TestProxy_List(t *testing.T) {
 			result:              &apisLoadTestV1.LoadTestList{},
 			error:               errors.New("client error"),
 			expectedCode:        500,
-			expectedContentType: "application/json; charset=utf-8",
+			expectedContentType: "application/json",
 			expectedResponse:    `{"error":"client error"}`,
 		},
 		{
@@ -98,7 +98,7 @@ func TestProxy_List(t *testing.T) {
 			urlParams:           "limit=foobar",
 			result:              &apisLoadTestV1.LoadTestList{},
 			expectedCode:        400,
-			expectedContentType: "application/json; charset=utf-8",
+			expectedContentType: "application/json",
 			expectedResponse:    `{"error":"strconv.ParseInt: parsing \"foobar\": invalid syntax"}`,
 		},
 		{
@@ -106,7 +106,7 @@ func TestProxy_List(t *testing.T) {
 			urlParams:           "tags=:value",
 			result:              &apisLoadTestV1.LoadTestList{},
 			expectedCode:        400,
-			expectedContentType: "application/json; charset=utf-8",
+			expectedContentType: "application/json",
 			expectedResponse:    `{"error":"missing tag label"}`,
 		},
 		{
@@ -114,7 +114,7 @@ func TestProxy_List(t *testing.T) {
 			urlParams:           "phase=foo",
 			result:              &apisLoadTestV1.LoadTestList{},
 			expectedCode:        400,
-			expectedContentType: "application/json; charset=utf-8",
+			expectedContentType: "application/json",
 			expectedResponse:    `{"error":"unknown Load Test phase"}`,
 		},
 		{
@@ -122,7 +122,7 @@ func TestProxy_List(t *testing.T) {
 			urlParams:           "limit=100",
 			result:              &apisLoadTestV1.LoadTestList{},
 			expectedCode:        400,
-			expectedContentType: "application/json; charset=utf-8",
+			expectedContentType: "application/json",
 			expectedResponse:    `{"error":"limit value is too big, max possible value is 50"}`,
 		},
 		{
@@ -150,7 +150,7 @@ func TestProxy_List(t *testing.T) {
 				},
 			},
 			expectedCode:        200,
-			expectedContentType: "application/json; charset=utf-8",
+			expectedContentType: "application/json",
 			expectedResponse:    `{"limit":50,"continue":"continue","remain":42,"items":[{"type":"JMeter","distributedPods":2,"loadtestName":"random","phase":"running","tags":{},"hasEnvVars":false,"hasTestData":true}]}`,
 		},
 		{
@@ -187,7 +187,7 @@ func TestProxy_List(t *testing.T) {
 				},
 			},
 			expectedCode:        200,
-			expectedContentType: "application/json; charset=utf-8",
+			expectedContentType: "application/json",
 			expectedResponse:    `{"limit":10,"continue":"continue","remain":42,"items":[{"type":"JMeter","distributedPods":2,"loadtestName":"random","phase":"running","tags":{"department":"platform","team":"kangal"},"hasEnvVars":false,"hasTestData":true}]}`,
 		},
 	}
@@ -220,7 +220,7 @@ func TestProxy_List(t *testing.T) {
 			respBody, _ := io.ReadAll(resp.Body)
 
 			assert.Equal(t, tc.expectedCode, resp.StatusCode)
-			assert.Equal(t, resp.Header.Get("Content-Type"), tc.expectedContentType)
+			assert.Equal(t, tc.expectedContentType, resp.Header.Get("Content-Type"))
 			assert.Equal(t, tc.expectedResponse, strings.Trim(string(respBody), "\n"))
 		})
 	}
@@ -248,7 +248,7 @@ func TestProxyCreate(t *testing.T) {
 			},
 			http.StatusCreated,
 			`{"type":"JMeter","distributedPods":10,"phase":"creating","tags":{"team":"kangal"},"hasEnvVars":false,"hasTestData":false}` + "\n",
-			"application/json; charset=utf-8",
+			"application/json",
 			nil,
 		},
 		{
@@ -263,7 +263,7 @@ func TestProxyCreate(t *testing.T) {
 			},
 			http.StatusCreated,
 			`{"type":"Fake","distributedPods":10,"phase":"creating","tags":{},"hasEnvVars":true,"hasTestData":true}` + "\n",
-			"application/json; charset=utf-8",
+			"application/json",
 			nil,
 		},
 		{
@@ -276,7 +276,7 @@ func TestProxyCreate(t *testing.T) {
 			},
 			http.StatusBadRequest,
 			`{"error":"no backend registered for current loadtest type"}` + "\n",
-			"application/json; charset=utf-8",
+			"application/json",
 			errors.New("test creation error"),
 		},
 		{
@@ -289,7 +289,7 @@ func TestProxyCreate(t *testing.T) {
 			},
 			http.StatusConflict,
 			`{"error":"test creation error"}` + "\n",
-			"application/json; charset=utf-8",
+			"application/json",
 			errors.New("test creation error"),
 		},
 	} {
@@ -329,7 +329,7 @@ func TestProxyCreate(t *testing.T) {
 			respBody, _ := io.ReadAll(resp.Body)
 
 			assert.Equal(t, tt.expectedCode, resp.StatusCode)
-			assert.Equal(t, resp.Header.Get("Content-Type"), tt.expectedContentType)
+			assert.Equal(t, tt.expectedContentType, resp.Header.Get("Content-Type"))
 			assert.Equal(t, tt.expectedResponse, string(respBody))
 		})
 	}
