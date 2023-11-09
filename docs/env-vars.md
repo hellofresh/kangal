@@ -30,7 +30,7 @@
 |----------------------------------------------------|--------------------------------------------------------------------------|-----------------------------------|
 | `JMETER_MASTER_IMAGE_NAME`                         | JMeter master image name/repository                                      | `hellofresh/kangal-jmeter-master` |
 | `JMETER_MASTER_IMAGE_TAG`                          | Tag of the JMeter master image above                                     | `latest`                          |
-| `JMETER_MASTER_CPU_LIMIT`                          | Master CPU limit                                                         |                                   |
+| `JMETER_MASTER_CPU_LIMITS`                         | Master CPU limits                                                         |                                   |
 | `JMETER_MASTER_CPU_REQUESTS`                       | Master CPU requests                                                      |                                   |
 | `JMETER_MASTER_MEMORY_LIMITS`                      | Master memory limits                                                     |                                   |
 | `JMETER_MASTER_MEMORY_REQUESTS`                    | Master memory requests                                                   |                                   |
