@@ -7,6 +7,20 @@ To troubleshoot Kangal you will need access to your Kubernetes cluster.
 - Check if Kangal Proxy and Controller pods are up and running
 - Check logs of Kangal Proxy and Kangal Controller
 
+## Load test killed or interrupted during execution
+Kangal backends usually run their load tests using Kubernetes Jobs.
+Jobs will spawn Pods, to perform the workload until:
+
+- The expected number of completions (usually the same as distributed pods spec);
+- The backoff limit is reached (subject to backends that can recover from failures);
+
+The Pods created by Jobs are ephemeral resources subject to the lifecycle
+of the Node they were scheduled. Which means they won't survive an eviction
+in case of lack of resources or Node maintenance.
+
+In case a load test was interrupted, and the backend can't recover from a failure,
+you should run a new test.
+
 ## Problems with a specific load test
 You can make basic troubleshooting using Kangal API endpoints or either exploring load test Pods if is the case of your backend.
 
