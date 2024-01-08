@@ -161,8 +161,8 @@ func (b *Backend) NewTestdataConfigMap(loadTest loadTestV1.LoadTest) ([]*coreV1.
 	return cMaps, nil
 }
 
-// NewPVC creates a new pvc for customdata
-func (b *Backend) NewPVC(loadTest loadTestV1.LoadTest, i int) *coreV1.PersistentVolumeClaim {
+// NewPVC creates a new pvc for custom data
+func (b *Backend) NewPVC(loadTest loadTestV1.LoadTest) *coreV1.PersistentVolumeClaim {
 
 	volumeSize := loadTestWorkerRemoteCustomDataVolumeSize
 	var storageClass *string
@@ -184,9 +184,9 @@ func (b *Backend) NewPVC(loadTest loadTestV1.LoadTest, i int) *coreV1.Persistent
 		},
 		Spec: coreV1.PersistentVolumeClaimSpec{
 			AccessModes: []coreV1.PersistentVolumeAccessMode{coreV1.ReadWriteMany},
-			Resources: coreV1.ResourceRequirements{
+			Resources: coreV1.VolumeResourceRequirements{
 				Requests: coreV1.ResourceList{
-					coreV1.ResourceName(coreV1.ResourceStorage): resource.MustParse(volumeSize),
+					coreV1.ResourceStorage: resource.MustParse(volumeSize),
 				},
 			},
 			StorageClassName: storageClass,
@@ -502,7 +502,7 @@ func (b *Backend) CreatePodsWithTestdata(ctx context.Context, configMaps []*core
 		if _, ok := loadTest.Spec.EnvVars["JMETER_WORKER_REMOTE_CUSTOM_DATA_ENABLED"]; ok {
 			logger.Info("Remote custom data enabled, creating PVC")
 
-			pvc := b.NewPVC(*loadTest, i)
+			pvc := b.NewPVC(*loadTest)
 			_, err = b.kubeClientSet.CoreV1().PersistentVolumeClaims(namespace).Create(ctx, pvc, metaV1.CreateOptions{})
 			if err != nil && !kerrors.IsAlreadyExists(err) {
 				logger.Error("Error on creating pvc", zap.Error(err))
