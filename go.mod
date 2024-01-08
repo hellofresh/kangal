@@ -1,6 +1,6 @@
 module github.com/hellofresh/kangal
 
-go 1.20
+go 1.21
 
 require (
 	github.com/felixge/httpsnoop v1.0.4
