@@ -21,10 +21,9 @@ package fake
 import (
 	"context"
 
-	loadtestv1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "github.com/hellofresh/kangal/pkg/kubernetes/apis/loadtest/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
-	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	testing "k8s.io/client-go/testing"
@@ -35,24 +34,24 @@ type FakeLoadTests struct {
 	Fake *FakeKangalV1
 }
 
-var loadtestsResource = schema.GroupVersionResource{Group: "kangal.hellofresh.com", Version: "v1", Resource: "loadtests"}
+var loadtestsResource = v1.SchemeGroupVersion.WithResource("loadtests")
 
-var loadtestsKind = schema.GroupVersionKind{Group: "kangal.hellofresh.com", Version: "v1", Kind: "LoadTest"}
+var loadtestsKind = v1.SchemeGroupVersion.WithKind("LoadTest")
 
 // Get takes name of the loadTest, and returns the corresponding loadTest object, and an error if there is any.
-func (c *FakeLoadTests) Get(ctx context.Context, name string, options v1.GetOptions) (result *loadtestv1.LoadTest, err error) {
+func (c *FakeLoadTests) Get(ctx context.Context, name string, options metav1.GetOptions) (result *v1.LoadTest, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewRootGetAction(loadtestsResource, name), &loadtestv1.LoadTest{})
+		Invokes(testing.NewRootGetAction(loadtestsResource, name), &v1.LoadTest{})
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*loadtestv1.LoadTest), err
+	return obj.(*v1.LoadTest), err
 }
 
 // List takes label and field selectors, and returns the list of LoadTests that match those selectors.
-func (c *FakeLoadTests) List(ctx context.Context, opts v1.ListOptions) (result *loadtestv1.LoadTestList, err error) {
+func (c *FakeLoadTests) List(ctx context.Context, opts metav1.ListOptions) (result *v1.LoadTestList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewRootListAction(loadtestsResource, loadtestsKind, opts), &loadtestv1.LoadTestList{})
+		Invokes(testing.NewRootListAction(loadtestsResource, loadtestsKind, opts), &v1.LoadTestList{})
 	if obj == nil {
 		return nil, err
 	}
@@ -61,8 +60,8 @@ func (c *FakeLoadTests) List(ctx context.Context, opts v1.ListOptions) (result *
 	if label == nil {
 		label = labels.Everything()
 	}
-	list := &loadtestv1.LoadTestList{ListMeta: obj.(*loadtestv1.LoadTestList).ListMeta}
-	for _, item := range obj.(*loadtestv1.LoadTestList).Items {
+	list := &v1.LoadTestList{ListMeta: obj.(*v1.LoadTestList).ListMeta}
+	for _, item := range obj.(*v1.LoadTestList).Items {
 		if label.Matches(labels.Set(item.Labels)) {
 			list.Items = append(list.Items, item)
 		}
@@ -71,63 +70,63 @@ func (c *FakeLoadTests) List(ctx context.Context, opts v1.ListOptions) (result *
 }
 
 // Watch returns a watch.Interface that watches the requested loadTests.
-func (c *FakeLoadTests) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
+func (c *FakeLoadTests) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewRootWatchAction(loadtestsResource, opts))
 }
 
 // Create takes the representation of a loadTest and creates it.  Returns the server's representation of the loadTest, and an error, if there is any.
-func (c *FakeLoadTests) Create(ctx context.Context, loadTest *loadtestv1.LoadTest, opts v1.CreateOptions) (result *loadtestv1.LoadTest, err error) {
+func (c *FakeLoadTests) Create(ctx context.Context, loadTest *v1.LoadTest, opts metav1.CreateOptions) (result *v1.LoadTest, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewRootCreateAction(loadtestsResource, loadTest), &loadtestv1.LoadTest{})
+		Invokes(testing.NewRootCreateAction(loadtestsResource, loadTest), &v1.LoadTest{})
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*loadtestv1.LoadTest), err
+	return obj.(*v1.LoadTest), err
 }
 
 // Update takes the representation of a loadTest and updates it. Returns the server's representation of the loadTest, and an error, if there is any.
-func (c *FakeLoadTests) Update(ctx context.Context, loadTest *loadtestv1.LoadTest, opts v1.UpdateOptions) (result *loadtestv1.LoadTest, err error) {
+func (c *FakeLoadTests) Update(ctx context.Context, loadTest *v1.LoadTest, opts metav1.UpdateOptions) (result *v1.LoadTest, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewRootUpdateAction(loadtestsResource, loadTest), &loadtestv1.LoadTest{})
+		Invokes(testing.NewRootUpdateAction(loadtestsResource, loadTest), &v1.LoadTest{})
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*loadtestv1.LoadTest), err
+	return obj.(*v1.LoadTest), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeLoadTests) UpdateStatus(ctx context.Context, loadTest *loadtestv1.LoadTest, opts v1.UpdateOptions) (*loadtestv1.LoadTest, error) {
+func (c *FakeLoadTests) UpdateStatus(ctx context.Context, loadTest *v1.LoadTest, opts metav1.UpdateOptions) (*v1.LoadTest, error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewRootUpdateSubresourceAction(loadtestsResource, "status", loadTest), &loadtestv1.LoadTest{})
+		Invokes(testing.NewRootUpdateSubresourceAction(loadtestsResource, "status", loadTest), &v1.LoadTest{})
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*loadtestv1.LoadTest), err
+	return obj.(*v1.LoadTest), err
 }
 
 // Delete takes name of the loadTest and deletes it. Returns an error if one occurs.
-func (c *FakeLoadTests) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
+func (c *FakeLoadTests) Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewRootDeleteActionWithOptions(loadtestsResource, name, opts), &loadtestv1.LoadTest{})
+		Invokes(testing.NewRootDeleteActionWithOptions(loadtestsResource, name, opts), &v1.LoadTest{})
 	return err
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakeLoadTests) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+func (c *FakeLoadTests) DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error {
 	action := testing.NewRootDeleteCollectionAction(loadtestsResource, listOpts)
 
-	_, err := c.Fake.Invokes(action, &loadtestv1.LoadTestList{})
+	_, err := c.Fake.Invokes(action, &v1.LoadTestList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched loadTest.
-func (c *FakeLoadTests) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *loadtestv1.LoadTest, err error) {
+func (c *FakeLoadTests) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.LoadTest, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewRootPatchSubresourceAction(loadtestsResource, name, pt, data, subresources...), &loadtestv1.LoadTest{})
+		Invokes(testing.NewRootPatchSubresourceAction(loadtestsResource, name, pt, data, subresources...), &v1.LoadTest{})
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*loadtestv1.LoadTest), err
+	return obj.(*v1.LoadTest), err
 }
