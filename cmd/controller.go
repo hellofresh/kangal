@@ -7,7 +7,6 @@ import (
 
 	"go.opentelemetry.io/otel/exporters/prometheus"
 	"go.opentelemetry.io/otel/sdk/metric"
-	"go.opentelemetry.io/otel/sdk/metric/aggregation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.18.0"
 
@@ -87,7 +86,7 @@ func NewControllerCmd() *cobra.Command {
 					resource.NewSchemaless(semconv.ServiceNameKey.String("kangal-controller"))),
 				metric.WithView(metric.NewView(
 					metric.Instrument{Name: "kangal_reconcile_latency"},
-					metric.Stream{Aggregation: aggregation.ExplicitBucketHistogram{
+					metric.Stream{Aggregation: metric.AggregationExplicitBucketHistogram{
 						Boundaries: reconcileDistribution,
 					}},
 				)))
