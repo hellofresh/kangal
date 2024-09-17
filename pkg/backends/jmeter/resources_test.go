@@ -106,6 +106,7 @@ func TestGetNamespaceFromInvalidName(t *testing.T) {
 }
 
 func TestPodResourceConfiguration(t *testing.T) {
+	var two int32 = 2
 	lt := loadTestV1.LoadTest{
 		Spec: loadTestV1.LoadTestSpec{
 			MasterConfig: loadTestV1.ImageDetails{
@@ -116,6 +117,7 @@ func TestPodResourceConfiguration(t *testing.T) {
 				Image: defaultWorkerImageName,
 				Tag:   defaultWorkerImageTag,
 			},
+			DistributedPods: &two,
 		},
 	}
 
