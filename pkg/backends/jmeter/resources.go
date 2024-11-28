@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"strings"
 
 	"go.uber.org/zap"
@@ -374,6 +375,10 @@ func (b *Backend) NewJMeterMasterJob(loadTest loadTestV1.LoadTest, reportURL str
 		{
 			Name:  "WORKER_SVC_NAME",
 			Value: loadTestWorkerServiceName,
+		},
+		{
+			Name:  "WORKER_TOTAL",
+			Value: strconv.Itoa(int(*loadTest.Spec.DistributedPods)),
 		},
 		{
 			Name:  "USE_WORKERS",
