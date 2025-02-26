@@ -1,19 +1,19 @@
-FROM ubuntu:20.04
+FROM golang:1.21-alpine AS builder
 
-RUN apt-get update && \
-    apt-get install --no-install-recommends -y ca-certificates=20240203~20.04.1 && \
-    mkdir -p /etc/kangal && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+RUN apk --no-cache add ca-certificates=20241121-r1  && \
+    update-ca-certificates
+
+FROM scratch
+USER nobody
+# Use nobody user + group
+USER nobody:nobody
+# Copy nobody user
+COPY --from=builder /etc/passwd /etc/passwd
+COPY --from=builder /etc/group /etc/group
 
 COPY kangal /bin/kangal
-COPY openapi.json /etc/kangal/
 
-RUN chmod a+x /bin/kangal && \
-    chmod -R a+r /etc/kangal
-
-# Use nobody user + group
-USER 65534:65534
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 
 EXPOSE 8080
 ENTRYPOINT ["/bin/kangal"]
