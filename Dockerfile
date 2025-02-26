@@ -1,7 +1,7 @@
 FROM ubuntu:20.04
 
 RUN apt-get update && \
-    apt-get install --no-install-recommends -y ca-certificates=20230311ubuntu0.20.04.1 && \
+    apt-get install --no-install-recommends -y ca-certificates=20240203~20.04.1 && \
     mkdir -p /etc/kangal && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
