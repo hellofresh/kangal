@@ -96,6 +96,7 @@ Kangal also supports test data with K6, the supported format file is `.csv`.
 1. Prepare your test data in a `.csv` file
 2. Configure test script accordingly. See [the k6 data parameterization from a CSV file example](https://k6.io/docs/examples/data-parameterization/#from-a-csv-file).
    * **Important**: _"k6 doesn't parse CSV files natively, but you can use an external library, [Papa Parse](https://www.papaparse.com/)."_
+   * **Important**: When accessing the test data file in your k6 script, use the hardcoded filename `testdata` (e.g., `open('testdata')`), not the original filename you uploaded.
 3. Add the file in the `testData` field:
 
 ```shell
@@ -137,7 +138,7 @@ export function handleSummary(data) {
 
 You can use <https://github.com/benc-uk/k6-reporter> to create an HTML Report.
 
-> Note: There aren't any concept of master/worker in k6. Metrics will not be automatically aggregated. To be able to aggregate your metrics and analyse them together, you’ll need to set K6_OUT env to send statics to another service (influxdb, prometheus, etc.).
+> Note: There aren't any concept of master/worker in k6. Metrics will not be automatically aggregated. To be able to aggregate your metrics and analyse them together, you'll need to set K6_OUT env to send statics to another service (influxdb, prometheus, etc.).
 
 ## Logs
 
