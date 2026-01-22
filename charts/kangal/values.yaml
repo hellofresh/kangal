@@ -89,7 +89,7 @@ controller:
   replicaCount: 1
 
   image:
-    repository: hellofresh/kangal
+    repository: ghcr.io/hellofresh/kangal
     tag: latest
     pullPolicy: Always
 

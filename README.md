@@ -6,6 +6,12 @@
 Run performance tests in Kubernetes cluster with Kangal.
 ___
 
+> [!WARNING]
+> Kangal's upload to DockerHub has been removed
+> We apologize for the disruption, but you can get the image from `ghcr.io/hellofresh/kangal` from January 31st
+>
+> The registry in DockerHub will not be available from February-onwards
+
 ## Table of content
 - [Why Kangal?](#why-kangal)
 - [Key features](#key-features)
