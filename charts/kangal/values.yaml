@@ -11,7 +11,7 @@ proxy:
   replicaCount: 2
 
   image:
-    repository: hellofresh/kangal
+    repository: ghcr.io/hellofresh/kangal
     tag: latest
     pullPolicy: Always
 
