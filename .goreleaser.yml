@@ -19,8 +19,8 @@ dockers:
   - goos: linux
     goarch: amd64
     image_templates:
-      - "hellofresh/kangal:latest"
-      - "hellofresh/kangal:{{.Tag}}"
+      - "ghcr.io/hellofresh/kangal:latest"
+      - "ghcr.io/hellofresh/kangal:{{.Tag}}"
     dockerfile: Dockerfile
     extra_files:
       - openapi.json
