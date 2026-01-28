@@ -2,6 +2,8 @@ package jmeter
 
 import (
 	"context"
+	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -238,6 +240,7 @@ func TestSetDefaults(t *testing.T) {
 	})
 
 	t.Run("No default", func(t *testing.T) {
+		ClearEnv(t)
 		cfg := Config{}
 		envconfig.MustProcess("", &cfg)
 		jmeter := &Backend{
@@ -249,5 +252,31 @@ func TestSetDefaults(t *testing.T) {
 		assert.Equal(t, jmeter.masterConfig.Tag, defaultMasterImageTag)
 		assert.Equal(t, jmeter.workerConfig.Image, defaultWorkerImageName)
 		assert.Equal(t, jmeter.workerConfig.Tag, defaultWorkerImageTag)
+	})
+}
+
+// ClearEnv clears all environment variables for the duration of the test
+// and restores them to their original state automatically when the test finishes.
+func ClearEnv(t *testing.T) {
+	// 1. Snapshot the current environment
+	originalEnv := os.Environ()
+
+	// 2. Clear the environment immediately
+	os.Clearenv()
+
+	// 3. Register a cleanup function to restore state
+	t.Cleanup(func() {
+		// Clear again to ensure variables added during the test are removed
+		os.Clearenv()
+
+		// Restore the original variables
+		for _, pair := range originalEnv {
+			// Environment variables are formatted as "KEY=VALUE"
+			// We split by the first "=" only
+			parts := strings.SplitN(pair, "=", 2)
+			if len(parts) == 2 {
+				os.Setenv(parts[0], parts[1])
+			}
+		}
 	})
 }
