@@ -1,0 +1,14 @@
+# Temporary — validates hellofresh/sonarqube-automation#212's staleness fix
+# against a genuinely dormant repo that isn't Sonar-integrated at all. Safe
+# to delete; not meant to be merged.
+name: "E2E test (temporary): Sonar Integration Gate on a dormant repo"
+
+on:
+  pull_request:
+
+jobs:
+  sonar-integration-gate:
+    uses: hellofresh/sonarqube-automation/.github/workflows/reusable.yml@RES-1145-sonarqube-api-detection
+    with:
+      mode: informative
+    secrets: inherit
