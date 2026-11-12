@@ -379,6 +379,13 @@ func (b *Backend) NewJMeterMasterJob(loadTest loadTestV1.LoadTest, reportURL str
 			Name:  "USE_WORKERS",
 			Value: "true",
 		},
+		{
+			// On some cgroup v2 hosts the default image's Java 11 throws while log4j registers its
+			// JMX beans, and log4j logs it as an ERROR. The master stops the test on any ERROR line,
+			// and Kangal doesn't need log4j's JMX beans.
+			Name:  "LOG4J_DISABLE_JMX",
+			Value: "true",
+		},
 	}
 
 	if reportURL != "" {
