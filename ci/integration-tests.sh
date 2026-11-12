@@ -70,8 +70,35 @@ function verify_jmeter_integration_test {
   REQUEST_COUNT=$(kubectl logs busybox -n test-busybox | grep -c "response:200")
   if [ "${REQUEST_COUNT}" -ne "${DESIRED_REQUESTS_COUNT}" ]; then
     echo "JMeter Integration Test sent $REQUEST_COUNT requests, but $DESIRED_REQUESTS_COUNT requests were expected. Test failed."
+    print_jmeter_logs
     exit 1
   fi
+}
+
+# The test deletes its namespace when it ends, so keep the last logs of each JMeter pod.
+JMETER_NAMESPACE=loadtest-jmeter-integration
+JMETER_LOGS=/tmp/jmeter-logs
+function capture_jmeter_logs {
+  mkdir -p "$JMETER_LOGS"
+  while :; do
+    for pod in $(kubectl get pods -n "$JMETER_NAMESPACE" -o name 2>/dev/null); do
+      if kubectl logs "$pod" -n "$JMETER_NAMESPACE" --all-containers --prefix >"$JMETER_LOGS/current" 2>/dev/null && [ -s "$JMETER_LOGS/current" ]; then
+        mv "$JMETER_LOGS/current" "$JMETER_LOGS/${pod#pod/}.log"
+      fi
+    done
+    if kubectl get events -n "$JMETER_NAMESPACE" --sort-by=.lastTimestamp >"$JMETER_LOGS/current" 2>/dev/null && [ -s "$JMETER_LOGS/current" ]; then
+      mv "$JMETER_LOGS/current" "$JMETER_LOGS/events.txt"
+    fi
+    sleep 2
+  done
+}
+
+function print_jmeter_logs {
+  for file in "$JMETER_LOGS"/*; do
+    [ -f "$file" ] || continue
+    echo "==> $file"
+    cat "$file"
+  done
 }
 
 # Verify that greeter-server received something
@@ -98,6 +125,12 @@ prepare_kangal
 
 
 # Run the integration tests
+if [[ "$SKIP_JMETER_INTEGRATION_TEST" != "1" ]]; then
+  capture_jmeter_logs &
+  PID_CAPTURE=$!
+  trap 'kill "$PID_CAPTURE" 2>/dev/null' EXIT
+fi
+
 echo "Starting integration tests"
 KUBECONFIG="$HOME/.kube/config" make test-integration
 
