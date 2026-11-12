@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 	coreV1 "k8s.io/api/core/v1"
 
@@ -147,4 +148,35 @@ func TestPodResourceConfiguration(t *testing.T) {
 	assert.Equal(t, c.workerResources.CPURequests, workerPod.Spec.Containers[0].Resources.Requests.Cpu().String())
 	assert.Equal(t, c.workerResources.MemoryLimits, workerPod.Spec.Containers[0].Resources.Limits.Memory().String())
 	assert.Equal(t, c.workerResources.MemoryRequests, workerPod.Spec.Containers[0].Resources.Requests.Memory().String())
+}
+
+func TestNewJMeterMasterJobEnvVars(t *testing.T) {
+	lt := loadTestV1.LoadTest{
+		Spec: loadTestV1.LoadTestSpec{
+			MasterConfig: loadTestV1.ImageDetails{
+				Image: defaultMasterImageName,
+				Tag:   defaultMasterImageTag,
+			},
+		},
+	}
+
+	c := &Backend{
+		logger: zaptest.NewLogger(t),
+		config: &Config{},
+	}
+
+	masterJob := c.NewJMeterMasterJob(lt, "", nil)
+
+	env := masterJob.Spec.Template.Spec.Containers[0].Env
+	expectedEnv := map[string]string{
+		"WORKER_SVC_NAME": loadTestWorkerServiceName,
+		"USE_WORKERS":     "true",
+		"JVM_ARGS":        "-Dlog4j2.disable.jmx=true",
+	}
+
+	require.Len(t, env, len(expectedEnv))
+	for _, e := range env {
+		require.Contains(t, expectedEnv, e.Name)
+		assert.Equal(t, expectedEnv[e.Name], e.Value)
+	}
 }

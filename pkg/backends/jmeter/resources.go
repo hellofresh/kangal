@@ -379,6 +379,18 @@ func (b *Backend) NewJMeterMasterJob(loadTest loadTestV1.LoadTest, reportURL str
 			Name:  "USE_WORKERS",
 			Value: "true",
 		},
+		{
+			// The JMeter master image (hellofresh/kangal-jmeter-master) runs
+			// JDK 11, which throws a NullPointerException from its cgroup v2
+			// metrics detection when the pod runs on a cgroup v2 node. The
+			// exception is logged by log4j2 at ERROR level during JMX
+			// reconfiguration and is harmless, but the master launcher script
+			// treats any "ERROR" line in the JMeter output as fatal and exits
+			// with code 1, killing the load test shortly after it starts.
+			// Disabling log4j2 JMX registration suppresses that ERROR line.
+			Name:  "JVM_ARGS",
+			Value: "-Dlog4j2.disable.jmx=true",
+		},
 	}
 
 	if reportURL != "" {
